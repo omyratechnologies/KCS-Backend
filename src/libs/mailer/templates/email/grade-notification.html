@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Grade Notification - Let's Catch Up</title>
+    <style>
+        /* Reset styles */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { margin: 0; padding: 0; font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8fafc; }
+        
+        /* Container */
+        .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; }
+        
+        /* Header */
+        .header { 
+            background: linear-gradient(135deg, #0A0A0A 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #0e4b99 100%);
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                radial-gradient(circle at 80% 80%, rgba(85, 218, 215, 0.2) 1px, transparent 1px);
+            background-size: 50px 50px, 80px 80px;
+        }
+        
+        .logo { 
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            display: inline-block;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .logo img { 
+            width: 80px; 
+            height: 80px; 
+            border-radius: 12px;
+        }
+        
+        .brand-title { 
+            color: #ffffff;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .brand-subtitle { 
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 16px;
+            font-weight: 400;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Grade Badge */
+        .grade-badge {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+            display: inline-block;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Content */
+        .content { padding: 50px 40px; }
+        
+        .grade-title {
+            color: #0A1929;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        
+        .grade-subtitle {
+            color: #64748B;
+            font-size: 18px;
+            font-weight: 400;
+            margin-bottom: 40px;
+            text-align: center;
+            line-height: 1.5;
+        }
+        
+        /* Grade Display Box */
+        .grade-display {
+            background: linear-gradient(135deg, #f0fdf4 0%, #86efac 100%);
+            border: 3px solid #22c55e;
+            border-radius: 20px;
+            padding: 40px;
+            margin: 32px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .grade-display::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(34, 197, 94, 0.1) 0%, transparent 70%);
+            animation: pulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        
+        .grade-score {
+            color: #15803d;
+            font-size: 72px;
+            font-weight: 900;
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 4px rgba(21, 128, 61, 0.2);
+        }
+        
+        .grade-letter {
+            color: #166534;
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .grade-message {
+            color: #166534;
+            font-size: 18px;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Assignment Info Box */
+        .assignment-info {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 32px;
+            margin: 32px 0;
+        }
+        
+        .assignment-info-title {
+            color: #0A1929;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .assignment-details {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            color: #64748B;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .detail-value {
+            color: #0f172a;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .detail-value.grade {
+            color: #15803d;
+            font-size: 16px;
+            font-weight: 700;
+        }
+        
+        /* Performance Analysis */
+        .performance-analysis {
+            background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%);
+            border: 2px solid #f59e0b;
+            border-radius: 16px;
+            padding: 24px;
+            margin: 32px 0;
+        }
+        
+        .performance-title {
+            color: #92400e;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .performance-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+        
+        .performance-stat {
+            background: #ffffff;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            color: #92400e;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
+            color: #78350f;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        /* Feedback Box */
+        .feedback-box {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 2px solid #0ea5e9;
+            border-radius: 16px;
+            padding: 24px;
+            margin: 32px 0;
+        }
+        
+        .feedback-title {
+            color: #0369a1;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .feedback-content {
+            color: #0c4a6e;
+            font-size: 16px;
+            line-height: 1.6;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #0ea5e9;
+            font-style: italic;
+        }
+        
+        .feedback-author {
+            color: #0369a1;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 16px;
+            text-align: right;
+        }
+        
+        /* Action Button */
+        .action-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #55dad7 0%, #F1531C 100%);
+            color: #ffffff;
+            text-decoration: none;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 32px 0;
+            text-align: center;
+            transition: transform 0.2s ease;
+            box-shadow: 0 4px 15px rgba(85, 218, 215, 0.3);
+        }
+        
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(85, 218, 215, 0.4);
+        }
+        
+        /* Grade Scale */
+        .grade-scale {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 32px 0;
+        }
+        
+        .grade-scale-title {
+            color: #0A1929;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .grade-scale-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 8px;
+        }
+        
+        .grade-scale-item {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 8px;
+            text-align: center;
+            font-size: 12px;
+        }
+        
+        .grade-scale-item.current {
+            background: #22c55e;
+            color: #ffffff;
+            font-weight: 600;
+        }
+        
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin: 32px 0;
+        }
+        
+        .quick-action {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .quick-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-color: #22c55e;
+        }
+        
+        .quick-action-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+        
+        .quick-action-title {
+            color: #0A1929;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .quick-action-desc {
+            color: #64748B;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        /* Footer */
+        .footer {
+            background: #0A1929;
+            color: #94a3b8;
+            padding: 32px 40px;
+            text-align: center;
+        }
+        
+        .footer-title {
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        .footer-text {
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .footer-link {
+            color: #55dad7;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .footer-link:hover {
+            color: #F1531C;
+        }
+        
+        .footer-copy {
+            color: #64748B;
+            font-size: 12px;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #1e293b;
+        }
+        
+        /* Responsive */
+        @media (max-width: 600px) {
+            .content { padding: 32px 24px; }
+            .grade-display { padding: 24px 20px; }
+            .grade-score { font-size: 48px; }
+            .grade-letter { font-size: 32px; }
+            .performance-stats { grid-template-columns: 1fr; }
+            .quick-actions { grid-template-columns: 1fr; }
+            .footer { padding: 24px 20px; }
+            .footer-links { flex-direction: column; gap: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <img src="{{LOGO_URL}}" alt="Let's Catch Up Logo">
+            </div>
+            <div class="brand-title">Let's Catch Up</div>
+            <div class="brand-subtitle">Learning & Communication Platform</div>
+            <div class="grade-badge">Grade Available</div>
+        </div>
+        
+        <!-- Content -->
+        <div class="content">
+            <h1 class="grade-title">🎉 Your Grade is Available!</h1>
+            <p class="grade-subtitle">{{GREETING_NAME}}, your assignment has been graded and your results are ready to view.</p>
+            
+            <!-- Grade Display -->
+            <div class="grade-display">
+                <div class="grade-score">{{SCORE}}/{{MAX_SCORE}}</div>
+                <div class="grade-letter">{{LETTER_GRADE}}</div>
+                <div class="grade-message">{{GRADE_MESSAGE}}</div>
+            </div>
+            
+            <!-- Assignment Information -->
+            <div class="assignment-info">
+                <div class="assignment-info-title">
+                    📋 Assignment Details
+                </div>
+                
+                <div class="assignment-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Assignment</span>
+                        <span class="detail-value">{{ASSIGNMENT_NAME}}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Course</span>
+                        <span class="detail-value">{{COURSE_NAME}}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Instructor</span>
+                        <span class="detail-value">{{INSTRUCTOR_NAME}}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Submitted</span>
+                        <span class="detail-value">{{SUBMISSION_DATE}}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Graded</span>
+                        <span class="detail-value">{{GRADED_DATE}}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Grade</span>
+                        <span class="detail-value grade">{{SCORE}}/{{MAX_SCORE}} ({{PERCENTAGE}}%)</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Performance Analysis -->
+            {{#if SHOW_ANALYTICS}}
+            <div class="performance-analysis">
+                <div class="performance-title">
+                    📊 Performance Analysis
+                </div>
+                <div class="performance-stats">
+                    <div class="performance-stat">
+                        <div class="stat-number">{{CLASS_RANK}}</div>
+                        <div class="stat-label">Class Rank</div>
+                    </div>
+                    <div class="performance-stat">
+                        <div class="stat-number">{{CLASS_AVERAGE}}%</div>
+                        <div class="stat-label">Class Average</div>
+                    </div>
+                    <div class="performance-stat">
+                        <div class="stat-number">{{IMPROVEMENT}}</div>
+                        <div class="stat-label">vs Last Assignment</div>
+                    </div>
+                    <div class="performance-stat">
+                        <div class="stat-number">{{COURSE_GPA}}</div>
+                        <div class="stat-label">Course GPA</div>
+                    </div>
+                </div>
+            </div>
+            {{/if}}
+            
+            <!-- Instructor Feedback -->
+            {{#if FEEDBACK}}
+            <div class="feedback-box">
+                <div class="feedback-title">
+                    💬 Instructor Feedback
+                </div>
+                <div class="feedback-content">
+                    "{{FEEDBACK}}"
+                </div>
+                <div class="feedback-author">— {{INSTRUCTOR_NAME}}</div>
+            </div>
+            {{/if}}
+            
+            <!-- Action Button -->
+            <div style="text-align: center;">
+                <a href="{{GRADE_DETAILS_URL}}" class="action-button">
+                    📖 View Detailed Grade Report
+                </a>
+            </div>
+            
+            <!-- Grade Scale Reference -->
+            <div class="grade-scale">
+                <div class="grade-scale-title">
+                    📏 Grade Scale Reference
+                </div>
+                <div class="grade-scale-grid">
+                    <div class="grade-scale-item {{#if IS_A}}current{{/if}}">A: 90-100%</div>
+                    <div class="grade-scale-item {{#if IS_B}}current{{/if}}">B: 80-89%</div>
+                    <div class="grade-scale-item {{#if IS_C}}current{{/if}}">C: 70-79%</div>
+                    <div class="grade-scale-item {{#if IS_D}}current{{/if}}">D: 60-69%</div>
+                    <div class="grade-scale-item {{#if IS_F}}current{{/if}}">F: Below 60%</div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <a href="{{GRADE_DETAILS_URL}}" class="quick-action">
+                    <div class="quick-action-icon">📊</div>
+                    <div class="quick-action-title">Detailed Report</div>
+                    <div class="quick-action-desc">View complete grade breakdown</div>
+                </a>
+                
+                <a href="{{COURSE_URL}}" class="quick-action">
+                    <div class="quick-action-icon">📚</div>
+                    <div class="quick-action-title">Course Overview</div>
+                    <div class="quick-action-desc">Return to course dashboard</div>
+                </a>
+                
+                <a href="{{GRADEBOOK_URL}}" class="quick-action">
+                    <div class="quick-action-icon">📋</div>
+                    <div class="quick-action-title">Gradebook</div>
+                    <div class="quick-action-desc">View all your grades</div>
+                </a>
+                
+                <a href="{{CONTACT_INSTRUCTOR_URL}}" class="quick-action">
+                    <div class="quick-action-icon">💬</div>
+                    <div class="quick-action-title">Contact Instructor</div>
+                    <div class="quick-action-desc">Ask questions about grade</div>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-title">Keep Up the Great Work!</div>
+            <div class="footer-text">
+                Your academic progress is important to us. Continue working hard and don't hesitate to reach out if you need support or have questions about your grades.
+            </div>
+            
+            <div class="footer-links">
+                <a href="{{ACADEMIC_SUPPORT_URL}}" class="footer-link">Academic Support</a>
+                <a href="{{GRADEBOOK_URL}}" class="footer-link">Gradebook</a>
+                <a href="{{SUPPORT_URL}}" class="footer-link">Contact Support</a>
+                <a href="{{WEBSITE_URL}}" class="footer-link">Visit Website</a>
+            </div>
+            
+            <div class="footer-copy">
+                © 2025 KANDHUGULE CONSULTANCY SERVICES PRIVATE LIMITED. All Rights Reserved.<br>
+                This grade notification was sent to {{EMAIL}}. For academic support, <a href="{{ACADEMIC_SUPPORT_URL}}" style="color: #55dad7;">contact our team</a>.
+            </div>
+        </div>
+    </div>
+</body>
+</html>
