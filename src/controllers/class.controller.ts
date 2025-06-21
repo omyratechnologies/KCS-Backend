@@ -48,7 +48,7 @@ export class ClassController {
                     student_ids: string[];
                     student_count: number;
                     academic_year: string;
-                    class_in_charge: string[];
+                    teacher_ids: string[];
                 };
             } = await ctx.req.json();
 
@@ -413,6 +413,120 @@ export class ClassController {
             const classes = await classService.getClassesByStudentId(studentId);
 
             return ctx.json(classes);
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json({ error: error.message }, 500);
+            }
+        }
+    };
+
+    // Assign students to class
+    public static readonly assignStudentsToClass = async (ctx: Context) => {
+        try {
+            const { class_id } = ctx.req.param();
+            const { student_ids }: { student_ids: string[] } = await ctx.req.json();
+
+            if (!student_ids || !Array.isArray(student_ids) || student_ids.length === 0) {
+                return ctx.json({ error: "student_ids array is required and cannot be empty" }, 400);
+            }
+
+            const result = await classService.assignStudentsToClass(class_id, student_ids);
+
+            return ctx.json({
+                success: true,
+                message: "Students assigned to class successfully",
+                data: result
+            });
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json({ error: error.message }, 400);
+            }
+            return ctx.json({ error: "An unexpected error occurred" }, 500);
+        }
+    };
+
+    // Remove students from class
+    public static readonly removeStudentsFromClass = async (ctx: Context) => {
+        try {
+            const { class_id } = ctx.req.param();
+            const { student_ids }: { student_ids: string[] } = await ctx.req.json();
+
+            if (!student_ids || !Array.isArray(student_ids) || student_ids.length === 0) {
+                return ctx.json({ error: "student_ids array is required and cannot be empty" }, 400);
+            }
+
+            const result = await classService.removeStudentsFromClass(class_id, student_ids);
+
+            return ctx.json({
+                success: true,
+                message: "Students removed from class successfully",
+                data: result
+            });
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json({ error: error.message }, 400);
+            }
+            return ctx.json({ error: "An unexpected error occurred" }, 500);
+        }
+    };
+
+    // Assign teachers to class
+    public static readonly assignTeachersToClass = async (ctx: Context) => {
+        try {
+            const { class_id } = ctx.req.param();
+            const { teacher_ids }: { teacher_ids: string[] } = await ctx.req.json();
+
+            if (!teacher_ids || !Array.isArray(teacher_ids) || teacher_ids.length === 0) {
+                return ctx.json({ error: "teacher_ids array is required and cannot be empty" }, 400);
+            }
+
+            const result = await classService.assignTeachersToClass(class_id, teacher_ids);
+
+            return ctx.json({
+                success: true,
+                message: "Teachers assigned to class successfully",
+                data: result
+            });
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json({ error: error.message }, 400);
+            }
+            return ctx.json({ error: "An unexpected error occurred" }, 500);
+        }
+    };
+
+    // Remove teachers from class
+    public static readonly removeTeachersFromClass = async (ctx: Context) => {
+        try {
+            const { class_id } = ctx.req.param();
+            const { teacher_ids }: { teacher_ids: string[] } = await ctx.req.json();
+
+            if (!teacher_ids || !Array.isArray(teacher_ids) || teacher_ids.length === 0) {
+                return ctx.json({ error: "teacher_ids array is required and cannot be empty" }, 400);
+            }
+
+            const result = await classService.removeTeachersFromClass(class_id, teacher_ids);
+
+            return ctx.json({
+                success: true,
+                message: "Teachers removed from class successfully",
+                data: result
+            });
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json({ error: error.message }, 400);
+            }
+            return ctx.json({ error: "An unexpected error occurred" }, 500);
+        }
+    };
+
+    public static readonly getAllAssignmentsFromAllClasses = async (ctx: Context) => {
+        try {
+            const campus_id = ctx.get("campus_id");
+
+            const result = await classService.getAllAssignmentsFromAllClasses(campus_id);
+
+            return ctx.json(result);
         } catch (error) {
             if (error instanceof Error) {
                 return ctx.json({ error: error.message }, 500);

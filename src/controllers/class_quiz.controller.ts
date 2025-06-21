@@ -506,4 +506,23 @@ export class ClassQuizController {
             }
         }
     };
+
+    public static readonly getAllClassQuizzes = async (ctx: Context) => {
+        try {
+            const campus_id = ctx.get("campus_id");
+
+            const result = await ClassQuizService.getAllClassQuizzes(campus_id);
+
+            return ctx.json(result);
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json(
+                    {
+                        message: error.message,
+                    },
+                    500
+                );
+            }
+        }
+    };
 }

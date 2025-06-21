@@ -54,6 +54,32 @@ export class TimetableController {
         }
     };
 
+    // Read by Campus ID and Teacher ID
+    public static readonly getTimetableByCampusAndTeacher = async (
+        ctx: Context
+    ) => {
+        try {
+            const campus_id = ctx.get("campus_id");
+
+            const { teacher_id } = ctx.req.param();
+
+            const timetable =
+                await TimetableService.getTimetableByCampusAndTeacher(
+                    campus_id,
+                    teacher_id
+                );
+
+            return ctx.json(timetable);
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json({
+                    success: false,
+                    message: error.message,
+                });
+            }
+        }
+    };
+
     // Update by ID
     public static readonly updateTimetableById = async (ctx: Context) => {
         try {

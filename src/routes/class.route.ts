@@ -6,6 +6,9 @@ import { ClassController } from "@/controllers/class.controller";
 import {
     assignmentSchema,
     assignmentSubmissionSchema,
+    assignStudentsRequestBodySchema,
+    assignTeachersRequestBodySchema,
+    assignmentResponseSchema,
     classSchema,
     classSubjectSchema,
     createAssignmentRequestBodySchema,
@@ -542,6 +545,40 @@ app.get(
 
 // Assignment routes
 app.get(
+    "/assignments/all",
+    describeRoute({
+        tags: ["Class"],
+        operationId: "getAllAssignmentsFromAllClasses",
+        summary: "Get all assignments from all classes",
+        description: "Retrieves all assignments from all classes for the current campus",
+        responses: {
+            200: {
+                description: "List of all assignments from all classes",
+                content: {
+                    "application/json": {
+                        schema: resolver(getAssignmentsResponseSchema),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    ClassController.getAllAssignmentsFromAllClasses
+);
+
+app.get(
     "/:class_id/assignments",
     describeRoute({
         tags: ["Class"],
@@ -1066,6 +1103,236 @@ app.get(
         },
     }),
     ClassController.getClassesByStudentUserId
+);
+
+// Student assignment routes
+app.post(
+    "/:class_id/students/assign",
+    describeRoute({
+        tags: ["Class"],
+        operationId: "assignStudentsToClass",
+        summary: "Assign students to a class",
+        description: "Assigns one or more students to a specific class with duplicate prevention",
+        parameters: [
+            {
+                name: "class_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Class ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Students assigned successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(assignmentResponseSchema),
+                    },
+                },
+            },
+            400: {
+                description: "Bad request - validation error or duplicates",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    zValidator("json", assignStudentsRequestBodySchema),
+    ClassController.assignStudentsToClass
+);
+
+app.delete(
+    "/:class_id/students/remove",
+    describeRoute({
+        tags: ["Class"],
+        operationId: "removeStudentsFromClass",
+        summary: "Remove students from a class",
+        description: "Removes one or more students from a specific class",
+        parameters: [
+            {
+                name: "class_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Class ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Students removed successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(assignmentResponseSchema),
+                    },
+                },
+            },
+            400: {
+                description: "Bad request - validation error or students not in class",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    zValidator("json", assignStudentsRequestBodySchema),
+    ClassController.removeStudentsFromClass
+);
+
+// Teacher assignment routes
+app.post(
+    "/:class_id/teachers/assign",
+    describeRoute({
+        tags: ["Class"],
+        operationId: "assignTeachersToClass",
+        summary: "Assign teachers to a class",
+        description: "Assigns one or more teachers to a specific class with duplicate prevention",
+        parameters: [
+            {
+                name: "class_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Class ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Teachers assigned successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(assignmentResponseSchema),
+                    },
+                },
+            },
+            400: {
+                description: "Bad request - validation error or duplicates",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    zValidator("json", assignTeachersRequestBodySchema),
+    ClassController.assignTeachersToClass
+);
+
+app.delete(
+    "/:class_id/teachers/remove",
+    describeRoute({
+        tags: ["Class"],
+        operationId: "removeTeachersFromClass",
+        summary: "Remove teachers from a class",
+        description: "Removes one or more teachers from a specific class",
+        parameters: [
+            {
+                name: "class_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Class ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Teachers removed successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(assignmentResponseSchema),
+                    },
+                },
+            },
+            400: {
+                description: "Bad request - validation error or teachers not in class",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    zValidator("json", assignTeachersRequestBodySchema),
+    ClassController.removeTeachersFromClass
 );
 
 export default app;

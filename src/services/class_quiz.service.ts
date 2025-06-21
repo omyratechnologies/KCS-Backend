@@ -102,6 +102,31 @@ export class ClassQuizService {
         return quiz.rows;
     };
 
+    // Get all quizzes from all classes
+    public static readonly getAllClassQuizzes = async (
+        campus_id: string
+    ) => {
+        const quiz: {
+            rows: IClassQuiz[];
+        } = await ClassQuiz.find(
+            {
+                campus_id: campus_id,
+                is_deleted: false,
+            },
+            {
+                sort: {
+                    updated_at: "DESC",
+                },
+            }
+        );
+
+        if (quiz.rows.length === 0) {
+            return [];
+        }
+
+        return quiz.rows;
+    };
+
     // Update by ID
     public static readonly updateClassQuizById = async (
         id: string,

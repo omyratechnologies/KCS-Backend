@@ -20,29 +20,8 @@ export class ClassService {
                 throw new Error("Class not found");
             }
 
-            const classInChargesIds = classData.class_in_charge;
-            const classStudentsIds = classData.student_ids;
-            const classTeacherId = classData.class_teacher_id;
-
-            // Get all students in the class
-            const classSubjects = await this.getAllSubjectsByClassId(id);
-
-            // Get class teacher
-            const classTeacher =
-                await TeacherService.getTeacherById(classTeacherId);
-
-            // Get all class in charges
-            const classInCharges =
-                await this.getAllClassInChargesByIds(classInChargesIds);
-            const classStudents =
-                await this.getAllClassStudentsByIds(classStudentsIds);
-
             return {
                 ...classData,
-                class_teacher: classTeacher,
-                class_in_charge: classInCharges,
-                students: classStudents,
-                subjects: classSubjects,
             };
         } catch (error) {
             console.error("Error fetching class by ID:", error);
@@ -88,7 +67,7 @@ export class ClassService {
             student_ids: string[];
             student_count: number;
             academic_year: string;
-            class_in_charge: string[];
+            teacher_ids: string[];
         }
     ): Promise<IClassData> {
         try {
@@ -105,36 +84,42 @@ export class ClassService {
                 throw new Error("Failed to create class");
             }
 
-            const teacher = await TeacherService.getTeacherById(
-                classData.class_teacher_id
-            );
-
-            // append class to teacher's classes
-            if (teacher) {
-                teacher.classes.push(newClass.id);
-                await TeacherService.updateTeacher(teacher.id, {
-                    classes: teacher.classes,
-                });
-            }
-
-            // append class to students' classes in metadata
-            for (const studentId of classData.student_ids) {
-                const student = await UserService.getUser(studentId);
-                if (student) {
-                    if (!student.meta_data) {
-                        student.meta_data = {};
+            // If class teacher is provided, append class to teacher's classes
+            if (classData.class_teacher_id) {
+                const teacher = await TeacherService.getTeacherById(
+                    classData.class_teacher_id
+                );
+                if (teacher) {
+                    // Ensure teacher's classes is an array
+                    if (!teacher.classes) {
+                        teacher.classes = [];
                     }
-                    // Ensure meta_data has a 'classes' property as an array
-                    if (!(student.meta_data as { classes?: string[] }).classes) {
-                        (student.meta_data as { classes?: string[] }).classes = [];
-                    }
-                    (student.meta_data as { classes: string[] }).classes = [
-                        ...(student.meta_data as { classes: string[] }).classes,
-                        newClass.id,
-                    ];
-                    await UserService.updateUsers(student.id, {
-                        meta_data: JSON.stringify(student.meta_data),
+                    // Append the new class to the teacher's classes
+                    teacher.classes.push(newClass.id);
+                    await TeacherService.updateTeacher(teacher.id, {
+                        classes: teacher.classes,
                     });
+                } else {
+                    console.warn(
+                        `Teacher with ID ${classData.class_teacher_id} not found`
+                    );
+                }
+            }
+            // append class from classData.teacher_ids & classData.class_teacher_id to teacher's classes
+            if (classData.teacher_ids) {
+                for (const teacherId of classData.teacher_ids) {
+                    const teacher = await TeacherService.getTeacherById(teacherId);
+                    if (teacher) {
+                        if (!teacher.classes) {
+                            teacher.classes = [];
+                        }
+                        teacher.classes.push(newClass.id);
+                        await TeacherService.updateTeacher(teacher.id, {
+                            classes: teacher.classes,
+                        });
+                    } else {
+                        console.warn(`Teacher with ID ${teacherId} not found`);
+                    }
                 }
             }
 
@@ -163,81 +148,23 @@ export class ClassService {
                 { new: true }
             );
 
-            // if teacher is updated, update the teacher's classes
-            if (classData.class_teacher_id) {
-                const teacher = await TeacherService.getTeacherById(
-                    classData.class_teacher_id
-                );
-                if (teacher) {
-                    // Remove the class from the old teacher's classes
-                    const oldTeacher = await TeacherService.getTeacherById(
-                        updatedClass.class_teacher_id
-                    );
-                    if (oldTeacher) {
-                        oldTeacher.classes = oldTeacher.classes.filter(
-                            (classId) => classId !== updatedClass.id
-                        );
-                        await TeacherService.updateTeacher(oldTeacher.id, {
-                            classes: oldTeacher.classes,
-                        });
-                    }
-                    // Add the class to the new teacher's classes
-                    teacher.classes.push(updatedClass.id);
-                    await TeacherService.updateTeacher(teacher.id, {
-                        classes: teacher.classes,
-                    });
-                }
-            }
-
-            // if students are updated, update the students' classes in metadata
-            if (classData.student_ids) {
-                // Remove the class from the old students' classes
-                const oldStudentIds = updatedClass.student_ids || [];
-                for (const studentId of oldStudentIds) {
-                    const student = await UserService.getUser(studentId);
-                    if (student) {
-                        if (!student.meta_data) {
-                            student.meta_data = {};
+            // append class from classData.teacher_ids & classData.class_teacher_id to teacher's classes
+            if (classData.teacher_ids) {
+                for (const teacherId of classData.teacher_ids) {
+                    const teacher = await TeacherService.getTeacherById(teacherId);
+                    if (teacher) {
+                        if (!teacher.classes) {
+                            teacher.classes = [];
                         }
-                        // Ensure meta_data has a 'classes' property as an array
-                        if (
-                            !(student.meta_data as { classes?: string[] })
-                                .classes
-                        ) {
-                            (student.meta_data as { classes?: string[] }).classes =
-                                [];
+                        // Check if the class is already in the teacher's classes
+                        if (!teacher.classes.includes(id)) {
+                            teacher.classes.push(id);
+                            await TeacherService.updateTeacher(teacher.id, {
+                                classes: teacher.classes,
+                            });
                         }
-                        (student.meta_data as { classes: string[] }).classes =
-                            (student.meta_data as { classes: string[] }).classes.filter(
-                                (classId) => classId !== updatedClass.id
-                            );
-                        await UserService.updateUsers(student.id, {
-                            meta_data: JSON.stringify(student.meta_data),
-                        });
-                    }
-                }
-                // Add the class to the new students' classes
-                for (const studentId of classData.student_ids) {
-                    const student = await UserService.getUser(studentId);
-                    if (student) {
-                        if (!student.meta_data) {
-                            student.meta_data = {};
-                        }
-                        // Ensure meta_data has a 'classes' property as an array
-                        if (
-                            !(student.meta_data as { classes?: string[] })
-                                .classes
-                        ) {
-                            (student.meta_data as { classes?: string[] }).classes =
-                                [];
-                        }
-                        (student.meta_data as { classes: string[] }).classes = [
-                            ...(student.meta_data as { classes: string[] }).classes,
-                            updatedClass.id,
-                        ];
-                        await UserService.updateUsers(student.id, {
-                            meta_data: JSON.stringify(student.meta_data),
-                        });
+                    } else {
+                        console.warn(`Teacher with ID ${teacherId} not found`);
                     }
                 }
             }
@@ -798,6 +725,347 @@ export class ClassService {
             return classes.rows;
         } catch (error) {
             console.error("Error fetching classes by student user ID:", error);
+            return [];
+        }
+    }
+
+    // Assign students to class
+    public async assignStudentsToClass(
+        classId: string,
+        studentIds: string[]
+    ): Promise<IClassData | null> {
+        try {
+            // Validate class exists
+            const existingClass = await Class.findById(classId);
+            if (!existingClass) {
+                throw new Error("Class not found");
+            }
+
+            if (!existingClass.is_active || existingClass.is_deleted) {
+                throw new Error("Class is not active or has been deleted");
+            }
+
+            // Validate student IDs exist and are valid
+            const validStudents: string[] = [];
+            for (const studentId of studentIds) {
+                const student = await UserService.getUser(studentId);
+                if (!student) {
+                    throw new Error(`Student with ID ${studentId} not found`);
+                }
+                if (student.user_type !== "student") {
+                    throw new Error(`User with ID ${studentId} is not a student`);
+                }
+                if (!student.is_active || student.is_deleted) {
+                    throw new Error(`Student with ID ${studentId} is not active`);
+                }
+                validStudents.push(studentId);
+            }
+
+            // Get current student IDs to prevent duplicates
+            const currentStudentIds = existingClass.student_ids || [];
+            const duplicateStudents = validStudents.filter(studentId => 
+                currentStudentIds.includes(studentId)
+            );
+
+            if (duplicateStudents.length > 0) {
+                throw new Error(`Students with IDs ${duplicateStudents.join(', ')} are already assigned to this class`);
+            }
+
+            // Merge new student IDs with existing ones
+            const updatedStudentIds = [...currentStudentIds, ...validStudents];
+
+            // Update class with new student IDs
+            const updatedClass = await Class.findOneAndUpdate(
+                {
+                    id: classId,
+                    is_active: true,
+                    is_deleted: false,
+                },
+                {
+                    student_ids: updatedStudentIds,
+                    student_count: updatedStudentIds.length,
+                    updated_at: new Date(),
+                },
+                { new: true }
+            );
+
+            if (!updatedClass) {
+                throw new Error("Failed to update class");
+            }
+
+            // Update each student's meta_data to include the class
+            for (const studentId of validStudents) {
+                const student = await UserService.getUser(studentId);
+                if (student) {
+                    if (!student.meta_data) {
+                        student.meta_data = {};
+                    }
+                    
+                    // Ensure meta_data has a 'classes' property as an array
+                    if (!(student.meta_data as { classes?: string[] }).classes) {
+                        (student.meta_data as { classes?: string[] }).classes = [];
+                    }
+                    
+                    const studentClasses = (student.meta_data as { classes: string[] }).classes;
+                    if (!studentClasses.includes(classId)) {
+                        studentClasses.push(classId);
+                        await UserService.updateUsers(student.id, {
+                            meta_data: JSON.stringify({
+                                ...student.meta_data,
+                                classes: studentClasses
+                            }),
+                        });
+                    }
+                }
+            }
+
+            return updatedClass;
+        } catch (error) {
+            console.error("Error assigning students to class:", error);
+            throw error;
+        }
+    }
+
+    // Assign teachers to class
+    public async assignTeachersToClass(
+        classId: string,
+        teacherIds: string[]
+    ): Promise<IClassData | null> {
+        try {
+            // Validate class exists
+            const existingClass = await Class.findById(classId);
+            if (!existingClass) {
+                throw new Error("Class not found");
+            }
+
+            if (!existingClass.is_active || existingClass.is_deleted) {
+                throw new Error("Class is not active or has been deleted");
+            }
+
+            // Validate teacher IDs exist and are valid
+            const validTeachers: string[] = [];
+            for (const teacherId of teacherIds) {
+                const teacher = await TeacherService.getTeacherById(teacherId);
+                if (!teacher) {
+                    throw new Error(`Teacher with ID ${teacherId} not found`);
+                }
+                validTeachers.push(teacherId);
+            }
+
+            // Get current teacher IDs to prevent duplicates
+            const currentTeacherIds = existingClass.teacher_ids || [];
+            const duplicateTeachers = validTeachers.filter(teacherId => 
+                currentTeacherIds.includes(teacherId)
+            );
+
+            if (duplicateTeachers.length > 0) {
+                throw new Error(`Teachers with IDs ${duplicateTeachers.join(', ')} are already assigned to this class`);
+            }
+
+            // Merge new teacher IDs with existing ones
+            const updatedTeacherIds = [...currentTeacherIds, ...validTeachers];
+
+            // Update class with new teacher IDs
+            const updatedClass = await Class.findOneAndUpdate(
+                {
+                    id: classId,
+                    is_active: true,
+                    is_deleted: false,
+                },
+                {
+                    teacher_ids: updatedTeacherIds,
+                    updated_at: new Date(),
+                },
+                { new: true }
+            );
+
+            if (!updatedClass) {
+                throw new Error("Failed to update class");
+            }
+
+            // Update each teacher's classes array
+            for (const teacherId of validTeachers) {
+                const teacher = await TeacherService.getTeacherById(teacherId);
+                if (teacher) {
+                    if (!teacher.classes) {
+                        teacher.classes = [];
+                    }
+                    
+                    if (!teacher.classes.includes(classId)) {
+                        teacher.classes.push(classId);
+                        await TeacherService.updateTeacher(teacher.id, {
+                            classes: teacher.classes,
+                        });
+                    }
+                }
+            }
+
+            return updatedClass;
+        } catch (error) {
+            console.error("Error assigning teachers to class:", error);
+            throw error;
+        }
+    }
+
+    // Remove students from class
+    public async removeStudentsFromClass(
+        classId: string,
+        studentIds: string[]
+    ): Promise<IClassData | null> {
+        try {
+            // Validate class exists
+            const existingClass = await Class.findById(classId);
+            if (!existingClass) {
+                throw new Error("Class not found");
+            }
+
+            if (!existingClass.is_active || existingClass.is_deleted) {
+                throw new Error("Class is not active or has been deleted");
+            }
+
+            // Get current student IDs
+            const currentStudentIds = existingClass.student_ids || [];
+            const studentsNotInClass = studentIds.filter(studentId => 
+                !currentStudentIds.includes(studentId)
+            );
+
+            if (studentsNotInClass.length > 0) {
+                throw new Error(`Students with IDs ${studentsNotInClass.join(', ')} are not assigned to this class`);
+            }
+
+            // Remove student IDs from class
+            const updatedStudentIds = currentStudentIds.filter(studentId => 
+                !studentIds.includes(studentId)
+            );
+
+            // Update class
+            const updatedClass = await Class.findOneAndUpdate(
+                {
+                    id: classId,
+                    is_active: true,
+                    is_deleted: false,
+                },
+                {
+                    student_ids: updatedStudentIds,
+                    student_count: updatedStudentIds.length,
+                    updated_at: new Date(),
+                },
+                { new: true }
+            );
+
+            if (!updatedClass) {
+                throw new Error("Failed to update class");
+            }
+
+            // Update each student's meta_data to remove the class
+            for (const studentId of studentIds) {
+                const student = await UserService.getUser(studentId);
+                if (student && student.meta_data) {
+                    const studentClasses = (student.meta_data as { classes?: string[] }).classes || [];
+                    const updatedClasses = studentClasses.filter(id => id !== classId);
+                    
+                    await UserService.updateUsers(student.id, {
+                        meta_data: JSON.stringify({
+                            ...student.meta_data,
+                            classes: updatedClasses
+                        }),
+                    });
+                }
+            }
+
+            return updatedClass;
+        } catch (error) {
+            console.error("Error removing students from class:", error);
+            throw error;
+        }
+    }
+
+    // Remove teachers from class
+    public async removeTeachersFromClass(
+        classId: string,
+        teacherIds: string[]
+    ): Promise<IClassData | null> {
+        try {
+            // Validate class exists
+            const existingClass = await Class.findById(classId);
+            if (!existingClass) {
+                throw new Error("Class not found");
+            }
+
+            if (!existingClass.is_active || existingClass.is_deleted) {
+                throw new Error("Class is not active or has been deleted");
+            }
+
+            // Get current teacher IDs
+            const currentTeacherIds = existingClass.teacher_ids || [];
+            const teachersNotInClass = teacherIds.filter(teacherId => 
+                !currentTeacherIds.includes(teacherId)
+            );
+
+            if (teachersNotInClass.length > 0) {
+                throw new Error(`Teachers with IDs ${teachersNotInClass.join(', ')} are not assigned to this class`);
+            }
+
+            // Remove teacher IDs from class
+            const updatedTeacherIds = currentTeacherIds.filter(teacherId => 
+                !teacherIds.includes(teacherId)
+            );
+
+            // Update class
+            const updatedClass = await Class.findOneAndUpdate(
+                {
+                    id: classId,
+                    is_active: true,
+                    is_deleted: false,
+                },
+                {
+                    teacher_ids: updatedTeacherIds,
+                    updated_at: new Date(),
+                },
+                { new: true }
+            );
+
+            if (!updatedClass) {
+                throw new Error("Failed to update class");
+            }
+
+            // Update each teacher's classes array
+            for (const teacherId of teacherIds) {
+                const teacher = await TeacherService.getTeacherById(teacherId);
+                if (teacher && teacher.classes) {
+                    const updatedClasses = teacher.classes.filter(id => id !== classId);
+                    await TeacherService.updateTeacher(teacher.id, {
+                        classes: updatedClasses,
+                    });
+                }
+            }
+
+            return updatedClass;
+        } catch (error) {
+            console.error("Error removing teachers from class:", error);
+            throw error;
+        }
+    }
+
+    // Get all assignments from all classes by campus
+    public async getAllAssignmentsFromAllClasses(
+        campusId: string
+    ): Promise<IAssignmentData[]> {
+        try {
+            const assignments: {
+                rows: IAssignmentData[];
+            } = await Assignment.find(
+                { campus_id: campusId },
+                {
+                    sort: {
+                        updated_at: "DESC",
+                    },
+                }
+            );
+
+            return assignments.rows;
+        } catch (error) {
+            console.error("Error fetching all assignments from all classes:", error);
             return [];
         }
     }

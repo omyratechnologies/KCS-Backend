@@ -55,6 +55,30 @@ export class TimetableService {
         return data.rows;
     };
 
+    // Read by Campus ID and Teacher ID
+    public static readonly getTimetableByCampusAndTeacher = async (
+        campus_id: string,
+        teacher_id: string
+    ) => {
+        const data: {
+            rows: ITimetable[];
+        } = await Timetable.find(
+            {
+                campus_id,
+                teacher_id,
+                is_deleted: false,
+            },
+            {
+                sort: {
+                    day: "ASC",
+                    start_time: "ASC",
+                },
+            }
+        );
+
+        return data.rows;
+    };
+
     // Update by ID
     public static readonly updateTimetableById = async (
         id: string,

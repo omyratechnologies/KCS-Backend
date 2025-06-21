@@ -83,6 +83,45 @@ app.get(
     TimetableController.getTimetableByCampusAndClass
 );
 
+app.get(
+    "/teacher/:teacher_id",
+    describeRoute({
+        operationId: "getTimetableByCampusAndTeacher",
+        summary: "Get timetable by teacher ID",
+        description:
+            "Retrieves all timetable entries for a specific teacher in a campus",
+        tags: ["Timetable"],
+        parameters: [
+            {
+                name: "teacher_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Teacher ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "List of timetable entries for the teacher",
+                content: {
+                    "application/json": {
+                        schema: resolver(getTimetablesResponseSchema),
+                    },
+                },
+            },
+            400: {
+                description: "Bad request",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    TimetableController.getTimetableByCampusAndTeacher
+);
+
 app.put(
     "/:id",
     describeRoute({

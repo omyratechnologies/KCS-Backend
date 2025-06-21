@@ -695,4 +695,33 @@ app.put(
     ClassQuizController.updateClassQuizSubmissionById
 );
 
+app.get(
+    "/all",
+    describeRoute({
+        operationId: "getAllClassQuizzes",
+        summary: "Get all quizzes from all classes",
+        description: "Retrieves all quizzes from all classes for the campus",
+        tags: ["Class Quiz"],
+        responses: {
+            200: {
+                description: "List of all quizzes from all classes",
+                content: {
+                    "application/json": {
+                        schema: resolver(getClassQuizzesResponseSchema),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    ClassQuizController.getAllClassQuizzes
+);
+
 export default app;

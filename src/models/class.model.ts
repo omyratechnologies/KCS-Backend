@@ -10,7 +10,7 @@ interface IClassData {
     student_ids: string[];
     student_count: number;
     academic_year: string;
-    class_in_charge: string[];
+    teacher_ids: string[];
     meta_data: object;
     is_active: boolean;
     is_deleted: boolean;
@@ -21,11 +21,11 @@ interface IClassData {
 const ClassSchema = new Schema({
     campus_id: { type: String, required: true },
     name: { type: String, required: true },
-    class_teacher_id: { type: String, required: true },
+    class_teacher_id: { type: String, required: false },
     student_ids: { type: [String], required: false },
     student_count: { type: Number, required: false },
     academic_year: { type: String, required: true },
-    class_in_charge: { type: [String], required: false },
+    teacher_ids: { type: [String], required: false },
     meta_data: { type: Object, required: true },
     is_active: { type: Boolean, required: true },
     is_deleted: { type: Boolean, required: true },

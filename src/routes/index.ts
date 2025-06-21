@@ -9,6 +9,7 @@ import classQuizRoute from "@/routes/class_quiz.route";
 import courseRoute from "@/routes/course.route";
 import courseQuizRoute from "@/routes/cousre_quiz.route";
 import curriculumRoute from "@/routes/curriculum.route";
+import dashboardRoute from "@/routes/dashboard.route";
 import documentStoreoute from "@/routes/document_store.route";
 import examRoute from "@/routes/exam.route";
 import feeRoute from "@/routes/fee.route";
@@ -33,6 +34,7 @@ app.route("/auth", authRoute);
 
 app.use(authMiddleware());
 
+app.route("/dashboard", dashboardRoute);
 app.route("/user", usersRoute);
 app.route("/campus", campusesRoute);
 app.route("/attendance", attendanceRoute);

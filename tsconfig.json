@@ -23,7 +23,6 @@
         "typeRoots": ["node_modules/@types", "src/types"]
     },
     "exclude": ["./node_modules/**/*", "./dist/**/*"],
-    "extends": "@bravo68web/tsconfig/base.json",
     "files": ["src/types/index.d.ts"],
     "include": ["./src/**/*.ts", "./src/**/*.tsx"]
 }

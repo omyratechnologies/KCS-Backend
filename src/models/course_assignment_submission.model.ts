@@ -25,7 +25,7 @@ const CourseAssignmentSubmissionSchema = new Schema({
     student_ids: { type: [String], required: true },
     student_count: { type: Number, required: true },
     academic_year: { type: String, required: true },
-    class_in_charge: { type: [String], required: true },
+    teacher_ids: { type: [String], required: true },
     meta_data: { type: Object, required: true },
     is_active: { type: Boolean, required: true },
     is_deleted: { type: Boolean, required: true },
