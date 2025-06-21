@@ -1335,4 +1335,176 @@ app.delete(
     ClassController.removeTeachersFromClass
 );
 
+// Students by year and class routes
+app.get(
+    "/students-by-year",
+    describeRoute({
+        tags: ["Class"],
+        operationId: "getStudentsByYearAndClass",
+        summary: "Get students by academic year and optional class filter",
+        description: "Retrieves all students for a specific academic year, optionally filtered by class_id",
+        parameters: [
+            {
+                name: "academic_year",
+                in: "query",
+                required: true,
+                schema: { type: "string" },
+                description: "Academic year (e.g., '2023-2024')",
+                example: "2023-2024"
+            },
+            {
+                name: "class_id",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+                description: "Optional class ID to filter students by specific class",
+                example: "class123"
+            }
+        ],
+        responses: {
+            200: {
+                description: "Students retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                students: {
+                                    type: "array",
+                                    items: {
+                                        type: "object",
+                                        properties: {
+                                            id: { type: "string" },
+                                            first_name: { type: "string" },
+                                            last_name: { type: "string" },
+                                            email: { type: "string" },
+                                            phone: { type: "string" },
+                                            user_type: { type: "string" },
+                                            campus_id: { type: "string" }
+                                        }
+                                    }
+                                },
+                                academic_year: { type: "string" },
+                                total_students: { type: "number" },
+                                classes_included: {
+                                    type: "array",
+                                    items: { $ref: "#/components/schemas/Class" }
+                                }
+                            }
+                        }
+                    },
+                },
+            },
+            400: {
+                description: "Bad request - missing academic_year parameter",
+            },
+            500: {
+                description: "Internal server error",
+            },
+        },
+    }),
+    ClassController.getStudentsByYearAndClass
+);
+
+app.get(
+    "/students-grouped-by-class",
+    describeRoute({
+        tags: ["Class"],
+        operationId: "getStudentsGroupedByClassForYear",
+        summary: "Get students grouped by class for academic year",
+        description: "Retrieves all students grouped by their respective classes for a specific academic year",
+        parameters: [
+            {
+                name: "academic_year",
+                in: "query",
+                required: true,
+                schema: { type: "string" },
+                description: "Academic year (e.g., '2023-2024')",
+                example: "2023-2024"
+            }
+        ],
+        responses: {
+            200: {
+                description: "Students grouped by class retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                academic_year: { type: "string" },
+                                total_students: { type: "number" },
+                                total_classes: { type: "number" },
+                                classes: {
+                                    type: "array",
+                                    items: {
+                                        type: "object",
+                                        properties: {
+                                            class_info: { $ref: "#/components/schemas/Class" },
+                                            students: {
+                                                type: "array",
+                                                items: {
+                                                    type: "object",
+                                                    properties: {
+                                                        id: { type: "string" },
+                                                        first_name: { type: "string" },
+                                                        last_name: { type: "string" },
+                                                        email: { type: "string" },
+                                                        phone: { type: "string" },
+                                                        user_type: { type: "string" }
+                                                    }
+                                                }
+                                            },
+                                            student_count: { type: "number" }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                },
+            },
+            400: {
+                description: "Bad request - missing academic_year parameter",
+            },
+            500: {
+                description: "Internal server error",
+            },
+        },
+    }),
+    ClassController.getStudentsGroupedByClassForYear
+);
+
+app.get(
+    "/academic-years",
+    describeRoute({
+        tags: ["Class"],
+        operationId: "getAcademicYears",
+        summary: "Get all academic years",
+        description: "Retrieves all available academic years for the campus",
+        responses: {
+            200: {
+                description: "Academic years retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                academic_years: {
+                                    type: "array",
+                                    items: { type: "string" },
+                                    example: ["2023-2024", "2022-2023", "2021-2022"]
+                                }
+                            }
+                        }
+                    },
+                },
+            },
+            500: {
+                description: "Internal server error",
+            },
+        },
+    }),
+    ClassController.getAcademicYears
+);
+
 export default app;

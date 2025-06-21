@@ -533,4 +533,69 @@ export class ClassController {
             }
         }
     };
+
+    // Get students by academic year and optional class_id filter
+    public static readonly getStudentsByYearAndClass = async (ctx: Context) => {
+        try {
+            const campus_id = ctx.get("campus_id");
+            const { academic_year, class_id } = ctx.req.query();
+
+            if (!academic_year) {
+                return ctx.json({ error: "academic_year query parameter is required" }, 400);
+            }
+
+            const result = await classService.getStudentsByYearAndClassId(
+                campus_id,
+                academic_year,
+                class_id
+            );
+
+            return ctx.json(result);
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json({ error: error.message }, 500);
+            }
+            return ctx.json({ error: "Internal server error" }, 500);
+        }
+    };
+
+    // Get students grouped by class for a specific academic year
+    public static readonly getStudentsGroupedByClassForYear = async (ctx: Context) => {
+        try {
+            const campus_id = ctx.get("campus_id");
+            const { academic_year } = ctx.req.query();
+
+            if (!academic_year) {
+                return ctx.json({ error: "academic_year query parameter is required" }, 400);
+            }
+
+            const result = await classService.getStudentsGroupedByClassForYear(
+                campus_id,
+                academic_year
+            );
+
+            return ctx.json(result);
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json({ error: error.message }, 500);
+            }
+            return ctx.json({ error: "Internal server error" }, 500);
+        }
+    };
+
+    // Get all available academic years for the campus
+    public static readonly getAcademicYears = async (ctx: Context) => {
+        try {
+            const campus_id = ctx.get("campus_id");
+
+            const academicYears = await classService.getAcademicYearsByCampus(campus_id);
+
+            return ctx.json({ academic_years: academicYears });
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json({ error: error.message }, 500);
+            }
+            return ctx.json({ error: "Internal server error" }, 500);
+        }
+    };
 }

@@ -22,6 +22,18 @@ export class ClassService {
 
             return {
                 ...classData,
+                // add teacher data (Name, email, phone) to classData
+                class_teacher: classData.class_teacher_id
+                    ? await TeacherService.getTeacherById(
+                          classData.class_teacher_id
+                      )
+                    : [],
+                // add student data (Name, email, phone) to classData
+                students: classData.student_ids
+                    ? await Promise.all(
+                          classData.student_ids.map((id: string) => UserService.getUser(id))
+                      )
+                    : [],
             };
         } catch (error) {
             console.error("Error fetching class by ID:", error);
@@ -752,7 +764,7 @@ export class ClassService {
                 if (!student) {
                     throw new Error(`Student with ID ${studentId} not found`);
                 }
-                if (student.user_type !== "student") {
+                if (student.user_type !== "Student") {
                     throw new Error(`User with ID ${studentId} is not a student`);
                 }
                 if (!student.is_active || student.is_deleted) {
@@ -1066,6 +1078,221 @@ export class ClassService {
             return assignments.rows;
         } catch (error) {
             console.error("Error fetching all assignments from all classes:", error);
+            return [];
+        }
+    }
+
+    // Get all students by academic year filtered by class_id
+    public async getStudentsByYearAndClassId(
+        campus_id: string,
+        academic_year: string,
+        class_id?: string
+    ): Promise<{
+        students: IUser[];
+        academic_year: string;
+        total_students: number;
+        classes_included: IClassData[];
+    }> {
+        try {
+            let classesQuery: any = {
+                campus_id,
+                academic_year,
+                is_active: true,
+                is_deleted: false,
+            };
+
+            // If class_id is provided, filter by specific class
+            if (class_id) {
+                classesQuery.id = class_id;
+            }
+
+            // Get classes for the specified academic year (and optionally specific class)
+            const classes: {
+                rows: IClassData[];
+            } = await Class.find(classesQuery, {
+                sort: {
+                    name: "ASC",
+                },
+            });
+
+            if (classes.rows.length === 0) {
+                throw new Error(
+                    class_id 
+                        ? `No class found with ID: ${class_id} for academic year: ${academic_year}`
+                        : `No classes found for academic year: ${academic_year}`
+                );
+            }
+
+            // Collect all unique student IDs from all classes
+            const studentIds = new Set<string>();
+            classes.rows.forEach(classData => {
+                if (classData.student_ids && classData.student_ids.length > 0) {
+                    classData.student_ids.forEach(studentId => {
+                        studentIds.add(studentId);
+                    });
+                }
+            });
+
+            if (studentIds.size === 0) {
+                return {
+                    students: [],
+                    academic_year,
+                    total_students: 0,
+                    classes_included: classes.rows,
+                };
+            }
+
+            // Get detailed student information
+            const studentsData = await Promise.all(
+                Array.from(studentIds).map(async (studentId) => {
+                    try {
+                        return await UserService.getUser(studentId);
+                    } catch (error) {
+                        console.warn(`Failed to get student data for ID: ${studentId}`, error);
+                        return null;
+                    }
+                })
+            );
+
+            // Filter out null values (failed to fetch students)
+            const validStudents = studentsData.filter(student => student !== null) as IUser[];
+
+            // Sort students by name
+            validStudents.sort((a, b) => {
+                const nameA = `${a.first_name} ${a.last_name}`.toLowerCase();
+                const nameB = `${b.first_name} ${b.last_name}`.toLowerCase();
+                return nameA.localeCompare(nameB);
+            });
+
+            return {
+                students: validStudents,
+                academic_year,
+                total_students: validStudents.length,
+                classes_included: classes.rows,
+            };
+        } catch (error) {
+            console.error("Error fetching students by year and class ID:", error);
+            throw error;
+        }
+    }
+
+    // Get students grouped by class for a specific academic year
+    public async getStudentsGroupedByClassForYear(
+        campus_id: string,
+        academic_year: string
+    ): Promise<{
+        academic_year: string;
+        total_students: number;
+        total_classes: number;
+        classes: Array<{
+            class_info: IClassData;
+            students: IUser[];
+            student_count: number;
+        }>;
+    }> {
+        try {
+            // Get all classes for the academic year
+            const classes: {
+                rows: IClassData[];
+            } = await Class.find(
+                {
+                    campus_id,
+                    academic_year,
+                    is_active: true,
+                    is_deleted: false,
+                },
+                {
+                    sort: {
+                        name: "ASC",
+                    },
+                }
+            );
+
+            if (classes.rows.length === 0) {
+                throw new Error(`No classes found for academic year: ${academic_year}`);
+            }
+
+            // Get students for each class
+            const classesWithStudents = await Promise.all(
+                classes.rows.map(async (classData) => {
+                    let students: IUser[] = [];
+                    
+                    if (classData.student_ids && classData.student_ids.length > 0) {
+                        const studentsData = await Promise.all(
+                            classData.student_ids.map(async (studentId) => {
+                                try {
+                                    return await UserService.getUser(studentId);
+                                } catch (error) {
+                                    console.warn(`Failed to get student data for ID: ${studentId}`, error);
+                                    return null;
+                                }
+                            })
+                        );
+                        
+                        students = studentsData.filter(student => student !== null) as IUser[];
+                        
+                        // Sort students by name
+                        students.sort((a, b) => {
+                            const nameA = `${a.first_name} ${a.last_name}`.toLowerCase();
+                            const nameB = `${b.first_name} ${b.last_name}`.toLowerCase();
+                            return nameA.localeCompare(nameB);
+                        });
+                    }
+
+                    return {
+                        class_info: classData,
+                        students,
+                        student_count: students.length,
+                    };
+                })
+            );
+
+            // Calculate total students across all classes
+            const totalStudents = classesWithStudents.reduce(
+                (total, classWithStudents) => total + classWithStudents.student_count,
+                0
+            );
+
+            return {
+                academic_year,
+                total_students: totalStudents,
+                total_classes: classes.rows.length,
+                classes: classesWithStudents,
+            };
+        } catch (error) {
+            console.error("Error fetching students grouped by class for year:", error);
+            throw error;
+        }
+    }
+
+    // Get all unique academic years for a campus
+    public async getAcademicYearsByCampus(campus_id: string): Promise<string[]> {
+        try {
+            const classes: {
+                rows: IClassData[];
+            } = await Class.find(
+                {
+                    campus_id,
+                    is_active: true,
+                    is_deleted: false,
+                },
+                {
+                    sort: {
+                        academic_year: "DESC",
+                    },
+                }
+            );
+
+            if (classes.rows.length === 0) {
+                return [];
+            }
+
+            // Get unique academic years
+            const academicYears = [...new Set(classes.rows.map(classData => classData.academic_year))];
+            
+            return academicYears.sort().reverse(); // Most recent first
+        } catch (error) {
+            console.error("Error fetching academic years:", error);
             return [];
         }
     }

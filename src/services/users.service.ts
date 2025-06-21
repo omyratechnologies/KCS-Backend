@@ -202,11 +202,37 @@ export class UserService {
     public static readonly getStudentForParent = async (
         parent_id: string
     ): Promise<IUser[]> => {
+        // First, get the parent to extract student IDs from their meta_data
+        const parentData: {
+            rows: IUser[];
+        } = await User.find({
+            id: parent_id,
+            user_type: "Parent",
+            is_active: true,
+            is_deleted: false,
+        });
+
+        if (parentData.rows.length === 0) {
+            throw new Error("Parent not found");
+        }
+
+        const parent = parentData.rows[0];
+        
+        // Extract student IDs from parent's meta_data
+        const studentIds = (parent.meta_data as any)?.student_id;
+        
+        if (!studentIds || !Array.isArray(studentIds) || studentIds.length === 0) {
+            throw new Error("No students found for the parent");
+        }
+
+        // Query students by the IDs found in parent's meta_data
         const data: {
             rows: IUser[];
         } = await User.find({
+            id: { $in: studentIds },
             user_type: "Student",
-            "meta_data.parent_id": [parent_id],
+            is_active: true,
+            is_deleted: false,
         });
 
         if (data.rows.length === 0) {
