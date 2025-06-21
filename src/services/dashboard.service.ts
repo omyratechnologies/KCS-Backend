@@ -92,6 +92,29 @@ interface ParentDashboardData {
         profile: any;
         grades: any[];
         attendance: any;
+        assignments: {
+            pending: any[];
+            submitted: any[];
+            overdue: any[];
+            total: number;
+        };
+        quizzes: {
+            upcoming: any[];
+            completed: any[];
+            recent: any[];
+        };
+        exams: {
+            upcoming: any[];
+            recent: any[];
+        };
+        library: {
+            booksIssued: any[];
+            dueBooks: any[];
+        };
+        schedule: {
+            today: any[];
+            thisWeek: any[];
+        };
         recentActivities: any[];
         upcomingEvents: any[];
     }[];
@@ -477,26 +500,49 @@ export class DashboardService {
                 throw new Error("Parent not found");
             }
 
-            // Get children (this assumes parent-child relationship exists in your data model)
-            // You might need to adjust this based on your actual data model
+            // Get children IDs from parent's meta_data
+            const childrenIds = profile.meta_data?.student_id || [];
+            
+            if (childrenIds.length === 0) {
+                return {
+                    profile: {
+                        id: profile.id,
+                        name: `${profile.first_name} ${profile.last_name}`,
+                        email: profile.email,
+                    },
+                    children: [],
+                    notifications: {
+                        unread: 0,
+                        recent: [],
+                    },
+                };
+            }
+
+            // Get children details using the IDs from parent's meta_data
             const childrenResult = await User.find({
+                id: { $in: childrenIds },
                 campus_id,
                 user_type: "Student",
                 is_active: true,
                 is_deleted: false,
             });
 
-            const allStudents = childrenResult.rows || [];
-            
-            // Filter children based on parent relationship - adjust this query based on your data model
-            const children = allStudents.filter(child => {
-                // This is a placeholder - implement based on your parent-child relationship model
-                return child.parent_id === user_id || (child.meta_data && child.meta_data.parent_id === user_id);
-            });
+            const children = childrenResult.rows || [];
 
             const childrenData = await Promise.all(
                 children.map(async (child) => {
                     try {
+                        // Get child's classes
+                        const classResult = await Class.find({
+                            campus_id,
+                            student_ids: { $elemMatch: child.id },
+                            is_active: true,
+                            is_deleted: false,
+                        });
+
+                        const classes = classResult.rows || [];
+                        const classIds = classes.map((c) => c.id);
+
                         // Get child's grades
                         const gradesResult = await StudentRecord.find({
                             campus_id,
@@ -519,23 +565,238 @@ export class DashboardService {
                         const totalDays = attendanceRecords.length;
                         const attendancePercentage = totalDays > 0 ? (presentDays / totalDays) * 100 : 0;
 
+                        // Get child's assignments
+                        const assignmentResult = await Assignment.find({
+                            campus_id,
+                            class_id: { $in: classIds },
+                            is_active: true,
+                            is_deleted: false,
+                        });
+
+                        const allAssignments = assignmentResult.rows || [];
+                        const now = new Date();
+                        const pendingAssignments = allAssignments.filter(
+                            (a) => new Date(a.due_date) > now
+                        );
+                        const overdueAssignments = allAssignments.filter(
+                            (a) => new Date(a.due_date) < now
+                        );
+
+                        // Get child's quizzes
+                        const quizResult = await ClassQuiz.find({
+                            campus_id,
+                            class_id: { $in: classIds },
+                            is_active: true,
+                            is_deleted: false,
+                        });
+
+                        const allQuizzes = quizResult.rows || [];
+                        const upcomingQuizzes = allQuizzes.filter(
+                            (q) => new Date(q.quiz_date) > now
+                        );
+                        const completedQuizzes = allQuizzes.filter(
+                            (q) => new Date(q.quiz_date) <= now
+                        );
+
+                        // Get child's exams
+                        const examResult = await Examination.find({
+                            campus_id,
+                            class_id: { $in: classIds },
+                            is_active: true,
+                            is_deleted: false,
+                        });
+
+                        const allExams = examResult.rows || [];
+                        const upcomingExams = allExams.filter(
+                            (e) => new Date(e.exam_date) > now
+                        );
+                        const recentExams = allExams.filter(
+                            (e) => new Date(e.exam_date) <= now
+                        ).slice(0, 5);
+
+                        // Get child's library data
+                        const libraryResult = await Library.find({
+                            campus_id,
+                            user_id: child.id,
+                            is_active: true,
+                            is_deleted: false,
+                        });
+
+                        const libraryRecords = libraryResult.rows || [];
+                        const booksIssued = libraryRecords.filter(
+                            (l) => l.status === "issued"
+                        );
+                        const dueBooks = libraryRecords.filter(
+                            (l) => l.status === "issued" && new Date(l.due_date) < now
+                        );
+
+                        // Get child's schedule (meetings/classes for today and this week)
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const weekEnd = new Date(today);
+                        weekEnd.setDate(today.getDate() + 7);
+
+                        const meetingResult = await Meeting.find({
+                            campus_id,
+                            class_id: { $in: classIds },
+                            meeting_date: { $gte: today, $lte: weekEnd },
+                            is_active: true,
+                            is_deleted: false,
+                        });
+
+                        const meetings = meetingResult.rows || [];
+                        const todayMeetings = meetings.filter(
+                            (m) => new Date(m.meeting_date).toDateString() === today.toDateString()
+                        );
+
                         return {
                             profile: {
                                 id: child.id,
                                 name: `${child.first_name} ${child.last_name}`,
-                                class: "Class details would go here",
+                                email: child.email,
+                                class: classes.length > 0 ? classes[0].name : "No class assigned",
+                                user_id: child.user_id,
                             },
                             grades: grades.slice(0, 5).map((grade) => ({
                                 id: grade.id,
-                                subject: grade.record_data,
+                                subject: grade.record_data?.subject || "Unknown",
+                                grade: grade.record_data?.grade || "N/A",
+                                marks: grade.record_data?.marks || 0,
                                 createdAt: grade.created_at,
                             })),
                             attendance: {
                                 thisMonth: presentDays,
                                 percentage: Math.round(attendancePercentage),
+                                totalDays: totalDays,
+                                recent: attendanceRecords.slice(0, 7).map((a) => ({
+                                    id: a.id,
+                                    date: a.date,
+                                    status: a.status,
+                                })),
                             },
-                            recentActivities: [],
-                            upcomingEvents: [],
+                            assignments: {
+                                pending: pendingAssignments.slice(0, 5).map((a) => ({
+                                    id: a.id,
+                                    title: a.title,
+                                    description: a.description,
+                                    dueDate: a.due_date,
+                                    subject: a.subject,
+                                })),
+                                submitted: [], // This would need assignment submission tracking
+                                overdue: overdueAssignments.slice(0, 5).map((a) => ({
+                                    id: a.id,
+                                    title: a.title,
+                                    description: a.description,
+                                    dueDate: a.due_date,
+                                    subject: a.subject,
+                                })),
+                                total: allAssignments.length,
+                            },
+                            quizzes: {
+                                upcoming: upcomingQuizzes.slice(0, 5).map((q) => ({
+                                    id: q.id,
+                                    title: q.title,
+                                    description: q.description,
+                                    quizDate: q.quiz_date,
+                                    duration: q.duration,
+                                })),
+                                completed: completedQuizzes.slice(0, 5).map((q) => ({
+                                    id: q.id,
+                                    title: q.title,
+                                    quizDate: q.quiz_date,
+                                    score: q.total_marks, // This might need quiz attempt data
+                                })),
+                                recent: allQuizzes.slice(0, 3).map((q) => ({
+                                    id: q.id,
+                                    title: q.title,
+                                    quizDate: q.quiz_date,
+                                    status: new Date(q.quiz_date) > now ? "upcoming" : "completed",
+                                })),
+                            },
+                            exams: {
+                                upcoming: upcomingExams.slice(0, 5).map((e) => ({
+                                    id: e.id,
+                                    title: e.title,
+                                    subject: e.subject,
+                                    examDate: e.exam_date,
+                                    duration: e.duration,
+                                    totalMarks: e.total_marks,
+                                })),
+                                recent: recentExams.map((e) => ({
+                                    id: e.id,
+                                    title: e.title,
+                                    subject: e.subject,
+                                    examDate: e.exam_date,
+                                    totalMarks: e.total_marks,
+                                })),
+                            },
+                            library: {
+                                booksIssued: booksIssued.map((l) => ({
+                                    id: l.id,
+                                    bookTitle: l.book_title,
+                                    issuedDate: l.issued_date,
+                                    dueDate: l.due_date,
+                                    status: l.status,
+                                })),
+                                dueBooks: dueBooks.map((l) => ({
+                                    id: l.id,
+                                    bookTitle: l.book_title,
+                                    dueDate: l.due_date,
+                                    daysOverdue: Math.floor((now.getTime() - new Date(l.due_date).getTime()) / (1000 * 60 * 60 * 24)),
+                                })),
+                            },
+                            schedule: {
+                                today: todayMeetings.map((m) => ({
+                                    id: m.id,
+                                    title: m.title,
+                                    subject: m.subject,
+                                    time: m.meeting_time,
+                                    duration: m.duration,
+                                    type: m.meeting_type,
+                                })),
+                                thisWeek: meetings.map((m) => ({
+                                    id: m.id,
+                                    title: m.title,
+                                    subject: m.subject,
+                                    date: m.meeting_date,
+                                    time: m.meeting_time,
+                                    type: m.meeting_type,
+                                })),
+                            },
+                            recentActivities: [
+                                ...pendingAssignments.slice(0, 2).map((a) => ({
+                                    type: "assignment",
+                                    title: `New assignment: ${a.title}`,
+                                    date: a.created_at,
+                                })),
+                                ...upcomingQuizzes.slice(0, 2).map((q) => ({
+                                    type: "quiz",
+                                    title: `Upcoming quiz: ${q.title}`,
+                                    date: q.quiz_date,
+                                })),
+                                ...upcomingExams.slice(0, 2).map((e) => ({
+                                    type: "exam",
+                                    title: `Upcoming exam: ${e.title}`,
+                                    date: e.exam_date,
+                                })),
+                            ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5),
+                            upcomingEvents: [
+                                ...upcomingQuizzes.slice(0, 3).map((q) => ({
+                                    type: "quiz",
+                                    title: q.title,
+                                    date: q.quiz_date,
+                                })),
+                                ...upcomingExams.slice(0, 3).map((e) => ({
+                                    type: "exam",
+                                    title: e.title,
+                                    date: e.exam_date,
+                                })),
+                                ...pendingAssignments.slice(0, 3).map((a) => ({
+                                    type: "assignment",
+                                    title: `${a.title} due`,
+                                    date: a.due_date,
+                                })),
+                            ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).slice(0, 5),
                         };
                     } catch (error) {
                         console.error(`Error fetching data for child ${child.id}:`, error);
@@ -543,10 +804,17 @@ export class DashboardService {
                             profile: {
                                 id: child.id,
                                 name: `${child.first_name} ${child.last_name}`,
+                                email: child.email,
                                 class: "Unknown",
+                                user_id: child.user_id,
                             },
                             grades: [],
-                            attendance: { thisMonth: 0, percentage: 0 },
+                            attendance: { thisMonth: 0, percentage: 0, totalDays: 0, recent: [] },
+                            assignments: { pending: [], submitted: [], overdue: [], total: 0 },
+                            quizzes: { upcoming: [], completed: [], recent: [] },
+                            exams: { upcoming: [], recent: [] },
+                            library: { booksIssued: [], dueBooks: [] },
+                            schedule: { today: [], thisWeek: [] },
                             recentActivities: [],
                             upcomingEvents: [],
                         };

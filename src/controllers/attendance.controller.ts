@@ -240,26 +240,87 @@ export class AttendanceController {
         return ctx.json(attendance);
     };
 
+    public static readonly getAttendanceByClassId = async (
+        ctx: Context
+    ) => {
+        const campus_id = ctx.get("campus_id");
+
+        // Get class_id from path parameter
+        const class_id = ctx.req.param("class_id");
+        // Get optional date from query parameter
+        const date = ctx.req.query("date");
+
+        if (!class_id) {
+            return ctx.json({ error: "class_id path parameter is required" }, 400);
+        }
+
+        try {
+            let attendance;
+            
+            if (date) {
+                // If date is provided, filter by date
+                const parsedDate = new Date(date);
+                attendance = await AttendanceService.getAttendanceByClassIdAndDate(
+                    campus_id,
+                    class_id,
+                    parsedDate
+                );
+            } else {
+                // If no date provided, get all attendance for the class
+                attendance = await AttendanceService.getAttendanceByClassId(
+                    campus_id,
+                    class_id
+                );
+            }
+
+            return ctx.json(attendance);
+        } catch (error) {
+            return ctx.json(
+                {
+                    message: "Error retrieving class attendance",
+                    error: error instanceof Error ? error.message : 'Unknown error',
+                },
+                500
+            );
+        }
+    };
+
     public static readonly getAttendanceByClassIdAndDate = async (
         ctx: Context
     ) => {
         const campus_id = ctx.get("campus_id");
 
-        const {
-            class_id,
-            date,
-        }: {
-            class_id: string;
-            date: string;
-        } = await ctx.req.json();
+        // Get parameters from query string instead of request body
+        const class_id = ctx.req.query("class_id");
+        const date = ctx.req.query("date");
 
-        const attendance =
-            await AttendanceService.getAttendanceByClassIdAndDate(
-                campus_id,
-                class_id,
-                new Date(date)
+        if (!class_id) {
+            return ctx.json({ error: "class_id query parameter is required" }, 400);
+        }
+
+        if (!date) {
+            return ctx.json({ error: "date query parameter is required" }, 400);
+        }
+
+        try {
+            const parsedDate = new Date(date);
+            
+            const attendance =
+                await AttendanceService.getAttendanceByClassIdAndDate(
+                    campus_id,
+                    class_id,
+                    parsedDate
+                );
+
+            return ctx.json(attendance);
+        } catch (error) {
+            return ctx.json(
+                {
+                    message: "Error retrieving class attendance",
+                    error: error instanceof Error ? error.message : 'Unknown error',
+                },
+                500
             );
-
-        return ctx.json(attendance);
+        }
     };
 }

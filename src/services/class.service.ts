@@ -22,17 +22,35 @@ export class ClassService {
 
             return {
                 ...classData,
-                // add teacher data (Name, email, phone) to classData
-                class_teacher: classData.class_teacher_id
-                    ? await TeacherService.getTeacherById(
-                          classData.class_teacher_id
-                      )
+                // only send response teacher data (Name, email, phone) to response
+                class_teacher: classData.teacher_ids
+                    ? await Promise.all(classData.teacher_ids.map(async (teacherId) => {
+                        const teacher = await TeacherService.getTeacherById(teacherId);
+                        if (!teacher) {
+                            throw new Error(`Teacher with ID ${teacherId} not found`);
+                        }
+                        return {
+                            id: teacher.id,
+                            name: `${teacher.teacher_profile.first_name} ${teacher.teacher_profile.last_name}`,
+                            email: teacher.teacher_profile.email,
+                            phone: teacher.teacher_profile.phone,
+                        };
+                    }))
                     : [],
-                // add student data (Name, email, phone) to classData
-                students: classData.student_ids
-                    ? await Promise.all(
-                          classData.student_ids.map((id: string) => UserService.getUser(id))
-                      )
+                // only send response student data (Name, email, phone) to response
+                class_students: classData.student_ids
+                    ? await Promise.all(classData.student_ids.map(async (studentId) => {
+                        const student = await UserService.getUser(studentId);
+                        if (!student) {
+                            throw new Error(`Student with ID ${studentId} not found`);
+                        }
+                        return {
+                            id: student.id,
+                            name: `${student.first_name} ${student.last_name}`,
+                            email: student.email,
+                            phone: student.phone,
+                        };
+                    }))
                     : [],
             };
         } catch (error) {
@@ -809,23 +827,32 @@ export class ClassService {
             for (const studentId of validStudents) {
                 const student = await UserService.getUser(studentId);
                 if (student) {
-                    if (!student.meta_data) {
-                        student.meta_data = {};
+                    // Parse meta_data if it's a string, otherwise use as object
+                    let currentMetaData: any = {};
+                    if (student.meta_data) {
+                        if (typeof student.meta_data === 'string') {
+                            try {
+                                currentMetaData = JSON.parse(student.meta_data);
+                            } catch (e) {
+                                currentMetaData = {};
+                            }
+                        } else {
+                            currentMetaData = student.meta_data;
+                        }
                     }
                     
-                    // Ensure meta_data has a 'classes' property as an array
-                    if (!(student.meta_data as { classes?: string[] }).classes) {
-                        (student.meta_data as { classes?: string[] }).classes = [];
-                    }
+                    const currentClasses = currentMetaData.classes || [];
                     
-                    const studentClasses = (student.meta_data as { classes: string[] }).classes;
-                    if (!studentClasses.includes(classId)) {
-                        studentClasses.push(classId);
+                    // Check if class is already assigned to avoid duplicates
+                    if (!currentClasses.includes(classId)) {
+                        const updatedClasses = [...currentClasses, classId];
+                        const updatedMetaData = {
+                            ...currentMetaData,
+                            classes: updatedClasses
+                        };
+                        
                         await UserService.updateUsers(student.id, {
-                            meta_data: JSON.stringify({
-                                ...student.meta_data,
-                                classes: studentClasses
-                            }),
+                            meta_data: JSON.stringify(updatedMetaData),
                         });
                     }
                 }
@@ -967,22 +994,6 @@ export class ClassService {
 
             if (!updatedClass) {
                 throw new Error("Failed to update class");
-            }
-
-            // Update each student's meta_data to remove the class
-            for (const studentId of studentIds) {
-                const student = await UserService.getUser(studentId);
-                if (student && student.meta_data) {
-                    const studentClasses = (student.meta_data as { classes?: string[] }).classes || [];
-                    const updatedClasses = studentClasses.filter(id => id !== classId);
-                    
-                    await UserService.updateUsers(student.id, {
-                        meta_data: JSON.stringify({
-                            ...student.meta_data,
-                            classes: updatedClasses
-                        }),
-                    });
-                }
             }
 
             return updatedClass;

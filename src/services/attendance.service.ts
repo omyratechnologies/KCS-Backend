@@ -269,40 +269,67 @@ export class AttendanceService {
         class_id: string,
         date: Date
     ): Promise<IAttendanceData[]> => {
-        // Approach 1: If attendance records have class_id
-        const attendanceWithClassId = await Attendance.find({
-            campus_id,
-            class_id,
-            date,
-        });
+        // Convert date to start and end of day for filtering
+        const startOfDay = new Date(date);
+        startOfDay.setUTCHours(0, 0, 0, 0);
+        
+        const endOfDay = new Date(date);
+        endOfDay.setUTCHours(23, 59, 59, 999);
 
-        if (attendanceWithClassId.rows.length > 0) {
-            return attendanceWithClassId.rows;
+        // Approach 1: Get attendance records by class_id only, then filter by date
+        try {
+            const attendanceWithClassId = await Attendance.find({
+                campus_id,
+                class_id
+            });
+            
+            // Filter by date on the application side
+            const filteredAttendance = attendanceWithClassId.rows.filter(record => {
+                const recordDate = new Date(record.date);
+                return recordDate >= startOfDay && recordDate <= endOfDay;
+            });
+
+            if (filteredAttendance.length > 0) {
+                return filteredAttendance;
+            }
+        } catch (error) {
+            // Continue to approach 2 if this fails
         }
 
         // Approach 2: Fallback - get class students and find their attendance
-        const classData = await Class.findById(class_id);
-        if (!classData || !classData.student_ids) {
-            throw new Error("Class not found or has no students");
-        }
+        try {
+            const classData = await Class.findById(class_id);
+            if (!classData || !classData.student_ids) {
+                throw new Error("Class not found or has no students");
+            }
 
-        const students = classData.student_ids;
-        const attendancePromises = students.map(async (student) => {
-            return await Attendance.findOne({
-                campus_id,
-                user_id: student,
-                date,
+            const attendancePromises = classData.student_ids.map(async (student) => {
+                try {
+                    // Query attendance by campus_id and user_id only, then filter by date
+                    const userAttendance = await Attendance.find({
+                        campus_id,
+                        user_id: student,
+                    });
+                    
+                    // Filter by date
+                    const filtered = userAttendance.rows.filter(record => {
+                        const recordDate = new Date(record.date);
+                        return recordDate >= startOfDay && recordDate <= endOfDay;
+                    });
+                    
+                    return filtered[0] || null; // Return first match or null
+                } catch (error) {
+                    return null;
+                }
             });
-        });
 
-        const attendances = await Promise.all(attendancePromises);
-        const validAttendances = attendances.filter(attendance => attendance !== null);
+            const attendances = await Promise.all(attendancePromises);
+            const validAttendances = attendances.filter(attendance => attendance !== null);
 
-        if (validAttendances.length === 0) {
-            throw new Error("No attendances found for this class on the specified date");
+            return validAttendances; // Return empty array if no records found
+        } catch (error) {
+            throw new Error("Unable to retrieve attendance records");
         }
-
-        return validAttendances;
     };
 
     // Dedicated method for marking class attendance
@@ -374,5 +401,54 @@ export class AttendanceService {
             error_count: errors.length,
             class_id,
         };
+    };
+
+    // Get all attendance for a specific class (without date filter)
+    public static readonly getAttendanceByClassId = async (
+        campus_id: string,
+        class_id: string
+    ): Promise<IAttendanceData[]> => {
+        // Approach 1: Get attendance records by class_id
+        try {
+            const attendanceWithClassId = await Attendance.find({
+                campus_id,
+                class_id
+            });
+
+            if (attendanceWithClassId.rows.length > 0) {
+                return attendanceWithClassId.rows;
+            }
+        } catch (error) {
+            // Continue to approach 2 if this fails
+        }
+
+        // Approach 2: Fallback - get class students and find all their attendance
+        try {
+            const classData = await Class.findById(class_id);
+            if (!classData || !classData.student_ids) {
+                throw new Error("Class not found or has no students");
+            }
+
+            const attendancePromises = classData.student_ids.map(async (student) => {
+                try {
+                    // Query attendance by campus_id and user_id
+                    const userAttendance = await Attendance.find({
+                        campus_id,
+                        user_id: student,
+                    });
+                    
+                    return userAttendance.rows || [];
+                } catch (error) {
+                    return [];
+                }
+            });
+
+            const attendanceArrays = await Promise.all(attendancePromises);
+            const allAttendances = attendanceArrays.flat(); // Flatten the array of arrays
+
+            return allAttendances;
+        } catch (error) {
+            throw new Error("Unable to retrieve attendance records");
+        }
     };
 }

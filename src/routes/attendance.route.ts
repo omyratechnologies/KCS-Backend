@@ -170,16 +170,37 @@ app.get(
 );
 
 app.get(
-    "/class-attendance",
+    "/class-attendance/:class_id",
     describeRoute({
         tags: ["Attendance"],
-        operationId: "getAttendanceByClassIdAndDate",
-        summary: "Get attendance by class ID and date",
+        operationId: "getAttendanceByClassId",
+        summary: "Get all attendance records for a class",
         description:
-            "Retrieves attendance records for a specific class on a specific date",
+            "Retrieves all attendance records for a specific class",
+        parameters: [
+            {
+                name: "class_id",
+                in: "path",
+                required: true,
+                schema: {
+                    type: "string",
+                },
+                description: "The class ID to get attendance records for",
+            },
+            {
+                name: "date",
+                in: "query",
+                required: false,
+                schema: {
+                    type: "string",
+                    format: "date-time",
+                },
+                description: "Optional: Filter by specific date (ISO 8601 format)",
+            },
+        ],
         responses: {
             200: {
-                description: "List of attendance records",
+                description: "List of attendance records for the class",
                 content: {
                     "application/json": {
                         schema: resolver(
@@ -188,10 +209,22 @@ app.get(
                     },
                 },
             },
+            400: {
+                description: "Bad request - invalid class ID",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
         },
     }),
-    zValidator("json", getAttendanceByClassIdAndDateRequestBodySchema),
-    AttendanceController.getAttendanceByClassIdAndDate
+    AttendanceController.getAttendanceByClassId
 );
 
 app.get(
