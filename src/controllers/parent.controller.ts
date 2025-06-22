@@ -34,7 +34,7 @@ export class ParentController {
                 return ctx.json({
                     success: false,
                     message: error.message,
-                });
+                }, 400);
             }
         }
     };

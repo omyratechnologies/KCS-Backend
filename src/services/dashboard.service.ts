@@ -1,8 +1,10 @@
 import { Attendance } from "@/models/attendance.model";
 import { Class } from "@/models/class.model";
+import { ClassSubject } from "@/models/class_subject.model";
 import { Course } from "@/models/course.model";
 import { Examination } from "@/models/examination.model";
 import { Library } from "@/models/library.model";
+import { LibraryIssue } from "@/models/library_issue.model";
 import { Meeting } from "@/models/meeting.model";
 import { StudentNotification } from "@/models/student_notification.model";
 import { TeacherNotification } from "@/models/teacher_notification.model";
@@ -14,6 +16,7 @@ import { Assignment } from "@/models/assignment.model";
 import { ClassQuiz } from "@/models/class_quiz.model";
 import { CampusWideNotification } from "@/models/campus_wide_notification.model";
 import { ParentNotification } from "@/models/parent_notification.model";
+import { Timetable } from "@/models/time_table.model";
 
 // Dashboard Data Interfaces
 interface StudentDashboardData {
@@ -72,8 +75,7 @@ interface TeacherDashboardData {
         recent: any[];
     };
     schedule: {
-        today: any[];
-        thisWeek: any[];
+        upcoming: any[];
     };
     notifications: {
         unread: number;
@@ -173,25 +175,28 @@ export class DashboardService {
             }
 
             // Get student's classes
-            const classResult = await Class.find({
+            // First get all classes for the campus, then filter by student_ids in JavaScript
+            const allClassesResult = await Class.find({
                 campus_id,
-                student_ids: { $elemMatch: user_id },
                 is_active: true,
                 is_deleted: false,
             });
 
-            const classes = classResult.rows || [];
+            const allClasses = allClassesResult.rows || [];
+            const classes = allClasses.filter(cls => 
+                cls.student_ids && cls.student_ids.includes(user_id)
+            );
             const classIds = classes.map((c) => c.id);
 
             // Get assignments for student's classes
-            const assignmentResult = await Assignment.find({
-                campus_id,
-                class_id: { $in: classIds },
-                is_active: true,
-                is_deleted: false,
-            });
-
-            const allAssignments = assignmentResult.rows || [];
+            let allAssignments: any[] = [];
+            if (classIds.length > 0) {
+                const assignmentResult = await Assignment.find({
+                    campus_id,
+                    class_id: { $in: classIds },
+                });
+                allAssignments = assignmentResult.rows || [];
+            }
 
             // Categorize assignments
             const now = new Date();
@@ -237,8 +242,8 @@ export class DashboardService {
             const notifications = notificationResult.rows || [];
             const unreadNotifications = notifications.filter((n) => !n.is_seen).length;
 
-            // Get library books
-            const libraryResult = await Library.find({
+            // Get library books issued to student
+            const libraryResult = await LibraryIssue.find({
                 campus_id,
                 user_id,
                 is_returned: false,
@@ -363,52 +368,135 @@ export class DashboardService {
                 throw new Error("Teacher not found");
             }
 
-            // Get teacher record
+            // Get teacher_id from user metadata
+            let teacherId: string | undefined;
+            if (profile.meta_data) {
+                // Handle both string and object meta_data formats
+                let metaData = profile.meta_data;
+                if (typeof profile.meta_data === 'string') {
+                    try {
+                        metaData = JSON.parse(profile.meta_data);
+                    } catch {
+                        metaData = {};
+                    }
+                }
+                teacherId = (metaData as any)?.teacher_id;
+            }
+
+            // If no teacher_id in metadata, try to get it from Teacher table
+            if (!teacherId) {
+                const teacherResult = await Teacher.find({
+                    campus_id,
+                    user_id,
+                });
+                teacherId = teacherResult.rows?.[0]?.id;
+            }
+
+            // Get teacher's classes using teacher_id
+            let classes: any[] = [];
+            if (teacherId) {
+                // Get all classes first, then filter in JavaScript
+                const allClassesResult = await Class.find({
+                    campus_id,
+                    is_active: true,
+                    is_deleted: false,
+                });
+                
+                const allClasses = allClassesResult.rows || [];
+                
+                // Filter classes where teacher is assigned
+                classes = allClasses.filter(cls => {
+                    const isClassTeacher = cls.class_teacher_id === teacherId;
+                    const isAssignedTeacher = cls.teacher_ids && cls.teacher_ids.includes(teacherId);
+                    return isClassTeacher || isAssignedTeacher;
+                });
+            }
+
+            // Get teacher's subjects from Teacher record or ClassSubject
+            let subjects: any[] = [];
+            
+            // First, get the Teacher record by user_id
             const teacherResult = await Teacher.find({
                 campus_id,
                 user_id,
             });
-
             const teacherRecord = teacherResult.rows?.[0];
-            const teacherId = teacherRecord?.id;
-
-            // Get teacher's classes
-            const classResult = await Class.find({
-                campus_id,
-                $or: [
-                    { class_teacher_id: teacherId },
-                    { teacher_ids: { $in: [teacherId] } },
-                ],
-                is_active: true,
-                is_deleted: false,
-            });
-
-            const classes = classResult.rows || [];
-
-            // Get teacher's subjects
-            const subjectIds = teacherRecord?.subjects || [];
-            const subjectResult = await Subject.find({
-                campus_id,
-                id: { $in: subjectIds },
-                is_active: true,
-                is_deleted: false,
-            });
-
-            const subjects = subjectResult.rows || [];
+            
+            if (teacherRecord?.subjects && teacherRecord.subjects.length > 0) {
+                // Get subjects from Teacher record
+                const subjectResult = await Subject.find({
+                    campus_id,
+                    id: { $in: teacherRecord.subjects },
+                    is_active: true,
+                    is_deleted: false,
+                });
+                subjects = subjectResult.rows || [];
+            } else if (teacherId) {
+                // Get subjects from ClassSubject table using teacherId
+                try {
+                    const classSubjectResult = await ClassSubject.find({
+                        campus_id,
+                        teacher_id: teacherId,
+                    });
+                    
+                    const subjectIds = [...new Set(classSubjectResult.rows?.map((cs: any) => cs.subject_id) || [])];
+                    
+                    if (subjectIds.length > 0) {
+                        const subjectResult = await Subject.find({
+                            campus_id,
+                            id: { $in: subjectIds },
+                            is_active: true,
+                            is_deleted: false,
+                        });
+                        subjects = subjectResult.rows || [];
+                    }
+                } catch (error) {
+                    console.error("Error fetching subjects from ClassSubject:", error);
+                }
+            }
 
             // Get total students count
             const totalStudents = classes.reduce((sum, c) => sum + (c.student_count || 0), 0);
 
             // Get assignments to grade
             const classIds = classes.map((c) => c.id);
-            const assignmentResult = await Assignment.find({
-                campus_id,
-                class_id: { $in: classIds },
-                is_active: true,
-                is_deleted: false,
-            });
-
-            const assignmentsToGrade = assignmentResult.rows || [];
+            let assignmentsToGrade: any[] = [];
+            
+            if (classIds.length > 0) {
+                // Get assignments for teacher's classes
+                const assignmentResult = await Assignment.find({
+                    campus_id,
+                    class_id: { $in: classIds },
+                });
+                
+                // Filter assignments created by this teacher (user_id should match)
+                const allAssignments = assignmentResult.rows || [];
+                assignmentsToGrade = allAssignments.filter(assignment => 
+                    assignment.user_id === user_id
+                );
+            }
+            
+            // Also get assignments by teacher's user_id directly (alternative approach)
+            try {
+                const teacherAssignmentsResult = await Assignment.find({
+                    campus_id,
+                    user_id,
+                });
+                
+                const teacherAssignments = teacherAssignmentsResult.rows || [];
+                
+                // Merge and deduplicate assignments
+                const allTeacherAssignments = [...assignmentsToGrade];
+                teacherAssignments.forEach(assignment => {
+                    if (!allTeacherAssignments.find(a => a.id === assignment.id)) {
+                        allTeacherAssignments.push(assignment);
+                    }
+                });
+                
+                assignmentsToGrade = allTeacherAssignments;
+            } catch (error) {
+                console.error("Error fetching teacher assignments:", error);
+            }
 
             // Get notifications
             const notificationResult = await TeacherNotification.find({
@@ -420,6 +508,77 @@ export class DashboardService {
 
             const notifications = notificationResult.rows || [];
             const unreadNotifications = notifications.filter((n) => !n.is_seen).length;
+
+            // Get teacher's schedule/timetable
+            let upcomingClasses: any[] = [];
+            
+            // Get the Teacher record to find the correct teacher_id for timetable
+            const teacherRecordForTimetable = teacherResult.rows?.[0];
+            const timetableTeacherId = teacherRecordForTimetable?.id || teacherId;
+            
+            if (timetableTeacherId) {
+                try {
+                    // Get all active timetable entries for the teacher
+                    const allTimetableResult = await Timetable.find({
+                        campus_id,
+                        teacher_id: timetableTeacherId,
+                        is_active: true,
+                        is_deleted: false,
+                        is_cancelled: false,
+                        is_suspended: false,
+                    });
+                    
+                    const allSchedule = allTimetableResult.rows || [];
+                    
+                    // Get current date and time
+                    const now = new Date();
+                    const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' });
+                    const currentTime = now.toTimeString().slice(0, 5); // Format: "HH:MM"
+                    
+                    // Define day order for sorting
+                    const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+                    const currentDayIndex = dayOrder.indexOf(currentDay);
+                    
+                    // Filter and sort upcoming classes
+                    const upcomingSchedule = allSchedule
+                        .map(schedule => {
+                            const scheduleDayIndex = dayOrder.indexOf(schedule.day);
+                            return {
+                                ...schedule,
+                                dayIndex: scheduleDayIndex,
+                                isToday: schedule.day === currentDay,
+                                isPast: schedule.day === currentDay && schedule.end_time < currentTime
+                            };
+                        })
+                        .filter(schedule => {
+                            // Include classes that are:
+                            // 1. Later today (not yet finished)
+                            // 2. On future days this week
+                            // 3. Next week's classes if needed
+                            if (schedule.isToday) {
+                                return !schedule.isPast; // Only future classes today
+                            }
+                            return schedule.dayIndex > currentDayIndex || schedule.dayIndex < currentDayIndex;
+                        })
+                        .sort((a, b) => {
+                            // Sort by day, then by start time
+                            if (a.day === b.day) {
+                                return a.start_time.localeCompare(b.start_time);
+                            }
+                            
+                            // Handle week boundary (today to end of week, then start of next week)
+                            const aDayFromToday = a.dayIndex >= currentDayIndex ? a.dayIndex - currentDayIndex : 7 + a.dayIndex - currentDayIndex;
+                            const bDayFromToday = b.dayIndex >= currentDayIndex ? b.dayIndex - currentDayIndex : 7 + b.dayIndex - currentDayIndex;
+                            
+                            return aDayFromToday - bDayFromToday;
+                        })
+                        .slice(0, 3); // Get only the next 3 upcoming classes
+                    
+                    upcomingClasses = upcomingSchedule;
+                } catch (error) {
+                    console.error("Error fetching teacher schedule:", error);
+                }
+            }
 
             return {
                 profile: {
@@ -453,8 +612,22 @@ export class DashboardService {
                     recent: [],
                 },
                 schedule: {
-                    today: [],
-                    thisWeek: [],
+                    upcoming: upcomingClasses.map((t) => ({
+                        id: t.id,
+                        classId: t.class_id,
+                        subjectId: t.subject_id,
+                        day: t.day,
+                        startTime: t.start_time,
+                        endTime: t.end_time,
+                        isActive: t.is_active,
+                        isCancelled: t.is_cancelled,
+                        isSuspended: t.is_suspended,
+                        isAdjourned: t.is_adjourned,
+                        isToday: t.isToday,
+                        // Add class and subject names if available
+                        className: classes.find(c => c.id === t.class_id)?.name || 'Unknown Class',
+                        subjectName: subjects.find(s => s.id === t.subject_id)?.name || 'Unknown Subject',
+                    })),
                 },
                 notifications: {
                     unread: unreadNotifications,
