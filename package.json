@@ -25,6 +25,7 @@
         "mustache": "^4.2.0",
         "napi-nanoid": "^0.2.0",
         "node-fetch": "^2.7.0",
+        "openapi-types": "^12.1.3",
         "ottoman": "^2.5.2",
         "pino": "^9.7.0",
         "zod": "^3.25.49",
