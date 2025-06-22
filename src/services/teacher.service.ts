@@ -19,6 +19,42 @@ export class TeacherService {
         if (!teacher) {
             throw new Error("Teacher not created");
         }
+
+        // Update the user's meta_data with the teacher_id
+        if (teacherData.user_id) {
+            try {
+                const user = await UserService.getUser(teacherData.user_id);
+                if (user) {
+                    // Parse existing meta_data if it's a string, otherwise use as object
+                    let existingMetaData = {};
+                    if (typeof user.meta_data === 'string') {
+                        try {
+                            existingMetaData = JSON.parse(user.meta_data);
+                        } catch {
+                            existingMetaData = {};
+                        }
+                    } else if (user.meta_data && typeof user.meta_data === 'object') {
+                        existingMetaData = user.meta_data;
+                    }
+                    
+                    // Add teacher_id to meta_data
+                    const updatedMetaData = {
+                        ...existingMetaData,
+                        teacher_id: teacher.id
+                    };
+
+                    // Update the user with the new meta_data (will be converted to JSON string by validation)
+                    await UserService.updateUsers(teacherData.user_id, {
+                        meta_data: updatedMetaData as any
+                    });
+                }
+            } catch (error) {
+                console.error(`Failed to update user meta_data with teacher_id: ${error}`);
+                // Don't throw error here as teacher creation was successful
+                // Just log the error for debugging
+            }
+        }
+
         return teacher;
     }
 
@@ -111,6 +147,38 @@ export class TeacherService {
         const teacher = await Teacher.findById(id);
         if (!teacher) {
             throw new Error("Teacher not found");
+        }
+
+        // Remove teacher_id from user's meta_data before deleting teacher
+        if (teacher.user_id) {
+            try {
+                const user = await UserService.getUser(teacher.user_id);
+                if (user) {
+                    // Parse existing meta_data if it's a string, otherwise use as object
+                    let existingMetaData = {};
+                    if (typeof user.meta_data === 'string') {
+                        try {
+                            existingMetaData = JSON.parse(user.meta_data);
+                        } catch {
+                            existingMetaData = {};
+                        }
+                    } else if (user.meta_data && typeof user.meta_data === 'object') {
+                        existingMetaData = user.meta_data;
+                    }
+                    
+                    // Remove teacher_id from meta_data
+                    delete (existingMetaData as any).teacher_id;
+
+                    // Update the user with the updated meta_data
+                    await UserService.updateUsers(teacher.user_id, {
+                        meta_data: existingMetaData as any
+                    });
+                }
+            } catch (error) {
+                console.error(`Failed to remove teacher_id from user meta_data: ${error}`);
+                // Don't throw error here as we still want to delete the teacher
+                // Just log the error for debugging
+            }
         }
 
         const deletedTeacher = await Teacher.removeById(id);
