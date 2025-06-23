@@ -14,10 +14,7 @@ const emailSchema = z.string()
     .email("Invalid email format")
     .max(255, "Email must be less than 255 characters");
 
-const passwordSchema = z.string()
-    .min(8, "Password must be at least 8 characters long")
-    .max(128, "Password must be less than 128 characters")
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, "Password must contain at least one lowercase letter, one uppercase letter, and one number");
+const passwordSchema = z.string();
 
 const nameSchema = z.string()
     .min(1, "Name is required")

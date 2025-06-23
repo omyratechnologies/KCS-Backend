@@ -10,7 +10,13 @@
         "format": "prettier --write .",
         "lint": "eslint . --ext .ts --fix",
         "start": "bun run src/index.ts",
-        "clean": "rm -rf node_modules dist"
+        "clean": "rm -rf node_modules dist",
+        "test": "jest",
+        "test:watch": "jest --watch",
+        "test:coverage": "jest --coverage",
+        "test:users": "jest tests/unit/users.crud.test.ts",
+        "test:services": "jest tests/services/",
+        "test:integration": "jest tests/integration/"
     },
     "dependencies": {
         "@aws-sdk/client-sesv2": "^3.821.0",
@@ -39,10 +45,15 @@
         "@bravo68web/prettier-config": "^1.2.6",
         "@bravo68web/tsconfig": "^1.2.5",
         "@types/bun": "^1.2.15",
+        "@types/jest": "^30.0.0",
         "@types/node-fetch": "^2.6.12",
+        "@types/supertest": "^6.0.3",
         "@types/swagger-ui-dist": "^3.30.5",
         "eslint": "^8.57.1",
+        "jest": "^30.0.2",
         "prettier": "^3.5.3",
+        "supertest": "^7.1.1",
+        "ts-jest": "^29.4.0",
         "type-fest": "^4.41.0",
         "typescript": "^5.8.3"
     },

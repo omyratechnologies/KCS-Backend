@@ -1,6 +1,7 @@
 import { Context } from "hono";
 
 import { AttendanceService } from "@/services/attendance.service";
+import { Class } from "@/models/class.model";
 
 type AttendanceStatus = "present" | "absent" | "late" | "leave";
 type UserType = "Student" | "Teacher";
@@ -317,6 +318,90 @@ export class AttendanceController {
             return ctx.json(
                 {
                     message: "Error retrieving class attendance",
+                    error: error instanceof Error ? error.message : 'Unknown error',
+                },
+                500
+            );
+        }
+    };
+
+    // Get attendance statistics by teacher ID
+    public static readonly getAttendanceStatsByTeacherId = async (ctx: Context) => {
+        const campus_id = ctx.get("campus_id");
+        const teacher_id = ctx.req.param("teacher_id");
+        const date = ctx.req.query("date");
+
+        if (!teacher_id) {
+            return ctx.json({ error: "teacher_id parameter is required" }, 400);
+        }
+
+        try {
+            let parsedDate: Date | undefined;
+            if (date) {
+                parsedDate = new Date(date);
+                if (isNaN(parsedDate.getTime())) {
+                    return ctx.json({ error: "Invalid date format" }, 400);
+                }
+            }
+
+            const stats = await AttendanceService.getAttendanceStatsByTeacherId(
+                campus_id,
+                teacher_id,
+                parsedDate
+            );
+
+            return ctx.json(stats);
+        } catch (error) {
+            return ctx.json(
+                {
+                    message: "Error retrieving attendance statistics",
+                    error: error instanceof Error ? error.message : 'Unknown error',
+                },
+                500
+            );
+        }
+    };
+
+    // Debug helper: Get all classes for a teacher
+    public static readonly getClassesByTeacherId = async (ctx: Context) => {
+        const campus_id = ctx.get("campus_id");
+        const teacher_id = ctx.req.param("teacher_id");
+
+        if (!teacher_id) {
+            return ctx.json({ error: "teacher_id parameter is required" }, 400);
+        }
+
+        try {
+            // Get all classes for debugging
+            const allClasses = await Class.find({
+                campus_id,
+                is_active: true,
+                is_deleted: false
+            });
+
+            const teacherClasses = allClasses.rows?.filter(classData => {
+                return classData.class_teacher_id === teacher_id || 
+                       (classData.teacher_ids && classData.teacher_ids.includes(teacher_id));
+            }) || [];
+
+            return ctx.json({
+                total_classes_in_campus: allClasses.rows?.length || 0,
+                teacher_classes_count: teacherClasses.length,
+                teacher_classes: teacherClasses.map(c => ({
+                    id: c.id,
+                    name: c.name,
+                    class_teacher_id: c.class_teacher_id,
+                    teacher_ids: c.teacher_ids,
+                    student_count: c.student_count,
+                    student_ids_count: c.student_ids?.length || 0
+                })),
+                searched_teacher_id: teacher_id,
+                campus_id: campus_id
+            });
+        } catch (error) {
+            return ctx.json(
+                {
+                    message: "Error retrieving classes",
                     error: error instanceof Error ? error.message : 'Unknown error',
                 },
                 500

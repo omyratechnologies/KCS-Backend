@@ -17,6 +17,7 @@ import {
     bulkAttendanceResponseSchema,
     updateAttendanceRequestBodySchema,
     updateAttendanceResponseSchema,
+    getAttendanceStatsByTeacherIdResponseSchema,
 } from "@/schema/attendance";
 
 const app = new Hono();
@@ -321,6 +322,88 @@ app.patch(
     }),
     zValidator("json", updateAttendanceRequestBodySchema),
     AttendanceController.updateAttendance
+);
+
+app.get(
+    "/teacher/:teacher_id/stats",
+    describeRoute({
+        tags: ["Attendance"],
+        operationId: "getAttendanceStatsByTeacherId",
+        summary: "Get attendance statistics by teacher ID",
+        description:
+            "Retrieves attendance statistics for all classes assigned to a specific teacher, including total classes, completed today, pending today, and average attendance percentage.",
+        responses: {
+            200: {
+                description: "Attendance statistics retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(getAttendanceStatsByTeacherIdResponseSchema),
+                    },
+                },
+            },
+            400: {
+                description: "Bad request - Invalid teacher_id or date format",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                message: { type: "string" },
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    AttendanceController.getAttendanceStatsByTeacherId
+);
+
+app.get(
+    "/teacher/:teacher_id/classes",
+    describeRoute({
+        tags: ["Attendance"],
+        operationId: "getClassesByTeacherId",
+        summary: "Debug: Get all classes for a teacher",
+        description: "Debug endpoint to check what classes are assigned to a teacher",
+        responses: {
+            200: {
+                description: "Classes retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                total_classes_in_campus: { type: "number" },
+                                teacher_classes_count: { type: "number" },
+                                teacher_classes: { 
+                                    type: "array",
+                                    items: { type: "object" }
+                                },
+                                searched_teacher_id: { type: "string" },
+                                campus_id: { type: "string" }
+                            }
+                        }
+                    },
+                },
+            },
+        },
+    }),
+    AttendanceController.getClassesByTeacherId
 );
 
 export default app;

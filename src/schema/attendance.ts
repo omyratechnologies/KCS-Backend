@@ -145,3 +145,37 @@ export const markClassAttendanceResponseSchema = z
         class_id: z.string(),
     })
     .openapi({ ref: "MarkClassAttendanceResponse" });
+
+// Teacher Attendance Stats Response
+export const getAttendanceStatsByTeacherIdResponseSchema = z
+    .object({
+        total_classes: z.number().openapi({ example: 8 }),
+        completed_today: z.number().openapi({ example: 4 }),
+        pending_today: z.number().openapi({ example: 2 }),
+        average_attendance: z.number().openapi({ example: 68 }),
+        date: z.string().openapi({ example: "2023-06-23" }),
+        debug: z.string().optional().openapi({ example: "Debug information" }),
+        classes: z.array(z.object({
+            class_id: z.string().openapi({ example: "class123" }),
+            class_name: z.string().openapi({ example: "Class X - Section A" }),
+            status: z.enum(["completed", "pending", "incomplete"]).openapi({ example: "completed" }),
+            present_count: z.number().openapi({ example: 32 }),
+            total_students: z.number().openapi({ example: 35 }),
+            attendance_rate: z.number().openapi({ example: 91 }),
+            last_updated: z.string().nullable().openapi({ example: "2023-06-23T10:30:00Z" }),
+            error: z.string().optional().openapi({ example: "Unable to fetch attendance data" }),
+        })).openapi({
+            example: [
+                {
+                    class_id: "class123",
+                    class_name: "Class X - Section A",
+                    status: "completed",
+                    present_count: 32,
+                    total_students: 35,
+                    attendance_rate: 91,
+                    last_updated: "2023-06-23T10:30:00Z"
+                }
+            ]
+        }),
+    })
+    .openapi({ ref: "GetAttendanceStatsByTeacherIdResponse" });

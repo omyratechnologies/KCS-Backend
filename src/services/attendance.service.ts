@@ -451,4 +451,171 @@ export class AttendanceService {
             throw new Error("Unable to retrieve attendance records");
         }
     };
+
+    // Get attendance statistics by teacher ID
+    public static readonly getAttendanceStatsByTeacherId = async (
+        campus_id: string,
+        teacher_id: string,
+        date?: Date
+    ) => {
+        try {
+            // Use today's date if no date is provided
+            const targetDate = date || new Date();
+            const startOfDay = new Date(targetDate);
+            startOfDay.setUTCHours(0, 0, 0, 0);
+            
+            const endOfDay = new Date(targetDate);
+            endOfDay.setUTCHours(23, 59, 59, 999);
+
+            // Get all classes for the campus first, then filter by teacher
+            const allClasses = await Class.find({
+                campus_id,
+                is_active: true,
+                is_deleted: false
+            });
+
+            if (!allClasses.rows || allClasses.rows.length === 0) {
+                return {
+                    total_classes: 0,
+                    completed_today: 0,
+                    pending_today: 0,
+                    average_attendance: 0,
+                    classes: [],
+                    debug: "No classes found for campus"
+                };
+            }
+
+            // Filter classes where teacher is involved
+            const teacherClasses = allClasses.rows.filter(classData => {
+                return classData.class_teacher_id === teacher_id || 
+                       (classData.teacher_ids && classData.teacher_ids.includes(teacher_id));
+            });
+
+            if (teacherClasses.length === 0) {
+                return {
+                    total_classes: 0,
+                    completed_today: 0,
+                    pending_today: 0,
+                    average_attendance: 0,
+                    classes: [],
+                    debug: `No classes found for teacher ${teacher_id}. Total classes in campus: ${allClasses.rows.length}`
+                };
+            }
+
+            const totalClasses = teacherClasses.length;
+            let completedToday = 0;
+            let pendingToday = 0;
+            let totalAttendanceRate = 0;
+            let classesWithAttendance = 0;
+
+            const classStatsPromises = teacherClasses.map(async (classData) => {
+                try {
+                    // First try to get attendance by class_id and date range
+                    let classAttendance: { rows: IAttendanceData[] } = { rows: [] };
+                    
+                    try {
+                        classAttendance = await Attendance.find({
+                            campus_id,
+                            class_id: classData.id,
+                            date: {
+                                $gte: startOfDay,
+                                $lte: endOfDay
+                            }
+                        });
+                    } catch (error) {
+                        // If class_id query fails, try getting attendance by students
+                        if (classData.student_ids && classData.student_ids.length > 0) {
+                            const studentAttendancePromises = classData.student_ids.map(async (studentId) => {
+                                try {
+                                    const studentAttendance = await Attendance.find({
+                                        campus_id,
+                                        user_id: studentId,
+                                        date: {
+                                            $gte: startOfDay,
+                                            $lte: endOfDay
+                                        }
+                                    });
+                                    return studentAttendance.rows || [];
+                                } catch (err) {
+                                    return [];
+                                }
+                            });
+                            
+                            const studentAttendanceArrays = await Promise.all(studentAttendancePromises);
+                            classAttendance = { rows: studentAttendanceArrays.flat() };
+                        }
+                    }
+
+                    const hasAttendanceToday = classAttendance.rows && classAttendance.rows.length > 0;
+                    
+                    if (hasAttendanceToday) {
+                        completedToday++;
+                        
+                        // Calculate attendance rate for this class
+                        const presentCount = classAttendance.rows.filter(att => att.status === 'present').length;
+                        const totalStudents = classData.student_count || classData.student_ids?.length || 0;
+                        
+                        if (totalStudents > 0) {
+                            const attendanceRate = (presentCount / totalStudents) * 100;
+                            totalAttendanceRate += attendanceRate;
+                            classesWithAttendance++;
+                        }
+
+                        return {
+                            class_id: classData.id,
+                            class_name: classData.name,
+                            status: 'completed',
+                            present_count: presentCount,
+                            total_students: totalStudents,
+                            attendance_rate: totalStudents > 0 ? Math.round((presentCount / totalStudents) * 100) : 0,
+                            last_updated: classAttendance.rows[0]?.updated_at
+                        };
+                    } else {
+                        pendingToday++;
+                        
+                        return {
+                            class_id: classData.id,
+                            class_name: classData.name,
+                            status: 'pending',
+                            present_count: 0,
+                            total_students: classData.student_count || classData.student_ids?.length || 0,
+                            attendance_rate: 0,
+                            last_updated: null
+                        };
+                    }
+                } catch (error) {
+                    pendingToday++;
+                    return {
+                        class_id: classData.id,
+                        class_name: classData.name,
+                        status: 'incomplete',
+                        present_count: 0,
+                        total_students: classData.student_count || classData.student_ids?.length || 0,
+                        attendance_rate: 0,
+                        last_updated: null,
+                        error: error instanceof Error ? error.message : 'Unknown error'
+                    };
+                }
+            });
+
+            const classStats = await Promise.all(classStatsPromises);
+
+            // Calculate average attendance
+            const averageAttendance = classesWithAttendance > 0 
+                ? Math.round(totalAttendanceRate / classesWithAttendance) 
+                : 0;
+
+            return {
+                total_classes: totalClasses,
+                completed_today: completedToday,
+                pending_today: pendingToday,
+                average_attendance: averageAttendance,
+                date: targetDate.toISOString().split('T')[0],
+                classes: classStats
+            };
+
+        } catch (error) {
+            throw new Error(`Unable to retrieve attendance statistics: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    };
 }

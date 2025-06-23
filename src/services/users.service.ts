@@ -53,9 +53,20 @@ export class UserService {
                 emailQuery.id = { $ne: excludeId };
             }
 
-            const existingUserByEmail = await User.findOne(emailQuery);
-            if (existingUserByEmail) {
-                throw new ConflictError(`User with email '${email}' already exists`);
+            try {
+                const existingUserByEmail = await User.findOne(emailQuery);
+                if (existingUserByEmail) {
+                    throw new ConflictError(`User with email '${email}' already exists`);
+                }
+            } catch (emailCheckError: any) {
+                // DocumentNotFoundError is expected when no user exists - this is good
+                if (emailCheckError.name === 'DocumentNotFoundError' || 
+                    emailCheckError.message?.includes('document not found')) {
+                    // No user found with this email, continue
+                } else {
+                    // Re-throw other errors
+                    throw emailCheckError;
+                }
             }
 
             // Check for duplicate user_id
@@ -64,15 +75,40 @@ export class UserService {
                 userIdQuery.id = { $ne: excludeId };
             }
 
-            const existingUserByUserId = await User.findOne(userIdQuery);
-            if (existingUserByUserId) {
-                throw new ConflictError(`User with user_id '${user_id}' already exists`);
+            try {
+                const existingUserByUserId = await User.findOne(userIdQuery);
+                if (existingUserByUserId) {
+                    throw new ConflictError(`User with user_id '${user_id}' already exists`);
+                }
+            } catch (userIdCheckError: any) {
+                // DocumentNotFoundError is expected when no user exists - this is good
+                if (userIdCheckError.name === 'DocumentNotFoundError' || 
+                    userIdCheckError.message?.includes('document not found')) {
+                    // No user found with this user_id, continue
+                } else {
+                    // Re-throw other errors
+                    throw userIdCheckError;
+                }
             }
+
         } catch (error) {
             if (error instanceof ConflictError) {
                 throw error;
             }
-            throw new DatabaseError("Failed to check for duplicate users");
+            
+            // Better error logging and handling
+            console.error("Database error in duplicate check:", error);
+            
+            // Check if it's a connection issue
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            if (errorMessage.includes('QueryScanConsistency') || 
+                errorMessage.includes('ottoman') ||
+                errorMessage.includes('couchbase') ||
+                errorMessage.includes('undefined is not an object')) {
+                throw new DatabaseError("Database connection not initialized. Please check database configuration and ensure initDB() is called before starting the server.");
+            }
+            
+            throw new DatabaseError("Failed to check for duplicate users: " + (error instanceof Error ? error.message : "Unknown error"));
         }
     }
 
@@ -108,11 +144,19 @@ export class UserService {
             }
 
             return user;
-        } catch (error) {
+        } catch (error: any) {
             if (error instanceof NotFoundError) {
                 throw error;
             }
-            throw new DatabaseError("Failed to retrieve user");
+            
+            // Handle DocumentNotFoundError from Ottoman/Couchbase
+            if (error.name === 'DocumentNotFoundError' || 
+                error.message?.includes('document not found')) {
+                throw new NotFoundError(`User with ID '${id}' not found`);
+            }
+            
+            console.error("Database error in validateUserExists:", error);
+            throw new DatabaseError("Failed to retrieve user: " + (error instanceof Error ? error.message : "Unknown error"));
         }
     }
 
@@ -265,10 +309,17 @@ export class UserService {
 
             return userWithoutSensitiveData;
 
-        } catch (error) {
+        } catch (error: any) {
             if (error instanceof NotFoundError) {
                 throw error;
             }
+            
+            // Handle DocumentNotFoundError from Ottoman/Couchbase
+            if (error.name === 'DocumentNotFoundError' || 
+                error.message?.includes('document not found')) {
+                throw new NotFoundError(`User with ID '${id}' not found`);
+            }
+            
             throw new DatabaseError("Failed to retrieve user: " + (error instanceof Error ? error.message : "Unknown error"));
         }
     };
@@ -597,8 +648,18 @@ export class UserService {
             const query: any = { is_deleted: false };
             query[type] = type === 'email' ? identifier.toLowerCase() : identifier;
 
-            const user = await User.findOne(query);
-            return !!user;
+            try {
+                const user = await User.findOne(query);
+                return !!user;
+            } catch (findError: any) {
+                // DocumentNotFoundError means user doesn't exist - return false
+                if (findError.name === 'DocumentNotFoundError' || 
+                    findError.message?.includes('document not found')) {
+                    return false;
+                }
+                // Re-throw other errors
+                throw findError;
+            }
 
         } catch (error) {
             throw new DatabaseError("Failed to check user existence: " + (error instanceof Error ? error.message : "Unknown error"));
