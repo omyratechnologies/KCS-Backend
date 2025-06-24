@@ -4,656 +4,267 @@ import crypto from "node:crypto";
 import { FindOptions } from "ottoman";
 
 import { IUser, User } from "@/models/user.model";
-import { 
-    ValidationError, 
-    NotFoundError, 
-    ConflictError, 
-    DatabaseError 
-} from "@/utils/errors";
-import { 
-    CreateUserData, 
-    UpdateUserData, 
-    UpdatePasswordData,
-    GetUsersQuery,
-    createUserSchema,
-    updateUserSchema,
-    updatePasswordSchema,
-    getUsersQuerySchema
-} from "@/utils/validation";
 
 export class UserService {
-    private static readonly SALT_ROUNDS = 12;
-    private static readonly DEFAULT_LIMIT = 100;
-    private static readonly MAX_LIMIT = 1000;
-
-    /**
-     * Validates input data using Zod schema
-     */
-    private static validateInput<T>(schema: any, data: unknown): T {
-        const result = schema.safeParse(data);
-        if (!result.success) {
-            const errorMessages = result.error.errors.map(err => `${err.path.join('.')}: ${err.message}`);
-            throw new ValidationError(`Validation failed: ${errorMessages.join(', ')}`);
-        }
-        return result.data;
-    }
-
-    /**
-     * Checks if a user exists by email or user_id to prevent duplicates
-     */
-    private static async checkForDuplicates(
-        email: string, 
-        user_id: string, 
-        excludeId?: string
-    ): Promise<void> {
-        try {
-            // Check for duplicate email
-            const emailQuery: any = { email: email.toLowerCase(), is_deleted: false };
-            if (excludeId) {
-                emailQuery.id = { $ne: excludeId };
-            }
-
-            try {
-                const existingUserByEmail = await User.findOne(emailQuery);
-                if (existingUserByEmail) {
-                    throw new ConflictError(`User with email '${email}' already exists`);
-                }
-            } catch (emailCheckError: any) {
-                // DocumentNotFoundError is expected when no user exists - this is good
-                if (emailCheckError.name === 'DocumentNotFoundError' || 
-                    emailCheckError.message?.includes('document not found')) {
-                    // No user found with this email, continue
-                } else {
-                    // Re-throw other errors
-                    throw emailCheckError;
-                }
-            }
-
-            // Check for duplicate user_id
-            const userIdQuery: any = { user_id, is_deleted: false };
-            if (excludeId) {
-                userIdQuery.id = { $ne: excludeId };
-            }
-
-            try {
-                const existingUserByUserId = await User.findOne(userIdQuery);
-                if (existingUserByUserId) {
-                    throw new ConflictError(`User with user_id '${user_id}' already exists`);
-                }
-            } catch (userIdCheckError: any) {
-                // DocumentNotFoundError is expected when no user exists - this is good
-                if (userIdCheckError.name === 'DocumentNotFoundError' || 
-                    userIdCheckError.message?.includes('document not found')) {
-                    // No user found with this user_id, continue
-                } else {
-                    // Re-throw other errors
-                    throw userIdCheckError;
-                }
-            }
-
-        } catch (error) {
-            if (error instanceof ConflictError) {
-                throw error;
-            }
-            
-            // Better error logging and handling
-            console.error("Database error in duplicate check:", error);
-            
-            // Check if it's a connection issue
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            if (errorMessage.includes('QueryScanConsistency') || 
-                errorMessage.includes('ottoman') ||
-                errorMessage.includes('couchbase') ||
-                errorMessage.includes('undefined is not an object')) {
-                throw new DatabaseError("Database connection not initialized. Please check database configuration and ensure initDB() is called before starting the server.");
-            }
-            
-            throw new DatabaseError("Failed to check for duplicate users: " + (error instanceof Error ? error.message : "Unknown error"));
-        }
-    }
-
-    /**
-     * Hashes password using crypto (maintaining consistency with existing codebase)
-     */
-    private static hashPassword(password: string): { hash: string; salt: string } {
-        try {
-            const salt = crypto.randomBytes(16).toString("hex");
-            const hash = crypto.pbkdf2Sync(password, salt, 10000, 64, "sha512").toString("hex");
-            return { hash, salt };
-        } catch (error) {
-            throw new DatabaseError("Failed to hash password");
-        }
-    }
-
-    /**
-     * Validates if user exists and is active
-     */
-    private static async validateUserExists(id: string): Promise<IUser> {
-        if (!id || typeof id !== 'string') {
-            throw new ValidationError("Valid user ID is required");
-        }
-
-        try {
-            const user = await User.findById(id);
-            if (!user) {
-                throw new NotFoundError(`User with ID '${id}' not found`);
-            }
-
-            if (user.is_deleted) {
-                throw new NotFoundError(`User with ID '${id}' has been deleted`);
-            }
-
-            return user;
-        } catch (error: any) {
-            if (error instanceof NotFoundError) {
-                throw error;
-            }
-            
-            // Handle DocumentNotFoundError from Ottoman/Couchbase
-            if (error.name === 'DocumentNotFoundError' || 
-                error.message?.includes('document not found')) {
-                throw new NotFoundError(`User with ID '${id}' not found`);
-            }
-            
-            console.error("Database error in validateUserExists:", error);
-            throw new DatabaseError("Failed to retrieve user: " + (error instanceof Error ? error.message : "Unknown error"));
-        }
-    }
-
     // Create
-    public static readonly createUsers = async (userData: CreateUserData) => {
-        // Validate input data
-        const validatedData = this.validateInput<CreateUserData>(createUserSchema, userData);
+    public static readonly createUsers = async ({
+        user_id,
+        email,
+        password,
+        first_name,
+        last_name,
+        phone,
+        address,
+        meta_data,
+        user_type,
+        campus_id,
+    }: {
+        user_id: string;
+        email: string;
+        password: string;
+        first_name: string;
+        last_name: string;
+        phone: string;
+        address: string;
+        meta_data: string;
+        user_type: string;
+        campus_id?: string;
+    }) => {
+        const salt = crypto.randomBytes(16).toString("hex");
+        const hash = crypto
+            .pbkdf2Sync(password, salt, 1000, 64, "sha512")
+            .toString("hex");
 
-        try {
-            // Check for duplicates
-            await this.checkForDuplicates(validatedData.email, validatedData.user_id);
-
-            // Hash password
-            const { hash, salt } = this.hashPassword(validatedData.password);
-
-            // Prepare user data
-            const newUser = {
-                user_id: validatedData.user_id,
-                email: validatedData.email.toLowerCase(),
-                hash,
-                salt,
-                first_name: validatedData.first_name.trim(),
-                last_name: validatedData.last_name.trim(),
-                phone: validatedData.phone,
-                address: validatedData.address.trim(),
-                meta_data: validatedData.meta_data || "{}",
-                is_active: true,
-                is_deleted: false,
-                user_type: validatedData.user_type,
-                campus_id: validatedData.campus_id || "",
-                created_at: new Date(),
-                updated_at: new Date(),
-            };
-
-            const createdUser = await User.create(newUser);
-            if (!createdUser) {
-                throw new DatabaseError("Failed to create user");
-            }
-
-            // Remove sensitive data before returning
-            const { hash: _, salt: __, ...userResponse } = createdUser;
-            return userResponse;
-
-        } catch (error) {
-            if (error instanceof ValidationError || error instanceof ConflictError || error instanceof DatabaseError) {
-                throw error;
-            }
-            throw new DatabaseError("Failed to create user: " + (error instanceof Error ? error.message : "Unknown error"));
-        }
+        return await User.create({
+            user_id: user_id,
+            email: email,
+            hash: hash,
+            salt: salt,
+            first_name: first_name,
+            last_name: last_name,
+            phone: phone,
+            address: address,
+            meta_data: meta_data,
+            is_active: true,
+            is_deleted: false,
+            user_type: user_type,
+            campus_id: campus_id ?? " ",
+            created_at: new Date(),
+            updated_at: new Date(),
+        });
     };
 
     // Get All
-    public static readonly getUsers = async (query: Partial<GetUsersQuery> = {}) => {
-        // Validate query parameters
-        const validatedQuery = this.validateInput<GetUsersQuery>(getUsersQuerySchema, query);
+    public static readonly getUsers = async (campus_id?: string) => {
+        const filter = campus_id ? { campus_id: campus_id } : {};
+        const options: FindOptions = {
+            sort: {
+                created_at: "DESC",
+            },
+            limit: 100,
+            skip: 0,
+            select: [
+                "id",
+                "user_id",
+                "email",
+                "first_name",
+                "last_name",
+                "phone",
+                "address",
+                "last_login",
+                "meta_data",
+                "is_active",
+                "is_deleted",
+                "user_type",
+                "campus_id",
+                "created_at",
+                "updated_at",
+            ],
+        };
 
-        try {
-            // Build filter
-            const filter: any = { is_deleted: false };
-            
-            if (validatedQuery.campus_id) {
-                filter.campus_id = validatedQuery.campus_id;
-            }
-            
-            if (validatedQuery.user_type) {
-                filter.user_type = validatedQuery.user_type;
-            }
+        const data: {
+            rows: IUser[];
+        } = await User.find(filter, options);
 
-            if (validatedQuery.is_active !== undefined) {
-                filter.is_active = validatedQuery.is_active;
-            }
-
-            // Set up options with validation
-            const options: FindOptions = {
-                sort: {
-                    created_at: "DESC",
-                },
-                limit: Math.min(validatedQuery.limit || this.DEFAULT_LIMIT, this.MAX_LIMIT),
-                skip: validatedQuery.skip || 0,
-                select: [
-                    "id",
-                    "user_id",
-                    "email",
-                    "first_name",
-                    "last_name",
-                    "phone",
-                    "address",
-                    "last_login",
-                    "meta_data",
-                    "is_active",
-                    "is_deleted",
-                    "user_type",
-                    "campus_id",
-                    "created_at",
-                    "updated_at",
-                ],
-            };
-
-            const data: { rows: IUser[] } = await User.find(filter, options);
-
-            if (!data || !data.rows) {
-                throw new DatabaseError("Failed to retrieve users from database");
-            }
-
-            return {
-                users: data.rows,
-                total: data.rows.length,
-                limit: options.limit,
-                skip: options.skip,
-                filters_applied: filter
-            };
-
-        } catch (error) {
-            if (error instanceof ValidationError || error instanceof DatabaseError) {
-                throw error;
-            }
-            throw new DatabaseError("Failed to retrieve users: " + (error instanceof Error ? error.message : "Unknown error"));
+        if (data.rows.length === 0) {
+            throw new Error("No users found");
         }
+
+        return data.rows;
     };
 
     // Get One
     public static readonly getUser = async (id: string): Promise<IUser> => {
-        const user = await this.validateUserExists(id);
-
-        try {
-            // Return user without sensitive data
-            const userWithoutSensitiveData = await User.findById(id, {
-                select: [
-                    "id",
-                    "user_id",
-                    "email",
-                    "first_name",
-                    "last_name",
-                    "phone",
-                    "address",
-                    "last_login",
-                    "meta_data",
-                    "is_active",
-                    "is_deleted",
-                    "user_type",
-                    "campus_id",
-                    "created_at",
-                    "updated_at",
-                ],
-            });
-
-            if (!userWithoutSensitiveData) {
-                throw new NotFoundError(`User with ID '${id}' not found`);
-            }
-
-            return userWithoutSensitiveData;
-
-        } catch (error: any) {
-            if (error instanceof NotFoundError) {
-                throw error;
-            }
-            
-            // Handle DocumentNotFoundError from Ottoman/Couchbase
-            if (error.name === 'DocumentNotFoundError' || 
-                error.message?.includes('document not found')) {
-                throw new NotFoundError(`User with ID '${id}' not found`);
-            }
-            
-            throw new DatabaseError("Failed to retrieve user: " + (error instanceof Error ? error.message : "Unknown error"));
-        }
+        return await User.findById(id, {
+            select: [
+                "id",
+                "user_id",
+                "email",
+                "first_name",
+                "last_name",
+                "phone",
+                "address",
+                "last_login",
+                "meta_data",
+                "is_active",
+                "is_deleted",
+                "user_type",
+                "campus_id",
+                "created_at",
+                "updated_at",
+            ],
+        });
     };
 
     // Update
     public static readonly updateUsers = async (
         id: string,
-        userData: Partial<UpdateUserData>
-    ): Promise<{ message: string; user: Partial<IUser> }> => {
-        // Validate user exists first
-        const existingUser = await this.validateUserExists(id);
-
-        // Validate update data
-        const validatedData = this.validateInput<UpdateUserData>(updateUserSchema, userData);
-
-        try {
-            // Prepare update data
-            const updateData: any = {
-                ...validatedData,
-                updated_at: new Date(),
-            };
-
-            // Normalize email if provided
-            if (updateData.email) {
-                updateData.email = updateData.email.toLowerCase();
-            }
-
-            // Trim string fields if provided
-            if (updateData.first_name) {
-                updateData.first_name = updateData.first_name.trim();
-            }
-            if (updateData.last_name) {
-                updateData.last_name = updateData.last_name.trim();
-            }
-            if (updateData.address) {
-                updateData.address = updateData.address.trim();
-            }
-
-            const updatedUser = await User.updateById(id, updateData);
-
-            if (!updatedUser) {
-                throw new DatabaseError("Failed to update user");
-            }
-
-            // Return success message and updated user (without sensitive data)
-            const { hash, salt, ...userResponse } = updatedUser;
-            return {
-                message: "User updated successfully",
-                user: userResponse
-            };
-
-        } catch (error) {
-            if (error instanceof ValidationError || error instanceof ConflictError || error instanceof DatabaseError) {
-                throw error;
-            }
-            throw new DatabaseError("Failed to update user: " + (error instanceof Error ? error.message : "Unknown error"));
+        data: {
+            user_id?: string;
+            email?: string;
+            first_name?: string;
+            last_name?: string;
+            phone?: string;
+            address?: string;
+            meta_data?: string;
+            is_active?: boolean;
+            is_deleted?: boolean;
+            user_type?: string;
+            campus_id?: string;
         }
+    ): Promise<void> => {
+        const user = await User.findById(id);
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        await User.updateById(id, {
+            ...data,
+            updated_at: new Date(),
+        });
     };
 
-    // Soft Delete (recommended over hard delete)
-    public static readonly softDeleteUser = async (id: string): Promise<{ message: string }> => {
-        // Validate user exists
-        await this.validateUserExists(id);
-
-        try {
-            const updatedUser = await User.updateById(id, {
-                is_deleted: true,
-                is_active: false,
-                updated_at: new Date(),
-            });
-
-            if (!updatedUser) {
-                throw new DatabaseError("Failed to delete user");
-            }
-
-            return { message: "User deleted successfully" };
-
-        } catch (error) {
-            if (error instanceof ValidationError || error instanceof NotFoundError || error instanceof DatabaseError) {
-                throw error;
-            }
-            throw new DatabaseError("Failed to delete user: " + (error instanceof Error ? error.message : "Unknown error"));
+    // Delete
+    public static readonly deleteUsers = async (id: string): Promise<void> => {
+        const user = await User.findById(id);
+        if (!user) {
+            throw new Error("User not found");
         }
-    };
 
-    // Hard Delete (maintain backward compatibility)
-    public static readonly deleteUsers = async (id: string): Promise<{ message: string }> => {
-        // Validate user exists
-        await this.validateUserExists(id);
-
-        try {
-            await User.removeById(id);
-            return { message: "User permanently deleted successfully" };
-
-        } catch (error) {
-            if (error instanceof ValidationError || error instanceof NotFoundError) {
-                throw error;
-            }
-            throw new DatabaseError("Failed to permanently delete user: " + (error instanceof Error ? error.message : "Unknown error"));
-        }
+        await User.removeById(id);
     };
 
     // Update Password
     public static readonly updatePassword = async (
         id: string,
-        passwordData: UpdatePasswordData
-    ): Promise<{ message: string }> => {
-        // Validate user exists
-        await this.validateUserExists(id);
-
-        // Validate password data
-        const validatedData = this.validateInput<UpdatePasswordData>(updatePasswordSchema, passwordData);
-
-        try {
-            // Hash new password
-            const { hash, salt } = this.hashPassword(validatedData.password);
-
-            const updatedUser = await User.updateById(id, {
-                hash,
-                salt,
-                updated_at: new Date(),
-            });
-
-            if (!updatedUser) {
-                throw new DatabaseError("Failed to update password");
-            }
-
-            return { message: "Password updated successfully" };
-
-        } catch (error) {
-            if (error instanceof ValidationError || error instanceof NotFoundError || error instanceof DatabaseError) {
-                throw error;
-            }
-            throw new DatabaseError("Failed to update password: " + (error instanceof Error ? error.message : "Unknown error"));
+        {
+            password,
+        }: {
+            password: string;
         }
+    ): Promise<void> => {
+        const user = await User.findById(id);
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        const salt = crypto.randomBytes(16).toString("hex");
+        const hash = crypto
+            .pbkdf2Sync(password, salt, 1000, 64, "sha512")
+            .toString("hex");
+
+        await User.updateById(id, {
+            hash: hash,
+            salt: salt,
+            updated_at: new Date(),
+        });
     };
 
-    // Get Parent for Student
+    // getParentForStudent
     public static readonly getParentForStudent = async (
         student_id: string
     ): Promise<IUser[]> => {
-        if (!student_id || typeof student_id !== 'string') {
-            throw new ValidationError("Valid student ID is required");
+        // First, get the student to extract parent IDs from their meta_data
+        const studentData: {
+            rows: IUser[];
+        } = await User.find({
+            id: student_id,
+            user_type: "Student",
+            is_active: true,
+            is_deleted: false,
+        });
+
+        if (studentData.rows.length === 0) {
+            throw new Error("Student not found");
         }
 
-        try {
-            const data: { rows: IUser[] } = await User.find({
-                user_type: "Parent",
-                "meta_data.student_id": [student_id],
-                is_active: true,
-                is_deleted: false,
-            });
-
-            if (!data || !data.rows) {
-                throw new DatabaseError("Failed to retrieve parents from database");
-            }
-
-            return data.rows;
-
-        } catch (error) {
-            if (error instanceof ValidationError || error instanceof DatabaseError) {
-                throw error;
-            }
-            throw new DatabaseError("Failed to retrieve parents for student: " + (error instanceof Error ? error.message : "Unknown error"));
+        const student = studentData.rows[0];
+        
+        // Extract parent IDs from student's meta_data
+        const parentIds = (student.meta_data as any)?.parent_id;
+        
+        if (!parentIds || !Array.isArray(parentIds) || parentIds.length === 0) {
+            throw new Error("No parents found for the student");
         }
+
+        // Query parents by the IDs found in student's meta_data
+        const data: {
+            rows: IUser[];
+        } = await User.find({
+            id: { $in: parentIds },
+            user_type: "Parent",
+            is_active: true,
+            is_deleted: false,
+        });
+
+        if (data.rows.length === 0) {
+            throw new Error("No parents found for the student");
+        }
+
+        return data.rows;
     };
 
-    // Get Student for Parent
+    // getStudentForParent
     public static readonly getStudentForParent = async (
         parent_id: string
     ): Promise<IUser[]> => {
-        if (!parent_id || typeof parent_id !== 'string') {
-            throw new ValidationError("Valid parent ID is required");
+        // First, get the parent to extract student IDs from their meta_data
+        const parentData: {
+            rows: IUser[];
+        } = await User.find({
+            id: parent_id,
+            user_type: "Parent",
+            is_active: true,
+            is_deleted: false,
+        });
+
+        if (parentData.rows.length === 0) {
+            throw new Error("Parent not found");
         }
 
-        try {
-            // First, get the parent to extract student IDs from their meta_data
-            const parentData: { rows: IUser[] } = await User.find({
-                id: parent_id,
-                user_type: "Parent",
-                is_active: true,
-                is_deleted: false,
-            });
-
-            if (!parentData || !parentData.rows || parentData.rows.length === 0) {
-                throw new NotFoundError("Parent not found or is not active");
-            }
-
-            const parent = parentData.rows[0];
-            
-            // Extract student IDs from parent's meta_data
-            const studentIds = (parent.meta_data as any)?.student_id;
-            
-            if (!studentIds || !Array.isArray(studentIds) || studentIds.length === 0) {
-                return []; // Return empty array instead of throwing error for better UX
-            }
-
-            // Validate student IDs are strings
-            const validStudentIds = studentIds.filter(id => typeof id === 'string' && id.length > 0);
-            
-            if (validStudentIds.length === 0) {
-                return [];
-            }
-
-            // Query students by the IDs found in parent's meta_data
-            const data: { rows: IUser[] } = await User.find({
-                id: { $in: validStudentIds },
-                user_type: "Student",
-                is_active: true,
-                is_deleted: false,
-            });
-
-            if (!data || !data.rows) {
-                throw new DatabaseError("Failed to retrieve students from database");
-            }
-
-            return data.rows;
-
-        } catch (error) {
-            if (error instanceof ValidationError || error instanceof NotFoundError || error instanceof DatabaseError) {
-                throw error;
-            }
-            throw new DatabaseError("Failed to retrieve students for parent: " + (error instanceof Error ? error.message : "Unknown error"));
-        }
-    };
-
-    // Utility method to activate/deactivate user
-    public static readonly toggleUserStatus = async (
-        id: string, 
-        isActive: boolean
-    ): Promise<{ message: string; user: Partial<IUser> }> => {
-        // Validate user exists
-        await this.validateUserExists(id);
-
-        try {
-            const updatedUser = await User.updateById(id, {
-                is_active: isActive,
-                updated_at: new Date(),
-            });
-
-            if (!updatedUser) {
-                throw new DatabaseError("Failed to update user status");
-            }
-
-            const { hash, salt, ...userResponse } = updatedUser;
-            return {
-                message: `User ${isActive ? 'activated' : 'deactivated'} successfully`,
-                user: userResponse
-            };
-
-        } catch (error) {
-            if (error instanceof ValidationError || error instanceof NotFoundError || error instanceof DatabaseError) {
-                throw error;
-            }
-            throw new DatabaseError("Failed to update user status: " + (error instanceof Error ? error.message : "Unknown error"));
-        }
-    };
-
-    // Utility method to get users by type and campus
-    public static readonly getUsersByTypeAndCampus = async (
-        user_type: string,
-        campus_id: string,
-        options: { includeInactive?: boolean; limit?: number; skip?: number } = {}
-    ): Promise<IUser[]> => {
-        if (!user_type || !campus_id) {
-            throw new ValidationError("User type and campus ID are required");
+        const parent = parentData.rows[0];
+        
+        // Extract student IDs from parent's meta_data
+        const studentIds = (parent.meta_data as any)?.student_id;
+        
+        if (!studentIds || !Array.isArray(studentIds) || studentIds.length === 0) {
+            throw new Error("No students found for the parent");
         }
 
-        try {
-            const filter: any = {
-                user_type,
-                campus_id,
-                is_deleted: false,
-            };
+        // Query students by the IDs found in parent's meta_data
+        const data: {
+            rows: IUser[];
+        } = await User.find({
+            id: { $in: studentIds },
+            user_type: "Student",
+            is_active: true,
+            is_deleted: false,
+        });
 
-            if (!options.includeInactive) {
-                filter.is_active = true;
-            }
-
-            const findOptions: FindOptions = {
-                sort: { created_at: "DESC" },
-                limit: Math.min(options.limit || this.DEFAULT_LIMIT, this.MAX_LIMIT),
-                skip: options.skip || 0,
-                select: [
-                    "id", "user_id", "email", "first_name", "last_name",
-                    "phone", "address", "meta_data", "is_active", "user_type",
-                    "campus_id", "created_at", "updated_at"
-                ],
-            };
-
-            const data: { rows: IUser[] } = await User.find(filter, findOptions);
-
-            if (!data || !data.rows) {
-                throw new DatabaseError("Failed to retrieve users from database");
-            }
-
-            return data.rows;
-
-        } catch (error) {
-            if (error instanceof ValidationError || error instanceof DatabaseError) {
-                throw error;
-            }
-            throw new DatabaseError("Failed to retrieve users by type and campus: " + (error instanceof Error ? error.message : "Unknown error"));
-        }
-    };
-
-    // Utility method to check if user exists by email or user_id
-    public static readonly checkUserExists = async (
-        identifier: string,
-        type: 'email' | 'user_id' = 'email'
-    ): Promise<boolean> => {
-        if (!identifier) {
-            throw new ValidationError("Identifier is required");
+        if (data.rows.length === 0) {
+            throw new Error("No students found for the parent");
         }
 
-        try {
-            const query: any = { is_deleted: false };
-            query[type] = type === 'email' ? identifier.toLowerCase() : identifier;
-
-            try {
-                const user = await User.findOne(query);
-                return !!user;
-            } catch (findError: any) {
-                // DocumentNotFoundError means user doesn't exist - return false
-                if (findError.name === 'DocumentNotFoundError' || 
-                    findError.message?.includes('document not found')) {
-                    return false;
-                }
-                // Re-throw other errors
-                throw findError;
-            }
-
-        } catch (error) {
-            throw new DatabaseError("Failed to check user existence: " + (error instanceof Error ? error.message : "Unknown error"));
-        }
+        return data.rows;
     };
 }
