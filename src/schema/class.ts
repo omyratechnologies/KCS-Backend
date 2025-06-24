@@ -276,6 +276,29 @@ export const getAssignmentSubmissionsResponseSchema = z
     .array(assignmentSubmissionSchema)
     .openapi({ ref: "GetAssignmentSubmissionsResponse" });
 
+// Student info schema for class students response
+export const studentInfoSchema = z
+    .object({
+        id: z.string().openapi({ example: "student123" }),
+        user_id: z.string().openapi({ example: "student123" }),
+        name: z.string().openapi({ example: "John Doe" }),
+    })
+    .openapi({ ref: "StudentInfo" });
+
+// Get Students by Class ID Response
+export const getStudentsByClassIdResponseSchema = z
+    .object({
+        class_id: z.string().openapi({ example: "class123" }),
+        students: z.array(studentInfoSchema).openapi({ 
+            example: [
+                { id: "student1", user_id: "student1", name: "John Doe" },
+                { id: "student2", user_id: "student2", name: "Jane Smith" }
+            ] 
+        }),
+        total_students: z.number().openapi({ example: 2 }),
+    })
+    .openapi({ ref: "GetStudentsByClassIdResponse" });
+
 // Delete Response
 export const deleteResponseSchema = z
     .object({

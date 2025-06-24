@@ -24,6 +24,7 @@ import {
     getAssignmentSubmissionsResponseSchema,
     getClassesResponseSchema,
     getClassSubjectsResponseSchema,
+    getStudentsByClassIdResponseSchema,
     updateAssignmentRequestBodySchema,
     updateAssignmentResponseSchema,
     updateClassRequestBodySchema,
@@ -216,6 +217,51 @@ app.get(
         },
     }),
     ClassController.getClassById
+);
+
+// Get students by class ID
+app.get(
+    "/:class_id/students",
+    describeRoute({
+        tags: ["Class"],
+        operationId: "getStudentsByClassId",
+        summary: "Get all students by class ID",
+        description: "Retrieves all students assigned to a specific class",
+        parameters: [
+            {
+                name: "class_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Class ID",
+                example: "class123"
+            },
+        ],
+        responses: {
+            200: {
+                description: "List of students in the class",
+                content: {
+                    "application/json": {
+                        schema: resolver(getStudentsByClassIdResponseSchema),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    ClassController.getStudentsByClassId
 );
 
 app.put(

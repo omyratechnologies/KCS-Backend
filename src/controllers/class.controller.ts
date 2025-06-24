@@ -598,4 +598,23 @@ export class ClassController {
             return ctx.json({ error: "Internal server error" }, 500);
         }
     };
+
+    public static readonly getStudentsByClassId = async (ctx: Context) => {
+        try {
+            const { class_id } = ctx.req.param();
+
+            const students = await classService.getStudentsByClassId(class_id);
+
+            return ctx.json({
+                class_id,
+                students,
+                total_students: students.length
+            });
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json({ error: error.message }, 500);
+            }
+            return ctx.json({ error: "Internal server error" }, 500);
+        }
+    };
 }

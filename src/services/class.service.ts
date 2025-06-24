@@ -481,6 +481,62 @@ export class ClassService {
         }
     }
 
+    // Get all students by class ID
+    public async getStudentsByClassId(classId: string): Promise<{
+        id: string;
+        user_id: string;
+        name: string;
+    }[]> {
+        try {
+            // Get the class data
+            const classData = await Class.findById(classId);
+
+            if (!classData) {
+                throw new Error("Class not found");
+            }
+
+            if (!classData.is_active || classData.is_deleted) {
+                throw new Error("Class is not active or has been deleted");
+            }
+
+            // Check if class has students
+            if (!classData.student_ids || classData.student_ids.length === 0) {
+                return [];
+            }
+
+            // Get all students data
+            const students = await Promise.all(
+                classData.student_ids.map(async (studentId) => {
+                    try {
+                        const student = await UserService.getUser(studentId);
+                        if (!student) {
+                            console.warn(`Student with ID ${studentId} not found`);
+                            return null;
+                        }
+                        return {
+                            id: student.id,
+                            user_id: student.id, // Assuming user_id is the same as id
+                            name: `${student.first_name} ${student.last_name}`,
+                        };
+                    } catch (error) {
+                        console.warn(`Error fetching student with ID ${studentId}:`, error);
+                        return null;
+                    }
+                })
+            );
+
+            // Filter out null values and return the results
+            return students.filter(student => student !== null) as {
+                id: string;
+                user_id: string;
+                name: string;
+            }[];
+        } catch (error) {
+            console.error("Error fetching students by class ID:", error);
+            throw error;
+        }
+    }
+
     // Get all assignments by class ID
     public async getAllAssignmentsByClassId(
         classId: string
