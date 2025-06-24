@@ -1,4 +1,7 @@
 import { ITimetable, Timetable } from "@/models/time_table.model";
+import { Subject } from "@/models/subject.model";
+import { Teacher } from "@/models/teacher.model";
+import { User } from "@/models/user.model";
 
 export class TimetableService {
     // Create
@@ -52,7 +55,40 @@ export class TimetableService {
             }
         );
 
-        return data.rows;
+        // Enrich timetable data with subject names and teacher names
+        const enrichedTimetable = await Promise.all(
+            data.rows.map(async (timetableItem) => {
+                try {
+                    // Fetch subject information
+                    const subject = await Subject.findById(timetableItem.subject_id);
+                    
+                    // Fetch teacher information
+                    const teacher = await Teacher.findById(timetableItem.teacher_id);
+                    let teacherName = "Unknown Teacher";
+                    
+                    if (teacher?.user_id) {
+                        const user = await User.findById(teacher.user_id);
+                        if (user) {
+                            teacherName = `${user.first_name} ${user.last_name}`.trim();
+                        }
+                    }
+                    
+                    return {
+                        ...timetableItem,
+                        subject_name: subject?.name || "Unknown Subject",
+                        teacher_name: teacherName,
+                    };
+                } catch (error) {
+                    return {
+                        ...timetableItem,
+                        subject_name: "Unknown Subject",
+                        teacher_name: "Unknown Teacher",
+                    };
+                }
+            })
+        );
+
+        return enrichedTimetable;
     };
 
     // Read by Campus ID and Teacher ID
@@ -76,7 +112,25 @@ export class TimetableService {
             }
         );
 
-        return data.rows;
+        // Enrich timetable data with subject names
+        const enrichedTimetable = await Promise.all(
+            data.rows.map(async (timetableItem) => {
+                try {
+                    const subject = await Subject.findById(timetableItem.subject_id);
+                    return {
+                        ...timetableItem,
+                        subject_name: subject?.name || "Unknown Subject",
+                    };
+                } catch (error) {
+                    return {
+                        ...timetableItem,
+                        subject_name: "Unknown Subject",
+                    };
+                }
+            })
+        );
+
+        return enrichedTimetable;
     };
 
     // Update by ID

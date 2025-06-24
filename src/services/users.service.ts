@@ -336,15 +336,6 @@ export class UserService {
         const validatedData = this.validateInput<UpdateUserData>(updateUserSchema, userData);
 
         try {
-            // Check for duplicates if email or user_id is being updated
-            if (validatedData.email || validatedData.user_id) {
-                await this.checkForDuplicates(
-                    validatedData.email || existingUser.email,
-                    validatedData.user_id || existingUser.user_id,
-                    id
-                );
-            }
-
             // Prepare update data
             const updateData: any = {
                 ...validatedData,

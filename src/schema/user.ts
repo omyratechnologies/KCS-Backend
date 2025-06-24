@@ -7,7 +7,7 @@ export const userSchema = z
     .object({
         id: z.string().openapi({ example: "user123" }),
         user_id: z.string().openapi({ example: "user123" }),
-        email: z.string().email().openapi({ example: "user@example.com" }),
+        email: z.string().email().openapi({ example: "user1234@example.com" }),
         first_name: z.string().openapi({ example: "John" }),
         last_name: z.string().openapi({ example: "Doe" }),
         phone: z.string().openapi({ example: "+1234567890" }),

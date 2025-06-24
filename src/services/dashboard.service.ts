@@ -17,139 +17,28 @@ import { ClassQuiz } from "@/models/class_quiz.model";
 import { CampusWideNotification } from "@/models/campus_wide_notification.model";
 import { ParentNotification } from "@/models/parent_notification.model";
 import { Timetable } from "@/models/time_table.model";
+import { AssignmentSubmission } from "@/models/assignment_submission.model";
+import { ClassQuizSubmission } from "@/models/class_quiz_submission.model";
+import { ClassQuizAttempt } from "@/models/class_quiz_attempt.model";
 
-// Dashboard Data Interfaces
-interface StudentDashboardData {
-    profile: {
-        id: string;
-        name: string;
-        email: string;
-        user_id: string;
-        class: string;
-    };
-    classes: any[];
-    currentGrades: any[];
-    assignments: {
-        pending: any[];
-        submitted: any[];
-        overdue: any[];
-    };
-    quizzes: {
-        upcoming: any[];
-        completed: any[];
-    };
-    attendance: {
-        thisMonth: number;
-        percentage: number;
-        recent: any[];
-    };
-    notifications: {
-        unread: number;
-        recent: any[];
-    };
-    schedule: {
-        today: any[];
-        thisWeek: any[];
-    };
-    library: {
-        booksIssued: any[];
-        dueBooks: any[];
-    };
-}
+// Import services
+import { ClassService } from "./class.service";
 
-interface TeacherDashboardData {
-    profile: {
-        id: string;
-        name: string;
-        email: string;
-        user_id: string;
-    };
-    classes: any[];
-    subjects: any[];
-    students: {
-        total: number;
-        activeToday: number;
-    };
-    assignments: {
-        toGrade: any[];
-        recent: any[];
-    };
-    schedule: {
-        upcoming: any[];
-    };
-    notifications: {
-        unread: number;
-        recent: any[];
-    };
-    quickActions: any[];
-}
+// Import helper classes
+import { PerformanceAnalyticsHelper } from "./analytics/performance.helper";
+import { StudyHoursAnalyticsHelper } from "./analytics/study-hours.helper";
+import { GradesAnalyticsHelper } from "./analytics/grades.helper";
 
-interface ParentDashboardData {
-    profile: {
-        id: string;
-        name: string;
-        email: string;
-    };
-    children: {
-        profile: any;
-        grades: any[];
-        attendance: any;
-        assignments: {
-            pending: any[];
-            submitted: any[];
-            overdue: any[];
-            total: number;
-        };
-        quizzes: {
-            upcoming: any[];
-            completed: any[];
-            recent: any[];
-        };
-        exams: {
-            upcoming: any[];
-            recent: any[];
-        };
-        library: {
-            booksIssued: any[];
-            dueBooks: any[];
-        };
-        schedule: {
-            today: any[];
-            thisWeek: any[];
-        };
-        recentActivities: any[];
-        upcomingEvents: any[];
-    }[];
-    notifications: {
-        unread: number;
-        recent: any[];
-    };
-}
-
-interface AdminDashboardData {
-    profile: {
-        id: string;
-        name: string;
-        email: string;
-        role: string;
-    };
-    stats: {
-        totalStudents: number;
-        totalTeachers: number;
-        totalClasses: number;
-        activeCourses: number;
-    };
-    attendance: {
-        today: number;
-        thisWeek: number;
-    };
-    recentActivities: any[];
-    notifications: {
-        unread: number;
-        recent: any[];
-    };
-    quickActions: any[];
-}
+// Import types
+import { 
+    StudentDashboardData,
+    TeacherDashboardData,
+    ParentDashboardData,
+    AdminDashboardData,
+    PerformanceMetrics,
+    StudyHoursData,
+    GradesData
+} from "@/types";
 
 export class DashboardService {
     /**
@@ -174,18 +63,9 @@ export class DashboardService {
                 throw new Error("Student not found");
             }
 
-            // Get student's classes
-            // First get all classes for the campus, then filter by student_ids in JavaScript
-            const allClassesResult = await Class.find({
-                campus_id,
-                is_active: true,
-                is_deleted: false,
-            });
-
-            const allClasses = allClassesResult.rows || [];
-            const classes = allClasses.filter(cls => 
-                cls.student_ids && cls.student_ids.includes(user_id)
-            );
+            // Get student's classes using ClassService
+            const classService = new ClassService();
+            const classes = await classService.getClassesByStudentId(user_id);
             const classIds = classes.map((c) => c.id);
 
             // Get assignments for student's classes
@@ -261,6 +141,15 @@ export class DashboardService {
             });
 
             const studentRecords = recordResult.rows || [];
+
+            // Get performance metrics
+            const performance = await PerformanceAnalyticsHelper.calculateStudentPerformance(user_id, campus_id, classIds);
+
+            // Get study hours data
+            const hoursSpent = await StudyHoursAnalyticsHelper.calculateStudyHours(user_id, campus_id);
+
+            // Get comprehensive grades data
+            const grades = await GradesAnalyticsHelper.getGradesData(user_id, campus_id);
 
             return {
                 profile: {
@@ -340,6 +229,9 @@ export class DashboardService {
                         dueDate: book.due_date,
                     })),
                 },
+                performance,
+                hoursSpent,
+                grades,
             };
         } catch (error) {
             throw new Error(`Failed to get student dashboard: ${error}`);
@@ -705,15 +597,9 @@ export class DashboardService {
             const childrenData = await Promise.all(
                 children.map(async (child) => {
                     try {
-                        // Get child's classes
-                        const classResult = await Class.find({
-                            campus_id,
-                            student_ids: { $elemMatch: child.id },
-                            is_active: true,
-                            is_deleted: false,
-                        });
-
-                        const classes = classResult.rows || [];
+                        // Get child's classes using ClassService
+                        const classService = new ClassService();
+                        const classes = await classService.getClassesByStudentId(child.id);
                         const classIds = classes.map((c) => c.id);
 
                         // Get child's grades
@@ -822,6 +708,15 @@ export class DashboardService {
                             (m) => new Date(m.meeting_date).toDateString() === today.toDateString()
                         );
 
+                        // Get performance metrics for child
+                        const childPerformance = await PerformanceAnalyticsHelper.calculateStudentPerformance(child.id, campus_id, classIds);
+
+                        // Get study hours data for child
+                        const childHoursSpent = await StudyHoursAnalyticsHelper.calculateStudyHours(child.id, campus_id);
+
+                        // Get comprehensive grades data for child
+                        const childGrades = await GradesAnalyticsHelper.getGradesData(child.id, campus_id);
+
                         return {
                             profile: {
                                 id: child.id,
@@ -830,13 +725,6 @@ export class DashboardService {
                                 class: classes.length > 0 ? classes[0].name : "No class assigned",
                                 user_id: child.user_id,
                             },
-                            grades: grades.slice(0, 5).map((grade) => ({
-                                id: grade.id,
-                                subject: grade.record_data?.subject || "Unknown",
-                                grade: grade.record_data?.grade || "N/A",
-                                marks: grade.record_data?.marks || 0,
-                                createdAt: grade.created_at,
-                            })),
                             attendance: {
                                 thisMonth: presentDays,
                                 percentage: Math.round(attendancePercentage),
@@ -970,6 +858,9 @@ export class DashboardService {
                                     date: a.due_date,
                                 })),
                             ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).slice(0, 5),
+                            performance: childPerformance,
+                            hoursSpent: childHoursSpent,
+                            grades: childGrades,
                         };
                     } catch (error) {
                         console.error(`Error fetching data for child ${child.id}:`, error);
@@ -981,7 +872,6 @@ export class DashboardService {
                                 class: "Unknown",
                                 user_id: child.user_id,
                             },
-                            grades: [],
                             attendance: { thisMonth: 0, percentage: 0, totalDays: 0, recent: [] },
                             assignments: { pending: [], submitted: [], overdue: [], total: 0 },
                             quizzes: { upcoming: [], completed: [], recent: [] },
@@ -990,6 +880,29 @@ export class DashboardService {
                             schedule: { today: [], thisWeek: [] },
                             recentActivities: [],
                             upcomingEvents: [],
+                            performance: {
+                                overallGrade: "N/A",
+                                gradePoint: 0,
+                                percentageScore: 0,
+                                subjectPerformance: [],
+                                monthlyTrend: [],
+                                rankInClass: 0,
+                                totalStudents: 0,
+                            },
+                            hoursSpent: {
+                                thisWeek: 0,
+                                thisMonth: 0,
+                                avgDaily: 0,
+                                subjectWise: [],
+                                weeklyTrend: [],
+                            },
+                            grades: {
+                                currentTerm: [],
+                                allTerms: [],
+                                subjectWise: [],
+                                termWiseAverage: [],
+                                improvementAreas: [],
+                            },
                         };
                     }
                 })
@@ -1125,6 +1038,176 @@ export class DashboardService {
     }
 
     /**
+     * Get detailed performance analytics for a student
+     */
+    public static async getStudentPerformance(
+        user_id: string,
+        campus_id: string
+    ): Promise<PerformanceMetrics> {
+        try {
+            // Get student's classes
+            const allClassesResult = await Class.find({
+                campus_id,
+                is_active: true,
+                is_deleted: false,
+            });
+
+            const allClasses = allClassesResult.rows || [];
+            const classes = allClasses.filter(cls => 
+                cls.student_ids && cls.student_ids.includes(user_id)
+            );
+            const classIds = classes.map((c) => c.id);
+
+            return await PerformanceAnalyticsHelper.calculateStudentPerformance(user_id, campus_id, classIds);
+        } catch (error) {
+            throw new Error(`Failed to get student performance: ${error}`);
+        }
+    }
+
+    /**
+     * Get detailed study hours analytics for a student
+     */
+    public static async getStudentHours(
+        user_id: string,
+        campus_id: string
+    ): Promise<StudyHoursData> {
+        try {
+            return await StudyHoursAnalyticsHelper.calculateStudyHours(user_id, campus_id);
+        } catch (error) {
+            throw new Error(`Failed to get student hours: ${error}`);
+        }
+    }
+
+    /**
+     * Get detailed grades analytics for a student
+     */
+    public static async getStudentGrades(
+        user_id: string,
+        campus_id: string
+    ): Promise<GradesData> {
+        try {
+            return await GradesAnalyticsHelper.getGradesData(user_id, campus_id);
+        } catch (error) {
+            throw new Error(`Failed to get student grades: ${error}`);
+        }
+    }
+
+    /**
+     * Get performance analytics for a parent's child
+     */
+    public static async getChildPerformance(
+        parent_user_id: string,
+        child_user_id: string,
+        campus_id: string
+    ): Promise<PerformanceMetrics> {
+        try {
+            // Verify parent has access to this child
+            const parentResult = await User.find({
+                id: parent_user_id,
+                campus_id,
+                user_type: "Parent",
+                is_active: true,
+                is_deleted: false,
+            });
+
+            const parent = parentResult.rows?.[0];
+            if (!parent) {
+                throw new Error("Parent not found");
+            }
+
+            const childrenIds = parent.meta_data?.student_id || [];
+            if (!childrenIds.includes(child_user_id)) {
+                throw new Error("Unauthorized access to child data");
+            }
+
+            // Get child's classes
+            const allClassesResult = await Class.find({
+                campus_id,
+                is_active: true,
+                is_deleted: false,
+            });
+
+            const allClasses = allClassesResult.rows || [];
+            const classes = allClasses.filter(cls => 
+                cls.student_ids && cls.student_ids.includes(child_user_id)
+            );
+            const classIds = classes.map((c) => c.id);
+
+            return await PerformanceAnalyticsHelper.calculateStudentPerformance(child_user_id, campus_id, classIds);
+        } catch (error) {
+            throw new Error(`Failed to get child performance: ${error}`);
+        }
+    }
+
+    /**
+     * Get study hours analytics for a parent's child
+     */
+    public static async getChildHours(
+        parent_user_id: string,
+        child_user_id: string,
+        campus_id: string
+    ): Promise<StudyHoursData> {
+        try {
+            // Verify parent has access to this child
+            const parentResult = await User.find({
+                id: parent_user_id,
+                campus_id,
+                user_type: "Parent",
+                is_active: true,
+                is_deleted: false,
+            });
+
+            const parent = parentResult.rows?.[0];
+            if (!parent) {
+                throw new Error("Parent not found");
+            }
+
+            const childrenIds = parent.meta_data?.student_id || [];
+            if (!childrenIds.includes(child_user_id)) {
+                throw new Error("Unauthorized access to child data");
+            }
+
+            return await StudyHoursAnalyticsHelper.calculateStudyHours(child_user_id, campus_id);
+        } catch (error) {
+            throw new Error(`Failed to get child hours: ${error}`);
+        }
+    }
+
+    /**
+     * Get grades analytics for a parent's child
+     */
+    public static async getChildGrades(
+        parent_user_id: string,
+        child_user_id: string,
+        campus_id: string
+    ): Promise<GradesData> {
+        try {
+            // Verify parent has access to this child
+            const parentResult = await User.find({
+                id: parent_user_id,
+                campus_id,
+                user_type: "Parent",
+                is_active: true,
+                is_deleted: false,
+            });
+
+            const parent = parentResult.rows?.[0];
+            if (!parent) {
+                throw new Error("Parent not found");
+            }
+
+            const childrenIds = parent.meta_data?.student_id || [];
+            if (!childrenIds.includes(child_user_id)) {
+                throw new Error("Unauthorized access to child data");
+            }
+
+            return await GradesAnalyticsHelper.getGradesData(child_user_id, campus_id);
+        } catch (error) {
+            throw new Error(`Failed to get child grades: ${error}`);
+        }
+    }
+
+    /**
      * Get quick stats for any user type
      */
     public static async getQuickStats(
@@ -1135,11 +1218,8 @@ export class DashboardService {
         try {
             switch (user_type) {
                 case "Student":
-                    const classResult = await Class.find({
-                        campus_id,
-                        student_ids: { $elemMatch: user_id },
-                        is_active: true,
-                    });
+                    const classService = new ClassService();
+                    const studentClasses = await classService.getClassesByStudentId(user_id);
                     
                     const notificationResult = await StudentNotification.find({
                         campus_id,
@@ -1149,7 +1229,7 @@ export class DashboardService {
                     });
 
                     return {
-                        classes: classResult.rows?.length || 0,
+                        classes: studentClasses.length,
                         unreadNotifications: notificationResult.rows?.length || 0,
                         pendingAssignments: 0, // Would need detailed calculation
                     };
