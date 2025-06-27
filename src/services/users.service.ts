@@ -30,6 +30,19 @@ export class UserService {
         user_type: string;
         campus_id?: string;
     }) => {
+        // Check if email already exists
+        try {
+            const existingUser = await User.find({ email: email });
+            if (existingUser.rows.length > 0) {
+                throw new Error("Email already exists");
+            }
+        } catch (error) {
+            if (error instanceof Error && error.message === "Email already exists") {
+                throw error;
+            }
+            // If error is not about existing user, continue with creation
+        }
+
         const salt = crypto.randomBytes(16).toString("hex");
         const hash = crypto
             .pbkdf2Sync(password, salt, 1000, 64, "sha512")
@@ -136,6 +149,21 @@ export class UserService {
         const user = await User.findById(id);
         if (!user) {
             throw new Error("User not found");
+        }
+
+        // Check if email is being updated and if it already exists
+        if (data.email && data.email !== user.email) {
+            try {
+                const existingUser = await User.find({ email: data.email });
+                if (existingUser.rows.length > 0) {
+                    throw new Error("Email already exists");
+                }
+            } catch (error) {
+                if (error instanceof Error && error.message === "Email already exists") {
+                    throw error;
+                }
+                // If error is not about existing user, continue with update
+            }
         }
 
         await User.updateById(id, {

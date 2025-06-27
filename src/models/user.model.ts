@@ -26,7 +26,7 @@ interface IUser {
 const UserSchema = new Schema({
     user_type: { type: String, required: true },
     user_id: { type: String, required: true },
-    email: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
     hash: { type: String, required: true },
     salt: { type: String, required: true },
     first_name: { type: String, required: true },

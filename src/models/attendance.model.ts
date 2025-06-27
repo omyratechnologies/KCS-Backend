@@ -8,10 +8,13 @@ interface IAttendanceData {
     campus_id: string;
     class_id?: string; // Optional class association
     date: Date;
-    status: "present" | "absent" | "late" | "leave";
+    status: string;
     user_type?: "Student" | "Teacher";
     created_at: Date;
     updated_at: Date;
+    is_deleted?: boolean; // For soft deletes
+    remarks?: string; // Optional remarks for attendance
+    modifiedCount?: number; // Optional field to track modified count
 }
 
 const AttendanceSchema = new Schema({

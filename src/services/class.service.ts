@@ -515,7 +515,7 @@ export class ClassService {
                         }
                         return {
                             id: student.id,
-                            user_id: student.id, // Assuming user_id is the same as id
+                            user_id: student.user_id, // Assuming user_id is the same as id
                             name: `${student.first_name} ${student.last_name}`,
                         };
                     } catch (error) {

@@ -143,4 +143,12 @@ export class TimetableService {
             updated_at: new Date(),
         });
     };
+
+    // Delete by ID
+    public static readonly deleteTimetableById = async (id: string) => {
+        return await Timetable.updateById(id, {
+            is_deleted: true,
+            updated_at: new Date(),
+        });
+    }
 }
