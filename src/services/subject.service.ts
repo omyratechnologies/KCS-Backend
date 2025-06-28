@@ -74,9 +74,18 @@ export class SubjectService {
 
     // Delete a subject
     public static async deleteSubject(id: string) {
-        const subject = await Subject.deleteById(id);
+        const subject = await Subject.findOneAndUpdate(
+            {
+                id: id,
+                is_deleted: false,
+            },
+            {
+                is_deleted: true,
+                updated_at: new Date(),
+            }
+        );
         if (!subject) {
-            throw new Error("Subject not deleted");
+            throw new Error("Subject not found or already deleted");
         }
         return subject;
     }

@@ -724,4 +724,389 @@ app.get(
     ClassQuizController.getAllClassQuizzes
 );
 
+// ======================= NEW SESSION-BASED QUIZ ROUTES =======================
+
+// Start a quiz session
+app.post(
+    "/session/:class_id/:quiz_id/start",
+    describeRoute({
+        operationId: "startQuizSession",
+        summary: "Start a quiz session",
+        description: "Starts a new quiz session for a student",
+        tags: ["Quiz Sessions"],
+        parameters: [
+            {
+                name: "class_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Class ID",
+            },
+            {
+                name: "quiz_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Quiz ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Quiz session started successfully",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                success: { type: "boolean" },
+                                message: { type: "string" },
+                                data: {
+                                    type: "object",
+                                    properties: {
+                                        session: { type: "object" },
+                                        quiz: { type: "object" },
+                                        current_question: { type: "object" },
+                                        questions_count: { type: "number" },
+                                        time_remaining_seconds: { type: "number" },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            400: {
+                description: "Bad request",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    ClassQuizController.startQuizSession
+);
+
+// Get quiz session
+app.get(
+    "/session/:session_token",
+    describeRoute({
+        operationId: "getQuizSession",
+        summary: "Get quiz session",
+        description: "Retrieves current quiz session state",
+        tags: ["Quiz Sessions"],
+        parameters: [
+            {
+                name: "session_token",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Session token",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Quiz session details",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                success: { type: "boolean" },
+                                data: {
+                                    type: "object",
+                                    properties: {
+                                        session: { type: "object" },
+                                        quiz: { type: "object" },
+                                        current_question: { type: "object" },
+                                        questions_count: { type: "number" },
+                                        time_remaining_seconds: { type: "number" },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            400: {
+                description: "Invalid session",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    ClassQuizController.getQuizSession
+);
+
+// Submit answer
+app.post(
+    "/session/:session_token/answer",
+    describeRoute({
+        operationId: "submitQuizAnswer",
+        summary: "Submit quiz answer",
+        description: "Submits an answer for a quiz question",
+        tags: ["Quiz Sessions"],
+        parameters: [
+            {
+                name: "session_token",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Session token",
+            },
+        ],
+        requestBody: {
+            content: {
+                "application/json": {
+                    schema: {
+                        type: "object",
+                        properties: {
+                            question_id: { type: "string" },
+                            answer: { type: "string" },
+                        },
+                        required: ["question_id", "answer"],
+                    },
+                },
+            },
+        },
+        responses: {
+            200: {
+                description: "Answer submitted successfully",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                success: { type: "boolean" },
+                                message: { type: "string" },
+                                data: {
+                                    type: "object",
+                                    properties: {
+                                        session: { type: "object" },
+                                        quiz: { type: "object" },
+                                        current_question: { type: "object" },
+                                        questions_count: { type: "number" },
+                                        time_remaining_seconds: { type: "number" },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            400: {
+                description: "Invalid request",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    ClassQuizController.submitQuizAnswer
+);
+
+// Complete quiz
+app.post(
+    "/session/:session_token/complete",
+    describeRoute({
+        operationId: "completeQuizSession",
+        summary: "Complete quiz session",
+        description: "Completes and submits the quiz",
+        tags: ["Quiz Sessions"],
+        parameters: [
+            {
+                name: "session_token",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Session token",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Quiz completed successfully",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                success: { type: "boolean" },
+                                message: { type: "string" },
+                                data: {
+                                    type: "object",
+                                    properties: {
+                                        score: { type: "number" },
+                                        total_questions: { type: "number" },
+                                        percentage: { type: "number" },
+                                        correct_answers: { type: "number" },
+                                        incorrect_answers: { type: "number" },
+                                        time_taken_seconds: { type: "number" },
+                                        submission: { type: "object" },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            400: {
+                description: "Invalid request",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    ClassQuizController.completeQuizSession
+);
+
+// Check and process expired sessions (admin endpoint)
+app.post(
+    "/admin/check-expired-sessions",
+    describeRoute({
+        operationId: "checkExpiredSessions",
+        summary: "Check and process expired quiz sessions",
+        description: "Checks for expired quiz sessions and auto-submits them (admin only)",
+        tags: ["Quiz Administration"],
+        responses: {
+            200: {
+                description: "Expired sessions processed successfully",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                success: { type: "boolean" },
+                                message: { type: "string" },
+                                data: {
+                                    type: "array",
+                                    items: {
+                                        type: "object",
+                                        properties: {
+                                            session_id: { type: "string" },
+                                            user_id: { type: "string" },
+                                            quiz_id: { type: "string" },
+                                            result: { type: "object" },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    ClassQuizController.checkExpiredSessions
+);
+
+// Get user's quiz session history
+app.get(
+    "/session/history",
+    describeRoute({
+        operationId: "getQuizSessionHistory",
+        summary: "Get user's quiz session history",
+        description: "Retrieves the history of quiz sessions for the current user",
+        tags: ["Quiz Sessions"],
+        parameters: [
+            {
+                name: "quiz_id",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+                description: "Filter by specific quiz ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Session history retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                success: { type: "boolean" },
+                                data: {
+                                    type: "array",
+                                    items: { type: "object" },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            400: {
+                description: "Bad request",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    ClassQuizController.getQuizSessionHistory
+);
+
+// Abandon quiz session
+app.post(
+    "/session/:session_token/abandon",
+    describeRoute({
+        operationId: "abandonQuizSession",
+        summary: "Abandon quiz session",
+        description: "Manually abandon a quiz session without submitting",
+        tags: ["Quiz Sessions"],
+        parameters: [
+            {
+                name: "session_token",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Session token",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Session abandoned successfully",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                success: { type: "boolean" },
+                                message: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+            400: {
+                description: "Invalid request",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    ClassQuizController.abandonQuizSession
+);
+
 export default app;

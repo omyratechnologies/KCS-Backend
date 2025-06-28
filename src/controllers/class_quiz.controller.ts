@@ -525,4 +525,213 @@ export class ClassQuizController {
             }
         }
     };
+
+    // ======================= NEW SESSION-BASED QUIZ METHODS =======================
+
+    public static readonly startQuizSession = async (ctx: Context) => {
+        try {
+            const campus_id = ctx.get("campus_id");
+            const user_id = ctx.get("user_id");
+            const { class_id, quiz_id } = ctx.req.param();
+
+            const result = await ClassQuizService.startQuizSession(
+                campus_id,
+                class_id,
+                quiz_id,
+                user_id
+            );
+
+            return ctx.json({
+                success: true,
+                message: "Quiz session started successfully",
+                data: result,
+            });
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json(
+                    {
+                        success: false,
+                        message: error.message,
+                    },
+                    400
+                );
+            }
+        }
+    };
+
+    public static readonly getQuizSession = async (ctx: Context) => {
+        try {
+            const user_id = ctx.get("user_id");
+            const { session_token } = ctx.req.param();
+
+            const result = await ClassQuizService.getQuizSession(
+                session_token,
+                user_id
+            );
+
+            return ctx.json({
+                success: true,
+                data: result,
+            });
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json(
+                    {
+                        success: false,
+                        message: error.message,
+                    },
+                    400
+                );
+            }
+        }
+    };
+
+    public static readonly submitQuizAnswer = async (ctx: Context) => {
+        try {
+            const user_id = ctx.get("user_id");
+            const { session_token } = ctx.req.param();
+            const { question_id, answer } = await ctx.req.json();
+
+            if (!question_id || !answer) {
+                return ctx.json(
+                    {
+                        success: false,
+                        message: "Question ID and answer are required",
+                    },
+                    400
+                );
+            }
+
+            const result = await ClassQuizService.submitAnswer(
+                session_token,
+                user_id,
+                question_id,
+                answer
+            );
+
+            return ctx.json({
+                success: true,
+                message: "Answer submitted successfully",
+                data: result,
+            });
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json(
+                    {
+                        success: false,
+                        message: error.message,
+                    },
+                    400
+                );
+            }
+        }
+    };
+
+    public static readonly completeQuizSession = async (ctx: Context) => {
+        try {
+            const user_id = ctx.get("user_id");
+            const { session_token } = ctx.req.param();
+
+            const result = await ClassQuizService.completeQuiz(
+                session_token,
+                user_id
+            );
+
+            return ctx.json({
+                success: true,
+                message: "Quiz completed successfully",
+                data: result,
+            });
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json(
+                    {
+                        success: false,
+                        message: error.message,
+                    },
+                    400
+                );
+            }
+        }
+    };
+
+    // ======================= UPDATED LEGACY METHODS =======================
+
+    // ======================= TIMEOUT HANDLING CONTROLLERS =======================
+
+    public static readonly checkExpiredSessions = async (ctx: Context) => {
+        try {
+            const result = await ClassQuizService.checkAndHandleExpiredSessions();
+
+            return ctx.json({
+                success: true,
+                message: `Processed ${result.length} expired sessions`,
+                data: result,
+            });
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json(
+                    {
+                        success: false,
+                        message: error.message,
+                    },
+                    500
+                );
+            }
+        }
+    };
+
+    public static readonly getQuizSessionHistory = async (ctx: Context) => {
+        try {
+            const user_id = ctx.get("user_id");
+            const { quiz_id } = ctx.req.query();
+
+            const result = await ClassQuizService.getQuizSessionHistory(
+                user_id,
+                quiz_id
+            );
+
+            return ctx.json({
+                success: true,
+                data: result,
+            });
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json(
+                    {
+                        success: false,
+                        message: error.message,
+                    },
+                    400
+                );
+            }
+        }
+    };
+
+    public static readonly abandonQuizSession = async (ctx: Context) => {
+        try {
+            const user_id = ctx.get("user_id");
+            const { session_token } = ctx.req.param();
+
+            const result = await ClassQuizService.abandonQuizSession(
+                session_token,
+                user_id
+            );
+
+            return ctx.json({
+                success: true,
+                message: result.message,
+            });
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json(
+                    {
+                        success: false,
+                        message: error.message,
+                    },
+                    400
+                );
+            }
+        }
+    };
 }
