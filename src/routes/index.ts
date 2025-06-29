@@ -19,6 +19,7 @@ import messagesRoute from "@/routes/message.route";
 import notificationRoute from "@/routes/notification.route";
 import parentRoute from "@/routes/parent.route";
 import studentRecordRoute from "@/routes/student_record.route";
+import studentPerformanceRoute from "@/routes/student_performance.route";
 import subjectRoute from "@/routes/subject.route";
 import syllabusRoute from "@/routes/syllabus.route";
 import teacherRoute from "@/routes/teacher.route";
@@ -55,6 +56,7 @@ app.route("/course-quiz", courseQuizRoute);
 app.route("/syllabus", syllabusRoute);
 app.route("/upload", uploadRoute);
 app.route("/student-record", studentRecordRoute);
+app.route("/student-performance", studentPerformanceRoute);
 app.route("/teacher", teacherRoute);
 app.route("/parent", parentRoute);
 

@@ -33,6 +33,8 @@ interface QuizSessionResponse {
     current_question?: IClassQuizQuestion;
     questions_count: number;
     time_remaining_seconds?: number;
+    can_go_previous?: boolean;
+    can_go_next?: boolean;
 }
 
 interface QuizResult {
@@ -420,6 +422,78 @@ export class ClassQuizService {
         return await this.getQuizSessionResponse(updatedSession!);
     };
 
+    public static readonly navigateToNext = async (
+        session_token: string,
+        user_id: string
+    ): Promise<QuizSessionResponse> => {
+        const session = await this.validateAndGetSession(session_token, user_id);
+
+        if (session.status === "completed") {
+            throw new Error("Quiz already completed");
+        }
+
+        if (session.status === "expired") {
+            throw new Error("Quiz session has expired");
+        }
+
+        // Get all questions for this quiz
+        const questions = await this.getClassQuizQuestionsByQuizId(
+            session.campus_id,
+            session.class_id,
+            session.quiz_id
+        );
+
+        const totalQuestions = questions.length;
+        const currentIndex = session.current_question_index || 0;
+
+        if (currentIndex >= totalQuestions - 1) {
+            throw new Error("Already at the last question");
+        }
+
+        const nextIndex = currentIndex + 1;
+
+        // Update session with new current question index
+        await ClassQuizSession.updateById(session.id, {
+            current_question_index: nextIndex,
+            last_activity_at: new Date(),
+        });
+
+        const updatedSession = await ClassQuizSession.findById(session.id);
+        return await this.getQuizSessionResponse(updatedSession!);
+    };
+
+    public static readonly navigateToPrevious = async (
+        session_token: string,
+        user_id: string
+    ): Promise<QuizSessionResponse> => {
+        const session = await this.validateAndGetSession(session_token, user_id);
+
+        if (session.status === "completed") {
+            throw new Error("Quiz already completed");
+        }
+
+        if (session.status === "expired") {
+            throw new Error("Quiz session has expired");
+        }
+
+        const currentIndex = session.current_question_index || 0;
+
+        if (currentIndex <= 0) {
+            throw new Error("Already at the first question");
+        }
+
+        const previousIndex = currentIndex - 1;
+
+        // Update session with new current question index
+        await ClassQuizSession.updateById(session.id, {
+            current_question_index: previousIndex,
+            last_activity_at: new Date(),
+        });
+
+        const updatedSession = await ClassQuizSession.findById(session.id);
+        return await this.getQuizSessionResponse(updatedSession!);
+    };
+
     public static readonly completeQuiz = async (
         session_token: string,
         user_id: string
@@ -501,6 +575,124 @@ export class ClassQuizService {
         };
     };
 
+    public static readonly getQuizResultsBySession = async (
+        session_token: string,
+        user_id: string
+    ) => {
+        // Validate session exists and belongs to user
+        const sessionResult = await ClassQuizSession.find({
+            session_token,
+            user_id,
+            is_deleted: false,
+        });
+
+        if (!sessionResult.rows || sessionResult.rows.length === 0) {
+            throw new Error("Session not found");
+        }
+
+        const session = sessionResult.rows[0] as IClassQuizSession;
+
+        // Only allow getting results for completed or expired sessions
+        if (session.status !== "completed" && session.status !== "expired") {
+            throw new Error("Quiz session is not completed yet");
+        }
+
+        // Get the quiz details
+        const quiz = await this.getClassQuizById(session.quiz_id);
+        if (!quiz) {
+            throw new Error("Quiz not found");
+        }
+
+        // Get the submission for this session
+        const submission = await ClassQuizSubmission.find({
+            quiz_id: session.quiz_id,
+            user_id: session.user_id,
+            is_deleted: false,
+        });
+
+        if (!submission.rows || submission.rows.length === 0) {
+            throw new Error("Quiz submission not found");
+        }
+
+        const submissionData = submission.rows[0] as IClassQuizSubmission;
+
+        // Get all questions for the quiz
+        const questions = await this.getClassQuizQuestionsByQuizId(
+            session.campus_id,
+            session.class_id,
+            session.quiz_id
+        );
+
+        // Get all attempts for this user and quiz
+        const attempts = await ClassQuizAttempt.find({
+            quiz_id: session.quiz_id,
+            user_id: session.user_id,
+        });
+
+        const attemptMap = new Map(
+            attempts.rows?.map(attempt => [attempt.question_id, attempt as IClassQuizAttempt]) || []
+        );
+
+        // Build detailed results
+        const questionResults = questions.map(question => {
+            const userAttempt = attemptMap.get(question.id);
+            const userAnswer = userAttempt ? (userAttempt as IClassQuizAttempt).attempt_data : null;
+            const isCorrect = userAnswer === question.correct_answer;
+
+            return {
+                question_id: question.id,
+                question_text: question.question_text,
+                question_type: question.question_type,
+                options: question.options,
+                correct_answer: question.correct_answer,
+                user_answer: userAnswer,
+                is_correct: isCorrect,
+                points_earned: isCorrect ? 1 : 0, // Basic scoring, can be enhanced
+                meta_data: question.meta_data,
+            };
+        });
+
+        const correctAnswers = questionResults.filter(q => q.is_correct).length;
+        const totalQuestions = questions.length;
+        const percentage = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
+
+        // Calculate time taken
+        const timeTakenSeconds = session.started_at && session.completed_at
+            ? Math.floor((new Date(session.completed_at).getTime() - new Date(session.started_at).getTime()) / 1000)
+            : 0;
+
+        return {
+            session: {
+                id: session.id,
+                session_token: session.session_token,
+                status: session.status,
+                started_at: session.started_at,
+                completed_at: session.completed_at,
+                time_taken_seconds: timeTakenSeconds,
+            },
+            quiz: {
+                id: quiz.id,
+                quiz_name: quiz.quiz_name,
+                quiz_description: quiz.quiz_description,
+                quiz_meta_data: quiz.quiz_meta_data,
+            },
+            results: {
+                submission_id: submissionData.id,
+                score: submissionData.score,
+                total_questions: totalQuestions,
+                correct_answers: correctAnswers,
+                incorrect_answers: totalQuestions - correctAnswers,
+                percentage: Math.round(percentage * 100) / 100,
+                submission_date: submissionData.submission_date,
+                feedback: submissionData.feedback,
+                time_taken_seconds: timeTakenSeconds,
+                auto_submitted: session.status === "expired",
+            },
+            question_details: questionResults,
+            meta_data: submissionData.meta_data,
+        };
+    };
+
     // ======================= HELPER METHODS =======================
 
     private static readonly validateAndGetSession = async (
@@ -572,12 +764,20 @@ export class ClassQuizService {
             timeRemainingSeconds = Math.max(0, Math.floor((expiresAt.getTime() - now.getTime()) / 1000));
         }
 
+        // Calculate navigation flags
+        const currentIndex = session.current_question_index || 0;
+        const totalQuestions = questions.length;
+        const canGoPrevious = currentIndex > 0;
+        const canGoNext = currentIndex < totalQuestions - 1;
+
         return {
             session,
             quiz,
             current_question: currentQuestion,
             questions_count: questions.length,
             time_remaining_seconds: timeRemainingSeconds,
+            can_go_previous: canGoPrevious,
+            can_go_next: canGoNext,
         };
     };
 
@@ -1097,4 +1297,115 @@ export class ClassQuizService {
 
         return await this.getQuizSessionResponse(session);
     };
+
+    public static readonly getClassQuizByClassIDWithStudentStatus = async (
+        campus_id: string,
+        class_id: string,
+        student_id: string
+    ) => {
+        // Get all quizzes for the class
+        const quizzes = await this.getClassQuizByClassID(campus_id, class_id);
+        
+        if (quizzes.length === 0) {
+            return [];
+        }
+
+        // Get all submissions for this student
+        const submissions = await ClassQuizSubmission.find({
+            class_id,
+            user_id: student_id,
+            is_deleted: false,
+        });
+
+        const submissionMap = new Map(
+            submissions.rows?.map(sub => [sub.quiz_id, sub as IClassQuizSubmission]) || []
+        );
+
+        // Get all active sessions for this student
+        const activeSessions = await ClassQuizSession.find({
+            class_id,
+            user_id: student_id,
+            status: "in_progress",
+            is_deleted: false,
+        });
+
+        const activeSessionMap = new Map(
+            activeSessions.rows?.map(session => [session.quiz_id, session as IClassQuizSession]) || []
+        );
+
+        // Enhance each quiz with student status
+        const quizzesWithStatus = await Promise.all(
+            quizzes.map(async (quiz) => {
+                const submission = submissionMap.get(quiz.id) as IClassQuizSubmission | undefined;
+                const activeSession = activeSessionMap.get(quiz.id) as IClassQuizSession | undefined;
+                
+                let status = "not_attempted";
+                let attempt_data: any = null;
+                let session_data: any = null;
+
+                if (submission) {
+                    status = "completed";
+                    attempt_data = {
+                        submission_id: submission.id,
+                        score: submission.score,
+                        submission_date: submission.submission_date,
+                        feedback: submission.feedback,
+                        meta_data: submission.meta_data,
+                    };
+                } else if (activeSession) {
+                    // Check if session is expired
+                    const now = new Date();
+                    if (activeSession.expires_at && new Date(activeSession.expires_at) <= now) {
+                        status = "expired";
+                    } else {
+                        status = "in_progress";
+                    }
+                    
+                    session_data = {
+                        session_id: activeSession.id,
+                        session_token: activeSession.session_token,
+                        started_at: activeSession.started_at,
+                        expires_at: activeSession.expires_at,
+                        answers_count: activeSession.answers_count,
+                        total_questions: activeSession.total_questions,
+                        time_remaining_seconds: activeSession.expires_at ? 
+                            Math.max(0, Math.floor((new Date(activeSession.expires_at).getTime() - now.getTime()) / 1000)) : null,
+                    };
+                }
+
+                // Check availability
+                const quizSettings = quiz.quiz_meta_data as QuizSettings;
+                let availability_status = "available";
+                
+                if (quizSettings.available_from && new Date() < new Date(quizSettings.available_from)) {
+                    availability_status = "not_yet_available";
+                } else if (quizSettings.available_until && new Date() > new Date(quizSettings.available_until)) {
+                    availability_status = "expired";
+                }
+
+                // Check if student can attempt based on max_attempts
+                let can_attempt = true;
+                if (submission && quizSettings.max_attempts && quizSettings.max_attempts <= 1) {
+                    can_attempt = false;
+                }
+
+                return {
+                    ...quiz,
+                    student_status: {
+                        status,
+                        availability_status,
+                        can_attempt,
+                        attempt_data,
+                        session_data,
+                        max_attempts: quizSettings.max_attempts || 1,
+                        attempts_made: submission ? 1 : 0,
+                    }
+                };
+            })
+        );
+
+        return quizzesWithStatus;
+    };
+
+    // ======================= QUIZ MANAGEMENT =======================
 }

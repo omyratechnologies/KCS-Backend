@@ -56,7 +56,6 @@ export class ClassQuizController {
     public static readonly getClassQuizByClassID = async (ctx: Context) => {
         try {
             const campus_id = ctx.get("campus_id");
-
             const { class_id } = ctx.req.param();
 
             const result = await ClassQuizService.getClassQuizByClassID(
@@ -69,6 +68,48 @@ export class ClassQuizController {
             if (error instanceof Error) {
                 return ctx.json(
                     {
+                        message: error.message,
+                    },
+                    500
+                );
+            }
+        }
+    };
+
+    public static readonly getClassQuizByClassIDWithStudentStatus = async (ctx: Context) => {
+        try {
+            const campus_id = ctx.get("campus_id");
+            const { class_id } = ctx.req.param();
+            const { user_id } = ctx.req.query();
+            
+            // If no user_id in query, use the logged-in user's ID
+            const student_id = user_id || ctx.get("user_id");
+
+            if (!student_id) {
+                return ctx.json(
+                    {
+                        success: false,
+                        message: "Student ID is required",
+                    },
+                    400
+                );
+            }
+
+            const result = await ClassQuizService.getClassQuizByClassIDWithStudentStatus(
+                campus_id,
+                class_id,
+                student_id
+            );
+
+            return ctx.json({
+                success: true,
+                data: result,
+            });
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json(
+                    {
+                        success: false,
                         message: error.message,
                     },
                     500
@@ -627,6 +668,62 @@ export class ClassQuizController {
         }
     };
 
+    public static readonly navigateToNextQuestion = async (ctx: Context) => {
+        try {
+            const user_id = ctx.get("user_id");
+            const { session_token } = ctx.req.param();
+
+            const result = await ClassQuizService.navigateToNext(
+                session_token,
+                user_id
+            );
+
+            return ctx.json({
+                success: true,
+                message: "Moved to next question",
+                data: result,
+            });
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json(
+                    {
+                        success: false,
+                        message: error.message,
+                    },
+                    400
+                );
+            }
+        }
+    };
+
+    public static readonly navigateToPreviousQuestion = async (ctx: Context) => {
+        try {
+            const user_id = ctx.get("user_id");
+            const { session_token } = ctx.req.param();
+
+            const result = await ClassQuizService.navigateToPrevious(
+                session_token,
+                user_id
+            );
+
+            return ctx.json({
+                success: true,
+                message: "Moved to previous question",
+                data: result,
+            });
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json(
+                    {
+                        success: false,
+                        message: error.message,
+                    },
+                    400
+                );
+            }
+        }
+    };
+
     public static readonly completeQuizSession = async (ctx: Context) => {
         try {
             const user_id = ctx.get("user_id");
@@ -655,7 +752,61 @@ export class ClassQuizController {
         }
     };
 
-    // ======================= UPDATED LEGACY METHODS =======================
+    public static readonly getQuizStatistics = async (ctx: Context) => {
+        try {
+            const campus_id = ctx.get("campus_id");
+            const { class_id, quiz_id } = ctx.req.param();
+
+            const result = await ClassQuizService.getQuizStatistics(
+                campus_id,
+                class_id,
+                quiz_id
+            );
+
+            return ctx.json({
+                success: true,
+                data: result,
+            });
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json(
+                    {
+                        success: false,
+                        message: error.message,
+                    },
+                    500
+                );
+            }
+        }
+    };
+
+    public static readonly getActiveQuizSessions = async (ctx: Context) => {
+        try {
+            const campus_id = ctx.get("campus_id");
+            const { class_id, quiz_id } = ctx.req.query();
+
+            const result = await ClassQuizService.getActiveQuizSessions(
+                campus_id,
+                class_id,
+                quiz_id
+            );
+
+            return ctx.json({
+                success: true,
+                data: result,
+            });
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json(
+                    {
+                        success: false,
+                        message: error.message,
+                    },
+                    500
+                );
+            }
+        }
+    };
 
     // ======================= TIMEOUT HANDLING CONTROLLERS =======================
 
@@ -721,6 +872,33 @@ export class ClassQuizController {
             return ctx.json({
                 success: true,
                 message: result.message,
+            });
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json(
+                    {
+                        success: false,
+                        message: error.message,
+                    },
+                    400
+                );
+            }
+        }
+    };
+
+    public static readonly getQuizResultsBySession = async (ctx: Context) => {
+        try {
+            const user_id = ctx.get("user_id");
+            const { session_token } = ctx.req.param();
+
+            const result = await ClassQuizService.getQuizResultsBySession(
+                session_token,
+                user_id
+            );
+
+            return ctx.json({
+                success: true,
+                data: result,
             });
         } catch (error) {
             if (error instanceof Error) {

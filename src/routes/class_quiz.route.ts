@@ -17,6 +17,7 @@ import {
     quizAttemptSchema,
     quizQuestionSchema,
     quizSubmissionSchema,
+    quizStatisticsResponseSchema,
     updateQuizQuestionRequestBodySchema,
     updateQuizQuestionResponseSchema,
     updateQuizSubmissionRequestBodySchema,
@@ -138,6 +139,95 @@ app.get(
         },
     }),
     ClassQuizController.getClassQuizByClassID
+);
+
+// Get quizzes by class ID with student status (for students)
+app.get(
+    "/class/:class_id/student-status",
+    describeRoute({
+        operationId: "getClassQuizByClassIDWithStudentStatus",
+        summary: "Get quizzes with student attempt status",
+        description: "Retrieves all quizzes for a specific class with student's attempt status (completed, in progress, not attempted)",
+        tags: ["Student Quiz"],
+        parameters: [
+            {
+                name: "class_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Class ID",
+            },
+            {
+                name: "user_id",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+                description: "Student ID (optional, uses logged-in user if not provided)",
+            },
+        ],
+        responses: {
+            200: {
+                description: "List of quizzes with student status",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                success: { type: "boolean" },
+                                data: {
+                                    type: "array",
+                                    items: {
+                                        type: "object",
+                                        properties: {
+                                            id: { type: "string" },
+                                            quiz_name: { type: "string" },
+                                            quiz_description: { type: "string" },
+                                            quiz_meta_data: { type: "object" },
+                                            student_status: {
+                                                type: "object",
+                                                properties: {
+                                                    status: { 
+                                                        type: "string",
+                                                        enum: ["not_attempted", "in_progress", "completed", "expired"]
+                                                    },
+                                                    availability_status: {
+                                                        type: "string",
+                                                        enum: ["available", "not_yet_available", "expired"]
+                                                    },
+                                                    can_attempt: { type: "boolean" },
+                                                    max_attempts: { type: "number" },
+                                                    attempts_made: { type: "number" },
+                                                    attempt_data: { type: "object", nullable: true },
+                                                    session_data: { type: "object", nullable: true },
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            400: {
+                description: "Bad request",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    ClassQuizController.getClassQuizByClassIDWithStudentStatus
 );
 
 app.put(
@@ -724,6 +814,60 @@ app.get(
     ClassQuizController.getAllClassQuizzes
 );
 
+// Get quiz statistics
+app.get(
+    "/class/:class_id/:quiz_id/statistics",
+    describeRoute({
+        operationId: "getQuizStatistics",
+        summary: "Get quiz statistics",
+        description: "Retrieves detailed statistics for a specific quiz including attempts, scores, and completion rates",
+        tags: ["Class Quiz"],
+        parameters: [
+            {
+                name: "class_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Class ID",
+            },
+            {
+                name: "quiz_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Quiz ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Quiz statistics retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(quizStatisticsResponseSchema),
+                    },
+                },
+            },
+            404: {
+                description: "Quiz not found",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    ClassQuizController.getQuizStatistics
+);
+
 // ======================= NEW SESSION-BASED QUIZ ROUTES =======================
 
 // Start a quiz session
@@ -909,6 +1053,120 @@ app.post(
         },
     }),
     ClassQuizController.submitQuizAnswer
+);
+
+// Navigate to next question
+app.post(
+    "/session/:session_token/next",
+    describeRoute({
+        operationId: "navigateToNextQuestion",
+        summary: "Navigate to next question",
+        description: "Moves to the next question in the quiz session",
+        tags: ["Quiz Sessions"],
+        parameters: [
+            {
+                name: "session_token",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Session token",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Successfully moved to next question",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                success: { type: "boolean" },
+                                message: { type: "string" },
+                                data: {
+                                    type: "object",
+                                    properties: {
+                                        session: { type: "object" },
+                                        quiz: { type: "object" },
+                                        current_question: { type: "object" },
+                                        questions_count: { type: "number" },
+                                        time_remaining_seconds: { type: "number" },
+                                        can_go_previous: { type: "boolean" },
+                                        can_go_next: { type: "boolean" },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            400: {
+                description: "Invalid request",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    ClassQuizController.navigateToNextQuestion
+);
+
+// Navigate to previous question
+app.post(
+    "/session/:session_token/previous",
+    describeRoute({
+        operationId: "navigateToPreviousQuestion",
+        summary: "Navigate to previous question",
+        description: "Moves to the previous question in the quiz session",
+        tags: ["Quiz Sessions"],
+        parameters: [
+            {
+                name: "session_token",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Session token",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Successfully moved to previous question",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                success: { type: "boolean" },
+                                message: { type: "string" },
+                                data: {
+                                    type: "object",
+                                    properties: {
+                                        session: { type: "object" },
+                                        quiz: { type: "object" },
+                                        current_question: { type: "object" },
+                                        questions_count: { type: "number" },
+                                        time_remaining_seconds: { type: "number" },
+                                        can_go_previous: { type: "boolean" },
+                                        can_go_next: { type: "boolean" },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            400: {
+                description: "Invalid request",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    ClassQuizController.navigateToPreviousQuestion
 );
 
 // Complete quiz
@@ -1108,5 +1366,109 @@ app.post(
     }),
     ClassQuizController.abandonQuizSession
 );
+
+// Get quiz results by session
+app.get(
+    "/session/:session_token/results",
+    describeRoute({
+        operationId: "getQuizResultsBySession",
+        summary: "Get quiz results by session",
+        description: "Retrieves detailed quiz results for a completed session",
+        tags: ["Quiz Sessions"],
+        parameters: [
+            {
+                name: "session_token",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Session token",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Quiz results retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                success: { type: "boolean" },
+                                data: {
+                                    type: "object",
+                                    properties: {
+                                        session: {
+                                            type: "object",
+                                            properties: {
+                                                id: { type: "string" },
+                                                session_token: { type: "string" },
+                                                status: { type: "string" },
+                                                started_at: { type: "string" },
+                                                completed_at: { type: "string" },
+                                                time_taken_seconds: { type: "number" },
+                                            },
+                                        },
+                                        quiz: {
+                                            type: "object",
+                                            properties: {
+                                                id: { type: "string" },
+                                                quiz_name: { type: "string" },
+                                                quiz_description: { type: "string" },
+                                                quiz_meta_data: { type: "object" },
+                                            },
+                                        },
+                                        results: {
+                                            type: "object",
+                                            properties: {
+                                                submission_id: { type: "string" },
+                                                score: { type: "number" },
+                                                total_questions: { type: "number" },
+                                                correct_answers: { type: "number" },
+                                                incorrect_answers: { type: "number" },
+                                                percentage: { type: "number" },
+                                                submission_date: { type: "string" },
+                                                feedback: { type: "string", nullable: true },
+                                                time_taken_seconds: { type: "number" },
+                                                auto_submitted: { type: "boolean" },
+                                            },
+                                        },
+                                        question_details: {
+                                            type: "array",
+                                            items: {
+                                                type: "object",
+                                                properties: {
+                                                    question_id: { type: "string" },
+                                                    question_text: { type: "string" },
+                                                    question_type: { type: "string" },
+                                                    options: { type: "object" },
+                                                    correct_answer: { type: "string" },
+                                                    user_answer: { type: "string", nullable: true },
+                                                    is_correct: { type: "boolean" },
+                                                    points_earned: { type: "number" },
+                                                    meta_data: { type: "object", nullable: true },
+                                                },
+                                            },
+                                        },
+                                        meta_data: { type: "object", nullable: true },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            400: {
+                description: "Invalid request or session not found",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    ClassQuizController.getQuizResultsBySession
+);
+
+// ======================= ADMINISTRATION ROUTES =======================
 
 export default app;

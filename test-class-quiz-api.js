@@ -314,6 +314,53 @@ async function testSubmitAnswers() {
     console.log(`✅ Successfully submitted ${testResults.questionIds.length} answers`);
 }
 
+async function testQuizNavigation() {
+    if (!testResults.sessionToken) {
+        throw new Error('No session token available');
+    }
+    
+    console.log('🧭 Testing quiz navigation...');
+    
+    // Test navigate to next question
+    const nextResponse = await apiCall('POST', `/class-quiz/session/${testResults.sessionToken}/next`, null, ACCESS_TOKEN);
+    
+    if (!nextResponse.ok) {
+        throw new Error(`Navigate to next failed: ${nextResponse.status} - ${JSON.stringify(nextResponse.data)}`);
+    }
+    
+    if (!nextResponse.data.success) {
+        throw new Error('Navigate to next not successful');
+    }
+    
+    // Verify navigation flags
+    const nextData = nextResponse.data.data;
+    if (nextData.can_go_previous !== true) {
+        throw new Error('Expected can_go_previous to be true after moving to next question');
+    }
+    
+    console.log('✅ Successfully navigated to next question');
+    
+    // Test navigate to previous question
+    const prevResponse = await apiCall('POST', `/class-quiz/session/${testResults.sessionToken}/previous`, null, ACCESS_TOKEN);
+    
+    if (!prevResponse.ok) {
+        throw new Error(`Navigate to previous failed: ${prevResponse.status} - ${JSON.stringify(prevResponse.data)}`);
+    }
+    
+    if (!prevResponse.data.success) {
+        throw new Error('Navigate to previous not successful');
+    }
+    
+    // Verify navigation flags
+    const prevData = prevResponse.data.data;
+    if (prevData.can_go_previous !== false) {
+        throw new Error('Expected can_go_previous to be false at first question');
+    }
+    
+    console.log('✅ Successfully navigated to previous question');
+    console.log('🧭 Navigation test completed successfully');
+}
+
 async function testCompleteQuiz() {
     if (!testResults.sessionToken) {
         throw new Error('No session token available');
@@ -347,8 +394,32 @@ async function testGetQuizStatistics() {
         throw new Error('No quiz ID available');
     }
     
-    // This is a custom endpoint we might need to add
-    console.log('📊 Quiz statistics test skipped (endpoint may not be implemented yet)');
+    const response = await apiCall(
+        'GET',
+        `/class-quiz/class/${testData.class_id}/${testResults.quizId}/statistics`,
+        null,
+        ACCESS_TOKEN
+    );
+
+    if (!response.ok) {
+        throw new Error(`Statistics request failed with status ${response.status}`);
+    }
+
+    const result = response.data;
+    if (!result.success || !result.data) {
+        throw new Error('Invalid statistics response structure');
+    }
+
+    const stats = result.data;
+    const expectedKeys = ['total_attempts', 'average_score', 'highest_score', 'lowest_score', 'completion_rate'];
+    
+    for (const key of expectedKeys) {
+        if (!(key in stats)) {
+            throw new Error(`Missing expected key: ${key}`);
+        }
+    }
+
+    console.log(`📊 Statistics: ${stats.total_attempts} attempts, avg: ${stats.average_score}, highest: ${stats.highest_score}`);
 }
 
 async function testTimeoutScenario() {
@@ -472,7 +543,9 @@ async function runAllTests() {
         ['Start Quiz Session', testStartQuizSession],
         ['Get Quiz Session', testGetQuizSession],
         ['Submit Answers', testSubmitAnswers],
+        ['Quiz Navigation', testQuizNavigation],
         ['Complete Quiz', testCompleteQuiz],
+        ['Get Quiz Statistics', testGetQuizStatistics],
         ['Timeout Scenario', testTimeoutScenario],
         ['Admin Endpoints', testAdminEndpoints],
         ['Legacy Attempt Creation', testLegacyAttemptCreation],

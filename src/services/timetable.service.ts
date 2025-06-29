@@ -1,6 +1,7 @@
 import { ITimetable, Timetable } from "@/models/time_table.model";
 import { Subject } from "@/models/subject.model";
 import { Teacher } from "@/models/teacher.model";
+import { Class } from "@/models/class.model";
 import { User } from "@/models/user.model";
 
 export class TimetableService {
@@ -117,13 +118,16 @@ export class TimetableService {
             data.rows.map(async (timetableItem) => {
                 try {
                     const subject = await Subject.findById(timetableItem.subject_id);
+                    const classInfo = await Class.findById(timetableItem.class_id);
                     return {
                         ...timetableItem,
+                        class_name: classInfo?.name || "Unknown Class",
                         subject_name: subject?.name || "Unknown Subject",
                     };
                 } catch (error) {
                     return {
                         ...timetableItem,
+                        class_name: "Unknown Class",
                         subject_name: "Unknown Subject",
                     };
                 }

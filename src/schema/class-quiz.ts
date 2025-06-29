@@ -286,6 +286,20 @@ export const getQuizSubmissionsResponseSchema = z
     .array(quizSubmissionSchema)
     .openapi({ ref: "GetQuizSubmissionsResponse" });
 
+// Quiz Statistics Response
+export const quizStatisticsResponseSchema = z
+    .object({
+        total_attempts: z.number().openapi({ example: 25 }),
+        average_score: z.number().openapi({ example: 85.4 }),
+        highest_score: z.number().openapi({ example: 100 }),
+        lowest_score: z.number().openapi({ example: 65 }),
+        completion_rate: z.number().openapi({ example: 25 }),
+        submissions: z.array(quizSubmissionSchema).openapi({
+            description: "Array of all quiz submissions for this quiz",
+        }),
+    })
+    .openapi({ ref: "QuizStatisticsResponse" });
+
 // Error Response
 export const errorResponseSchema = z
     .object({

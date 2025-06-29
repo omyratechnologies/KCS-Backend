@@ -225,7 +225,71 @@ Content-Type: application/json
 - You can update an answer by submitting again for the same question
 - Session automatically expires when time limit is reached
 
-#### D. Complete Quiz
+#### D. Navigate to Next Question
+```http
+POST /api/class-quiz/session/{session_token}/next
+Authorization: Bearer {access_token}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Moved to next question",
+  "data": {
+    "session": {
+      "current_question_index": 1,
+      "answers_count": 1,
+      "last_activity_at": "2025-06-27T20:05:00.000Z"
+    },
+    "quiz": { ... },
+    "current_question": {
+      "id": "question_id_2",
+      "question_text": "What is the square root of 16?",
+      "question_type": "multiple_choice",
+      "options": ["2", "3", "4", "5"]
+    },
+    "questions_count": 3,
+    "time_remaining_seconds": 1500,
+    "can_go_previous": true,
+    "can_go_next": true
+  }
+}
+```
+
+#### E. Navigate to Previous Question
+```http
+POST /api/class-quiz/session/{session_token}/previous
+Authorization: Bearer {access_token}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Moved to previous question",
+  "data": {
+    "session": {
+      "current_question_index": 0,
+      "answers_count": 1,
+      "last_activity_at": "2025-06-27T20:05:00.000Z"
+    },
+    "quiz": { ... },
+    "current_question": {
+      "id": "question_id_1",
+      "question_text": "What is 2 + 2?",
+      "question_type": "multiple_choice",
+      "options": ["3", "4", "5", "6"]
+    },
+    "questions_count": 3,
+    "time_remaining_seconds": 1500,
+    "can_go_previous": false,
+    "can_go_next": true
+  }
+}
+```
+
+#### F. Complete Quiz
 ```http
 POST /api/class-quiz/session/{session_token}/complete
 Authorization: Bearer {access_token}
@@ -455,6 +519,80 @@ const submitAnswer = async (questionId, answer) => {
 };
 ```
 
+#### Navigation Between Questions
+```javascript
+const navigateToNext = async () => {
+  try {
+    const response = await fetch(`/api/class-quiz/session/${sessionToken}/next`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      updateCurrentQuestion(result.data.current_question);
+      updateNavigationButtons(result.data.can_go_previous, result.data.can_go_next);
+      updateProgress(result.data.session.current_question_index, result.data.questions_count);
+    }
+  } catch (error) {
+    if (error.message.includes('expired')) {
+      handleSessionExpired();
+    }
+  }
+};
+
+const navigateToPrevious = async () => {
+  try {
+    const response = await fetch(`/api/class-quiz/session/${sessionToken}/previous`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      updateCurrentQuestion(result.data.current_question);
+      updateNavigationButtons(result.data.can_go_previous, result.data.can_go_next);
+      updateProgress(result.data.session.current_question_index, result.data.questions_count);
+    }
+  } catch (error) {
+    if (error.message.includes('expired')) {
+      handleSessionExpired();
+    }
+  }
+};
+
+// UI Helper functions
+const updateNavigationButtons = (canGoPrevious, canGoNext) => {
+  const prevButton = document.getElementById('prev-question-btn');
+  const nextButton = document.getElementById('next-question-btn');
+  
+  prevButton.disabled = !canGoPrevious;
+  nextButton.disabled = !canGoNext;
+};
+
+const updateCurrentQuestion = (question) => {
+  document.getElementById('question-text').textContent = question.question_text;
+  // Update options, load saved answer if any, etc.
+};
+
+const updateProgress = (currentIndex, totalQuestions) => {
+  const progressText = `Question ${currentIndex + 1} of ${totalQuestions}`;
+  document.getElementById('progress-text').textContent = progressText;
+  
+  const progressBar = document.getElementById('progress-bar');
+  const percentage = ((currentIndex + 1) / totalQuestions) * 100;
+  progressBar.style.width = `${percentage}%`;
+};
+```
+
 #### Complete Quiz
 ```javascript
 const completeQuiz = async () => {
@@ -539,6 +677,8 @@ This will run a comprehensive test suite covering all quiz flow scenarios includ
 | `/api/class-quiz/session/{class_id}/{quiz_id}/start` | POST | Start quiz session |
 | `/api/class-quiz/session/{session_token}` | GET | Get session status |
 | `/api/class-quiz/session/{session_token}/answer` | POST | Submit answer |
+| `/api/class-quiz/session/{session_token}/next` | POST | Navigate to next question |
+| `/api/class-quiz/session/{session_token}/previous` | POST | Navigate to previous question |
 | `/api/class-quiz/session/{session_token}/complete` | POST | Complete quiz |
 | `/api/class-quiz/admin/check-expired-sessions` | POST | Admin: Check expired sessions |
 
