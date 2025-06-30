@@ -1471,4 +1471,203 @@ app.get(
 
 // ======================= ADMINISTRATION ROUTES =======================
 
+app.get(
+    "/student/:student_id/results",
+    describeRoute({
+        operationId: "getAllQuizResultsByStudentId",
+        summary: "Get all quiz results by student ID",
+        description: "Retrieves all quiz results for a specific student with detailed information",
+        tags: ["Class Quiz"],
+        parameters: [
+            {
+                name: "student_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Student ID",
+            },
+            {
+                name: "class_id",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+                description: "Optional class ID to filter results",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Quiz results retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                success: { type: "boolean" },
+                                data: {
+                                    type: "array",
+                                    items: {
+                                        type: "object",
+                                        properties: {
+                                            submission: {
+                                                type: "object",
+                                                properties: {
+                                                    id: { type: "string" },
+                                                    submission_date: { type: "string", format: "date-time" },
+                                                    score: { type: "number" },
+                                                    feedback: { type: "string" },
+                                                    meta_data: { type: "object" },
+                                                },
+                                            },
+                                            quiz: {
+                                                type: "object",
+                                                properties: {
+                                                    id: { type: "string" },
+                                                    quiz_name: { type: "string" },
+                                                    quiz_description: { type: "string" },
+                                                    class_id: { type: "string" },
+                                                    quiz_meta_data: { type: "object" },
+                                                },
+                                            },
+                                            results: {
+                                                type: "object",
+                                                properties: {
+                                                    total_questions: { type: "number" },
+                                                    correct_answers: { type: "number" },
+                                                    incorrect_answers: { type: "number" },
+                                                    percentage: { type: "number" },
+                                                    time_taken_seconds: { type: "number" },
+                                                    auto_submitted: { type: "boolean" },
+                                                },
+                                            },
+                                            question_details: {
+                                                type: "array",
+                                                items: {
+                                                    type: "object",
+                                                    properties: {
+                                                        question_id: { type: "string" },
+                                                        question_text: { type: "string" },
+                                                        question_type: { type: "string" },
+                                                        options: { type: "array", items: { type: "string" } },
+                                                        correct_answer: { type: "string" },
+                                                        user_answer: { type: "string", nullable: true },
+                                                        is_correct: { type: "boolean" },
+                                                        points_earned: { type: "number" },
+                                                    },
+                                                },
+                                            },
+                                            session_info: {
+                                                type: "object",
+                                                nullable: true,
+                                                properties: {
+                                                    session_id: { type: "string" },
+                                                    status: { type: "string" },
+                                                    started_at: { type: "string", format: "date-time" },
+                                                    completed_at: { type: "string", format: "date-time", nullable: true },
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                                count: { type: "number" },
+                            },
+                        },
+                    },
+                },
+            },
+            500: {
+                description: "Internal server error",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    ClassQuizController.getAllQuizResultsByStudentId
+);
+
+app.get(
+    "/student/:student_id/results/summary",
+    describeRoute({
+        operationId: "getQuizResultsSummaryByStudentId",
+        summary: "Get quiz results summary by student ID",
+        description: "Retrieves a summary of all quiz results for a specific student",
+        tags: ["Class Quiz"],
+        parameters: [
+            {
+                name: "student_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Student ID",
+            },
+            {
+                name: "class_id",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+                description: "Optional class ID to filter results",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Quiz results summary retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                success: { type: "boolean" },
+                                data: {
+                                    type: "object",
+                                    properties: {
+                                        student_id: { type: "string" },
+                                        campus_id: { type: "string" },
+                                        class_id: { type: "string", nullable: true },
+                                        total_quizzes_attempted: { type: "number" },
+                                        average_score: { type: "number" },
+                                        average_percentage: { type: "number" },
+                                        total_correct_answers: { type: "number" },
+                                        total_questions_attempted: { type: "number" },
+                                        highest_score: { type: "number" },
+                                        lowest_score: { type: "number" },
+                                        total_time_spent_seconds: { type: "number" },
+                                        quiz_results: {
+                                            type: "array",
+                                            items: {
+                                                type: "object",
+                                                properties: {
+                                                    quiz_id: { type: "string" },
+                                                    quiz_name: { type: "string" },
+                                                    submission_date: { type: "string", format: "date-time" },
+                                                    score: { type: "number" },
+                                                    percentage: { type: "number" },
+                                                    total_questions: { type: "number" },
+                                                    correct_answers: { type: "number" },
+                                                    time_taken_seconds: { type: "number" },
+                                                    auto_submitted: { type: "boolean" },
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            500: {
+                description: "Internal server error",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    ClassQuizController.getQuizResultsSummaryByStudentId
+);
+
 export default app;

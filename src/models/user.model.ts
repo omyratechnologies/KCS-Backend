@@ -16,11 +16,14 @@ interface IUser {
     last_login: Date;
     last_login_ip: string;
     campus_id?: string;
-    meta_data?: object;
+    // meta_data?: object;
     is_active: boolean;
     is_deleted: boolean;
     created_at: Date;
     updated_at: Date;
+    meta_data: {
+        [key: string]: any;
+    }
 }
 
 const UserSchema = new Schema({

@@ -408,4 +408,104 @@ export class AttendanceController {
             );
         }
     };
+
+    // Get comprehensive attendance report for a class
+    public static readonly getClassAttendanceReport = async (ctx: Context) => {
+        try {
+            const campus_id = ctx.get("campus_id");
+            const class_id = ctx.req.param("class_id");
+
+            if (!class_id) {
+                return ctx.json({ error: "class_id parameter is required" }, 400);
+            }
+
+            // Get optional date range from query parameters
+            const from_date = ctx.req.query("from_date");
+            const to_date = ctx.req.query("to_date");
+
+            let parsedFromDate: Date | undefined;
+            let parsedToDate: Date | undefined;
+
+            if (from_date) {
+                parsedFromDate = new Date(from_date);
+                if (isNaN(parsedFromDate.getTime())) {
+                    return ctx.json({ error: "Invalid from_date format. Use YYYY-MM-DD" }, 400);
+                }
+            }
+
+            if (to_date) {
+                parsedToDate = new Date(to_date);
+                if (isNaN(parsedToDate.getTime())) {
+                    return ctx.json({ error: "Invalid to_date format. Use YYYY-MM-DD" }, 400);
+                }
+            }
+
+            const report = await AttendanceService.getClassAttendanceReport(
+                campus_id,
+                class_id,
+                parsedFromDate,
+                parsedToDate
+            );
+
+            return ctx.json(report);
+        } catch (error) {
+            return ctx.json(
+                {
+                    message: "Error generating attendance report",
+                    error: error instanceof Error ? error.message : 'Unknown error',
+                },
+                500
+            );
+        }
+    };
+
+    // Get comprehensive attendance view for a specific student
+    public static readonly getStudentAttendanceView = async (ctx: Context) => {
+        try {
+            const campus_id = ctx.get("campus_id");
+            const student_id = ctx.req.param("student_id");
+
+            if (!student_id) {
+                return ctx.json({ error: "student_id parameter is required" }, 400);
+            }
+
+            // Get optional date range from query parameters
+            const from_date = ctx.req.query("from_date");
+            const to_date = ctx.req.query("to_date");
+
+            let parsedFromDate: Date | undefined;
+            let parsedToDate: Date | undefined;
+
+            if (from_date) {
+                parsedFromDate = new Date(from_date);
+                if (isNaN(parsedFromDate.getTime())) {
+                    return ctx.json({ error: "Invalid from_date format. Use YYYY-MM-DD" }, 400);
+                }
+            }
+
+            if (to_date) {
+                parsedToDate = new Date(to_date);
+                if (isNaN(parsedToDate.getTime())) {
+                    return ctx.json({ error: "Invalid to_date format. Use YYYY-MM-DD" }, 400);
+                }
+            }
+
+            const studentView = await AttendanceService.getStudentAttendanceView(
+                campus_id,
+                student_id,
+                parsedFromDate,
+                parsedToDate
+            );
+
+            return ctx.json(studentView);
+        } catch (error) {
+            return ctx.json(
+                {
+                    message: "Error generating student attendance view",
+                    error: error instanceof Error ? error.message : 'Unknown error',
+                },
+                500
+            );
+        }
+    };
 }

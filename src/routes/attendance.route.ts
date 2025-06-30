@@ -18,6 +18,8 @@ import {
     updateAttendanceRequestBodySchema,
     updateAttendanceResponseSchema,
     getAttendanceStatsByTeacherIdResponseSchema,
+    getClassAttendanceReportResponseSchema,
+    getStudentAttendanceViewResponseSchema,
 } from "@/schema/attendance";
 
 const app = new Hono();
@@ -404,6 +406,127 @@ app.get(
         },
     }),
     AttendanceController.getClassesByTeacherId
+);
+
+// Get comprehensive attendance report for a class
+app.get(
+    "/report/class/:class_id",
+    describeRoute({
+        tags: ["Attendance"],
+        operationId: "getClassAttendanceReport",
+        summary: "Get comprehensive attendance report for a class",
+        description: "Generate detailed attendance analytics for a specific class including student-wise breakdown, summary statistics, and attendance trends. Supports optional date range filtering.",
+        responses: {
+            200: {
+                description: "Attendance report generated successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(getClassAttendanceReportResponseSchema),
+                    },
+                },
+            },
+            400: {
+                description: "Bad request - invalid parameters",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                message: { type: "string" },
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    AttendanceController.getClassAttendanceReport
+);
+
+// Get comprehensive attendance view for a specific student
+app.get(
+    "/student/:student_id/view",
+    describeRoute({
+        tags: ["Attendance"],
+        operationId: "getStudentAttendanceView",
+        summary: "Get comprehensive attendance view for a student",
+        description: "Generate detailed attendance view for a specific student including profile information, summary statistics, and detailed attendance history. Supports optional date range filtering.",
+        parameters: [
+            {
+                name: "student_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Student ID to get attendance view for",
+            },
+            {
+                name: "from_date",
+                in: "query",
+                required: false,
+                schema: { type: "string", format: "date" },
+                description: "Start date for attendance records (YYYY-MM-DD)",
+            },
+            {
+                name: "to_date",
+                in: "query",
+                required: false,
+                schema: { type: "string", format: "date" },
+                description: "End date for attendance records (YYYY-MM-DD)",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Student attendance view generated successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(getStudentAttendanceViewResponseSchema),
+                    },
+                },
+            },
+            400: {
+                description: "Bad request - invalid parameters",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                message: { type: "string" },
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    AttendanceController.getStudentAttendanceView
 );
 
 export default app;

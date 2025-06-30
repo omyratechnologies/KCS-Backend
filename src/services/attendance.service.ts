@@ -618,4 +618,381 @@ export class AttendanceService {
             throw new Error(`Unable to retrieve attendance statistics: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     };
+
+    // Get comprehensive attendance report for a class
+    public static readonly getClassAttendanceReport = async (
+        campus_id: string,
+        class_id: string,
+        from_date?: Date,
+        to_date?: Date
+    ) => {
+        try {
+            // Set default date range if not provided (last 30 days)
+            const endDate = to_date || new Date();
+            const startDate = from_date || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+            
+            // Get class details
+            const classData = await Class.findById(class_id);
+            if (!classData || !classData.student_ids || classData.student_ids.length === 0) {
+                throw new Error("Class not found or has no students");
+            }
+
+            // Get all students in the class
+            const { User } = await import("@/models/user.model");
+            const studentPromises = classData.student_ids.map(async (studentId) => {
+                try {
+                    const student = await User.findById(studentId);
+                    return student;
+                } catch (error) {
+                    return null;
+                }
+            });
+
+            const students = (await Promise.all(studentPromises)).filter(student => student !== null);
+
+            // Calculate total class days (excluding weekends for now)
+            const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+            
+            // Get attendance data for all students
+            const attendanceReportPromises = students.map(async (student) => {
+                try {
+                    // Get all attendance records for this student in the date range
+                    const studentAttendance = await Attendance.find({
+                        campus_id,
+                        user_id: student.id,
+                        date: {
+                            $gte: startDate,
+                            $lte: endDate
+                        }
+                    });
+
+                    const attendanceRecords = studentAttendance.rows || [];
+                    
+                    // Calculate attendance statistics
+                    const totalClasses = totalDays; // Can be refined based on actual class schedule
+                    const attendedClasses = attendanceRecords.filter(record => record.status === 'present').length;
+                    const absentClasses = attendanceRecords.filter(record => record.status === 'absent').length;
+                    const lateClasses = attendanceRecords.filter(record => record.status === 'late').length;
+                    const leaveClasses = attendanceRecords.filter(record => record.status === 'leave').length;
+                    
+                    const attendancePercentage = totalClasses > 0 
+                        ? Math.round((attendedClasses / totalClasses) * 100) 
+                        : 0;
+
+                    // Determine attendance status
+                    let attendanceStatus = 'good';
+                    if (attendancePercentage >= 90) {
+                        attendanceStatus = 'excellent';
+                    } else if (attendancePercentage >= 75) {
+                        attendanceStatus = 'good';
+                    } else if (attendancePercentage >= 60) {
+                        attendanceStatus = 'average';
+                    } else {
+                        attendanceStatus = 'poor';
+                    }
+
+                    // Get last attendance date
+                    const lastAttendance = attendanceRecords.length > 0 
+                        ? attendanceRecords.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
+                        : null;
+
+                    return {
+                        student_id: student.id,
+                        student_name: `${student.first_name} ${student.last_name}`,
+                        roll_number: student.user_id, // Using user_id as roll number
+                        total_classes: totalClasses,
+                        attended: attendedClasses,
+                        absent: absentClasses,
+                        late: lateClasses,
+                        leave: leaveClasses,
+                        percentage: attendancePercentage,
+                        status: attendanceStatus,
+                        last_attended: lastAttendance ? lastAttendance.date : null,
+                        email: student.email,
+                        phone: student.phone
+                    };
+                } catch (error) {
+                    return {
+                        student_id: student.id,
+                        student_name: `${student.first_name} ${student.last_name}`,
+                        roll_number: student.user_id,
+                        total_classes: 0,
+                        attended: 0,
+                        absent: 0,
+                        late: 0,
+                        leave: 0,
+                        percentage: 0,
+                        status: 'poor',
+                        last_attended: null,
+                        email: student.email,
+                        phone: student.phone,
+                        error: error instanceof Error ? error.message : 'Unknown error'
+                    };
+                }
+            });
+
+            const attendanceReport = await Promise.all(attendanceReportPromises);
+            
+            // Calculate summary statistics
+            const totalStudents = attendanceReport.length;
+            const averageAttendance = totalStudents > 0 
+                ? Math.round(attendanceReport.reduce((sum, student) => sum + student.percentage, 0) / totalStudents)
+                : 0;
+
+            const excellentCount = attendanceReport.filter(student => student.percentage >= 90).length;
+            const goodCount = attendanceReport.filter(student => student.percentage >= 75 && student.percentage < 90).length;
+            const averageCount = attendanceReport.filter(student => student.percentage >= 60 && student.percentage < 75).length;
+            const needsAttentionCount = attendanceReport.filter(student => student.percentage < 60).length;
+
+            // Sort students by attendance percentage (descending)
+            attendanceReport.sort((a, b) => b.percentage - a.percentage);
+
+            return {
+                class_info: {
+                    class_id: classData.id,
+                    class_name: classData.name,
+                    total_students: totalStudents
+                },
+                date_range: {
+                    from_date: startDate.toISOString().split('T')[0],
+                    to_date: endDate.toISOString().split('T')[0],
+                    total_days: totalDays
+                },
+                summary: {
+                    total_students: totalStudents,
+                    average_attendance: averageAttendance,
+                    excellent_90_plus: excellentCount,
+                    good_75_89: goodCount,
+                    average_60_74: averageCount,
+                    needs_attention_below_60: needsAttentionCount
+                },
+                students: attendanceReport
+            };
+
+        } catch (error) {
+            throw new Error(`Unable to generate attendance report: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    };
+
+    // Get comprehensive attendance view for a specific student (Monthly Performance)
+    public static readonly getStudentAttendanceView = async (
+        campus_id: string,
+        student_id: string,
+        from_date?: Date,
+        to_date?: Date
+    ) => {
+        try {
+            // Set default date range if not provided (last 12 months)
+            const endDate = to_date || new Date();
+            const startDate = from_date || new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
+            
+            // Get student details
+            const { User } = await import("@/models/user.model");
+            const student = await User.findById(student_id);
+            if (!student) {
+                throw new Error("Student not found");
+            }
+
+            // Get student's class information
+            const studentClasses = await Class.find({
+                campus_id,
+                student_ids: { $in: [student_id] },
+                is_active: true,
+                is_deleted: false
+            });
+
+            const primaryClass = studentClasses.rows && studentClasses.rows.length > 0 
+                ? studentClasses.rows[0] 
+                : null;
+
+            // Get all attendance records for this student in the date range
+            const studentAttendance = await Attendance.find({
+                campus_id,
+                user_id: student_id,
+                date: {
+                    $gte: startDate,
+                    $lte: endDate
+                }
+            }, {
+                sort: {
+                    date: "DESC"
+                },
+            });
+
+            const attendanceRecords = studentAttendance.rows || [];
+            
+            // Group attendance records by month
+            const monthlyAttendance = new Map<string, {
+                month: string;
+                year: number;
+                present: number;
+                absent: number;
+                late: number;
+                leave: number;
+                total_days: number;
+                percentage: number;
+                status: string;
+            }>();
+
+            // Process records by month
+            attendanceRecords.forEach(record => {
+                const recordDate = new Date(record.date);
+                const monthKey = `${recordDate.getMonth() + 1}-${recordDate.getFullYear()}`;
+                const monthName = recordDate.toLocaleString('default', { month: 'long' });
+                const year = recordDate.getFullYear();
+
+                if (!monthlyAttendance.has(monthKey)) {
+                    monthlyAttendance.set(monthKey, {
+                        month: monthName,
+                        year: year,
+                        present: 0,
+                        absent: 0,
+                        late: 0,
+                        leave: 0,
+                        total_days: 0,
+                        percentage: 0,
+                        status: 'poor'
+                    });
+                }
+
+                const monthData = monthlyAttendance.get(monthKey)!;
+                monthData.total_days++;
+
+                switch (record.status) {
+                    case 'present':
+                        monthData.present++;
+                        break;
+                    case 'absent':
+                        monthData.absent++;
+                        break;
+                    case 'late':
+                        monthData.late++;
+                        break;
+                    case 'leave':
+                        monthData.leave++;
+                        break;
+                }
+
+                // Calculate monthly percentage (including late as present)
+                const effectivePresent = monthData.present + monthData.late;
+                monthData.percentage = monthData.total_days > 0 
+                    ? Math.round((effectivePresent / monthData.total_days) * 100) 
+                    : 0;
+
+                // Determine monthly status
+                if (monthData.percentage >= 90) {
+                    monthData.status = 'excellent';
+                } else if (monthData.percentage >= 75) {
+                    monthData.status = 'good';
+                } else if (monthData.percentage >= 60) {
+                    monthData.status = 'average';
+                } else {
+                    monthData.status = 'poor';
+                }
+            });
+
+            // Convert to array and sort by year-month descending
+            const monthlyPerformance = Array.from(monthlyAttendance.values())
+                .sort((a, b) => {
+                    if (a.year !== b.year) return b.year - a.year;
+                    const monthOrder = ['January', 'February', 'March', 'April', 'May', 'June',
+                                      'July', 'August', 'September', 'October', 'November', 'December'];
+                    return monthOrder.indexOf(b.month) - monthOrder.indexOf(a.month);
+                });
+
+            // Calculate overall summary statistics
+            const totalRecords = attendanceRecords.length;
+            const totalPresent = attendanceRecords.filter(record => record.status === 'present').length;
+            const totalAbsent = attendanceRecords.filter(record => record.status === 'absent').length;
+            const totalLate = attendanceRecords.filter(record => record.status === 'late').length;
+            const totalLeave = attendanceRecords.filter(record => record.status === 'leave').length;
+            
+            const overallAttendanceRate = totalRecords > 0 
+                ? Math.round(((totalPresent + totalLate) / totalRecords) * 100) 
+                : 0;
+
+            // Determine overall attendance status
+            let overallStatus = 'good';
+            if (overallAttendanceRate >= 90) {
+                overallStatus = 'excellent';
+            } else if (overallAttendanceRate >= 75) {
+                overallStatus = 'good';
+            } else if (overallAttendanceRate >= 60) {
+                overallStatus = 'average';
+            } else {
+                overallStatus = 'poor';
+            }
+
+            // Calculate total unique months/days for display
+            const totalMonths = monthlyPerformance.length;
+            const totalUniqueDays = totalRecords;
+
+            return {
+                student_profile: {
+                    student_id: student.id,
+                    name: `${student.first_name} ${student.last_name}`,
+                    roll_number: student.user_id,
+                    class: primaryClass ? primaryClass.name : "Not Assigned",
+                    contact: student.phone,
+                    email: student.email,
+                    avatar_url: student.meta_data?.imageURL || null
+                },
+                date_range: {
+                    from_date: startDate.toISOString().split('T')[0],
+                    to_date: endDate.toISOString().split('T')[0],
+                    showing_records: `${totalMonths} months with ${totalUniqueDays} attendance records`
+                },
+                summary_cards: {
+                    total_days: {
+                        count: totalUniqueDays,
+                        label: "TOTAL DAYS"
+                    },
+                    present_days: {
+                        count: totalPresent,
+                        label: "PRESENT DAYS"
+                    },
+                    absent_days: {
+                        count: totalAbsent,
+                        label: "ABSENT DAYS"
+                    },
+                    attendance_rate: {
+                        percentage: overallAttendanceRate,
+                        label: "ATTENDANCE RATE",
+                        status: overallStatus
+                    }
+                },
+                additional_stats: {
+                    late_days: totalLate,
+                    leave_days: totalLeave,
+                    total_present_including_late: totalPresent + totalLate,
+                    total_months: totalMonths
+                },
+                monthly_performance: {
+                    records: monthlyPerformance.map(month => ({
+                        month: month.month,
+                        year: month.year,
+                        month_year: `${month.month} ${month.year}`,
+                        present_days: month.present,
+                        absent_days: month.absent,
+                        late_days: month.late,
+                        leave_days: month.leave,
+                        total_days: month.total_days,
+                        percentage: month.percentage,
+                        status: month.status,
+                        performance_badge: month.percentage >= 90 ? 'excellent' : 
+                                         month.percentage >= 75 ? 'good' : 
+                                         month.percentage >= 60 ? 'average' : 'poor'
+                    })),
+                    total_months: totalMonths,
+                    filters: {
+                        date_range: "Last 12 Months",
+                        view_type: "Monthly"
+                    }
+                }
+            };
+
+        } catch (error) {
+            throw new Error(`Unable to generate student attendance view: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    };
 }

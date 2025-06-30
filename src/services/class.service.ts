@@ -31,6 +31,7 @@ export class ClassService {
                         }
                         return {
                             id: teacher.id,
+                            user_type: teacher.teacher_profile.user_type,
                             name: `${teacher.teacher_profile.first_name} ${teacher.teacher_profile.last_name}`,
                             email: teacher.teacher_profile.email,
                             phone: teacher.teacher_profile.phone,
@@ -46,6 +47,7 @@ export class ClassService {
                         }
                         return {
                             id: student.id,
+                            user_type: student.user_type,
                             name: `${student.first_name} ${student.last_name}`,
                             email: student.email,
                             phone: student.phone,

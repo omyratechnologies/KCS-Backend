@@ -1408,4 +1408,198 @@ export class ClassQuizService {
     };
 
     // ======================= QUIZ MANAGEMENT =======================
+    public static readonly getAllQuizResultsByStudentId = async (
+        campus_id: string,
+        student_id: string,
+        class_id?: string
+    ) => {
+        // Build filter for submissions
+        const filter: any = {
+            campus_id,
+            user_id: student_id,
+            is_deleted: false,
+        };
+
+        if (class_id) {
+            filter.class_id = class_id;
+        }
+
+        // Get all submissions for the student
+        const submissions = await ClassQuizSubmission.find(filter, {
+            sort: { submission_date: "DESC" },
+        });
+
+        if (!submissions.rows || submissions.rows.length === 0) {
+            return [];
+        }
+
+        // Get detailed results for each submission
+        const results = await Promise.all(
+            submissions.rows.map(async (submission) => {
+                const submissionData = submission as IClassQuizSubmission;
+                
+                // Get quiz details
+                const quiz = await this.getClassQuizById(submissionData.quiz_id);
+                if (!quiz) {
+                    return null;
+                }
+
+                // Get all questions for the quiz
+                const questions = await this.getClassQuizQuestionsByQuizId(
+                    submissionData.campus_id,
+                    submissionData.class_id,
+                    submissionData.quiz_id
+                );
+
+                // Get all attempts for this submission
+                const attempts = await ClassQuizAttempt.find({
+                    quiz_id: submissionData.quiz_id,
+                    user_id: student_id,
+                });
+
+                const attemptMap = new Map(
+                    attempts.rows?.map(attempt => [attempt.question_id, attempt as IClassQuizAttempt]) || []
+                );
+
+                // Calculate detailed results
+                const questionResults = questions.map(question => {
+                    const userAttempt = attemptMap.get(question.id);
+                    const userAnswer = userAttempt ? (userAttempt as IClassQuizAttempt).attempt_data : null;
+                    const isCorrect = userAnswer === question.correct_answer;
+
+                    return {
+                        question_id: question.id,
+                        question_text: question.question_text,
+                        question_type: question.question_type,
+                        options: question.options,
+                        correct_answer: question.correct_answer,
+                        user_answer: userAnswer,
+                        is_correct: isCorrect,
+                        points_earned: isCorrect ? 1 : 0,
+                    };
+                });
+
+                const correctAnswers = questionResults.filter(q => q.is_correct).length;
+                const totalQuestions = questions.length;
+                const percentage = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
+
+                // Get session information if available
+                const session = await ClassQuizSession.find({
+                    quiz_id: submissionData.quiz_id,
+                    user_id: student_id,
+                    is_deleted: false,
+                });
+
+                const sessionData = session.rows && session.rows.length > 0 ? session.rows[0] as IClassQuizSession : null;
+                
+                let timeTakenSeconds = 0;
+                if (sessionData && sessionData.started_at && sessionData.completed_at) {
+                    timeTakenSeconds = Math.floor(
+                        (new Date(sessionData.completed_at).getTime() - new Date(sessionData.started_at).getTime()) / 1000
+                    );
+                }
+
+                return {
+                    submission: {
+                        id: submissionData.id,
+                        submission_date: submissionData.submission_date,
+                        score: submissionData.score,
+                        feedback: submissionData.feedback,
+                        meta_data: submissionData.meta_data,
+                    },
+                    quiz: {
+                        id: quiz.id,
+                        quiz_name: quiz.quiz_name,
+                        quiz_description: quiz.quiz_description,
+                        class_id: quiz.class_id,
+                        quiz_meta_data: quiz.quiz_meta_data,
+                    },
+                    results: {
+                        total_questions: totalQuestions,
+                        correct_answers: correctAnswers,
+                        incorrect_answers: totalQuestions - correctAnswers,
+                        percentage: Math.round(percentage * 100) / 100,
+                        time_taken_seconds: timeTakenSeconds,
+                        auto_submitted: sessionData?.status === "expired" || false,
+                    },
+                    question_details: questionResults,
+                    session_info: sessionData ? {
+                        session_id: sessionData.id,
+                        status: sessionData.status,
+                        started_at: sessionData.started_at,
+                        completed_at: sessionData.completed_at,
+                    } : null,
+                };
+            })
+        );
+
+        // Filter out null results and return
+        return results.filter(result => result !== null);
+    };
+
+    public static readonly getQuizResultsSummaryByStudentId = async (
+        campus_id: string,
+        student_id: string,
+        class_id?: string
+    ) => {
+        const results = await this.getAllQuizResultsByStudentId(campus_id, student_id, class_id);
+        
+        if (results.length === 0) {
+            return {
+                student_id,
+                campus_id,
+                class_id: class_id || null,
+                total_quizzes_attempted: 0,
+                average_score: 0,
+                average_percentage: 0,
+                total_correct_answers: 0,
+                total_questions_attempted: 0,
+                highest_score: 0,
+                lowest_score: 0,
+                total_time_spent_seconds: 0,
+                quiz_results: [],
+            };
+        }
+
+        // Calculate summary statistics
+        const totalQuizzesAttempted = results.length;
+        const totalScore = results.reduce((sum, result) => sum + result.submission.score, 0);
+        const totalPercentage = results.reduce((sum, result) => sum + result.results.percentage, 0);
+        const totalCorrectAnswers = results.reduce((sum, result) => sum + result.results.correct_answers, 0);
+        const totalQuestionsAttempted = results.reduce((sum, result) => sum + result.results.total_questions, 0);
+        const totalTimeSpent = results.reduce((sum, result) => sum + result.results.time_taken_seconds, 0);
+        
+        const scores = results.map(result => result.submission.score);
+        const averageScore = totalScore / totalQuizzesAttempted;
+        const averagePercentage = totalPercentage / totalQuizzesAttempted;
+        const highestScore = Math.max(...scores);
+        const lowestScore = Math.min(...scores);
+
+        return {
+            student_id,
+            campus_id,
+            class_id: class_id || null,
+            total_quizzes_attempted: totalQuizzesAttempted,
+            average_score: Math.round(averageScore * 100) / 100,
+            average_percentage: Math.round(averagePercentage * 100) / 100,
+            total_correct_answers: totalCorrectAnswers,
+            total_questions_attempted: totalQuestionsAttempted,
+            highest_score: highestScore,
+            lowest_score: lowestScore,
+            total_time_spent_seconds: totalTimeSpent,
+            quiz_results: results.map(result => ({
+                quiz_id: result.quiz.id,
+                quiz_name: result.quiz.quiz_name,
+                submission_date: result.submission.submission_date,
+                score: result.submission.score,
+                percentage: result.results.percentage,
+                total_questions: result.results.total_questions,
+                correct_answers: result.results.correct_answers,
+                time_taken_seconds: result.results.time_taken_seconds,
+                auto_submitted: result.results.auto_submitted,
+            })),
+        };
+    };
+
+    // ======================= QUIZ MANAGEMENT =======================
 }
