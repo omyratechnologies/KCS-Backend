@@ -22,19 +22,14 @@ export class ClassQuizController {
                 }
             );
 
-            return ctx.json({
-                success: true,
-                message: "Quiz created successfully",
-                data: result,
-            });
+            return ctx.json(result);
         } catch (error) {
             if (error instanceof Error) {
                 return ctx.json(
                     {
-                        success: false,
                         message: error.message,
                     },
-                    400
+                    500
                 );
             }
         }
@@ -45,22 +40,11 @@ export class ClassQuizController {
             const { quiz_id } = ctx.req.param();
             const result = await ClassQuizService.getClassQuizById(quiz_id);
 
-            if (!result) {
-                return ctx.json({
-                    success: false,
-                    message: "Quiz not found",
-                }, 404);
-            }
-
-            return ctx.json({
-                success: true,
-                data: result,
-            });
+            return ctx.json(result);
         } catch (error) {
             if (error instanceof Error) {
                 return ctx.json(
                     {
-                        success: false,
                         message: error.message,
                     },
                     500
@@ -79,16 +63,11 @@ export class ClassQuizController {
                 class_id
             );
 
-            return ctx.json({
-                success: true,
-                data: result,
-                count: result.length,
-            });
+            return ctx.json(result);
         } catch (error) {
             if (error instanceof Error) {
                 return ctx.json(
                     {
-                        success: false,
                         message: error.message,
                     },
                     500
@@ -152,19 +131,14 @@ export class ClassQuizController {
                 quiz_meta_data,
             });
 
-            return ctx.json({
-                success: true,
-                message: "Quiz updated successfully",
-                data: result,
-            });
+            return ctx.json(result);
         } catch (error) {
             if (error instanceof Error) {
                 return ctx.json(
                     {
-                        success: false,
                         message: error.message,
                     },
-                    400
+                    500
                 );
             }
         }
@@ -176,19 +150,14 @@ export class ClassQuizController {
 
             const result = await ClassQuizService.deleteClassQuizById(quiz_id);
 
-            return ctx.json({
-                success: true,
-                message: "Quiz deleted successfully",
-                data: result,
-            });
+            return ctx.json(result);
         } catch (error) {
             if (error instanceof Error) {
                 return ctx.json(
                     {
-                        success: false,
                         message: error.message,
                     },
-                    400
+                    500
                 );
             }
         }
@@ -219,19 +188,14 @@ export class ClassQuizController {
                 questionBank
             );
 
-            return ctx.json({
-                success: true,
-                message: result.message,
-                data: result,
-            });
+            return ctx.json(result);
         } catch (error) {
             if (error instanceof Error) {
                 return ctx.json(
                     {
-                        success: false,
                         message: error.message,
                     },
-                    400
+                    500
                 );
             }
         }
@@ -244,22 +208,11 @@ export class ClassQuizController {
             const result =
                 await ClassQuizService.getClassQuizQuestionById(question_id);
 
-            if (!result) {
-                return ctx.json({
-                    success: false,
-                    message: "Question not found",
-                }, 404);
-            }
-
-            return ctx.json({
-                success: true,
-                data: result,
-            });
+            return ctx.json(result);
         } catch (error) {
             if (error instanceof Error) {
                 return ctx.json(
                     {
-                        success: false,
                         message: error.message,
                     },
                     500
@@ -283,16 +236,11 @@ export class ClassQuizController {
                     quiz_id
                 );
 
-            return ctx.json({
-                success: true,
-                data: result,
-                count: result.length,
-            });
+            return ctx.json(result);
         } catch (error) {
             if (error instanceof Error) {
                 return ctx.json(
                     {
-                        success: false,
                         message: error.message,
                     },
                     500
@@ -332,19 +280,14 @@ export class ClassQuizController {
                 }
             );
 
-            return ctx.json({
-                success: true,
-                message: "Question updated successfully",
-                data: result,
-            });
+            return ctx.json(result);
         } catch (error) {
             if (error instanceof Error) {
                 return ctx.json(
                     {
-                        success: false,
                         message: error.message,
                     },
-                    400
+                    500
                 );
             }
         }
@@ -359,19 +302,14 @@ export class ClassQuizController {
             const result =
                 await ClassQuizService.deleteClassQuizQuestionById(question_id);
 
-            return ctx.json({
-                success: true,
-                message: "Question deleted successfully",
-                data: result,
-            });
+            return ctx.json(result);
         } catch (error) {
             if (error instanceof Error) {
                 return ctx.json(
                     {
-                        success: false,
                         message: error.message,
                     },
-                    400
+                    500
                 );
             }
         }
@@ -380,7 +318,7 @@ export class ClassQuizController {
     public static readonly createClassQuizAttempt = async (ctx: Context) => {
         try {
             const campus_id = ctx.get("campus_id");
-            const user_id = ctx.get("user_id"); // Standardized to user_id
+            const student_id = ctx.get("user_id");
             const { class_id, quiz_id } = ctx.req.param();
 
             const {
@@ -399,25 +337,20 @@ export class ClassQuizController {
                 class_id,
                 {
                     quiz_id,
-                    student_id: user_id,
+                    student_id,
                     question_id,
                     opted_answer,
                 }
             );
 
-            return ctx.json({
-                success: true,
-                message: "Quiz attempt created successfully",
-                data: result,
-            });
+            return ctx.json(result);
         } catch (error) {
             if (error instanceof Error) {
                 return ctx.json(
                     {
-                        success: false,
                         message: error.message,
                     },
-                    400
+                    500
                 );
             }
         }
@@ -435,16 +368,11 @@ export class ClassQuizController {
                     student_id
                 );
 
-            return ctx.json({
-                success: true,
-                data: result,
-                count: result.length,
-            });
+            return ctx.json(result);
         } catch (error) {
             if (error instanceof Error) {
                 return ctx.json(
                     {
-                        success: false,
                         message: error.message,
                     },
                     500
@@ -467,16 +395,11 @@ export class ClassQuizController {
                         quiz_id
                     );
 
-                return ctx.json({
-                    success: true,
-                    data: result,
-                    count: result.length,
-                });
+                return ctx.json(result);
             } catch (error) {
                 if (error instanceof Error) {
                     return ctx.json(
                         {
-                            success: false,
                             message: error.message,
                         },
                         500
@@ -499,19 +422,14 @@ export class ClassQuizController {
                 user_id
             );
 
-            return ctx.json({
-                success: true,
-                message: "Quiz submission created successfully",
-                data: result,
-            });
+            return ctx.json(result);
         } catch (error) {
             if (error instanceof Error) {
                 return ctx.json(
                     {
-                        success: false,
                         message: error.message,
                     },
-                    400
+                    500
                 );
             }
         }
@@ -528,22 +446,11 @@ export class ClassQuizController {
                     submission_id
                 );
 
-            if (!result) {
-                return ctx.json({
-                    success: false,
-                    message: "Submission not found",
-                }, 404);
-            }
-
-            return ctx.json({
-                success: true,
-                data: result,
-            });
+            return ctx.json(result);
         } catch (error) {
             if (error instanceof Error) {
                 return ctx.json(
                     {
-                        success: false,
                         message: error.message,
                     },
                     500
@@ -566,15 +473,11 @@ export class ClassQuizController {
                     user_id
                 );
 
-            return ctx.json({
-                success: true,
-                data: result,
-            });
+            return ctx.json(result);
         } catch (error) {
             if (error instanceof Error) {
                 return ctx.json(
                     {
-                        success: false,
                         message: error.message,
                     },
                     500
@@ -597,16 +500,11 @@ export class ClassQuizController {
                     class_id
                 );
 
-            return ctx.json({
-                success: true,
-                data: result,
-                count: result.length,
-            });
+            return ctx.json(result);
         } catch (error) {
             if (error instanceof Error) {
                 return ctx.json(
                     {
-                        success: false,
                         message: error.message,
                     },
                     500
@@ -637,19 +535,14 @@ export class ClassQuizController {
                 data
             );
 
-            return ctx.json({
-                success: true,
-                message: "Submission updated successfully",
-                data: result,
-            });
+            return ctx.json(result);
         } catch (error) {
             if (error instanceof Error) {
                 return ctx.json(
                     {
-                        success: false,
                         message: error.message,
                     },
-                    400
+                    500
                 );
             }
         }
@@ -661,28 +554,16 @@ export class ClassQuizController {
 
             const result = await ClassQuizService.getAllClassQuizzes(campus_id);
 
-            return ctx.json({
-                success: true,
-                data: result,
-                count: result.length,
-            });
+            return ctx.json(result);
         } catch (error) {
             if (error instanceof Error) {
                 return ctx.json(
                     {
-                        success: false,
                         message: error.message,
                     },
                     500
                 );
             }
-            return ctx.json(
-                {
-                    success: false,
-                    message: "An unknown error occurred",
-                },
-                500
-            );
         }
     };
 
