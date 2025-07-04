@@ -971,4 +971,32 @@ export class ClassQuizController {
             }
         }
     };
+
+    public static readonly getQuizResultsByStudentIdAndQuizId = async (ctx: Context) => {
+        try {
+            const campus_id = ctx.get("campus_id");
+            const { student_id, quiz_id } = ctx.req.param();
+
+            const results = await ClassQuizService.getQuizResultsByStudentIdAndQuizId(
+                campus_id,
+                student_id,
+                quiz_id
+            );
+
+            return ctx.json({
+                success: true,
+                data: results,
+            });
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json(
+                    {
+                        success: false,
+                        message: error.message,
+                    },
+                    500
+                );
+            }
+        }
+    }
 }

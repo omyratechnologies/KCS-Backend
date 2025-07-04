@@ -1601,5 +1601,115 @@ export class ClassQuizService {
         };
     };
 
+    public static readonly getQuizResultsByStudentIdAndQuizId = async (
+        campus_id: string,
+        student_id: string,
+        quiz_id: string,
+        class_id?: string
+    ) => {
+        // Get all submissions for the specific quiz
+        const submissions = await ClassQuizSubmission.find({
+            campus_id,
+            user_id: student_id,
+            quiz_id,
+            is_deleted: false,
+        });
+        if (!submissions.rows || submissions.rows.length === 0) {
+            return null; // No submissions found for this quiz
+        }
+        const submissionData = submissions.rows[0] as IClassQuizSubmission;
+        // Get quiz details
+        const quiz = await this.getClassQuizById(quiz_id);
+        if (!quiz) {
+            throw new Error("Quiz not found");
+        }
+        // Get all questions for the quiz
+        const questions = await this.getClassQuizQuestionsByQuizId(
+            submissionData.campus_id,
+            submissionData.class_id,
+            submissionData.quiz_id
+        );
+        // Get all attempts for this submission
+        const attempts = await ClassQuizAttempt.find({
+            quiz_id: submissionData.quiz_id,
+            user_id: student_id,
+        });
+        const attemptMap = new Map(
+            attempts.rows?.map(attempt => [attempt.question_id, attempt as IClassQuizAttempt]) || []
+        );
+        // Calculate detailed results
+        const questionResults = questions.map(question => {
+            const userAttempt = attemptMap.get(question.id);
+            const userAnswer = userAttempt ? (userAttempt as IClassQuizAttempt).attempt_data
+                : null;
+            const isCorrect = userAnswer === question.correct_answer;
+            return {
+                question_id: question.id,
+                question_text: question.question_text,
+                question_type: question.question_type,
+                options: question.options,
+                correct_answer: question.correct_answer,
+                user_answer: userAnswer,
+                is_correct: isCorrect,
+                marks_awarded: isCorrect ? 1 : 0, // Marks for this question
+            };
+        });
+
+        // Calculate marks summary
+        const correctAnswers = questionResults.filter(q => q.is_correct).length;
+        const totalQuestions = questions.length;
+        const studentMarks = submissionData.score; // Student's total marks
+        const totalMarks = totalQuestions; // Total possible marks (assuming 1 mark per question)
+        const percentage = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
+
+        // Get session information for time taken
+        const session = await ClassQuizSession.find({
+            quiz_id: submissionData.quiz_id,
+            user_id: student_id,
+            is_deleted: false,
+        });
+
+        const sessionData = session.rows && session.rows.length > 0 ? session.rows[0] as IClassQuizSession : null;
+        
+        let timeTakenSeconds = 0;
+        if (sessionData && sessionData.started_at && sessionData.completed_at) {
+            timeTakenSeconds = Math.floor(
+                (new Date(sessionData.completed_at).getTime() - new Date(sessionData.started_at).getTime()) / 1000
+            );
+        }
+
+        return {
+            quiz: {
+                id: quiz.id,
+                quiz_name: quiz.quiz_name,
+                quiz_description: quiz.quiz_description,
+                total_questions: totalQuestions,
+            },
+            student: {
+                student_id,
+                campus_id,
+                class_id: submissionData.class_id,
+            },
+            marks: {
+                student_marks: studentMarks, // Marks student got
+                total_marks: totalMarks, // Total marks possible
+                correct_answers: correctAnswers,
+                incorrect_answers: totalQuestions - correctAnswers,
+                percentage: Math.round(percentage * 100) / 100,
+                marks_breakdown: `${studentMarks}/${totalMarks}`,
+            },
+            submission: {
+                id: submissionData.id,
+                submission_date: submissionData.submission_date,
+                feedback: submissionData.feedback,
+                time_taken_seconds: timeTakenSeconds,
+                auto_submitted: sessionData?.status === "expired" || false,
+                meta_data: submissionData.meta_data,
+            },
+            question_results: questionResults,
+        };
+    };
+
+
     // ======================= QUIZ MANAGEMENT =======================
 }

@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 
 import { authMiddleware } from "@/middlewares/auth.middleware";
+import androidApkRoute from "@/routes/android_apk.route";
 import attendanceRoute from "@/routes/attendance.route";
 import authRoute from "@/routes/auth.route";
 import campusesRoute from "@/routes/campuses.route";
@@ -35,6 +36,7 @@ app.route("/auth", authRoute);
 
 app.use(authMiddleware());
 
+app.route("/android-apk", androidApkRoute);
 app.route("/dashboard", dashboardRoute);
 app.route("/user", usersRoute);
 app.route("/campus", campusesRoute);
@@ -59,5 +61,6 @@ app.route("/student-record", studentRecordRoute);
 app.route("/student-performance", studentPerformanceRoute);
 app.route("/teacher", teacherRoute);
 app.route("/parent", parentRoute);
+
 
 export default app;

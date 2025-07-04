@@ -60,8 +60,12 @@ app.get(
             ],
             servers: [
                 {
-                    url: "https://dev-api.letscatchup-kcs.com",
+                    url: "https://localhost:4500",
                     description: "Local server",
+                },
+                {
+                    url: "https://dev-api.letscatchup-kcs.com",
+                    description: "Production server",
                 },
             ],
         },

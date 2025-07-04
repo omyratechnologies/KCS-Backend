@@ -816,7 +816,7 @@ app.get(
 
 // Get quiz statistics
 app.get(
-    "/class/:class_id/:quiz_id/statistics",
+    "/:class_id/:quiz_id/statistics",
     describeRoute({
         operationId: "getQuizStatistics",
         summary: "Get quiz statistics",
@@ -1668,6 +1668,33 @@ app.get(
         },
     }),
     ClassQuizController.getQuizResultsSummaryByStudentId
+);
+
+app.get(
+    "/student/:student_id/results/:quiz_id",
+    describeRoute({
+        operationId: "getQuizResultsByStudentIdAndQuizId",
+        summary: "Get quiz results by student ID and quiz ID",
+        description: "Retrieves detailed quiz results for a specific student and quiz",
+        tags: ["Class Quiz"],
+        parameters: [
+            {
+                name: "student_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Student ID",
+            },
+            {
+                name: "quiz_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Quiz ID",
+            },
+        ],
+    }),
+    ClassQuizController.getQuizResultsByStudentIdAndQuizId
 );
 
 export default app;

@@ -13,6 +13,18 @@ const initDB = async () => {
         password: config.OTTOMAN_PASSWORD,
     });
     await ottoman.start();
+    
+    // Import all models after database connection is established
+    await import("@/models");
+    
+    // Ensure all models/collections are created
+    try {
+        await ottoman.ensureIndexes();
+        log("Database indexes ensured", LogTypes.LOGS, "DB");
+    } catch (error) {
+        log(`Warning: Could not ensure indexes: ${error}`, LogTypes.ERROR, "DB");
+    }
+    
     log("Connected to DB", LogTypes.LOGS, "DB");
 };
 
