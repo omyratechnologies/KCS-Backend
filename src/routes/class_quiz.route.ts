@@ -141,6 +141,35 @@ app.get(
     ClassQuizController.getClassQuizByClassID
 );
 
+app.get(
+    "/i/created-by",
+    describeRoute({
+        operationId: "getClassQuizByCreatedBy",
+        summary: "Get quizzes created by user",
+        description: "Retrieves all quizzes created by the logged-in user",
+        tags: ["Class Quiz"],
+        responses: {
+            200: {
+                description: "List of quizzes created by user",
+                content: {
+                    "application/json": {
+                        schema: resolver(getClassQuizzesResponseSchema),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    ClassQuizController.getClassQuizByCreatedBy
+);
+
 // Get quizzes by class ID with student status (for students)
 app.get(
     "/class/:class_id/student-status",
@@ -811,7 +840,7 @@ app.get(
             },
         },
     }),
-    ClassQuizController.getAllClassQuizzes
+    ClassQuizController.getAllQuizzesFromAllClasses
 );
 
 // Get quiz statistics

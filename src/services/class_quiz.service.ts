@@ -53,6 +53,7 @@ export class ClassQuizService {
     public static readonly createClassQuiz = async (
         campus_id: string,
         class_id: string,
+        created_by: string,
         {
             quiz_name,
             quiz_description,
@@ -66,6 +67,7 @@ export class ClassQuizService {
         const quiz = await ClassQuiz.create({
             campus_id,
             class_id,
+            created_by,
             quiz_name,
             quiz_description,
             quiz_meta_data: {
@@ -85,6 +87,20 @@ export class ClassQuizService {
         return quiz;
     };
 
+    public static readonly getAllQuizzesFromAllClasses = async (campus_id: string) => {
+        const quizzes = await ClassQuiz.find(
+            {
+                campus_id,
+                is_deleted: false,
+            },
+            {
+                sort: { created_at: "DESC" },
+            }
+        );
+
+        return quizzes || [];
+    };
+
     public static readonly getClassQuizById = async (id: string) => {
         const quiz = await ClassQuiz.findById(id);
         if (!quiz || quiz.is_deleted) {
@@ -101,6 +117,24 @@ export class ClassQuizService {
             {
                 campus_id,
                 class_id,
+                is_deleted: false,
+            },
+            {
+                sort: { created_at: "DESC" },
+            }
+        );
+
+        return result.rows || [];
+    };
+
+    public static readonly getClassQuizByCreatedBy = async (
+        campus_id: string,
+        created_by: string
+    ) => {
+        const result = await ClassQuiz.find(
+            {
+                campus_id,
+                created_by,
                 is_deleted: false,
             },
             {

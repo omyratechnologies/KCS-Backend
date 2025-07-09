@@ -6,6 +6,7 @@ export class ClassQuizController {
     public static readonly createClassQuiz = async (ctx: Context) => {
         try {
             const campus_id = ctx.get("campus_id");
+            const created_by = ctx.get("user_id");
 
             const { class_id } = ctx.req.param();
 
@@ -13,8 +14,10 @@ export class ClassQuizController {
                 await ctx.req.json();
 
             const result = await ClassQuizService.createClassQuiz(
+                created_by,
                 campus_id,
                 class_id,
+
                 {
                     quiz_name,
                     quiz_description,
@@ -61,6 +64,29 @@ export class ClassQuizController {
             const result = await ClassQuizService.getClassQuizByClassID(
                 campus_id,
                 class_id
+            );
+
+            return ctx.json(result);
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json(
+                    {
+                        message: error.message,
+                    },
+                    500
+                );
+            }
+        }
+    };
+
+    public static readonly getClassQuizByCreatedBy = async (ctx: Context) => {
+        try {
+            const campus_id = ctx.get("campus_id");
+            const created_by = ctx.get("user_id");
+
+            const result = await ClassQuizService.getClassQuizByCreatedBy(
+                campus_id,
+                created_by
             );
 
             return ctx.json(result);
@@ -548,24 +574,31 @@ export class ClassQuizController {
         }
     };
 
-    public static readonly getAllClassQuizzes = async (ctx: Context) => {
+    public static readonly getAllQuizzesFromAllClasses = async (ctx: Context) => {
         try {
             const campus_id = ctx.get("campus_id");
 
-            const result = await ClassQuizService.getAllClassQuizzes(campus_id);
+            const result = await ClassQuizService.getAllQuizzesFromAllClasses(
+                campus_id
+            );
 
-            return ctx.json(result);
+            return ctx.json({
+                success: true,
+                data: result,
+                count: result.length,
+            });
         } catch (error) {
             if (error instanceof Error) {
                 return ctx.json(
                     {
+                        success: false,
                         message: error.message,
                     },
                     500
                 );
             }
         }
-    };
+    }
 
     // ======================= NEW SESSION-BASED QUIZ METHODS =======================
 
