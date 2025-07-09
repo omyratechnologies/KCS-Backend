@@ -66,6 +66,7 @@ export interface TeacherDashboardData {
         name: string;
         email: string;
         user_id: string;
+        profileImg?: string;
     };
     classes: any[];
     subjects: any[];

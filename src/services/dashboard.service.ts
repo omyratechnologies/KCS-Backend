@@ -478,6 +478,7 @@ export class DashboardService {
                     name: `${profile.first_name} ${profile.last_name}`,
                     email: profile.email,
                     user_id: profile.user_id,
+                    profileImg: profile.meta_data?.imageURL || "",
                 },
                 classes: classes.map((c) => ({
                     id: c.id,

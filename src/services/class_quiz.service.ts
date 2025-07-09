@@ -15,6 +15,7 @@ import {
     ClassQuizSession,
     IClassQuizSession,
 } from "@/models/class_quiz_session.model";
+import { Class, IClassData } from "@/models/class.model";
 import { randomBytes } from "crypto";
 
 interface QuizSettings {
@@ -142,7 +143,115 @@ export class ClassQuizService {
             }
         );
 
-        return result.rows || [];
+        const quizzes = result.rows || [];
+
+        // Enhance quiz data with class information and status
+        const enhancedQuizzes = await Promise.all(
+            quizzes.map(async (quiz) => {
+                // Get class information
+                const classData = await Class.findById(quiz.class_id);
+                
+                // Get quiz questions count
+                const questionsResult = await ClassQuizQuestion.find({
+                    quiz_id: quiz.id,
+                    is_deleted: false,
+                });
+                const questionsCount = questionsResult.rows?.length || 0;
+
+                // Get quiz submissions count
+                const submissionsResult = await ClassQuizSubmission.find({
+                    quiz_id: quiz.id,
+                    is_deleted: false,
+                });
+                const submissionsCount = submissionsResult.rows?.length || 0;
+
+                // Determine quiz status
+                const quizSettings = quiz.quiz_meta_data as QuizSettings;
+                let status = "Draft";
+                
+                if (questionsCount > 0) {
+                    // Check if quiz is published based on availability settings
+                    if (quizSettings.available_from && quizSettings.available_until) {
+                        const now = new Date();
+                        const availableFrom = new Date(quizSettings.available_from);
+                        const availableUntil = new Date(quizSettings.available_until);
+                        
+                        if (now > availableUntil) {
+                            status = "Completed";
+                        } else if (now >= availableFrom) {
+                            status = "Published";
+                        } else {
+                            status = "Published"; // Scheduled for future
+                        }
+                    } else {
+                        // No time restrictions, consider it published if it has questions
+                        status = submissionsCount > 0 ? "Published" : "Published";
+                    }
+                }
+
+                // Format due date
+                let dueDate: Date | null = null;
+                let dueDateDisplay = "Not scheduled";
+                
+                if (quizSettings.available_until) {
+                    dueDate = new Date(quizSettings.available_until);
+                    dueDateDisplay = dueDate.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                    });
+                }
+
+                // Format completion date for completed quizzes
+                let completionDate: Date | null = null;
+                if (status === "Completed" && quizSettings.available_until) {
+                    completionDate = new Date(quizSettings.available_until);
+                }
+
+                return {
+                    id: quiz.id,
+                    quiz_name: quiz.quiz_name,
+                    quiz_description: quiz.quiz_description,
+                    class_id: quiz.class_id,
+                    class_name: classData?.name || "Unknown Class",
+                    status,
+                    due_date: dueDate,
+                    due_date_display: dueDateDisplay,
+                    completion_date: completionDate,
+                    questions_count: questionsCount,
+                    submissions_count: submissionsCount,
+                    time_limit_minutes: quizSettings.time_limit_minutes || null,
+                    max_attempts: quizSettings.max_attempts || 1,
+                    quiz_meta_data: quiz.quiz_meta_data,
+                    created_at: quiz.created_at,
+                    updated_at: quiz.updated_at,
+                    is_active: quiz.is_active,
+                    created_by: quiz.created_by,
+                    campus_id: quiz.campus_id,
+                    // Dashboard specific fields
+                    dashboard_display: {
+                        title: quiz.quiz_name,
+                        subtitle: classData?.name || "Unknown Class",
+                        status_label: status,
+                        status_color: status === "Published" ? "success" : 
+                                     status === "Completed" ? "neutral" : "warning",
+                        date_label: status === "Completed" ? "Ended" : "Due",
+                        date_value: status === "Completed" ? completionDate : dueDate,
+                        date_display: status === "Completed" ? 
+                            (completionDate ? completionDate.toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
+                            }) : "Recently ended") : 
+                            dueDateDisplay,
+                        participants_count: submissionsCount,
+                        questions_count: questionsCount
+                    }
+                };
+            })
+        );
+
+        return enhancedQuizzes;
     };
 
     public static readonly getAllClassQuizzes = async (campus_id: string) => {
