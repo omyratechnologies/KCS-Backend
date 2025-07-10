@@ -897,6 +897,128 @@ app.get(
     ClassQuizController.getQuizStatistics
 );
 
+// Get detailed quiz statistics by quiz ID
+app.get(
+    "/detailed-statistics/:quiz_id",
+    describeRoute({
+        operationId: "getDetailedQuizStatistics",
+        summary: "Get detailed quiz statistics by quiz ID",
+        description: "Retrieves comprehensive statistics for a specific quiz including attempted students count, total students average, each student's quiz marks, and top three students based on marks and completion time",
+        tags: ["Class Quiz"],
+        parameters: [
+            {
+                name: "quiz_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Quiz ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Detailed quiz statistics retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                success: { type: "boolean" },
+                                data: {
+                                    type: "object",
+                                    properties: {
+                                        quiz_info: {
+                                            type: "object",
+                                            properties: {
+                                                id: { type: "string" },
+                                                quiz_name: { type: "string" },
+                                                quiz_description: { type: "string" },
+                                                class_id: { type: "string" },
+                                                class_name: { type: "string" },
+                                                created_at: { type: "string", format: "date-time" },
+                                            },
+                                        },
+                                        statistics: {
+                                            type: "object",
+                                            properties: {
+                                                total_students: { type: "number" },
+                                                attempted_students: { type: "number" },
+                                                completion_percentage: { type: "number" },
+                                                average_score: { type: "number" },
+                                                highest_score: { type: "number" },
+                                                lowest_score: { type: "number" },
+                                                average_completion_time_seconds: { type: "number" },
+                                            },
+                                        },
+                                        top_three_students: {
+                                            type: "array",
+                                            items: {
+                                                type: "object",
+                                                properties: {
+                                                    student_id: { type: "string" },
+                                                    student_name: { type: "string" },
+                                                    student_email: { type: "string" },
+                                                    score: { type: "number" },
+                                                    submission_date: { type: "string", format: "date-time" },
+                                                    completion_time_seconds: { type: "number" },
+                                                    completion_time_formatted: { type: "string" },
+                                                    feedback: { type: "string" },
+                                                    meta_data: { type: "object" },
+                                                },
+                                            },
+                                        },
+                                        all_student_results: {
+                                            type: "array",
+                                            items: {
+                                                type: "object",
+                                                properties: {
+                                                    student_id: { type: "string" },
+                                                    student_name: { type: "string" },
+                                                    student_email: { type: "string" },
+                                                    score: { type: "number" },
+                                                    submission_date: { type: "string", format: "date-time" },
+                                                    completion_time_seconds: { type: "number" },
+                                                    completion_time_formatted: { type: "string" },
+                                                    feedback: { type: "string" },
+                                                    meta_data: { type: "object" },
+                                                },
+                                            },
+                                        },
+                                        summary: {
+                                            type: "object",
+                                            properties: {
+                                                total_attempts: { type: "number" },
+                                                success_rate: { type: "number" },
+                                                average_time_formatted: { type: "string" },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            404: {
+                description: "Quiz not found",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    ClassQuizController.getDetailedQuizStatistics
+);
+
 // ======================= NEW SESSION-BASED QUIZ ROUTES =======================
 
 // Start a quiz session

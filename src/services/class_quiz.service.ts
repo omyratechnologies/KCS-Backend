@@ -16,7 +16,24 @@ import {
     IClassQuizSession,
 } from "@/models/class_quiz_session.model";
 import { Class, IClassData } from "@/models/class.model";
+import { User, IUser } from "@/models/user.model";
 import { randomBytes } from "crypto";
+
+// Utility function to format time in seconds to a readable format
+const formatTime = (seconds: number): string => {
+    if (seconds === 0) return "0 seconds";
+    
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = seconds % 60;
+    
+    const parts: string[] = [];
+    if (hours > 0) parts.push(`${hours} hour${hours > 1 ? 's' : ''}`);
+    if (minutes > 0) parts.push(`${minutes} minute${minutes > 1 ? 's' : ''}`);
+    if (remainingSeconds > 0) parts.push(`${remainingSeconds} second${remainingSeconds > 1 ? 's' : ''}`);
+    
+    return parts.join(', ');
+};
 
 interface QuizSettings {
     time_limit_minutes?: number;
@@ -294,6 +311,24 @@ export class ClassQuizService {
             throw new Error("Cannot delete quiz with active sessions");
         }
 
+        // Delete all questions associated with this quiz
+        const questions = await ClassQuizQuestion.find({
+            quiz_id: id,
+            is_deleted: false,
+        });
+
+        if (questions.rows && questions.rows.length > 0) {
+            await Promise.all(
+                questions.rows.map(question => 
+                    ClassQuizQuestion.updateById(question.id, {
+                        is_deleted: true,
+                        updated_at: new Date(),
+                    })
+                )
+            );
+        }
+
+        // Delete the quiz
         return await ClassQuiz.updateById(id, {
             is_deleted: true,
             updated_at: new Date(),
@@ -1853,6 +1888,156 @@ export class ClassQuizService {
         };
     };
 
+    // ======================= QUIZ STATISTICS =======================
+    public static readonly getDetailedQuizStatistics = async (
+        campus_id: string,
+        quiz_id: string
+    ) => {
+        try {
+            // Get quiz information
+            const quiz = await ClassQuiz.findOne({
+                id: quiz_id,
+                campus_id,
+                is_deleted: false
+            });
+
+            if (!quiz) {
+                throw new Error("Quiz not found");
+            }
+
+            // Get class information to get total students
+            const classData = await Class.findOne({
+                id: quiz.class_id,
+                campus_id,
+                is_deleted: false
+            });
+
+            if (!classData) {
+                throw new Error("Class not found");
+            }
+
+            // Get all quiz submissions
+            const submissions = await ClassQuizSubmission.find({
+                campus_id,
+                quiz_id,
+                is_deleted: false,
+            });
+
+            const submissionData = submissions.rows || [];
+            
+            // Get quiz sessions for completion time data
+            const sessions = await ClassQuizSession.find({
+                campus_id,
+                quiz_id,
+                status: "completed",
+                is_deleted: false
+            });
+
+            const sessionData = sessions.rows || [];
+
+            // Calculate basic statistics
+            const totalStudents = classData.student_count || classData.student_ids?.length || 0;
+            const attemptedStudents = submissionData.length;
+            const scores = submissionData.map(s => s.score);
+            const averageScore = scores.length > 0 ? 
+                scores.reduce((sum, score) => sum + score, 0) / scores.length : 0;
+
+            // Get detailed student results with user information
+            const studentResults = await Promise.all(
+                submissionData.map(async (submission) => {
+                    // Get user information
+                    const user = await User.findOne({
+                        id: submission.user_id,
+                        campus_id,
+                        is_deleted: false
+                    });
+
+                    // Get session information for completion time
+                    const session = sessionData.find(s => s.user_id === submission.user_id);
+                    
+                    let completionTimeSeconds = 0;
+                    if (session && session.started_at && session.completed_at) {
+                        const startTime = new Date(session.started_at).getTime();
+                        const endTime = new Date(session.completed_at).getTime();
+                        completionTimeSeconds = Math.floor((endTime - startTime) / 1000);
+                    }
+
+                    return {
+                        student_id: submission.user_id,
+                        student_name: user ? `${user.first_name} ${user.last_name}` : "Unknown Student",
+                        student_email: user?.email || "Unknown",
+                        score: submission.score,
+                        submission_date: submission.submission_date,
+                        completion_time_seconds: completionTimeSeconds,
+                        completion_time_formatted: formatTime(completionTimeSeconds),
+                        feedback: submission.feedback || "",
+                        meta_data: submission.meta_data || {}
+                    };
+                })
+            );
+
+            // Sort by score (descending) and then by completion time (ascending) for top performers
+            const sortedResults = studentResults.sort((a, b) => {
+                if (b.score !== a.score) {
+                    return b.score - a.score; // Higher score first
+                }
+                return a.completion_time_seconds - b.completion_time_seconds; // Faster completion first
+            });
+
+            // Get top 3 students
+            const topThreeStudents = sortedResults.slice(0, 3);
+
+            return {
+                quiz_info: {
+                    id: quiz.id,
+                    quiz_name: quiz.quiz_name,
+                    quiz_description: quiz.quiz_description,
+                    class_id: quiz.class_id,
+                    class_name: classData.name,
+                    created_at: quiz.created_at
+                },
+                statistics: {
+                    total_students: totalStudents,
+                    attempted_students: attemptedStudents,
+                    completion_percentage: totalStudents > 0 ? 
+                        Math.round((attemptedStudents / totalStudents) * 100) : 0,
+                    average_score: Math.round(averageScore * 100) / 100,
+                    highest_score: scores.length > 0 ? Math.max(...scores) : 0,
+                    lowest_score: scores.length > 0 ? Math.min(...scores) : 0,
+                    average_completion_time_seconds: sessionData.length > 0 ? 
+                        Math.round(sessionData.reduce((sum, session) => {
+                            if (session.started_at && session.completed_at) {
+                                const startTime = new Date(session.started_at).getTime();
+                                const endTime = new Date(session.completed_at).getTime();
+                                return sum + (endTime - startTime) / 1000;
+                            }
+                            return sum;
+                        }, 0) / sessionData.length) : 0
+                },
+                top_three_students: topThreeStudents,
+                all_student_results: sortedResults,
+                summary: {
+                    total_attempts: attemptedStudents,
+                    success_rate: attemptedStudents > 0 ? 
+                        Math.round((sortedResults.filter(r => r.score >= 60).length / attemptedStudents) * 100) : 0,
+                    average_time_formatted: formatTime(
+                        sessionData.length > 0 ? 
+                            Math.round(sessionData.reduce((sum, session) => {
+                                if (session.started_at && session.completed_at) {
+                                    const startTime = new Date(session.started_at).getTime();
+                                    const endTime = new Date(session.completed_at).getTime();
+                                    return sum + (endTime - startTime) / 1000;
+                                }
+                                return sum;
+                            }, 0) / sessionData.length) : 0
+                    )
+                }
+            };
+        } catch (error) {
+            console.error("Error getting detailed quiz statistics:", error);
+            throw error;
+        }
+    };
 
     // ======================= QUIZ MANAGEMENT =======================
 }
