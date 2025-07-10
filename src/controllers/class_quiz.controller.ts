@@ -7,15 +7,14 @@ export class ClassQuizController {
         try {
             const campus_id = ctx.get("campus_id");
             const created_by = ctx.get("user_id");
-
             const { class_id } = ctx.req.param();
 
             const { quiz_name, quiz_description, quiz_meta_data } =
                 await ctx.req.json();
 
             const result = await ClassQuizService.createClassQuiz(
-                created_by,
                 campus_id,
+                created_by,
                 class_id,
 
                 {

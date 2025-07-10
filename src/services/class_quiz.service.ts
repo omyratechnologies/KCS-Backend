@@ -53,8 +53,8 @@ export class ClassQuizService {
     
     public static readonly createClassQuiz = async (
         campus_id: string,
-        class_id: string,
         created_by: string,
+        class_id: string,
         {
             quiz_name,
             quiz_description,
@@ -67,8 +67,8 @@ export class ClassQuizService {
     ) => {
         const quiz = await ClassQuiz.create({
             campus_id,
-            class_id,
             created_by,
+            class_id,
             quiz_name,
             quiz_description,
             quiz_meta_data: {
