@@ -539,18 +539,22 @@ export class ClassService {
         }
     }
 
-    // Assignment methods moved to AssignmentService for better separation of concerns
-    // Use AssignmentService for all assignment-related operations
-    
-    /**
-     * @deprecated Use AssignmentService.getAssignments({ class_id }) instead
-     */
-    public async getAllAssignmentsByClassId(classId: string): Promise<IAssignmentData[]> {
+    // Get all assignments by class ID
+    public async getAllAssignmentsByClassId(
+        classId: string
+    ): Promise<IAssignmentData[]> {
         try {
-            const assignments: { rows: IAssignmentData[] } = await Assignment.find(
+            const assignments: {
+                rows: IAssignmentData[];
+            } = await Assignment.find(
                 { class_id: classId },
-                { sort: { updated_at: "DESC" } }
+                {
+                    sort: {
+                        updated_at: "DESC",
+                    },
+                }
             );
+
             return assignments.rows;
         } catch (error) {
             console.error("Error fetching assignments by class ID:", error);
@@ -558,10 +562,70 @@ export class ClassService {
         }
     }
 
-    /**
-     * @deprecated Use AssignmentService for assignment submission operations
-     */
-    public async getAssignmentSubmissionById(id: string): Promise<IAssignmentSubmission | null> {
+    // Get assignment by ID
+    public async getAssignmentById(
+        id: string
+    ): Promise<IAssignmentData | null> {
+        try {
+            return await Assignment.findById(id);
+        } catch (error) {
+            console.error("Error fetching assignment by ID:", error);
+            return null;
+        }
+    }
+
+    // Create assignment
+    public async createAssignment(
+        campus_id: string,
+        class_id: string,
+        assignmentData: Partial<IAssignmentData>
+    ): Promise<IAssignmentData | null> {
+        try {
+            const assignment = await Assignment.create({
+                campus_id,
+                class_id,
+                ...assignmentData,
+                created_at: new Date(),
+                updated_at: new Date(),
+            });
+            
+            console.log("Assignment created successfully:", assignment);
+            return assignment;
+        } catch (error) {
+            console.error("Error creating assignment:", error);
+            throw error; // Re-throw the error instead of returning null
+        }
+    }
+
+    // update assignment
+    public async updateAssignment(
+        id: string,
+        assignmentData: Partial<IAssignmentData>
+    ): Promise<IAssignmentData | null> {
+        try {
+            return await Assignment.updateById(id, assignmentData);
+        } catch (error) {
+            console.error("Error updating assignment:", error);
+            return null;
+        }
+    }
+
+    // delete assignment
+    public async deleteAssignment(id: string): Promise<boolean> {
+        try {
+            await Assignment.findByIdAndDelete(id);
+
+            return true;
+        } catch (error) {
+            console.error("Error deleting assignment:", error);
+            return false;
+        }
+    }
+
+    // Get assignment submission by ID
+    public async getAssignmentSubmissionById(
+        id: string
+    ): Promise<IAssignmentSubmission | null> {
         try {
             return await AssignmentSubmission.findById(id);
         } catch (error) {
@@ -570,9 +634,7 @@ export class ClassService {
         }
     }
 
-    /**
-     * @deprecated Use AssignmentService for assignment submission operations
-     */
+    // create a assignment submission
     public async createAssignmentSubmission(
         assignment_id: string,
         assignmentSubmissionData: Partial<IAssignmentSubmission>
@@ -590,28 +652,45 @@ export class ClassService {
         }
     }
 
-    /**
-     * @deprecated Use AssignmentService.getAssignmentSubmissions() instead
-     */
-    public async getAssignmentSubmissionByAssignmentId(assignmentId: string): Promise<IAssignmentSubmission[]> {
+    // get assignment submission by assignment id
+    public async getAssignmentSubmissionByAssignmentId(
+        assignmentId: string
+    ): Promise<IAssignmentSubmission[]> {
         try {
-            const assignmentSubmissions: { rows: IAssignmentSubmission[] } = await AssignmentSubmission.find(
-                { assignment_id: assignmentId },
-                { sort: { updated_at: "DESC" } }
+            const assignmentSubmissions: {
+                rows: IAssignmentSubmission[];
+            } = await AssignmentSubmission.find(
+                {
+                    assignment_id: assignmentId,
+                },
+                {
+                    sort: {
+                        updated_at: "DESC",
+                    },
+                }
             );
-            return assignmentSubmissions.rows.length === 0 ? [] : assignmentSubmissions.rows;
+
+            if (assignmentSubmissions.rows.length === 0) {
+                throw new Error(
+                    "No assignment submissions found for this assignment"
+                );
+            }
+
+            return assignmentSubmissions.rows;
         } catch (error) {
-            console.error("Error fetching assignment submissions by assignment ID:", error);
+            console.error(
+                "Error fetching assignment submissions by assignment ID:",
+                error
+            );
             return [];
         }
     }
 
-    /**
-     * @deprecated Use AssignmentService for assignment submission operations
-     */
+    // update assignment submission
     public async deleteAssignmentSubmission(id: string): Promise<boolean> {
         try {
             await AssignmentSubmission.findByIdAndDelete(id);
+
             return true;
         } catch (error) {
             console.error("Error deleting assignment submission:", error);
@@ -619,9 +698,7 @@ export class ClassService {
         }
     }
 
-    /**
-     * @deprecated Use AssignmentService.getAssignmentSubmissions() instead
-     */
+    // get all assignment submissions by user id
     public async getAssignmentSubmissionsByUserId(
         userId: string
     ): Promise<IAssignmentSubmission[]> {
@@ -637,7 +714,13 @@ export class ClassService {
                 }
             );
 
-            return assignmentSubmissions.rows.length === 0 ? [] : assignmentSubmissions.rows;
+            if (assignmentSubmissions.rows.length === 0) {
+                throw new Error(
+                    "No assignment submissions found for this user"
+                );
+            }
+
+            return assignmentSubmissions.rows;
         } catch (error) {
             console.error(
                 "Error fetching assignment submissions by user ID:",
@@ -647,9 +730,7 @@ export class ClassService {
         }
     }
 
-    /**
-     * @deprecated Use AssignmentService.getAssignmentSubmissions() instead
-     */
+    // get all assignment submissions by class id
     public async getAssignmentSubmissionsByClassId(
         classId: string
     ): Promise<IAssignmentSubmission[]> {
@@ -665,7 +746,13 @@ export class ClassService {
                 }
             );
 
-            return assignmentSubmissions.rows.length === 0 ? [] : assignmentSubmissions.rows;
+            if (assignmentSubmissions.rows.length === 0) {
+                throw new Error(
+                    "No assignment submissions found for this class"
+                );
+            }
+
+            return assignmentSubmissions.rows;
         } catch (error) {
             console.error(
                 "Error fetching assignment submissions by class ID:",
@@ -1041,9 +1128,7 @@ export class ClassService {
         }
     }
 
-    /**
-     * @deprecated Use AssignmentService.getAssignments({ campus_id }) instead
-     */
+    // Get all assignments from all classes by campus
     public async getAllAssignmentsFromAllClasses(
         campusId: string
     ): Promise<IAssignmentData[]> {
