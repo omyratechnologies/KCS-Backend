@@ -29,6 +29,7 @@ import timetableRoute from "@/routes/timetable.route";
 import uploadRoute from "@/routes/upload.route";
 import usersRoute from "@/routes/users.route";
 import paymentRoute from "@/routes/payment.route";
+import superAdminRoute from "@/routes/super_admin.routes";
 
 const app = new Hono();
 
@@ -63,5 +64,6 @@ app.route("/student-performance", studentPerformanceRoute);
 app.route("/teacher", teacherRoute);
 app.route("/parent", parentRoute);
 app.route("/payment", paymentRoute);
+app.route("/super-admin", superAdminRoute);
 
 export default app;
