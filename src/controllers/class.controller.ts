@@ -304,6 +304,21 @@ export class ClassController {
             }
         }
     };
+
+    public static readonly getAllAssignmentbyUserId = async (
+        ctx: Context
+    ) => {
+        try {
+            const user_id = ctx.get("user_id");
+            const result = await classService.getAllAssignmentByUserId(user_id);
+            return ctx.json(result);
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json({ error: error.message }, 500);
+            }
+        }
+    };
+
     public static readonly getAssignmentSubmissionById = async (
         ctx: Context
     ) => {
@@ -609,6 +624,98 @@ export class ClassController {
                 class_id,
                 students,
                 total_students: students.length
+            });
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json({ error: error.message }, 500);
+            }
+            return ctx.json({ error: "Internal server error" }, 500);
+        }
+    };
+
+    public static readonly gradeAssignmentSubmission = async (ctx: Context) => {
+        try {
+            const { submission_id } = ctx.req.param();
+            const { grade, feedback } = await ctx.req.json();
+
+            const result = await classService.gradeAssignmentSubmission(
+                submission_id,
+                grade,
+                feedback
+            );
+
+            return ctx.json({
+                success: true,
+                message: "Assignment submission graded successfully",
+                data: result
+            });
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json({ error: error.message }, 500);
+            }
+            return ctx.json({ error: "Internal server error" }, 500);
+        }
+    };
+
+    public static readonly getStudentAssignmentsWithSubmissions = async (ctx: Context) => {
+        try {
+            const { student_id } = ctx.req.param();
+            const campus_id = ctx.get("campus_id");
+
+            const assignments = await classService.getStudentAssignmentsWithSubmissions(
+                student_id,
+                campus_id
+            );
+
+            return ctx.json({ assignments });
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json({ error: error.message }, 500);
+            }
+            return ctx.json({ error: "Internal server error" }, 500);
+        }
+    };
+
+    public static readonly updateAssignmentSubmission = async (ctx: Context) => {
+        try {
+            const { submission_id } = ctx.req.param();
+            const data = await ctx.req.json();
+
+            const result = await classService.updateAssignmentSubmission(
+                submission_id,
+                data
+            );
+
+            return ctx.json({
+                success: true,
+                message: "Assignment submission updated successfully",
+                data: result
+            });
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json({ error: error.message }, 500);
+            }
+            return ctx.json({ error: "Internal server error" }, 500);
+        }
+    };
+
+    public static readonly getAssignmentsDueSoon = async (ctx: Context) => {
+        try {
+            const { student_id } = ctx.req.param();
+            const { days } = ctx.req.query();
+            const campus_id = ctx.get("campus_id");
+
+            const daysAhead = days ? parseInt(days as string) : 7;
+
+            const assignments = await classService.getAssignmentsDueSoon(
+                student_id,
+                campus_id,
+                daysAhead
+            );
+
+            return ctx.json({
+                assignments,
+                total_count: assignments.length
             });
         } catch (error) {
             if (error instanceof Error) {

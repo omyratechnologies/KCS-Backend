@@ -622,6 +622,32 @@ export class ClassService {
         }
     }
 
+    public async getAllAssignmentByUserId(
+        userId: string
+    ): Promise<IAssignmentData[]> {
+        try {
+            const assignments: {
+                rows: IAssignmentData[];
+            } = await Assignment.find(
+                { user_id: userId },
+                {
+                    sort: {
+                        updated_at: "DESC",
+                    },
+                }
+            );
+
+            if (assignments.rows.length === 0) {
+                throw new Error("No assignments found for this user");
+            }
+
+            return assignments.rows;
+        } catch (error) {
+            console.error("Error fetching assignments by user ID:", error);
+            return [];
+        }
+    }
+
     // Get assignment submission by ID
     public async getAssignmentSubmissionById(
         id: string
@@ -1363,6 +1389,282 @@ export class ClassService {
         } catch (error) {
             console.error("Error fetching academic years:", error);
             return [];
+        }
+    }
+
+    // Grade an assignment submission
+    public async gradeAssignmentSubmission(
+        submission_id: string,
+        grade: number,
+        feedback?: string
+    ): Promise<IAssignmentSubmission> {
+        try {
+            const submission = await AssignmentSubmission.findById(submission_id);
+            
+            if (!submission) {
+                throw new Error("Assignment submission not found");
+            }
+
+            const updatedSubmission = await AssignmentSubmission.updateById(submission_id, {
+                grade,
+                feedback: feedback || submission.feedback,
+                updated_at: new Date()
+            });
+
+            if (!updatedSubmission) {
+                throw new Error("Failed to update assignment submission");
+            }
+
+            return updatedSubmission;
+        } catch (error) {
+            console.error("Error grading assignment submission:", error);
+            throw error;
+        }
+    }
+
+    // Get student assignments with submission status and grades
+    public async getStudentAssignmentsWithSubmissions(
+        student_id: string,
+        campus_id: string
+    ): Promise<Array<{
+        assignment: IAssignmentData;
+        submission: IAssignmentSubmission | null;
+        status: string;
+        class_info: {
+            id: string;
+            name: string;
+            academic_year: string;
+        };
+    }>> {
+        try {
+            // First, get all classes the student is enrolled in
+            const studentClasses: {
+                rows: IClassData[];
+            } = await Class.find({
+                campus_id,
+                student_ids: { $in: [student_id] },
+                is_active: true,
+                is_deleted: false,
+            });
+
+            if (studentClasses.rows.length === 0) {
+                return [];
+            }
+
+            const assignments: Array<{
+                assignment: IAssignmentData;
+                submission: IAssignmentSubmission | null;
+                status: string;
+                class_info: {
+                    id: string;
+                    name: string;
+                    academic_year: string;
+                };
+            }> = [];
+
+            // For each class, get all assignments and check submission status
+            for (const classData of studentClasses.rows) {
+                const classAssignments: {
+                    rows: IAssignmentData[];
+                } = await Assignment.find({
+                    campus_id,
+                    class_id: classData.id,
+                    is_active: true,
+                    is_deleted: false,
+                });
+
+                for (const assignment of classAssignments.rows) {
+                    // Check if student has submitted this assignment
+                    const submission: {
+                        rows: IAssignmentSubmission[];
+                    } = await AssignmentSubmission.find({
+                        assignment_id: assignment.id,
+                        user_id: student_id,
+                    });
+
+                    let status = "not_submitted";
+                    let submissionData: IAssignmentSubmission | null = null;
+
+                    if (submission.rows.length > 0) {
+                        submissionData = submission.rows[0];
+                        
+                        // Check if assignment is overdue
+                        const currentDate = new Date();
+                        const dueDate = new Date(assignment.due_date);
+                        
+                        if (submissionData.grade !== null && submissionData.grade !== undefined) {
+                            status = "graded";
+                        } else if (currentDate > dueDate) {
+                            status = "overdue";
+                        } else {
+                            status = "submitted";
+                        }
+                    } else {
+                        // Check if assignment is overdue
+                        const currentDate = new Date();
+                        const dueDate = new Date(assignment.due_date);
+                        
+                        if (currentDate > dueDate) {
+                            status = "overdue";
+                        }
+                    }
+
+                    assignments.push({
+                        assignment,
+                        submission: submissionData,
+                        status,
+                        class_info: {
+                            id: classData.id,
+                            name: classData.name,
+                            academic_year: classData.academic_year
+                        }
+                    });
+                }
+            }
+
+            // Sort by assignment due date (newest first)
+            assignments.sort((a, b) => {
+                const dateA = new Date(a.assignment.due_date);
+                const dateB = new Date(b.assignment.due_date);
+                return dateB.getTime() - dateA.getTime();
+            });
+
+            return assignments;
+        } catch (error) {
+            console.error("Error fetching student assignments with submissions:", error);
+            throw error;
+        }
+    }
+
+    // Update an assignment submission (for resubmission)
+    public async updateAssignmentSubmission(
+        submission_id: string,
+        updateData: Partial<{
+            submission_date: string;
+            meta_data: object;
+        }>
+    ): Promise<IAssignmentSubmission> {
+        try {
+            const submission = await AssignmentSubmission.findById(submission_id);
+            
+            if (!submission) {
+                throw new Error("Assignment submission not found");
+            }
+
+            const updatedSubmission = await AssignmentSubmission.updateById(submission_id, {
+                ...updateData,
+                submission_date: updateData.submission_date ? new Date(updateData.submission_date) : submission.submission_date,
+                updated_at: new Date()
+            });
+
+            if (!updatedSubmission) {
+                throw new Error("Failed to update assignment submission");
+            }
+
+            return updatedSubmission;
+        } catch (error) {
+            console.error("Error updating assignment submission:", error);
+            throw error;
+        }
+    }
+
+    // Get assignments due soon for a student
+    public async getAssignmentsDueSoon(
+        student_id: string,
+        campus_id: string,
+        daysAhead: number = 7
+    ): Promise<Array<{
+        assignment: IAssignmentData;
+        days_until_due: number;
+        is_submitted: boolean;
+        class_info: {
+            id: string;
+            name: string;
+            academic_year: string;
+        };
+    }>> {
+        try {
+            // Get current date and future date
+            const currentDate = new Date();
+            const futureDate = new Date();
+            futureDate.setDate(currentDate.getDate() + daysAhead);
+
+            // Get all classes the student is enrolled in
+            const studentClasses: {
+                rows: IClassData[];
+            } = await Class.find({
+                campus_id,
+                student_ids: { $in: [student_id] },
+                is_active: true,
+                is_deleted: false,
+            });
+
+            if (studentClasses.rows.length === 0) {
+                return [];
+            }
+
+            const dueSoonAssignments: Array<{
+                assignment: IAssignmentData;
+                days_until_due: number;
+                is_submitted: boolean;
+                class_info: {
+                    id: string;
+                    name: string;
+                    academic_year: string;
+                };
+            }> = [];
+
+            // For each class, get assignments due within the specified days
+            for (const classData of studentClasses.rows) {
+                const classAssignments: {
+                    rows: IAssignmentData[];
+                } = await Assignment.find({
+                    campus_id,
+                    class_id: classData.id,
+                    is_active: true,
+                    is_deleted: false,
+                    due_date: {
+                        $gte: currentDate.toISOString(),
+                        $lte: futureDate.toISOString()
+                    }
+                });
+
+                for (const assignment of classAssignments.rows) {
+                    // Check if student has submitted this assignment
+                    const submission: {
+                        rows: IAssignmentSubmission[];
+                    } = await AssignmentSubmission.find({
+                        assignment_id: assignment.id,
+                        user_id: student_id,
+                    });
+
+                    const isSubmitted = submission.rows.length > 0;
+                    
+                    // Calculate days until due
+                    const dueDate = new Date(assignment.due_date);
+                    const timeDiff = dueDate.getTime() - currentDate.getTime();
+                    const daysUntilDue = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+                    dueSoonAssignments.push({
+                        assignment,
+                        days_until_due: daysUntilDue,
+                        is_submitted: isSubmitted,
+                        class_info: {
+                            id: classData.id,
+                            name: classData.name,
+                            academic_year: classData.academic_year
+                        }
+                    });
+                }
+            }
+
+            // Sort by days until due (most urgent first)
+            dueSoonAssignments.sort((a, b) => a.days_until_due - b.days_until_due);
+
+            return dueSoonAssignments;
+        } catch (error) {
+            console.error("Error fetching assignments due soon:", error);
+            throw error;
         }
     }
 }

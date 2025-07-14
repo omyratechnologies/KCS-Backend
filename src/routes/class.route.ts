@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";
 import { resolver, validator as zValidator } from "hono-openapi/zod";
+import { z } from "zod";
 
 import { ClassController } from "@/controllers/class.controller";
 import {
@@ -913,6 +914,41 @@ app.delete(
 );
 
 app.get(
+    "/assignment/i/created-by",
+    describeRoute({
+        tags: ["Class"],
+        operationId: "getAssignmentsCreatedByUser",
+        summary: "Get assignments created by user",
+        description: "Retrieves all assignments created by a specific user",
+        // This endpoint assumes the user ID is obtained from the request context or token
+        responses: {
+            200: {
+                description: "Assignments created by user retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(getAssignmentsResponseSchema),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    ClassController.getAllAssignmentbyUserId
+);
+
+app.get(
     "/assignment-submission/:submission_id",
     describeRoute({
         tags: ["Class"],
@@ -1552,6 +1588,80 @@ app.get(
         },
     }),
     ClassController.getAcademicYears
+);
+
+app.get(
+    "/student/:student_id/assignments/due-soon",
+    describeRoute({
+        tags: ["Class"],
+        operationId: "getAssignmentsDueSoon",
+        summary: "Get assignments due soon for a student",
+        description: "Retrieves assignments that are due within the next 7 days for a specific student",
+        parameters: [
+            {
+                name: "student_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Student ID",
+            },
+            {
+                name: "days",
+                in: "query",
+                required: false,
+                schema: { type: "number", default: 7 },
+                description: "Number of days to look ahead (default: 7)",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Assignments due soon retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                assignments: {
+                                    type: "array",
+                                    items: {
+                                        type: "object",
+                                        properties: {
+                                            assignment: { $ref: "#/components/schemas/Assignment" },
+                                            days_until_due: { type: "number" },
+                                            is_submitted: { type: "boolean" },
+                                            class_info: {
+                                                type: "object",
+                                                properties: {
+                                                    id: { type: "string" },
+                                                    name: { type: "string" },
+                                                    academic_year: { type: "string" }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                total_count: { type: "number" }
+                            }
+                        }
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    ClassController.getAssignmentsDueSoon
 );
 
 export default app;
