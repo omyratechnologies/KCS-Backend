@@ -92,7 +92,7 @@ EnhancedAssignmentSchema.index.findByUserId = { by: "user_id" };
 EnhancedAssignmentSchema.index.findByDueDate = { by: "due_date" };
 EnhancedAssignmentSchema.index.findByPriority = { by: "priority" };
 EnhancedAssignmentSchema.index.findByType = { by: "assignment_type" };
-EnhancedAssignmentSchema.index.findByStatus = { by: "is_active, is_deleted" };
+EnhancedAssignmentSchema.index.findByStatus = { by: ["is_active", "is_deleted"] };
 
 // Enhanced Assignment Submission Schema
 const EnhancedAssignmentSubmissionSchema = new Schema({
