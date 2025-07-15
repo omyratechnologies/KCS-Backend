@@ -343,10 +343,26 @@ export class ClassController {
 
             const data: Partial<IAssignmentSubmission> = await ctx.req.json();
 
+            // Get the assignment to extract campus_id
+            const assignment = await classService.getAssignmentById(assignment_id);
+            if (!assignment) {
+                return ctx.json({ error: "Assignment not found" }, 404);
+            }
+
+            // Add campus_id from assignment to the submission data
+            const submissionData = {
+                ...data,
+                campus_id: assignment.campus_id,
+            };
+
             const result = await classService.createAssignmentSubmission(
                 assignment_id,
-                data
+                submissionData
             );
+
+            if (!result) {
+                return ctx.json({ error: "Failed to create assignment submission" }, 500);
+            }
 
             return ctx.json(result);
         } catch (error) {

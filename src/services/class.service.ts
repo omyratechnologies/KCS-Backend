@@ -666,12 +666,39 @@ export class ClassService {
         assignmentSubmissionData: Partial<IAssignmentSubmission>
     ): Promise<IAssignmentSubmission | null> {
         try {
-            return await AssignmentSubmission.create({
+            // Validate required fields
+            if (!assignmentSubmissionData.campus_id) {
+                throw new Error("campus_id is required for assignment submission");
+            }
+            if (!assignmentSubmissionData.user_id) {
+                throw new Error("user_id is required for assignment submission");
+            }
+
+            const submissionData: any = {
                 assignment_id,
-                ...assignmentSubmissionData,
+                campus_id: assignmentSubmissionData.campus_id,
+                user_id: assignmentSubmissionData.user_id,
+                submission_date: assignmentSubmissionData.submission_date || new Date(),
+                meta_data: assignmentSubmissionData.meta_data || {},
                 created_at: new Date(),
                 updated_at: new Date(),
-            });
+            };
+
+            // Add optional fields if provided
+            if (assignmentSubmissionData.grade !== undefined) {
+                submissionData.grade = assignmentSubmissionData.grade;
+            }
+            if (assignmentSubmissionData.feedback !== undefined) {
+                submissionData.feedback = assignmentSubmissionData.feedback;
+            }
+
+            const result = await AssignmentSubmission.create(submissionData);
+            
+            if (!result) {
+                throw new Error("Failed to create assignment submission");
+            }
+
+            return result;
         } catch (error) {
             console.error("Error creating assignment submission:", error);
             return null;

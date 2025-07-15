@@ -8,9 +8,9 @@ interface IAssignmentSubmission {
     assignment_id: string;
     user_id: string;
     submission_date: Date;
-    grade: number;
-    feedback: string;
-    meta_data: object;
+    grade?: number; // Optional - for ungraded submissions
+    feedback?: string; // Optional - for ungraded submissions
+    meta_data?: object; // Optional - additional data
     created_at: Date;
     updated_at: Date;
 }
@@ -20,9 +20,9 @@ const AssignmentSubmissionSchema = new Schema({
     assignment_id: { type: String, required: true },
     user_id: { type: String, required: true },
     submission_date: { type: Date, required: true },
-    grade: { type: Number, required: true },
-    feedback: { type: String, required: true },
-    meta_data: { type: Object, required: true },
+    grade: { type: Number, required: false }, // Optional - will be set when graded
+    feedback: { type: String, required: false }, // Optional - will be set when graded
+    meta_data: { type: Object, required: false, default: {} }, // Optional with default
     created_at: { type: Date, default: () => new Date() },
     updated_at: { type: Date, default: () => new Date() },
 });
