@@ -30,6 +30,7 @@ import uploadRoute from "@/routes/upload.route";
 import usersRoute from "@/routes/users.route";
 import paymentRoute from "@/routes/payment.route";
 import superAdminRoute from "@/routes/super_admin.routes";
+import assignmentRoute from "@/routes/assignments.route";
 
 const app = new Hono();
 
@@ -48,6 +49,7 @@ app.route("/curriculum", curriculumRoute);
 app.route("/course", courseRoute);
 app.route("/subject", subjectRoute);
 app.route("/library", libraryRoute);
+app.route("/assignments", assignmentRoute); // New unified assignment routes
 app.route("/document-store", documentStoreoute);
 app.route("/exam", examRoute);
 app.route("/fee", feeRoute);
