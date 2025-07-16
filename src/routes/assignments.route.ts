@@ -499,6 +499,79 @@ app.get(
 );
 
 app.get(
+    "/student/dashboard",
+    describeRoute({
+        operationId: "getStudentAssignmentDashboard",
+        summary: "Get student assignment dashboard",
+        description: "Get student's assignment dashboard with upcoming deadlines and performance.",
+        tags: ["Assignments - Student"],
+        responses: {
+            200: {
+                description: "Student assignment dashboard",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                upcoming_assignments: {
+                                    type: "array",
+                                    items: {
+                                        type: "object",
+                                        properties: {
+                                            assignment: {
+                                                $ref: "#/components/schemas/Assignment"
+                                            },
+                                            days_until_due: { type: "number" },
+                                            priority: { 
+                                                type: "string",
+                                                enum: ["high", "medium", "low"]
+                                            },
+                                        },
+                                    },
+                                },
+                                overdue_assignments: {
+                                    type: "array",
+                                    items: {
+                                        $ref: "#/components/schemas/Assignment"
+                                    },
+                                },
+                                recent_grades: {
+                                    type: "array",
+                                    items: {
+                                        type: "object",
+                                        properties: {
+                                            assignment: {
+                                                $ref: "#/components/schemas/Assignment"
+                                            },
+                                            grade: { type: "number" },
+                                            feedback: { type: "string" },
+                                            graded_date: { type: "string", format: "date-time" },
+                                        },
+                                    },
+                                },
+                                stats: {
+                                    type: "object",
+                                    properties: {
+                                        total_assignments: { type: "number" },
+                                        submitted: { type: "number" },
+                                        pending: { type: "number" },
+                                        overdue: { type: "number" },
+                                        average_grade: { type: "number" },
+                                        completion_rate: { type: "number" },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    roleMiddleware("student_assignment_dashboard"),
+    AssignmentController.getStudentAssignmentDashboard
+);
+
+app.get(
     "/student/:assignment_id",
     describeRoute({
         operationId: "getStudentAssignmentDetails",
@@ -592,79 +665,6 @@ app.post(
     roleMiddleware("student_submit_assignment"),
     zValidator("json", submitAssignmentRequestBodySchema),
     AssignmentController.submitAssignment
-);
-
-app.get(
-    "/student/dashboard",
-    describeRoute({
-        operationId: "getStudentAssignmentDashboard",
-        summary: "Get student assignment dashboard",
-        description: "Get student's assignment dashboard with upcoming deadlines and performance.",
-        tags: ["Assignments - Student"],
-        responses: {
-            200: {
-                description: "Student assignment dashboard",
-                content: {
-                    "application/json": {
-                        schema: {
-                            type: "object",
-                            properties: {
-                                upcoming_assignments: {
-                                    type: "array",
-                                    items: {
-                                        type: "object",
-                                        properties: {
-                                            assignment: {
-                                                $ref: "#/components/schemas/Assignment"
-                                            },
-                                            days_until_due: { type: "number" },
-                                            priority: { 
-                                                type: "string",
-                                                enum: ["high", "medium", "low"]
-                                            },
-                                        },
-                                    },
-                                },
-                                overdue_assignments: {
-                                    type: "array",
-                                    items: {
-                                        $ref: "#/components/schemas/Assignment"
-                                    },
-                                },
-                                recent_grades: {
-                                    type: "array",
-                                    items: {
-                                        type: "object",
-                                        properties: {
-                                            assignment: {
-                                                $ref: "#/components/schemas/Assignment"
-                                            },
-                                            grade: { type: "number" },
-                                            feedback: { type: "string" },
-                                            graded_date: { type: "string", format: "date-time" },
-                                        },
-                                    },
-                                },
-                                stats: {
-                                    type: "object",
-                                    properties: {
-                                        total_assignments: { type: "number" },
-                                        submitted: { type: "number" },
-                                        pending: { type: "number" },
-                                        overdue: { type: "number" },
-                                        average_grade: { type: "number" },
-                                        completion_rate: { type: "number" },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-        },
-    }),
-    roleMiddleware("student_assignment_dashboard"),
-    AssignmentController.getStudentAssignmentDashboard
 );
 
 app.get(

@@ -370,24 +370,36 @@ export class AssignmentController {
             const { assignment_id } = ctx.req.param();
 
             // First, try to get from class assignments
-            let assignment: any = await classService.getAssignmentById(assignment_id);
+            let assignment: any = null;
             let submission: any = null;
             let isClassAssignment = true;
 
-            if (assignment) {
-                const submissions = await classService.getAssignmentSubmissionByAssignmentId(assignment_id);
-                submission = submissions.find(s => s.user_id === user_id) || null;
-            } else {
-                // Try course assignments
-                assignment = await CourseService.getCourseAssignmentById(assignment_id);
+            try {
+                assignment = await classService.getAssignmentById(assignment_id);
                 if (assignment) {
-                    isClassAssignment = false;
-                    const submissions = await CourseService.getAllCourseAssignmentSubmissions(
-                        assignment.campus_id,
-                        assignment.course_id,
-                        assignment_id
-                    );
-                    submission = submissions.find((s: any) => s.user_id === user_id) || null;
+                    const submissions = await classService.getAssignmentSubmissionByAssignmentId(assignment_id);
+                    submission = submissions.find(s => s.user_id === user_id) || null;
+                }
+            } catch (error) {
+                console.error("Error fetching class assignment:", assignment_id, error);
+                assignment = null; // Continue to try course assignments
+            }
+
+            if (!assignment) {
+                // Try course assignments
+                try {
+                    assignment = await CourseService.getCourseAssignmentById(assignment_id);
+                    if (assignment) {
+                        isClassAssignment = false;
+                        const submissions = await CourseService.getAllCourseAssignmentSubmissions(
+                            assignment.campus_id,
+                            assignment.course_id,
+                            assignment_id
+                        );
+                        submission = submissions.find((s: any) => s.user_id === user_id) || null;
+                    }
+                } catch (error) {
+                    console.error("Error fetching course assignment:", assignment_id, error);
                 }
             }
 

@@ -141,9 +141,20 @@ export class EnhancedAssignmentService {
             // Get student's class
             const studentClasses: { rows: IClassData[] } = await Class.find({
                 campus_id,
-                student_ids: student_id,
                 is_active: true,
                 is_deleted: false,
+            }).then(result => {
+                // Filter classes where the student is enrolled
+                const filteredRows = result.rows.filter(classData => {
+                    // Safety check for student_ids field
+                    if (!classData.student_ids || !Array.isArray(classData.student_ids)) {
+                        return false;
+                    }
+                    
+                    return classData.student_ids.includes(student_id);
+                });
+                
+                return { rows: filteredRows };
             });
 
             // Get student's course enrollments
@@ -153,31 +164,41 @@ export class EnhancedAssignmentService {
                 is_active: true,
                 is_deleted: false,
             });
-
+            
             const enrolledCourseIds = courseEnrollments.rows.map(enrollment => enrollment.course_id);
 
             let allAssignments: IUnifiedAssignmentView[] = [];
 
             // Get class assignments
             for (const classData of studentClasses.rows) {
-                const classAssignments = await this.getClassAssignmentsForStudent(
-                    student_id,
-                    classData.id,
-                    campus_id,
-                    filters
-                );
-                allAssignments = allAssignments.concat(classAssignments);
+                try {
+                    const classAssignments = await this.getClassAssignmentsForStudent(
+                        student_id,
+                        classData.id,
+                        campus_id,
+                        filters
+                    );
+                    allAssignments = allAssignments.concat(classAssignments);
+                } catch (error) {
+                    console.error(`Error getting assignments for class ${classData.id}:`, error);
+                    // Continue with other classes instead of failing completely
+                }
             }
 
             // Get course assignments
             for (const courseId of enrolledCourseIds) {
-                const courseAssignments = await this.getCourseAssignmentsForStudent(
-                    student_id,
-                    courseId,
-                    campus_id,
-                    filters
-                );
-                allAssignments = allAssignments.concat(courseAssignments);
+                try {
+                    const courseAssignments = await this.getCourseAssignmentsForStudent(
+                        student_id,
+                        courseId,
+                        campus_id,
+                        filters
+                    );
+                    allAssignments = allAssignments.concat(courseAssignments);
+                } catch (error) {
+                    console.error(`Error getting assignments for course ${courseId}:`, error);
+                    // Continue with other courses instead of failing completely
+                }
             }
 
             // Apply filters
@@ -249,6 +270,28 @@ export class EnhancedAssignmentService {
                 campus_id,
                 { limit: 1000 } // Get all assignments for dashboard
             );
+
+            // If no assignments found, return empty dashboard
+            if (!assignments || assignments.length === 0) {
+                return {
+                    upcoming_assignments: [],
+                    overdue_assignments: [],
+                    recent_grades: [],
+                    due_today: [],
+                    due_this_week: [],
+                    statistics: {
+                        total_assignments: 0,
+                        submitted: 0,
+                        pending: 0,
+                        overdue: 0,
+                        graded: 0,
+                        average_grade: undefined,
+                        completion_rate: 0,
+                        on_time_submission_rate: 0,
+                    },
+                    performance_by_subject: [],
+                };
+            }
 
             const currentDate = new Date();
             const todayEnd = new Date(currentDate);
@@ -329,8 +372,6 @@ export class EnhancedAssignmentService {
                 Assignment.find({
                     campus_id,
                     class_id,
-                    is_active: true,
-                    is_deleted: false,
                 }).catch(error => {
                     console.error("Error fetching legacy assignments:", error);
                     return { rows: [] };
@@ -413,8 +454,6 @@ export class EnhancedAssignmentService {
                 CourseAssignment.find({
                     campus_id,
                     course_id,
-                    is_active: true,
-                    is_deleted: false,
                 }).catch(error => {
                     console.error("Error fetching legacy course assignments:", error);
                     return { rows: [] };
@@ -502,8 +541,14 @@ export class EnhancedAssignmentService {
 
             // Get subject and teacher info
             const [subjectData, teacherData] = await Promise.all([
-                Subject.findById(assignment.subject_id),
-                TeacherService.getTeacherById(assignment.user_id)
+                Subject.findById(assignment.subject_id).catch(error => {
+                    console.error("Error fetching subject:", assignment.subject_id, error);
+                    return null;
+                }),
+                TeacherService.getTeacherById(assignment.user_id).catch(error => {
+                    console.error("Error fetching teacher:", assignment.user_id, error);
+                    return null;
+                })
             ]);
 
             const status = this.calculateAssignmentStatus(assignment.due_date, submission);
@@ -622,8 +667,14 @@ export class EnhancedAssignmentService {
 
             // Get subject and teacher info
             const [subjectData, teacherData] = await Promise.all([
-                Subject.findById(assignment.subject_id),
-                TeacherService.getTeacherById(assignment.user_id)
+                Subject.findById(assignment.subject_id).catch(error => {
+                    console.error("Error fetching subject:", assignment.subject_id, error);
+                    return null;
+                }),
+                TeacherService.getTeacherById(assignment.user_id).catch(error => {
+                    console.error("Error fetching teacher:", assignment.user_id, error);
+                    return null;
+                })
             ]);
 
             const status = this.calculateAssignmentStatus(assignment.due_date, submission);
