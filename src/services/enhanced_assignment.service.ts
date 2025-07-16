@@ -331,41 +331,63 @@ export class EnhancedAssignmentService {
                     class_id,
                     is_active: true,
                     is_deleted: false,
+                }).catch(error => {
+                    console.error("Error fetching legacy assignments:", error);
+                    return { rows: [] };
                 }),
                 EnhancedAssignment.find({
                     campus_id,
                     class_id,
                     is_active: true,
                     is_deleted: false,
+                }).catch(error => {
+                    console.error("Error fetching enhanced assignments:", error);
+                    return { rows: [] };
                 }),
-                Class.findById(class_id)
+                Class.findById(class_id).catch(error => {
+                    console.error("Error fetching class by ID:", class_id, error);
+                    return null;
+                })
             ]);
+
+            if (!classData) {
+                console.warn(`Class not found for ID: ${class_id}`);
+                return [];
+            }
 
             const unifiedAssignments: IUnifiedAssignmentView[] = [];
 
             // Process legacy assignments
             for (const assignment of legacyAssignments.rows) {
-                const unifiedAssignment = await this.convertLegacyClassAssignmentToUnified(
-                    assignment,
-                    student_id,
-                    classData!,
-                    "class"
-                );
-                if (unifiedAssignment) {
-                    unifiedAssignments.push(unifiedAssignment);
+                try {
+                    const unifiedAssignment = await this.convertLegacyClassAssignmentToUnified(
+                        assignment,
+                        student_id,
+                        classData,
+                        "class"
+                    );
+                    if (unifiedAssignment) {
+                        unifiedAssignments.push(unifiedAssignment);
+                    }
+                } catch (error) {
+                    console.error("Error converting legacy assignment:", assignment.id, error);
                 }
             }
 
             // Process enhanced assignments
             for (const assignment of enhancedAssignments.rows) {
-                const unifiedAssignment = await this.convertEnhancedAssignmentToUnified(
-                    assignment,
-                    student_id,
-                    classData!,
-                    "class"
-                );
-                if (unifiedAssignment) {
-                    unifiedAssignments.push(unifiedAssignment);
+                try {
+                    const unifiedAssignment = await this.convertEnhancedAssignmentToUnified(
+                        assignment,
+                        student_id,
+                        classData,
+                        "class"
+                    );
+                    if (unifiedAssignment) {
+                        unifiedAssignments.push(unifiedAssignment);
+                    }
+                } catch (error) {
+                    console.error("Error converting enhanced assignment:", assignment.id, error);
                 }
             }
 
@@ -393,41 +415,63 @@ export class EnhancedAssignmentService {
                     course_id,
                     is_active: true,
                     is_deleted: false,
+                }).catch(error => {
+                    console.error("Error fetching legacy course assignments:", error);
+                    return { rows: [] };
                 }),
                 EnhancedAssignment.find({
                     campus_id,
                     course_id,
                     is_active: true,
                     is_deleted: false,
+                }).catch(error => {
+                    console.error("Error fetching enhanced course assignments:", error);
+                    return { rows: [] };
                 }),
-                Course.findById(course_id)
+                Course.findById(course_id).catch(error => {
+                    console.error("Error fetching course by ID:", course_id, error);
+                    return null;
+                })
             ]);
+
+            if (!courseData) {
+                console.warn(`Course not found for ID: ${course_id}`);
+                return [];
+            }
 
             const unifiedAssignments: IUnifiedAssignmentView[] = [];
 
             // Process legacy course assignments
             for (const assignment of legacyAssignments.rows) {
-                const unifiedAssignment = await this.convertLegacyCourseAssignmentToUnified(
-                    assignment,
-                    student_id,
-                    courseData!,
-                    "course"
-                );
-                if (unifiedAssignment) {
-                    unifiedAssignments.push(unifiedAssignment);
+                try {
+                    const unifiedAssignment = await this.convertLegacyCourseAssignmentToUnified(
+                        assignment,
+                        student_id,
+                        courseData,
+                        "course"
+                    );
+                    if (unifiedAssignment) {
+                        unifiedAssignments.push(unifiedAssignment);
+                    }
+                } catch (error) {
+                    console.error("Error converting legacy course assignment:", assignment.id, error);
                 }
             }
 
             // Process enhanced assignments
             for (const assignment of enhancedAssignments.rows) {
-                const unifiedAssignment = await this.convertEnhancedAssignmentToUnified(
-                    assignment,
-                    student_id,
-                    courseData!,
-                    "course"
-                );
-                if (unifiedAssignment) {
-                    unifiedAssignments.push(unifiedAssignment);
+                try {
+                    const unifiedAssignment = await this.convertEnhancedAssignmentToUnified(
+                        assignment,
+                        student_id,
+                        courseData,
+                        "course"
+                    );
+                    if (unifiedAssignment) {
+                        unifiedAssignments.push(unifiedAssignment);
+                    }
+                } catch (error) {
+                    console.error("Error converting enhanced course assignment:", assignment.id, error);
                 }
             }
 
