@@ -3,10 +3,15 @@ import { describeRoute } from "hono-openapi";
 import { resolver, validator as zValidator } from "hono-openapi/zod";
 
 import { CourseController } from "@/controllers/course.controller";
-import {    courseAssignmentSubmissionSchema,
+import {
+    courseAssignmentSchema,
+    courseAssignmentSubmissionSchema,
     courseContentSchema,
     courseEnrollmentSchema,
-    courseSchema,    createCourseAssignmentSubmissionRequestBodySchema,
+    courseSchema,
+    createCourseAssignmentRequestBodySchema,
+    createCourseAssignmentResponseSchema,
+    createCourseAssignmentSubmissionRequestBodySchema,
     createCourseAssignmentSubmissionResponseSchema,
     createCourseContentRequestBodySchema,
     createCourseContentResponseSchema,
@@ -14,9 +19,17 @@ import {    courseAssignmentSubmissionSchema,
     createCourseEnrollmentResponseSchema,
     createCourseRequestBodySchema,
     createCourseResponseSchema,
-    deleteCourseResponseSchema,    getCourseContentsResponseSchema,
+    deleteCourseResponseSchema,
+    getCourseAssignmentsResponseSchema,
+    getCourseAssignmentSubmissionsResponseSchema,
+    getCourseContentsResponseSchema,
     getCourseEnrollmentsResponseSchema,
-    getCoursesResponseSchema,    updateCourseContentRequestBodySchema,
+    getCoursesResponseSchema,
+    updateCourseAssignmentRequestBodySchema,
+    updateCourseAssignmentResponseSchema,
+    updateCourseAssignmentSubmissionRequestBodySchema,
+    updateCourseAssignmentSubmissionResponseSchema,
+    updateCourseContentRequestBodySchema,
     updateCourseContentResponseSchema,
     updateCourseEnrollmentRequestBodySchema,
     updateCourseEnrollmentResponseSchema,
@@ -224,6 +237,535 @@ app.delete(
         },
     }),
     CourseController.deleteCourse
+);
+
+// Course Assignment routes
+app.post(
+    "/:course_id/assignment",
+    describeRoute({
+        tags: ["Course"],
+        operationId: "createCourseAssignment",
+        summary: "Create a course assignment",
+        description: "Creates a new assignment for a specific course",
+        parameters: [
+            {
+                name: "course_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Course ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Assignment created successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(createCourseAssignmentResponseSchema),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                message: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    zValidator("json", createCourseAssignmentRequestBodySchema),
+    CourseController.createCourseAssignment
+);
+
+app.get(
+    "/:course_id/assignment",
+    describeRoute({
+        tags: ["Course"],
+        operationId: "getAllCourseAssignments",
+        summary: "Get all course assignments",
+        description: "Retrieves all assignments for a specific course",
+        parameters: [
+            {
+                name: "course_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Course ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "List of course assignments",
+                content: {
+                    "application/json": {
+                        schema: resolver(getCourseAssignmentsResponseSchema),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                message: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    CourseController.getAllCourseAssignments
+);
+
+app.get(
+    "/:course_id/assignment/:assignment_id",
+    describeRoute({
+        tags: ["Course"],
+        operationId: "getCourseAssignmentById",
+        summary: "Get course assignment by ID",
+        description: "Retrieves a specific assignment by ID",
+        parameters: [
+            {
+                name: "course_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Course ID",
+            },
+            {
+                name: "assignment_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Assignment ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Assignment details",
+                content: {
+                    "application/json": {
+                        schema: resolver(courseAssignmentSchema),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                message: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    CourseController.getCourseAssignmentById
+);
+
+app.put(
+    "/:course_id/assignment/:assignment_id",
+    describeRoute({
+        tags: ["Course"],
+        operationId: "updateCourseAssignment",
+        summary: "Update a course assignment",
+        description: "Updates a specific assignment by ID",
+        parameters: [
+            {
+                name: "course_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Course ID",
+            },
+            {
+                name: "assignment_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Assignment ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Assignment updated successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(updateCourseAssignmentResponseSchema),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                message: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    zValidator("json", updateCourseAssignmentRequestBodySchema),
+    CourseController.updateCourseAssignment
+);
+
+app.delete(
+    "/:course_id/assignment/:assignment_id",
+    describeRoute({
+        tags: ["Course"],
+        operationId: "deleteCourseAssignment",
+        summary: "Delete a course assignment",
+        description: "Deletes a specific assignment by ID",
+        parameters: [
+            {
+                name: "course_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Course ID",
+            },
+            {
+                name: "assignment_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Assignment ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Assignment deleted successfully",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                message: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                message: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    CourseController.deleteCourseAssignment
+);
+
+// Course Assignment Submission routes
+app.post(
+    "/:course_id/assignment/:assignment_id/submission",
+    describeRoute({
+        tags: ["Course"],
+        operationId: "createCourseAssignmentSubmission",
+        summary: "Create a course assignment submission",
+        description: "Creates a new submission for a specific assignment",
+        parameters: [
+            {
+                name: "course_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Course ID",
+            },
+            {
+                name: "assignment_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Assignment ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Submission created successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(
+                            createCourseAssignmentSubmissionResponseSchema
+                        ),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                message: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    zValidator("json", createCourseAssignmentSubmissionRequestBodySchema),
+    CourseController.createCourseAssignmentSubmission
+);
+
+app.get(
+    "/:course_id/assignment/:assignment_id/submission",
+    describeRoute({
+        tags: ["Course"],
+        operationId: "getAllCourseAssignmentSubmissions",
+        summary: "Get all course assignment submissions",
+        description: "Retrieves all submissions for a specific assignment",
+        parameters: [
+            {
+                name: "course_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Course ID",
+            },
+            {
+                name: "assignment_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Assignment ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "List of assignment submissions",
+                content: {
+                    "application/json": {
+                        schema: resolver(
+                            getCourseAssignmentSubmissionsResponseSchema
+                        ),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                message: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    CourseController.getAllCourseAssignmentSubmissions
+);
+
+app.get(
+    "/:course_id/assignment/:assignment_id/submission/:submission_id",
+    describeRoute({
+        tags: ["Course"],
+        operationId: "getCourseAssignmentSubmission",
+        summary: "Get course assignment submission by ID",
+        description: "Retrieves a specific submission by ID",
+        parameters: [
+            {
+                name: "course_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Course ID",
+            },
+            {
+                name: "assignment_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Assignment ID",
+            },
+            {
+                name: "submission_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Submission ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Submission details",
+                content: {
+                    "application/json": {
+                        schema: resolver(courseAssignmentSubmissionSchema),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                message: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    CourseController.getCourseAssignmentSubmission
+);
+
+app.put(
+    "/:course_id/assignment/:assignment_id/submission/:submission_id",
+    describeRoute({
+        tags: ["Course"],
+        operationId: "updateCourseAssignmentSubmission",
+        summary: "Update a course assignment submission",
+        description: "Updates a specific submission by ID",
+        parameters: [
+            {
+                name: "course_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Course ID",
+            },
+            {
+                name: "assignment_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Assignment ID",
+            },
+            {
+                name: "submission_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Submission ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Submission updated successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(
+                            updateCourseAssignmentSubmissionResponseSchema
+                        ),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                message: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    zValidator("json", updateCourseAssignmentSubmissionRequestBodySchema),
+    CourseController.updateCourseAssignmentSubmission
+);
+
+app.delete(
+    "/:course_id/assignment/:assignment_id/submission/:submission_id",
+    describeRoute({
+        tags: ["Course"],
+        operationId: "deleteCourseAssignmentSubmission",
+        summary: "Delete a course assignment submission",
+        description: "Deletes a specific submission by ID",
+        parameters: [
+            {
+                name: "course_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Course ID",
+            },
+            {
+                name: "assignment_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Assignment ID",
+            },
+            {
+                name: "submission_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Submission ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Submission deleted successfully",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                message: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                message: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    CourseController.deleteCourseAssignmentSubmission
 );
 
 // Course Content routes

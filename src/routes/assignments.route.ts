@@ -1,3 +1,25 @@
+/**
+ * 🎯 UNIFIED ASSIGNMENT API
+ * 
+ * This file contains the complete, unified assignment API that replaces all legacy
+ * assignment endpoints from class.route.ts and course.route.ts.
+ * 
+ * ✅ FEATURES:
+ * - Role-based access control (Admin, Teacher, Student, Parent)
+ * - Unified view across classes and courses
+ * - Comprehensive assignment management
+ * - Analytics and reporting
+ * - Mobile-optimized responses
+ * 
+ * ✅ MIGRATION STATUS: COMPLETE
+ * - Legacy class assignment endpoints: REMOVED
+ * - Legacy course assignment endpoints: REMOVED
+ * - All functionality consolidated here
+ * 
+ * 🔗 API Documentation: /docs
+ * 🧪 Test Collection: docs/Assignment_API.postman_collection.json
+ */
+
 import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";
 import { resolver, validator as zValidator } from "hono-openapi/zod";
@@ -572,6 +594,79 @@ app.get(
 );
 
 app.get(
+    "/student/performance",
+    describeRoute({
+        operationId: "getStudentAssignmentPerformance",
+        summary: "Get student assignment performance",
+        description: "Get detailed performance analytics for the student's assignments.",
+        tags: ["Assignments - Student"],
+        parameters: [
+            {
+                name: "period",
+                in: "query",
+                required: false,
+                schema: { 
+                    type: "string",
+                    enum: ["week", "month", "quarter", "year", "all"]
+                },
+                description: "Performance analysis period",
+            },
+            {
+                name: "subject_id",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+                description: "Filter by subject ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Student assignment performance",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                performance_trends: {
+                                    type: "array",
+                                    items: {
+                                        type: "object",
+                                        properties: {
+                                            period: { type: "string" },
+                                            average_grade: { type: "number" },
+                                            completion_rate: { type: "number" },
+                                            submitted_count: { type: "number" },
+                                        },
+                                    },
+                                },
+                                subject_performance: {
+                                    type: "array",
+                                    items: {
+                                        type: "object",
+                                        properties: {
+                                            subject_name: { type: "string" },
+                                            average_grade: { type: "number" },
+                                            completion_rate: { type: "number" },
+                                            total_assignments: { type: "number" },
+                                        },
+                                    },
+                                },
+                                improvement_suggestions: {
+                                    type: "array",
+                                    items: { type: "string" },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    roleMiddleware("student_assignment_performance"),
+    AssignmentController.getStudentAssignmentPerformance
+);
+
+app.get(
     "/student/:assignment_id",
     describeRoute({
         operationId: "getStudentAssignmentDetails",
@@ -665,79 +760,6 @@ app.post(
     roleMiddleware("student_submit_assignment"),
     zValidator("json", submitAssignmentRequestBodySchema),
     AssignmentController.submitAssignment
-);
-
-app.get(
-    "/student/performance",
-    describeRoute({
-        operationId: "getStudentAssignmentPerformance",
-        summary: "Get student assignment performance",
-        description: "Get detailed performance analytics for the student's assignments.",
-        tags: ["Assignments - Student"],
-        parameters: [
-            {
-                name: "period",
-                in: "query",
-                required: false,
-                schema: { 
-                    type: "string",
-                    enum: ["week", "month", "quarter", "year", "all"]
-                },
-                description: "Performance analysis period",
-            },
-            {
-                name: "subject_id",
-                in: "query",
-                required: false,
-                schema: { type: "string" },
-                description: "Filter by subject ID",
-            },
-        ],
-        responses: {
-            200: {
-                description: "Student assignment performance",
-                content: {
-                    "application/json": {
-                        schema: {
-                            type: "object",
-                            properties: {
-                                performance_trends: {
-                                    type: "array",
-                                    items: {
-                                        type: "object",
-                                        properties: {
-                                            period: { type: "string" },
-                                            average_grade: { type: "number" },
-                                            completion_rate: { type: "number" },
-                                            submitted_count: { type: "number" },
-                                        },
-                                    },
-                                },
-                                subject_performance: {
-                                    type: "array",
-                                    items: {
-                                        type: "object",
-                                        properties: {
-                                            subject_name: { type: "string" },
-                                            average_grade: { type: "number" },
-                                            completion_rate: { type: "number" },
-                                            total_assignments: { type: "number" },
-                                        },
-                                    },
-                                },
-                                improvement_suggestions: {
-                                    type: "array",
-                                    items: { type: "string" },
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-        },
-    }),
-    roleMiddleware("student_assignment_performance"),
-    AssignmentController.getStudentAssignmentPerformance
 );
 
 // ======================= PARENT ROUTES =======================

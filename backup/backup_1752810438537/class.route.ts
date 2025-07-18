@@ -4,15 +4,31 @@ import { resolver, validator as zValidator } from "hono-openapi/zod";
 import { z } from "zod";
 
 import { ClassController } from "@/controllers/class.controller";
-import {    assignStudentsRequestBodySchema,
-    assignTeachersRequestBodySchema,    classSchema,
-    classSubjectSchema,    createClassRequestBodySchema,
+import {
+    assignmentSchema,
+    assignmentSubmissionSchema,
+    assignStudentsRequestBodySchema,
+    assignTeachersRequestBodySchema,
+    assignmentResponseSchema,
+    classSchema,
+    classSubjectSchema,
+    createAssignmentRequestBodySchema,
+    createAssignmentResponseSchema,
+    createAssignmentSubmissionRequestBodySchema,
+    createAssignmentSubmissionResponseSchema,
+    createClassRequestBodySchema,
     createClassResponseSchema,
     createClassSubjectRequestBodySchema,
     createClassSubjectResponseSchema,
-    deleteResponseSchema,    getClassesResponseSchema,
+    deleteResponseSchema,
+    getAssignmentsResponseSchema,
+    getAssignmentSubmissionsResponseSchema,
+    getClassesResponseSchema,
     getClassSubjectsResponseSchema,
-    getStudentsByClassIdResponseSchema,    updateClassRequestBodySchema,
+    getStudentsByClassIdResponseSchema,
+    updateAssignmentRequestBodySchema,
+    updateAssignmentResponseSchema,
+    updateClassRequestBodySchema,
     updateClassResponseSchema,
     updateClassSubjectRequestBodySchema,
     updateClassSubjectResponseSchema,
@@ -645,6 +661,603 @@ app.get(
     ClassController.getClassSubjectById
 );
 
+// Assignment routes
+app.get(
+    "/assignments/all",
+    describeRoute({
+        tags: ["Class"],
+        operationId: "getAllAssignmentsFromAllClasses",
+        summary: "Get all assignments from all classes",
+        description: "Retrieves all assignments from all classes for the current campus",
+        responses: {
+            200: {
+                description: "List of all assignments from all classes",
+                content: {
+                    "application/json": {
+                        schema: resolver(getAssignmentsResponseSchema),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    ClassController.getAllAssignmentsFromAllClasses
+);
+
+app.get(
+    "/:class_id/assignments",
+    describeRoute({
+        tags: ["Class"],
+        operationId: "getAllAssignmentsByClassId",
+        summary: "Get all assignments by class ID",
+        description: "Retrieves all assignments for a specific class",
+        parameters: [
+            {
+                name: "class_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Class ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "List of assignments",
+                content: {
+                    "application/json": {
+                        schema: resolver(getAssignmentsResponseSchema),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    ClassController.getAllAssignmentsByClassId
+);
+
+app.get(
+    "/assignment/:assignment_id",
+    describeRoute({
+        tags: ["Class"],
+        operationId: "getAssignmentById",
+        summary: "Get assignment by ID",
+        description: "Retrieves a specific assignment by ID",
+        parameters: [
+            {
+                name: "assignment_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Assignment ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Assignment details",
+                content: {
+                    "application/json": {
+                        schema: resolver(assignmentSchema),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    ClassController.getAssignmentById
+);
+
+app.post(
+    "/:class_id/assignments",
+    describeRoute({
+        tags: ["Class"],
+        operationId: "createAssignment",
+        summary: "Create an assignment",
+        description: "Creates a new assignment for a specific class",
+        parameters: [
+            {
+                name: "class_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Class ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Assignment created successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(createAssignmentResponseSchema),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    zValidator("json", createAssignmentRequestBodySchema),
+    ClassController.createAssignment
+);
+
+app.put(
+    "/assignment/:assignment_id",
+    describeRoute({
+        tags: ["Class"],
+        operationId: "updateAssignment",
+        summary: "Update an assignment",
+        description: "Updates a specific assignment by ID",
+        parameters: [
+            {
+                name: "assignment_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Assignment ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Assignment updated successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(updateAssignmentResponseSchema),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    zValidator("json", updateAssignmentRequestBodySchema),
+    ClassController.updateAssignment
+);
+
+app.delete(
+    "/assignment/:assignment_id",
+    describeRoute({
+        tags: ["Class"],
+        operationId: "deleteAssignment",
+        summary: "Delete an assignment",
+        description: "Deletes a specific assignment by ID",
+        parameters: [
+            {
+                name: "assignment_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Assignment ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Assignment deleted successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(deleteResponseSchema),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    ClassController.deleteAssignment
+);
+
+app.get(
+    "/assignment/i/created-by",
+    describeRoute({
+        tags: ["Class"],
+        operationId: "getAssignmentsCreatedByUser",
+        summary: "Get assignments created by user",
+        description: "Retrieves all assignments created by a specific user",
+        // This endpoint assumes the user ID is obtained from the request context or token
+        responses: {
+            200: {
+                description: "Assignments created by user retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(getAssignmentsResponseSchema),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    ClassController.getAllAssignmentbyUserId
+);
+
+app.get(
+    "/assignment-submission/:submission_id",
+    describeRoute({
+        tags: ["Class"],
+        operationId: "getAssignmentSubmissionById",
+        summary: "Get assignment submission by ID",
+        description: "Retrieves a specific assignment submission by ID",
+        parameters: [
+            {
+                name: "submission_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Submission ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Assignment submission details",
+                content: {
+                    "application/json": {
+                        schema: resolver(assignmentSubmissionSchema),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    ClassController.getAssignmentSubmissionById
+);
+
+app.post(
+    "/assignment-submission/:assignment_id",
+    describeRoute({
+        tags: ["Class"],
+        operationId: "createAssignmentSubmission",
+        summary: "Create an assignment submission",
+        description: "Creates a new submission for a specific assignment",
+        parameters: [
+            {
+                name: "assignment_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Assignment ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Assignment submission created successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(
+                            createAssignmentSubmissionResponseSchema
+                        ),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    zValidator("json", createAssignmentSubmissionRequestBodySchema),
+    ClassController.createAssignmentSubmission
+);
+
+app.get(
+    "/assignment-submission/:assignment_id/submissions",
+    describeRoute({
+        tags: ["Class"],
+        operationId: "getAssignmentSubmissionByAssignmentId",
+        summary: "Get assignment submissions by assignment ID",
+        description: "Retrieves all submissions for a specific assignment",
+        parameters: [
+            {
+                name: "assignment_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Assignment ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "List of assignment submissions",
+                content: {
+                    "application/json": {
+                        schema: resolver(
+                            getAssignmentSubmissionsResponseSchema
+                        ),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    ClassController.getAssignmentSubmissionByAssignmentId
+);
+
+app.delete(
+    "/assignment-submission/:submission_id",
+    describeRoute({
+        tags: ["Class"],
+        operationId: "deleteAssignmentSubmission",
+        summary: "Delete an assignment submission",
+        description: "Deletes a specific assignment submission by ID",
+        parameters: [
+            {
+                name: "submission_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Submission ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Assignment submission deleted successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(deleteResponseSchema),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    ClassController.deleteAssignmentSubmission
+);
+
+app.get(
+    "/assignment-submission/user/:user_id",
+    describeRoute({
+        tags: ["Class"],
+        operationId: "getAssignmentSubmissionsByUserId",
+        summary: "Get assignment submissions by user ID",
+        description: "Retrieves all submissions made by a specific user",
+        parameters: [
+            {
+                name: "user_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "User ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "List of assignment submissions",
+                content: {
+                    "application/json": {
+                        schema: resolver(
+                            getAssignmentSubmissionsResponseSchema
+                        ),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    ClassController.getAssignmentSubmissionsByUserId
+);
+
+app.get(
+    "/assignment-submission/class/:class_id",
+    describeRoute({
+        tags: ["Class"],
+        operationId: "getAssignmentSubmissionsByClassId",
+        summary: "Get assignment submissions by class ID",
+        description: "Retrieves all submissions for a specific class",
+        parameters: [
+            {
+                name: "class_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Class ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "List of assignment submissions",
+                content: {
+                    "application/json": {
+                        schema: resolver(
+                            getAssignmentSubmissionsResponseSchema
+                        ),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    ClassController.getAssignmentSubmissionsByClassId
+);
+
+app.get(
+    "/student/:studentId",
+    describeRoute({
+        tags: ["Class"],
+        operationId: "getClassesByStudentId",
+        summary: "Get classes by student ID",
+        description: "Retrieves all classes that a student is enrolled in",
+        parameters: [
+            {
+                name: "studentId",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Student ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "List of classes for the student",
+                content: {
+                    "application/json": {
+                        schema: resolver(getClassesResponseSchema),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    ClassController.getClassesByStudentUserId
+);
+
 // Student assignment routes
 app.post(
     "/:class_id/students/assign",
@@ -667,14 +1280,7 @@ app.post(
                 description: "Students assigned successfully",
                 content: {
                     "application/json": {
-                        schema: resolver(z.object({
-                            message: z.string(),
-                            data: z.array(z.object({
-                                student_id: z.string(),
-                                class_id: z.string(),
-                                assigned_at: z.string(),
-                            })),
-                        })),
+                        schema: resolver(assignmentResponseSchema),
                     },
                 },
             },
@@ -731,14 +1337,7 @@ app.delete(
                 description: "Students removed successfully",
                 content: {
                     "application/json": {
-                        schema: resolver(z.object({
-                            message: z.string(),
-                            data: z.array(z.object({
-                                student_id: z.string(),
-                                class_id: z.string(),
-                                removed_at: z.string(),
-                            })),
-                        })),
+                        schema: resolver(assignmentResponseSchema),
                     },
                 },
             },
@@ -796,14 +1395,7 @@ app.post(
                 description: "Teachers assigned successfully",
                 content: {
                     "application/json": {
-                        schema: resolver(z.object({
-                            message: z.string(),
-                            data: z.array(z.object({
-                                teacher_id: z.string(),
-                                class_id: z.string(),
-                                assigned_at: z.string(),
-                            })),
-                        })),
+                        schema: resolver(assignmentResponseSchema),
                     },
                 },
             },
@@ -860,14 +1452,7 @@ app.delete(
                 description: "Teachers removed successfully",
                 content: {
                     "application/json": {
-                        schema: resolver(z.object({
-                            message: z.string(),
-                            data: z.array(z.object({
-                                teacher_id: z.string(),
-                                class_id: z.string(),
-                                removed_at: z.string(),
-                            })),
-                        })),
+                        schema: resolver(assignmentResponseSchema),
                     },
                 },
             },
@@ -902,6 +1487,7 @@ app.delete(
     zValidator("json", assignTeachersRequestBodySchema),
     ClassController.removeTeachersFromClass
 );
+
 
 app.get(
     "/students-grouped-by-class",

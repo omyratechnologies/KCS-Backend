@@ -667,14 +667,7 @@ app.post(
                 description: "Students assigned successfully",
                 content: {
                     "application/json": {
-                        schema: resolver(z.object({
-                            message: z.string(),
-                            data: z.array(z.object({
-                                student_id: z.string(),
-                                class_id: z.string(),
-                                assigned_at: z.string(),
-                            })),
-                        })),
+                        schema: resolver(assignmentResponseSchema),
                     },
                 },
             },
@@ -731,14 +724,7 @@ app.delete(
                 description: "Students removed successfully",
                 content: {
                     "application/json": {
-                        schema: resolver(z.object({
-                            message: z.string(),
-                            data: z.array(z.object({
-                                student_id: z.string(),
-                                class_id: z.string(),
-                                removed_at: z.string(),
-                            })),
-                        })),
+                        schema: resolver(assignmentResponseSchema),
                     },
                 },
             },
@@ -796,14 +782,7 @@ app.post(
                 description: "Teachers assigned successfully",
                 content: {
                     "application/json": {
-                        schema: resolver(z.object({
-                            message: z.string(),
-                            data: z.array(z.object({
-                                teacher_id: z.string(),
-                                class_id: z.string(),
-                                assigned_at: z.string(),
-                            })),
-                        })),
+                        schema: resolver(assignmentResponseSchema),
                     },
                 },
             },
@@ -860,14 +839,7 @@ app.delete(
                 description: "Teachers removed successfully",
                 content: {
                     "application/json": {
-                        schema: resolver(z.object({
-                            message: z.string(),
-                            data: z.array(z.object({
-                                teacher_id: z.string(),
-                                class_id: z.string(),
-                                removed_at: z.string(),
-                            })),
-                        })),
+                        schema: resolver(assignmentResponseSchema),
                     },
                 },
             },
