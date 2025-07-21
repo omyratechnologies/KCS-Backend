@@ -419,4 +419,125 @@ app.get(
     PaymentController.downloadInvoice
 );
 
+// Gateway Configuration (Admin only)
+app.post(
+    "/secure-credentials",
+    describeRoute({
+        tags: ["Gateway Management"],
+        operationId: "configureSecureCredentials",
+        summary: "Configure payment gateway credentials",
+        description: "Admin can configure secure payment gateway credentials",
+        responses: {
+            200: {
+                description: "Gateway credentials configured successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(successResponseSchema),
+                    },
+                },
+            },
+            403: {
+                description: "Unauthorized - Admin access required",
+            },
+        },
+    }),
+    PaymentController.configureSecureCredentials
+);
+
+app.get(
+    "/credentials/masked",
+    describeRoute({
+        tags: ["Gateway Management"],
+        operationId: "getMaskedCredentials",
+        summary: "Get masked payment gateway credentials",
+        description: "Admin can view masked gateway credentials for verification",
+        responses: {
+            200: {
+                description: "Masked credentials retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(successResponseSchema),
+                    },
+                },
+            },
+            403: {
+                description: "Unauthorized - Admin access required",
+            },
+        },
+    }),
+    PaymentController.getMaskedCredentials
+);
+
+app.get(
+    "/security-status",
+    describeRoute({
+        tags: ["Security Management"],
+        operationId: "getSecurityStatus",
+        summary: "Get security status of payment system",
+        description: "Admin can check security status and encryption health",
+        responses: {
+            200: {
+                description: "Security status retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(successResponseSchema),
+                    },
+                },
+            },
+            403: {
+                description: "Unauthorized - Admin access required",
+            },
+        },
+    }),
+    PaymentController.getSecurityStatus
+);
+
+app.get(
+    "/validate-encryption",
+    describeRoute({
+        tags: ["Security Management"],
+        operationId: "validateEncryption",
+        summary: "Validate encryption setup",
+        description: "Admin can validate encryption configuration and health",
+        responses: {
+            200: {
+                description: "Security status retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(successResponseSchema),
+                    },
+                },
+            },
+            403: {
+                description: "Unauthorized - Admin access required",
+            },
+        },
+    }),
+    PaymentController.validateEncryption
+);
+
+app.post(
+    "/migrate-credentials",
+    describeRoute({
+        tags: ["Security Management"],
+        operationId: "migrateLegacyCredentials",
+        summary: "Migrate legacy credentials",
+        description: "Admin can migrate legacy credentials to new encryption format",
+        responses: {
+            200: {
+                description: "Credentials migration completed",
+                content: {
+                    "application/json": {
+                        schema: resolver(successResponseSchema),
+                    },
+                },
+            },
+            403: {
+                description: "Unauthorized - Admin access required",
+            },
+        },
+    }),
+    PaymentController.migrateLegacyCredentials
+);
+
 export default app;

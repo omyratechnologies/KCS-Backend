@@ -230,12 +230,44 @@ export class CourseController {
             const campus_id = ctx.get("campus_id");
             const { course_id } = ctx.req.param();
 
-            const data: Partial<ICourseContentData> = await ctx.req.json();
+            // Get simple schema data from API request
+            const requestData = await ctx.req.json();
+            
+            // Transform simple schema to complex model schema
+            const modelData: Partial<ICourseContentData> = {
+                content_title: requestData.title,
+                content_description: requestData.content,
+                content_type: requestData.content_type === "text" ? "lesson" : requestData.content_type,
+                content_format: requestData.content_type === "text" ? "text" : requestData.content_type,
+                content_data: {
+                    text_content: requestData.content,
+                    html_content: `<p>${requestData.content}</p>`,
+                    duration: 1800
+                },
+                access_settings: {
+                    access_level: "free",
+                    available_from: new Date(),
+                    available_until: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year from now
+                },
+                interaction_settings: {
+                    allow_comments: true,
+                    allow_notes: true,
+                    allow_bookmarks: true,
+                    require_completion: false
+                },
+                sort_order: requestData.order || 1,
+                meta_data: {
+                    created_by: "system",
+                    tags: []
+                },
+                is_active: true,
+                is_deleted: false
+            };
 
             const content = await CourseService.createCourseContent(
                 campus_id,
                 course_id,
-                data
+                modelData
             );
 
             return ctx.json(content);
@@ -297,11 +329,34 @@ export class CourseController {
         try {
             const { course_id } = ctx.req.param();
 
-            const data: Partial<ICourseContentData> = await ctx.req.json();
+            // Get simple schema data from API request
+            const requestData = await ctx.req.json();
+            
+            // Transform simple schema to complex model schema
+            const modelData: Partial<ICourseContentData> = {};
+            
+            if (requestData.title) {
+                modelData.content_title = requestData.title;
+            }
+            if (requestData.content) {
+                modelData.content_description = requestData.content;
+                modelData.content_data = {
+                    text_content: requestData.content,
+                    html_content: `<p>${requestData.content}</p>`,
+                    duration: 1800
+                };
+            }
+            if (requestData.content_type) {
+                modelData.content_type = requestData.content_type === "text" ? "lesson" : requestData.content_type;
+                modelData.content_format = requestData.content_type === "text" ? "text" : requestData.content_type;
+            }
+            if (requestData.order !== undefined) {
+                modelData.sort_order = requestData.order;
+            }
 
             const content = await CourseService.updateCourseContent(
                 course_id,
-                data
+                modelData
             );
 
             return ctx.json(content);
