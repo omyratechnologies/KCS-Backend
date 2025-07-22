@@ -1,3 +1,6 @@
+import { randomBytes } from "node:crypto";
+
+import { Class, IClassData } from "@/models/class.model";
 import { ClassQuiz, IClassQuiz } from "@/models/class_quiz.model";
 import {
     ClassQuizAttempt,
@@ -8,16 +11,14 @@ import {
     IClassQuizQuestion,
 } from "@/models/class_quiz_question.model";
 import {
-    ClassQuizSubmission,
-    IClassQuizSubmission,
-} from "@/models/class_quiz_submission.model";
-import {
     ClassQuizSession,
     IClassQuizSession,
 } from "@/models/class_quiz_session.model";
-import { Class, IClassData } from "@/models/class.model";
-import { User, IUser } from "@/models/user.model";
-import { randomBytes } from "crypto";
+import {
+    ClassQuizSubmission,
+    IClassQuizSubmission,
+} from "@/models/class_quiz_submission.model";
+import { IUser,User } from "@/models/user.model";
 
 // Utility function to format time in seconds to a readable format
 const formatTime = (seconds: number): string => {
@@ -28,11 +29,11 @@ const formatTime = (seconds: number): string => {
     const remainingSeconds = seconds % 60;
     
     const parts: string[] = [];
-    if (hours > 0) parts.push(`${hours} hour${hours > 1 ? 's' : ''}`);
-    if (minutes > 0) parts.push(`${minutes} minute${minutes > 1 ? 's' : ''}`);
-    if (remainingSeconds > 0) parts.push(`${remainingSeconds} second${remainingSeconds > 1 ? 's' : ''}`);
+    if (hours > 0) parts.push(`${hours} hour${hours > 1 ? "s" : ""}`);
+    if (minutes > 0) parts.push(`${minutes} minute${minutes > 1 ? "s" : ""}`);
+    if (remainingSeconds > 0) parts.push(`${remainingSeconds} second${remainingSeconds > 1 ? "s" : ""}`);
     
-    return parts.join(', ');
+    return parts.join(", ");
 };
 
 interface QuizSettings {
@@ -82,7 +83,7 @@ export class ClassQuizService {
             quiz_meta_data: QuizSettings;
         }
     ) => {
-        const quiz = await ClassQuiz.create({
+        return await ClassQuiz.create({
             campus_id,
             created_by,
             class_id,
@@ -101,8 +102,6 @@ export class ClassQuizService {
             created_at: new Date(),
             updated_at: new Date(),
         });
-
-        return quiz;
     };
 
     public static readonly getAllQuizzesFromAllClasses = async (campus_id: string) => {
@@ -163,7 +162,7 @@ export class ClassQuizService {
         const quizzes = result.rows || [];
 
         // Enhance quiz data with class information and status
-        const enhancedQuizzes = await Promise.all(
+        return await Promise.all(
             quizzes.map(async (quiz) => {
                 // Get class information
                 const classData = await Class.findById(quiz.class_id);
@@ -212,10 +211,10 @@ export class ClassQuizService {
                 
                 if (quizSettings.available_until) {
                     dueDate = new Date(quizSettings.available_until);
-                    dueDateDisplay = dueDate.toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
+                    dueDateDisplay = dueDate.toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric"
                     });
                 }
 
@@ -251,14 +250,14 @@ export class ClassQuizService {
                         subtitle: classData?.name || "Unknown Class",
                         status_label: status,
                         status_color: status === "Published" ? "success" : 
-                                     status === "Completed" ? "neutral" : "warning",
+                                     (status === "Completed" ? "neutral" : "warning"),
                         date_label: status === "Completed" ? "Ended" : "Due",
                         date_value: status === "Completed" ? completionDate : dueDate,
                         date_display: status === "Completed" ? 
-                            (completionDate ? completionDate.toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric'
+                            (completionDate ? completionDate.toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric"
                             }) : "Recently ended") : 
                             dueDateDisplay,
                         participants_count: submissionsCount,
@@ -267,8 +266,6 @@ export class ClassQuizService {
                 };
             })
         );
-
-        return enhancedQuizzes;
     };
 
     public static readonly getAllClassQuizzes = async (campus_id: string) => {
@@ -1512,7 +1509,7 @@ export class ClassQuizService {
         );
 
         // Enhance each quiz with student status
-        const quizzesWithStatus = await Promise.all(
+        return await Promise.all(
             quizzes.map(async (quiz) => {
                 const submission = submissionMap.get(quiz.id) as IClassQuizSubmission | undefined;
                 const activeSession = activeSessionMap.get(quiz.id) as IClassQuizSession | undefined;
@@ -1533,11 +1530,7 @@ export class ClassQuizService {
                 } else if (activeSession) {
                     // Check if session is expired
                     const now = new Date();
-                    if (activeSession.expires_at && new Date(activeSession.expires_at) <= now) {
-                        status = "expired";
-                    } else {
-                        status = "in_progress";
-                    }
+                    status = activeSession.expires_at && new Date(activeSession.expires_at) <= now ? "expired" : "in_progress";
                     
                     session_data = {
                         session_id: activeSession.id,
@@ -1581,8 +1574,6 @@ export class ClassQuizService {
                 };
             })
         );
-
-        return quizzesWithStatus;
     };
 
     // ======================= QUIZ MANAGEMENT =======================

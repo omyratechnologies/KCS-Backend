@@ -193,5 +193,5 @@ export class UsersController {
                 );
             }
         }
-    }
+    };
 }

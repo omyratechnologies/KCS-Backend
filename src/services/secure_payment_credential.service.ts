@@ -1,9 +1,9 @@
-import { SchoolBankDetails, ISchoolBankDetails } from "@/models/school_bank_details.model";
+import { ISchoolBankDetails,SchoolBankDetails } from "@/models/school_bank_details.model";
+
 import { 
     CredentialEncryptionService, 
-    PaymentGatewayCredentials,
-    EncryptedCredential 
-} from "./credential_encryption.service";
+    EncryptedCredential, 
+    PaymentGatewayCredentials} from "./credential_encryption.service";
 
 export class SecurePaymentCredentialService {
 
@@ -20,17 +20,17 @@ export class SecurePaymentCredentialService {
             
             // Prepare gateway status (non-sensitive metadata)
             const gatewayStatus: any = {};
-            Object.keys(credentials).forEach(gateway => {
+            for (const gateway of Object.keys(credentials)) {
                 const creds = credentials[gateway as keyof PaymentGatewayCredentials];
                 if (creds) {
                     gatewayStatus[gateway] = {
                         enabled: creds.enabled || false,
                         configured: this.isGatewayConfigured(gateway, creds),
                         last_tested: null,
-                        test_status: 'untested'
+                        test_status: "untested"
                     };
                 }
-            });
+            }
 
             // Find existing bank details
             const existingBankDetails = await SchoolBankDetails.find({
@@ -48,7 +48,7 @@ export class SecurePaymentCredentialService {
                         encrypted_payment_credentials: encryptedCredentials,
                         gateway_status: gatewayStatus,
                         credential_updated_at: new Date(),
-                        encryption_version: 'v1',
+                        encryption_version: "v1",
                         updated_at: new Date()
                     }
                 );
@@ -102,7 +102,7 @@ export class SecurePaymentCredentialService {
      */
     static async getGatewayCredentials(
         campus_id: string,
-        gateway: 'razorpay' | 'payu' | 'cashfree'
+        gateway: "razorpay" | "payu" | "cashfree"
     ): Promise<any | null> {
         try {
             const credentials = await this.getSecureCredentials(campus_id);
@@ -117,7 +117,7 @@ export class SecurePaymentCredentialService {
      */
     static async updateGatewayCredentials(
         campus_id: string,
-        gateway: 'razorpay' | 'payu' | 'cashfree',
+        gateway: "razorpay" | "payu" | "cashfree",
         newCredentials: any
     ): Promise<ISchoolBankDetails> {
         try {
@@ -142,7 +142,7 @@ export class SecurePaymentCredentialService {
      */
     static async removeGatewayCredentials(
         campus_id: string,
-        gateway: 'razorpay' | 'payu' | 'cashfree'
+        gateway: "razorpay" | "payu" | "cashfree"
     ): Promise<ISchoolBankDetails> {
         try {
             const existingCredentials = await this.getSecureCredentials(campus_id) || {};
@@ -181,12 +181,12 @@ export class SecurePaymentCredentialService {
      */
     static async updateGatewayStatus(
         campus_id: string,
-        gateway: 'razorpay' | 'payu' | 'cashfree',
+        gateway: "razorpay" | "payu" | "cashfree",
         status: {
             enabled?: boolean;
             configured?: boolean;
             last_tested?: Date;
-            test_status?: 'success' | 'failed' | 'untested';
+            test_status?: "success" | "failed" | "untested";
         }
     ): Promise<ISchoolBankDetails> {
         try {
@@ -317,7 +317,7 @@ export class SecurePaymentCredentialService {
             // Update with new encryption
             await SchoolBankDetails.updateById(details.id, {
                 encrypted_payment_credentials: newEncryptedCredentials,
-                encryption_version: 'v2',
+                encryption_version: "v2",
                 updated_at: new Date()
             });
 
@@ -365,7 +365,7 @@ export class SecurePaymentCredentialService {
             }
 
             // Check encryption version
-            if (details.encryption_version && details.encryption_version !== 'v2') {
+            if (details.encryption_version && details.encryption_version !== "v2") {
                 recommendations.push("Consider updating to latest encryption version");
             }
 
@@ -398,14 +398,18 @@ export class SecurePaymentCredentialService {
      */
     private static isGatewayConfigured(gateway: string, credentials: any): boolean {
         switch (gateway) {
-            case 'razorpay':
+            case "razorpay": {
                 return !!(credentials.key_id && credentials.key_secret);
-            case 'payu':
+            }
+            case "payu": {
                 return !!(credentials.merchant_key && credentials.merchant_salt);
-            case 'cashfree':
+            }
+            case "cashfree": {
                 return !!(credentials.app_id && credentials.secret_key);
-            default:
+            }
+            default: {
                 return false;
+            }
         }
     }
 

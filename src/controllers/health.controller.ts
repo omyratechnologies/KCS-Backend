@@ -1,4 +1,5 @@
 import { type Context } from "hono";
+
 import { User } from "@/models/user.model";
 
 export class HealthController {

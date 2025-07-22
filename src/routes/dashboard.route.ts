@@ -4,16 +4,15 @@ import { resolver } from "hono-openapi/zod";
 
 import { DashboardController } from "@/controllers/dashboard.controller";
 import { 
-    studentDashboardResponseSchema,
-    teacherDashboardResponseSchema,
-    parentDashboardResponseSchema,
     adminDashboardResponseSchema,
+    errorResponseSchema,
+    notificationsSummaryResponseSchema,
+    parentDashboardResponseSchema,
     quickStatsResponseSchema,
     recentActivitiesResponseSchema,
-    notificationsSummaryResponseSchema,
-    upcomingEventsResponseSchema,
-    errorResponseSchema
-} from "@/schema/dashboard";
+    studentDashboardResponseSchema,
+    teacherDashboardResponseSchema,
+    upcomingEventsResponseSchema} from "@/schema/dashboard";
 
 const app = new Hono();
 

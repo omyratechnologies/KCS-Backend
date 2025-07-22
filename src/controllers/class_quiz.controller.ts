@@ -597,7 +597,7 @@ export class ClassQuizController {
                 );
             }
         }
-    }
+    };
 
     // ======================= NEW SESSION-BASED QUIZ METHODS =======================
 

@@ -1,7 +1,4 @@
-import { 
-    SchoolBankDetails, 
-    ISchoolBankDetails 
-} from "@/models/school_bank_details.model";
+import { Fee, IFeeData } from "@/models/fee.model";
 import { 
     FeeCategory, 
     IFeeCategory 
@@ -11,25 +8,26 @@ import {
     IFeeTemplate 
 } from "@/models/fee_template.model";
 import { 
-    PaymentTransaction, 
-    IPaymentTransaction 
-} from "@/models/payment_transaction.model";
+    IPaymentInvoice, 
+    PaymentInvoice} from "@/models/payment_invoice.model";
 import { 
-    PaymentInvoice, 
-    IPaymentInvoice 
-} from "@/models/payment_invoice.model";
-import { Fee, IFeeData } from "@/models/fee.model";
+    IPaymentTransaction, 
+    PaymentTransaction} from "@/models/payment_transaction.model";
 import { 
-    PaymentGatewayService, 
+    ISchoolBankDetails, 
+    SchoolBankDetails} from "@/models/school_bank_details.model";
+
+import { 
+    PaymentGatewayCredentials 
+} from "./credential_encryption.service";
+import { 
     PaymentGatewayConfig, 
+    PaymentGatewayService, 
     PaymentOrderRequest 
 } from "./payment_gateway.service";
 import { 
     SecurePaymentCredentialService 
 } from "./secure_payment_credential.service";
-import { 
-    PaymentGatewayCredentials 
-} from "./credential_encryption.service";
 
 export class PaymentService {
 
@@ -51,17 +49,16 @@ export class PaymentService {
 
             if (existingBankDetails.rows && existingBankDetails.rows.length > 0) {
                 // Update existing details
-                const updated = await SchoolBankDetails.updateById(
+                return await SchoolBankDetails.updateById(
                     existingBankDetails.rows[0].id,
                     {
                         ...bankData,
                         updated_at: new Date()
                     }
                 );
-                return updated;
             } else {
                 // Create new bank details
-                const newBankDetails = await SchoolBankDetails.create({
+                return await SchoolBankDetails.create({
                     campus_id,
                     ...bankData,
                     is_active: true,
@@ -70,7 +67,6 @@ export class PaymentService {
                     created_at: new Date(),
                     updated_at: new Date()
                 });
-                return newBankDetails;
             }
         } catch (error) {
             throw new Error(`Failed to create/update bank details: ${error}`);
@@ -105,7 +101,7 @@ export class PaymentService {
         categoryData: Partial<IFeeCategory>
     ): Promise<IFeeCategory> {
         try {
-            const category = await FeeCategory.create({
+            return await FeeCategory.create({
                 campus_id,
                 ...categoryData,
                 is_active: true,
@@ -113,7 +109,6 @@ export class PaymentService {
                 created_at: new Date(),
                 updated_at: new Date()
             });
-            return category;
         } catch (error) {
             throw new Error(`Failed to create fee category: ${error}`);
         }
@@ -147,11 +142,10 @@ export class PaymentService {
         updateData: Partial<IFeeCategory>
     ): Promise<IFeeCategory> {
         try {
-            const updated = await FeeCategory.updateById(category_id, {
+            return await FeeCategory.updateById(category_id, {
                 ...updateData,
                 updated_at: new Date()
             });
-            return updated;
         } catch (error) {
             throw new Error(`Failed to update fee category: ${error}`);
         }
@@ -345,26 +339,30 @@ export class PaymentService {
 
             let paymentDetails;
             switch (gateway) {
-                case 'razorpay':
+                case "razorpay": {
                     paymentDetails = await PaymentGatewayService.createRazorpayOrder(
                         gatewayConfig.razorpay as any,
                         orderRequest
                     );
                     break;
-                case 'payu':
+                }
+                case "payu": {
                     paymentDetails = await PaymentGatewayService.createPayUOrder(
                         gatewayConfig.payu as any,
                         orderRequest
                     );
                     break;
-                case 'cashfree':
+                }
+                case "cashfree": {
                     paymentDetails = await PaymentGatewayService.createCashfreeOrder(
                         gatewayConfig.cashfree as any,
                         orderRequest
                     );
                     break;
-                default:
+                }
+                default: {
                     throw new Error("Unsupported payment gateway");
+                }
             }
 
             // Update transaction with gateway details
@@ -411,11 +409,11 @@ export class PaymentService {
 
             // Verify payment based on gateway
             switch (transaction.payment_gateway) {
-                case 'razorpay':
+                case "razorpay": {
                     isVerified = PaymentGatewayService.verifyRazorpayPayment(
                         gatewayConfig.razorpay as any,
                         {
-                            gateway: 'razorpay',
+                            gateway: "razorpay",
                             payment_id,
                             order_id: transaction.gateway_order_id!,
                             signature,
@@ -423,12 +421,13 @@ export class PaymentService {
                         }
                     );
                     break;
-                case 'payu':
+                }
+                case "payu": {
                     isVerified = PaymentGatewayService.verifyPayUPayment(
                         gatewayConfig.payu as any,
                         {
                             ...additionalData,
-                            gateway: 'payu',
+                            gateway: "payu",
                             payment_id,
                             order_id: transaction.gateway_order_id!,
                             signature,
@@ -436,11 +435,12 @@ export class PaymentService {
                         }
                     );
                     break;
-                case 'cashfree':
+                }
+                case "cashfree": {
                     isVerified = PaymentGatewayService.verifyCashfreePayment(
                         gatewayConfig.cashfree as any,
                         {
-                            gateway: 'cashfree',
+                            gateway: "cashfree",
                             payment_id,
                             order_id: transaction.gateway_order_id!,
                             signature,
@@ -448,8 +448,10 @@ export class PaymentService {
                         }
                     );
                     break;
-                default:
+                }
+                default: {
                     throw new Error("Unsupported payment gateway");
+                }
             }
 
             if (isVerified) {
@@ -623,7 +625,7 @@ export class PaymentService {
      */
     static async configurePaymentGateway(
         campus_id: string,
-        gateway: 'razorpay' | 'payu' | 'cashfree',
+        gateway: "razorpay" | "payu" | "cashfree",
         credentials: any,
         enabled: boolean = true
     ): Promise<ISchoolBankDetails> {
@@ -643,13 +645,11 @@ export class PaymentService {
             };
 
             // Store securely
-            const updated = await SecurePaymentCredentialService.updateGatewayCredentials(
+            return await SecurePaymentCredentialService.updateGatewayCredentials(
                 campus_id,
                 gateway,
                 gatewayCredentials
             );
-
-            return updated;
         } catch (error) {
             throw new Error(`Failed to configure ${gateway} gateway: ${error}`);
         }
@@ -660,7 +660,7 @@ export class PaymentService {
      */
     static async testGatewayConfiguration(
         campus_id: string,
-        gateway: 'razorpay' | 'payu' | 'cashfree'
+        gateway: "razorpay" | "payu" | "cashfree"
     ): Promise<{ success: boolean; message: string; details?: any }> {
         try {
             const bankDetails = await this.getSchoolBankDetails(campus_id);
@@ -685,17 +685,21 @@ export class PaymentService {
             // Test gateway connection based on type
             let testResult;
             switch (gateway) {
-                case 'razorpay':
+                case "razorpay": {
                     testResult = await this.testRazorpayConnection(gatewayConfig);
                     break;
-                case 'payu':
+                }
+                case "payu": {
                     testResult = await this.testPayUConnection(gatewayConfig);
                     break;
-                case 'cashfree':
+                }
+                case "cashfree": {
                     testResult = await this.testCashfreeConnection(gatewayConfig);
                     break;
-                default:
+                }
+                default: {
                     return { success: false, message: "Unsupported gateway" };
+                }
             }
 
             // Update gateway status
@@ -704,7 +708,7 @@ export class PaymentService {
                 gateway,
                 {
                     last_tested: new Date(),
-                    test_status: testResult.success ? 'success' : 'failed'
+                    test_status: testResult.success ? "success" : "failed"
                 }
             );
 
@@ -742,15 +746,15 @@ export class PaymentService {
 
             // Return configurations without sensitive data
             const safeConfigurations: { [key: string]: any } = {};
-            available.forEach(gateway => {
+            for (const gateway of available) {
                 const status = gatewayStatus[gateway];
                 safeConfigurations[gateway] = {
                     enabled: status?.enabled || false,
                     configured: status?.configured || false,
                     last_tested: status?.last_tested || null,
-                    test_status: status?.test_status || 'untested'
+                    test_status: status?.test_status || "untested"
                 };
-            });
+            }
 
             return {
                 available,
@@ -767,7 +771,7 @@ export class PaymentService {
      */
     static async toggleGateway(
         campus_id: string,
-        gateway: 'razorpay' | 'payu' | 'cashfree',
+        gateway: "razorpay" | "payu" | "cashfree",
         enabled: boolean
     ): Promise<ISchoolBankDetails> {
         try {
@@ -824,33 +828,37 @@ export class PaymentService {
      * Validate gateway credentials format
      */
     private static async validateGatewayCredentials(
-        gateway: 'razorpay' | 'payu' | 'cashfree',
+        gateway: "razorpay" | "payu" | "cashfree",
         credentials: any
     ): Promise<void> {
         switch (gateway) {
-            case 'razorpay':
+            case "razorpay": {
                 if (!credentials.key_id || !credentials.key_secret) {
                     throw new Error("Razorpay requires key_id and key_secret");
                 }
-                if (!credentials.key_id.startsWith('rzp_')) {
+                if (!credentials.key_id.startsWith("rzp_")) {
                     throw new Error("Invalid Razorpay key_id format");
                 }
                 break;
+            }
 
-            case 'payu':
+            case "payu": {
                 if (!credentials.merchant_key || !credentials.merchant_salt) {
                     throw new Error("PayU requires merchant_key and merchant_salt");
                 }
                 break;
+            }
 
-            case 'cashfree':
+            case "cashfree": {
                 if (!credentials.app_id || !credentials.secret_key) {
                     throw new Error("Cashfree requires app_id and secret_key");
                 }
                 break;
+            }
 
-            default:
+            default: {
                 throw new Error("Unsupported gateway type");
+            }
         }
     }
 
@@ -872,7 +880,7 @@ export class PaymentService {
             return { 
                 success: true, 
                 message: "Razorpay connection successful",
-                details: { gateway: 'razorpay', tested_at: new Date() }
+                details: { gateway: "razorpay", tested_at: new Date() }
             };
         } catch (error) {
             return { 
@@ -894,15 +902,15 @@ export class PaymentService {
 
             // Here you would make an actual test API call to PayU
             // Test hash generation
-            const testHash = require('crypto')
-                .createHash('sha512')
+            const testHash = require("node:crypto")
+                .createHash("sha512")
                 .update(`${config.merchant_key}|test|100|test|test|test@test.com|||||||||||${config.merchant_salt}`)
-                .digest('hex');
+                .digest("hex");
 
             return { 
                 success: true, 
                 message: "PayU connection successful",
-                details: { gateway: 'payu', tested_at: new Date() }
+                details: { gateway: "payu", tested_at: new Date() }
             };
         } catch (error) {
             return { 
@@ -926,7 +934,7 @@ export class PaymentService {
             return { 
                 success: true, 
                 message: "Cashfree connection successful",
-                details: { gateway: 'cashfree', tested_at: new Date() }
+                details: { gateway: "cashfree", tested_at: new Date() }
             };
         } catch (error) {
             return { 
@@ -942,14 +950,18 @@ export class PaymentService {
      */
     private static isGatewayFullyConfigured(gateway: string, config: any): boolean {
         switch (gateway) {
-            case 'razorpay':
+            case "razorpay": {
                 return !!(config.key_id && config.key_secret);
-            case 'payu':
+            }
+            case "payu": {
                 return !!(config.merchant_key && config.merchant_salt);
-            case 'cashfree':
+            }
+            case "cashfree": {
                 return !!(config.app_id && config.secret_key);
-            default:
+            }
+            default: {
                 return false;
+            }
         }
     }
 

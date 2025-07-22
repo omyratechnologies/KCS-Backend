@@ -1,15 +1,16 @@
 import { Schema } from "ottoman";
+
 import { ottoman } from "../libs/db";
 
 export interface IComplianceCheck {
     id: string;
     campus_id: string;
-    check_type: 'automated' | 'manual' | 'scheduled';
+    check_type: "automated" | "manual" | "scheduled";
     check_date: Date;
     compliance_score: number;
-    status: 'compliant' | 'partial' | 'non_compliant';
+    status: "compliant" | "partial" | "non_compliant";
     issues: Array<{
-        severity: 'critical' | 'high' | 'medium' | 'low';
+        severity: "critical" | "high" | "medium" | "low";
         category: string;
         description: string;
         recommendation: string;
@@ -19,7 +20,7 @@ export interface IComplianceCheck {
     remediation_actions: Array<{
         action_id: string;
         action_type: string;
-        status: 'pending' | 'in_progress' | 'completed' | 'failed';
+        status: "pending" | "in_progress" | "completed" | "failed";
         initiated_at: Date;
         completed_at?: Date;
         initiated_by: string;
@@ -51,13 +52,12 @@ ComplianceCheckSchema.index.findByCheckDate = { by: "check_date" };
 const ComplianceCheck = ottoman.model<IComplianceCheck>("compliance_checks", ComplianceCheckSchema);
 
 export class ComplianceCheckService {
-    public static async createComplianceCheck(data: Omit<IComplianceCheck, 'id' | 'created_at' | 'updated_at'>): Promise<IComplianceCheck> {
-        const complianceCheck = await ComplianceCheck.create({
+    public static async createComplianceCheck(data: Omit<IComplianceCheck, "id" | "created_at" | "updated_at">): Promise<IComplianceCheck> {
+        return await ComplianceCheck.create({
             ...data,
             created_at: new Date(),
             updated_at: new Date()
         });
-        return complianceCheck;
     }
 
     public static async getComplianceHistory(campus_id: string, limit?: number): Promise<IComplianceCheck[]> {
@@ -86,14 +86,14 @@ export class ComplianceCheckService {
         check_id: string,
         action_id: string,
         updates: {
-            status?: 'pending' | 'in_progress' | 'completed' | 'failed';
+            status?: "pending" | "in_progress" | "completed" | "failed";
             completed_at?: Date;
             result?: string;
         }
     ): Promise<IComplianceCheck> {
         const check = await ComplianceCheck.findById(check_id);
         if (!check) {
-            throw new Error('Compliance check not found');
+            throw new Error("Compliance check not found");
         }
 
         const updatedActions = check.remediation_actions.map(action => {
@@ -114,7 +114,7 @@ export class ComplianceCheckService {
     }
 
     public static async getComplianceTrends(campus_id: string, days: number = 30): Promise<{
-        trend_direction: 'improving' | 'declining' | 'stable';
+        trend_direction: "improving" | "declining" | "stable";
         avg_score: number;
         score_change: number;
         checks_count: number;
@@ -137,7 +137,7 @@ export class ComplianceCheckService {
 
         if (checks.length === 0) {
             return {
-                trend_direction: 'stable',
+                trend_direction: "stable",
                 avg_score: 0,
                 score_change: 0,
                 checks_count: 0,
@@ -148,7 +148,7 @@ export class ComplianceCheckService {
         const avgScore = checks.reduce((sum, check) => sum + check.compliance_score, 0) / checks.length;
         
         // Calculate trend
-        let trendDirection: 'improving' | 'declining' | 'stable' = 'stable';
+        let trendDirection: "improving" | "declining" | "stable" = "stable";
         let scoreChange = 0;
         
         if (checks.length >= 2) {
@@ -161,17 +161,17 @@ export class ComplianceCheckService {
             scoreChange = secondHalfAvg - firstHalfAvg;
             
             if (scoreChange > 5) {
-                trendDirection = 'improving';
+                trendDirection = "improving";
             } else if (scoreChange < -5) {
-                trendDirection = 'declining';
+                trendDirection = "declining";
             }
         }
 
         // Aggregate recent issues
         const issueMap = new Map<string, { category: string; count: number; severity: string }>();
         
-        checks.forEach(check => {
-            check.issues.forEach(issue => {
+        for (const check of checks) {
+            for (const issue of check.issues) {
                 const key = `${issue.category}_${issue.severity}`;
                 if (issueMap.has(key)) {
                     issueMap.get(key)!.count++;
@@ -182,10 +182,10 @@ export class ComplianceCheckService {
                         severity: issue.severity
                     });
                 }
-            });
-        });
+            }
+        }
 
-        const recentIssues = Array.from(issueMap.values())
+        const recentIssues = [...issueMap.values()]
             .sort((a, b) => b.count - a.count)
             .slice(0, 10);
 
@@ -218,21 +218,21 @@ export class ComplianceCheckService {
         const checks = allChecks.rows || [];
         
         const total = checks.length;
-        const compliant = checks.filter(c => c.status === 'compliant').length;
-        const nonCompliant = checks.filter(c => c.status === 'non_compliant').length;
+        const compliant = checks.filter(c => c.status === "compliant").length;
+        const nonCompliant = checks.filter(c => c.status === "non_compliant").length;
         const avgScore = total > 0 ? checks.reduce((sum, c) => sum + c.compliance_score, 0) / total : 0;
         
         const checksByType = {
-            automated: checks.filter(c => c.check_type === 'automated').length,
-            manual: checks.filter(c => c.check_type === 'manual').length,
-            scheduled: checks.filter(c => c.check_type === 'scheduled').length
+            automated: checks.filter(c => c.check_type === "automated").length,
+            manual: checks.filter(c => c.check_type === "manual").length,
+            scheduled: checks.filter(c => c.check_type === "scheduled").length
         };
         
         // Aggregate common issues
         const issueMap = new Map<string, { category: string; count: number; severity: string }>();
         
-        checks.forEach(check => {
-            check.issues.forEach(issue => {
+        for (const check of checks) {
+            for (const issue of check.issues) {
                 const key = `${issue.category}_${issue.severity}`;
                 if (issueMap.has(key)) {
                     issueMap.get(key)!.count++;
@@ -243,10 +243,10 @@ export class ComplianceCheckService {
                         severity: issue.severity
                     });
                 }
-            });
-        });
+            }
+        }
 
-        const commonIssues = Array.from(issueMap.values())
+        const commonIssues = [...issueMap.values()]
             .sort((a, b) => b.count - a.count)
             .slice(0, 10);
         

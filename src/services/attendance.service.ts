@@ -63,7 +63,7 @@ export class AttendanceService {
             } catch (error) {
                 errors.push({
                     user_id: userId,
-                    error: error instanceof Error ? error.message : 'Unknown error',
+                    error: error instanceof Error ? error.message : "Unknown error",
                 });
             }
         }
@@ -122,7 +122,7 @@ export class AttendanceService {
             } catch (error) {
                 errors.push({
                     user_id: attendanceData.user_id,
-                    error: error instanceof Error ? error.message : 'Unknown error',
+                    error: error instanceof Error ? error.message : "Unknown error",
                 });
             }
         }
@@ -292,7 +292,7 @@ export class AttendanceService {
             if (filteredAttendance.length > 0) {
                 return filteredAttendance;
             }
-        } catch (error) {
+        } catch {
             // Continue to approach 2 if this fails
         }
 
@@ -312,22 +312,20 @@ export class AttendanceService {
                     });
                     
                     // Filter by date
-                    const filtered = userAttendance.rows.filter(record => {
+                    const filtered = userAttendance.rows.find(record => {
                         const recordDate = new Date(record.date);
                         return recordDate >= startOfDay && recordDate <= endOfDay;
                     });
                     
-                    return filtered[0] || null; // Return first match or null
-                } catch (error) {
+                    return filtered || null; // Return first match or null
+                } catch {
                     return null;
                 }
             });
 
             const attendances = await Promise.all(attendancePromises);
-            const validAttendances = attendances.filter(attendance => attendance !== null);
-
-            return validAttendances; // Return empty array if no records found
-        } catch (error) {
+            return attendances.filter(attendance => attendance !== null); // Return empty array if no records found
+        } catch {
             throw new Error("Unable to retrieve attendance records");
         }
     };
@@ -388,7 +386,7 @@ export class AttendanceService {
             } catch (error) {
                 errors.push({
                     user_id: attendanceData.user_id,
-                    error: error instanceof Error ? error.message : 'Unknown error',
+                    error: error instanceof Error ? error.message : "Unknown error",
                 });
             }
         }
@@ -418,7 +416,7 @@ export class AttendanceService {
             if (attendanceWithClassId.rows.length > 0) {
                 return attendanceWithClassId.rows;
             }
-        } catch (error) {
+        } catch {
             // Continue to approach 2 if this fails
         }
 
@@ -438,16 +436,16 @@ export class AttendanceService {
                     });
                     
                     return userAttendance.rows || [];
-                } catch (error) {
+                } catch {
                     return [];
                 }
             });
 
             const attendanceArrays = await Promise.all(attendancePromises);
-            const allAttendances = attendanceArrays.flat(); // Flatten the array of arrays
+            // Flatten the array of arrays
 
-            return allAttendances;
-        } catch (error) {
+            return attendanceArrays.flat();
+        } catch {
             throw new Error("Unable to retrieve attendance records");
         }
     };
@@ -522,7 +520,7 @@ export class AttendanceService {
                                 $lte: endOfDay
                             }
                         });
-                    } catch (error) {
+                    } catch {
                         // If class_id query fails, try getting attendance by students
                         if (classData.student_ids && classData.student_ids.length > 0) {
                             const studentAttendancePromises = classData.student_ids.map(async (studentId) => {
@@ -536,7 +534,7 @@ export class AttendanceService {
                                         }
                                     });
                                     return studentAttendance.rows || [];
-                                } catch (err) {
+                                } catch {
                                     return [];
                                 }
                             });
@@ -552,7 +550,7 @@ export class AttendanceService {
                         completedToday++;
                         
                         // Calculate attendance rate for this class
-                        const presentCount = classAttendance.rows.filter(att => att.status === 'present').length;
+                        const presentCount = classAttendance.rows.filter(att => att.status === "present").length;
                         const totalStudents = classData.student_count || classData.student_ids?.length || 0;
                         
                         if (totalStudents > 0) {
@@ -564,7 +562,7 @@ export class AttendanceService {
                         return {
                             class_id: classData.id,
                             class_name: classData.name,
-                            status: 'completed',
+                            status: "completed",
                             present_count: presentCount,
                             total_students: totalStudents,
                             attendance_rate: totalStudents > 0 ? Math.round((presentCount / totalStudents) * 100) : 0,
@@ -576,7 +574,7 @@ export class AttendanceService {
                         return {
                             class_id: classData.id,
                             class_name: classData.name,
-                            status: 'pending',
+                            status: "pending",
                             present_count: 0,
                             total_students: classData.student_count || classData.student_ids?.length || 0,
                             attendance_rate: 0,
@@ -588,12 +586,12 @@ export class AttendanceService {
                     return {
                         class_id: classData.id,
                         class_name: classData.name,
-                        status: 'incomplete',
+                        status: "incomplete",
                         present_count: 0,
                         total_students: classData.student_count || classData.student_ids?.length || 0,
                         attendance_rate: 0,
                         last_updated: null,
-                        error: error instanceof Error ? error.message : 'Unknown error'
+                        error: error instanceof Error ? error.message : "Unknown error"
                     };
                 }
             });
@@ -610,12 +608,12 @@ export class AttendanceService {
                 completed_today: completedToday,
                 pending_today: pendingToday,
                 average_attendance: averageAttendance,
-                date: targetDate.toISOString().split('T')[0],
+                date: targetDate.toISOString().split("T")[0],
                 classes: classStats
             };
 
         } catch (error) {
-            throw new Error(`Unable to retrieve attendance statistics: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            throw new Error(`Unable to retrieve attendance statistics: ${error instanceof Error ? error.message : "Unknown error"}`);
         }
     };
 
@@ -641,9 +639,8 @@ export class AttendanceService {
             const { User } = await import("@/models/user.model");
             const studentPromises = classData.student_ids.map(async (studentId) => {
                 try {
-                    const student = await User.findById(studentId);
-                    return student;
-                } catch (error) {
+                    return await User.findById(studentId);
+                } catch {
                     return null;
                 }
             });
@@ -670,25 +667,25 @@ export class AttendanceService {
                     
                     // Calculate attendance statistics
                     const totalClasses = totalDays; // Can be refined based on actual class schedule
-                    const attendedClasses = attendanceRecords.filter(record => record.status === 'present').length;
-                    const absentClasses = attendanceRecords.filter(record => record.status === 'absent').length;
-                    const lateClasses = attendanceRecords.filter(record => record.status === 'late').length;
-                    const leaveClasses = attendanceRecords.filter(record => record.status === 'leave').length;
+                    const attendedClasses = attendanceRecords.filter(record => record.status === "present").length;
+                    const absentClasses = attendanceRecords.filter(record => record.status === "absent").length;
+                    const lateClasses = attendanceRecords.filter(record => record.status === "late").length;
+                    const leaveClasses = attendanceRecords.filter(record => record.status === "leave").length;
                     
                     const attendancePercentage = totalClasses > 0 
                         ? Math.round((attendedClasses / totalClasses) * 100) 
                         : 0;
 
                     // Determine attendance status
-                    let attendanceStatus = 'good';
+                    let attendanceStatus = "good";
                     if (attendancePercentage >= 90) {
-                        attendanceStatus = 'excellent';
+                        attendanceStatus = "excellent";
                     } else if (attendancePercentage >= 75) {
-                        attendanceStatus = 'good';
+                        attendanceStatus = "good";
                     } else if (attendancePercentage >= 60) {
-                        attendanceStatus = 'average';
+                        attendanceStatus = "average";
                     } else {
-                        attendanceStatus = 'poor';
+                        attendanceStatus = "poor";
                     }
 
                     // Get last attendance date
@@ -722,11 +719,11 @@ export class AttendanceService {
                         late: 0,
                         leave: 0,
                         percentage: 0,
-                        status: 'poor',
+                        status: "poor",
                         last_attended: null,
                         email: student.email,
                         phone: student.phone,
-                        error: error instanceof Error ? error.message : 'Unknown error'
+                        error: error instanceof Error ? error.message : "Unknown error"
                     };
                 }
             });
@@ -754,8 +751,8 @@ export class AttendanceService {
                     total_students: totalStudents
                 },
                 date_range: {
-                    from_date: startDate.toISOString().split('T')[0],
-                    to_date: endDate.toISOString().split('T')[0],
+                    from_date: startDate.toISOString().split("T")[0],
+                    to_date: endDate.toISOString().split("T")[0],
                     total_days: totalDays
                 },
                 summary: {
@@ -770,7 +767,7 @@ export class AttendanceService {
             };
 
         } catch (error) {
-            throw new Error(`Unable to generate attendance report: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            throw new Error(`Unable to generate attendance report: ${error instanceof Error ? error.message : "Unknown error"}`);
         }
     };
 
@@ -835,10 +832,10 @@ export class AttendanceService {
             }>();
 
             // Process records by month
-            attendanceRecords.forEach(record => {
+            for (const record of attendanceRecords) {
                 const recordDate = new Date(record.date);
                 const monthKey = `${recordDate.getMonth() + 1}-${recordDate.getFullYear()}`;
-                const monthName = recordDate.toLocaleString('default', { month: 'long' });
+                const monthName = recordDate.toLocaleString("default", { month: "long" });
                 const year = recordDate.getFullYear();
 
                 if (!monthlyAttendance.has(monthKey)) {
@@ -851,7 +848,7 @@ export class AttendanceService {
                         leave: 0,
                         total_days: 0,
                         percentage: 0,
-                        status: 'poor'
+                        status: "poor"
                     });
                 }
 
@@ -859,18 +856,22 @@ export class AttendanceService {
                 monthData.total_days++;
 
                 switch (record.status) {
-                    case 'present':
+                    case "present": {
                         monthData.present++;
                         break;
-                    case 'absent':
+                    }
+                    case "absent": {
                         monthData.absent++;
                         break;
-                    case 'late':
+                    }
+                    case "late": {
                         monthData.late++;
                         break;
-                    case 'leave':
+                    }
+                    case "leave": {
                         monthData.leave++;
                         break;
+                    }
                 }
 
                 // Calculate monthly percentage (including late as present)
@@ -881,46 +882,46 @@ export class AttendanceService {
 
                 // Determine monthly status
                 if (monthData.percentage >= 90) {
-                    monthData.status = 'excellent';
+                    monthData.status = "excellent";
                 } else if (monthData.percentage >= 75) {
-                    monthData.status = 'good';
+                    monthData.status = "good";
                 } else if (monthData.percentage >= 60) {
-                    monthData.status = 'average';
+                    monthData.status = "average";
                 } else {
-                    monthData.status = 'poor';
+                    monthData.status = "poor";
                 }
-            });
+            }
 
             // Convert to array and sort by year-month descending
-            const monthlyPerformance = Array.from(monthlyAttendance.values())
+            const monthlyPerformance = [...monthlyAttendance.values()]
                 .sort((a, b) => {
                     if (a.year !== b.year) return b.year - a.year;
-                    const monthOrder = ['January', 'February', 'March', 'April', 'May', 'June',
-                                      'July', 'August', 'September', 'October', 'November', 'December'];
+                    const monthOrder = ["January", "February", "March", "April", "May", "June",
+                                      "July", "August", "September", "October", "November", "December"];
                     return monthOrder.indexOf(b.month) - monthOrder.indexOf(a.month);
                 });
 
             // Calculate overall summary statistics
             const totalRecords = attendanceRecords.length;
-            const totalPresent = attendanceRecords.filter(record => record.status === 'present').length;
-            const totalAbsent = attendanceRecords.filter(record => record.status === 'absent').length;
-            const totalLate = attendanceRecords.filter(record => record.status === 'late').length;
-            const totalLeave = attendanceRecords.filter(record => record.status === 'leave').length;
+            const totalPresent = attendanceRecords.filter(record => record.status === "present").length;
+            const totalAbsent = attendanceRecords.filter(record => record.status === "absent").length;
+            const totalLate = attendanceRecords.filter(record => record.status === "late").length;
+            const totalLeave = attendanceRecords.filter(record => record.status === "leave").length;
             
             const overallAttendanceRate = totalRecords > 0 
                 ? Math.round(((totalPresent + totalLate) / totalRecords) * 100) 
                 : 0;
 
             // Determine overall attendance status
-            let overallStatus = 'good';
+            let overallStatus = "good";
             if (overallAttendanceRate >= 90) {
-                overallStatus = 'excellent';
+                overallStatus = "excellent";
             } else if (overallAttendanceRate >= 75) {
-                overallStatus = 'good';
+                overallStatus = "good";
             } else if (overallAttendanceRate >= 60) {
-                overallStatus = 'average';
+                overallStatus = "average";
             } else {
-                overallStatus = 'poor';
+                overallStatus = "poor";
             }
 
             // Calculate total unique months/days for display
@@ -938,8 +939,8 @@ export class AttendanceService {
                     avatar_url: student.meta_data?.imageURL || null
                 },
                 date_range: {
-                    from_date: startDate.toISOString().split('T')[0],
-                    to_date: endDate.toISOString().split('T')[0],
+                    from_date: startDate.toISOString().split("T")[0],
+                    to_date: endDate.toISOString().split("T")[0],
                     showing_records: `${totalMonths} months with ${totalUniqueDays} attendance records`
                 },
                 summary_cards: {
@@ -979,9 +980,9 @@ export class AttendanceService {
                         total_days: month.total_days,
                         percentage: month.percentage,
                         status: month.status,
-                        performance_badge: month.percentage >= 90 ? 'excellent' : 
-                                         month.percentage >= 75 ? 'good' : 
-                                         month.percentage >= 60 ? 'average' : 'poor'
+                        performance_badge: month.percentage >= 90 ? "excellent" : 
+                                         month.percentage >= 75 ? "good" : 
+                                         month.percentage >= 60 ? "average" : "poor"
                     })),
                     total_months: totalMonths,
                     filters: {
@@ -992,7 +993,7 @@ export class AttendanceService {
             };
 
         } catch (error) {
-            throw new Error(`Unable to generate student attendance view: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            throw new Error(`Unable to generate student attendance view: ${error instanceof Error ? error.message : "Unknown error"}`);
         }
     };
 }

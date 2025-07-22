@@ -1,7 +1,7 @@
-import { ITimetable, Timetable } from "@/models/time_table.model";
+import { Class } from "@/models/class.model";
 import { Subject } from "@/models/subject.model";
 import { Teacher } from "@/models/teacher.model";
-import { Class } from "@/models/class.model";
+import { ITimetable, Timetable } from "@/models/time_table.model";
 import { User } from "@/models/user.model";
 
 export class TimetableService {
@@ -57,7 +57,7 @@ export class TimetableService {
         );
 
         // Enrich timetable data with subject names and teacher names
-        const enrichedTimetable = await Promise.all(
+        return await Promise.all(
             data.rows.map(async (timetableItem) => {
                 try {
                     // Fetch subject information
@@ -79,7 +79,7 @@ export class TimetableService {
                         subject_name: subject?.name || "Unknown Subject",
                         teacher_name: teacherName,
                     };
-                } catch (error) {
+                } catch {
                     return {
                         ...timetableItem,
                         subject_name: "Unknown Subject",
@@ -88,8 +88,6 @@ export class TimetableService {
                 }
             })
         );
-
-        return enrichedTimetable;
     };
 
     // Read by Campus ID and Teacher ID
@@ -114,7 +112,7 @@ export class TimetableService {
         );
 
         // Enrich timetable data with subject names
-        const enrichedTimetable = await Promise.all(
+        return await Promise.all(
             data.rows.map(async (timetableItem) => {
                 try {
                     const subject = await Subject.findById(timetableItem.subject_id);
@@ -124,7 +122,7 @@ export class TimetableService {
                         class_name: classInfo?.name || "Unknown Class",
                         subject_name: subject?.name || "Unknown Subject",
                     };
-                } catch (error) {
+                } catch {
                     return {
                         ...timetableItem,
                         class_name: "Unknown Class",
@@ -133,8 +131,6 @@ export class TimetableService {
                 }
             })
         );
-
-        return enrichedTimetable;
     };
 
     // Update by ID
@@ -154,5 +150,5 @@ export class TimetableService {
             is_deleted: true,
             updated_at: new Date(),
         });
-    }
+    };
 }

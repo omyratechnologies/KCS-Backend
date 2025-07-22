@@ -89,4 +89,4 @@ const PaymentTransaction = ottoman.model<IPaymentTransaction>(
     PaymentTransactionSchema
 );
 
-export { PaymentTransaction, type IPaymentTransaction };
+export { type IPaymentTransaction,PaymentTransaction };

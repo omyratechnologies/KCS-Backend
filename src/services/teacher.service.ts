@@ -27,13 +27,13 @@ export class TeacherService {
                 if (user) {
                     // Parse existing meta_data if it's a string, otherwise use as object
                     let existingMetaData = {};
-                    if (typeof user.meta_data === 'string') {
+                    if (typeof user.meta_data === "string") {
                         try {
                             existingMetaData = JSON.parse(user.meta_data);
                         } catch {
                             existingMetaData = {};
                         }
-                    } else if (user.meta_data && typeof user.meta_data === 'object') {
+                    } else if (user.meta_data && typeof user.meta_data === "object") {
                         existingMetaData = user.meta_data;
                     }
                     
@@ -156,13 +156,13 @@ export class TeacherService {
                 if (user) {
                     // Parse existing meta_data if it's a string, otherwise use as object
                     let existingMetaData = {};
-                    if (typeof user.meta_data === 'string') {
+                    if (typeof user.meta_data === "string") {
                         try {
                             existingMetaData = JSON.parse(user.meta_data);
                         } catch {
                             existingMetaData = {};
                         }
-                    } else if (user.meta_data && typeof user.meta_data === 'object') {
+                    } else if (user.meta_data && typeof user.meta_data === "object") {
                         existingMetaData = user.meta_data;
                     }
                     

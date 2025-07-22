@@ -1,44 +1,41 @@
+import { Assignment } from "@/models/assignment.model";
+import { AssignmentSubmission } from "@/models/assignment_submission.model";
 import { Attendance } from "@/models/attendance.model";
+import { CampusWideNotification } from "@/models/campus_wide_notification.model";
 import { Class } from "@/models/class.model";
+import { ClassQuiz } from "@/models/class_quiz.model";
+import { ClassQuizAttempt } from "@/models/class_quiz_attempt.model";
+import { ClassQuizSubmission } from "@/models/class_quiz_submission.model";
 import { ClassSubject } from "@/models/class_subject.model";
 import { Course } from "@/models/course.model";
 import { Examination } from "@/models/examination.model";
 import { Library } from "@/models/library.model";
 import { LibraryIssue } from "@/models/library_issue.model";
 import { Meeting } from "@/models/meeting.model";
+import { ParentNotification } from "@/models/parent_notification.model";
 import { StudentNotification } from "@/models/student_notification.model";
-import { TeacherNotification } from "@/models/teacher_notification.model";
 import { StudentRecord } from "@/models/student_record.model";
 import { Subject } from "@/models/subject.model";
 import { Teacher } from "@/models/teacher.model";
-import { User } from "@/models/user.model";
-import { Assignment } from "@/models/assignment.model";
-import { ClassQuiz } from "@/models/class_quiz.model";
-import { CampusWideNotification } from "@/models/campus_wide_notification.model";
-import { ParentNotification } from "@/models/parent_notification.model";
+import { TeacherNotification } from "@/models/teacher_notification.model";
 import { Timetable } from "@/models/time_table.model";
-import { AssignmentSubmission } from "@/models/assignment_submission.model";
-import { ClassQuizSubmission } from "@/models/class_quiz_submission.model";
-import { ClassQuizAttempt } from "@/models/class_quiz_attempt.model";
+import { User } from "@/models/user.model";
+// Import types
+import { 
+    AdminDashboardData,
+    GradesData,
+    ParentDashboardData,
+    PerformanceMetrics,
+    StudentDashboardData,
+    StudyHoursData,
+    TeacherDashboardData} from "@/types";
 
-// Import services
-import { ClassService } from "./class.service";
-
+import { GradesAnalyticsHelper } from "./analytics/grades.helper";
 // Import helper classes
 import { PerformanceAnalyticsHelper } from "./analytics/performance.helper";
 import { StudyHoursAnalyticsHelper } from "./analytics/study-hours.helper";
-import { GradesAnalyticsHelper } from "./analytics/grades.helper";
-
-// Import types
-import { 
-    StudentDashboardData,
-    TeacherDashboardData,
-    ParentDashboardData,
-    AdminDashboardData,
-    PerformanceMetrics,
-    StudyHoursData,
-    GradesData
-} from "@/types";
+// Import services
+import { ClassService } from "./class.service";
 
 export class DashboardService {
     /**
@@ -265,7 +262,7 @@ export class DashboardService {
             if (profile.meta_data) {
                 // Handle both string and object meta_data formats
                 let metaData = profile.meta_data;
-                if (typeof profile.meta_data === 'string') {
+                if (typeof profile.meta_data === "string") {
                     try {
                         metaData = JSON.parse(profile.meta_data);
                     } catch {
@@ -379,11 +376,11 @@ export class DashboardService {
                 
                 // Merge and deduplicate assignments
                 const allTeacherAssignments = [...assignmentsToGrade];
-                teacherAssignments.forEach(assignment => {
+                for (const assignment of teacherAssignments) {
                     if (!allTeacherAssignments.find(a => a.id === assignment.id)) {
                         allTeacherAssignments.push(assignment);
                     }
-                });
+                }
                 
                 assignmentsToGrade = allTeacherAssignments;
             } catch (error) {
@@ -424,11 +421,11 @@ export class DashboardService {
                     
                     // Get current date and time
                     const now = new Date();
-                    const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' });
+                    const currentDay = now.toLocaleDateString("en-US", { weekday: "long" });
                     const currentTime = now.toTimeString().slice(0, 5); // Format: "HH:MM"
                     
                     // Define day order for sorting
-                    const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+                    const dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
                     const currentDayIndex = dayOrder.indexOf(currentDay);
                     
                     // Filter and sort upcoming classes
@@ -518,8 +515,8 @@ export class DashboardService {
                         isAdjourned: t.is_adjourned,
                         isToday: t.isToday,
                         // Add class and subject names if available
-                        className: classes.find(c => c.id === t.class_id)?.name || 'Unknown Class',
-                        subjectName: subjects.find(s => s.id === t.subject_id)?.name || 'Unknown Subject',
+                        className: classes.find(c => c.id === t.class_id)?.name || "Unknown Class",
+                        subjectName: subjects.find(s => s.id === t.subject_id)?.name || "Unknown Subject",
                     })),
                 },
                 notifications: {
@@ -1218,7 +1215,7 @@ export class DashboardService {
     ) {
         try {
             switch (user_type) {
-                case "Student":
+                case "Student": {
                     const classService = new ClassService();
                     const studentClasses = await classService.getClassesByStudentId(user_id);
                     
@@ -1234,8 +1231,9 @@ export class DashboardService {
                         unreadNotifications: notificationResult.rows?.length || 0,
                         pendingAssignments: 0, // Would need detailed calculation
                     };
+                }
 
-                case "Teacher":
+                case "Teacher": {
                     const teacherResult = await Teacher.find({ campus_id, user_id });
                     const teacherRecord = teacherResult.rows?.[0];
                     
@@ -1255,9 +1253,11 @@ export class DashboardService {
                         students: teacherClasses.reduce((sum, c) => sum + (c.student_count || 0), 0),
                         subjects: teacherRecord?.subjects?.length || 0,
                     };
+                }
 
-                default:
+                default: {
                     return {};
+                }
             }
         } catch (error) {
             throw new Error(`Failed to get quick stats: ${error}`);
@@ -1294,7 +1294,7 @@ export class DashboardService {
             let unreadCount = 0;
 
             switch (user_type) {
-                case "Student":
+                case "Student": {
                     const studentResult = await StudentNotification.find({
                         campus_id,
                         user_id,
@@ -1304,8 +1304,9 @@ export class DashboardService {
                     notifications = studentResult.rows || [];
                     unreadCount = notifications.filter(n => !n.is_seen).length;
                     break;
+                }
 
-                case "Teacher":
+                case "Teacher": {
                     const teacherResult = await TeacherNotification.find({
                         campus_id,
                         user_id,
@@ -1315,8 +1316,9 @@ export class DashboardService {
                     notifications = teacherResult.rows || [];
                     unreadCount = notifications.filter(n => !n.is_seen).length;
                     break;
+                }
 
-                case "Parent":
+                case "Parent": {
                     const parentResult = await ParentNotification.find({
                         campus_id,
                         user_id,
@@ -1326,6 +1328,7 @@ export class DashboardService {
                     notifications = parentResult.rows || [];
                     unreadCount = notifications.filter(n => !n.is_seen).length;
                     break;
+                }
             }
 
             return {

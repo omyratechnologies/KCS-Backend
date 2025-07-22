@@ -1,6 +1,7 @@
 import { Context } from "hono";
-import { SuperAdminService } from "@/services/super_admin.service";
+
 import { BackupRecoveryService } from "@/services/backup_recovery.service";
+import { SuperAdminService } from "@/services/super_admin.service";
 
 export class SuperAdminController {
 
@@ -53,7 +54,7 @@ export class SuperAdminController {
             }
 
             const { campus_ids } = ctx.req.query();
-            const campusArray = campus_ids ? campus_ids.split(',') : undefined;
+            const campusArray = campus_ids ? campus_ids.split(",") : undefined;
 
             const healthMetrics = await SuperAdminService.monitorSchoolHealth(campusArray);
 
@@ -498,8 +499,8 @@ export class SuperAdminController {
                 security_summary: securityStatus,
                 recommendations: [
                     ...securityStatus.recommendations,
-                    ...(platformAnalytics.avg_collection_rate < 80 ? ['Improve overall collection rates across schools'] : []),
-                    ...(complianceData.filter(c => c.compliance_score < 60).length > 0 ? ['Address compliance issues in underperforming schools'] : [])
+                    ...(platformAnalytics.avg_collection_rate < 80 ? ["Improve overall collection rates across schools"] : []),
+                    ...(complianceData.some(c => c.compliance_score < 60) ? ["Address compliance issues in underperforming schools"] : [])
                 ]
             };
 
@@ -638,7 +639,7 @@ export class SuperAdminController {
                         action: action.action,
                         campus_ids: action.campus_ids,
                         success: false,
-                        message: 'Action requires explicit approval',
+                        message: "Action requires explicit approval",
                         executed_at: new Date()
                     });
                     continue;
@@ -649,17 +650,20 @@ export class SuperAdminController {
                     let actionResult: { success: boolean; message: string };
 
                     switch (action.action) {
-                        case 'Configure default payment gateway':
+                        case "Configure default payment gateway": {
                             actionResult = await this.configureDefaultPaymentGateway(action.campus_ids);
                             break;
-                        case 'Enable automated payment reminders':
+                        }
+                        case "Enable automated payment reminders": {
                             actionResult = await this.enableAutomatedReminders(action.campus_ids);
                             break;
-                        default:
+                        }
+                        default: {
                             actionResult = {
                                 success: false,
                                 message: `Unknown remediation action: ${action.action}`
                             };
+                        }
                     }
 
                     results.push({
@@ -675,7 +679,7 @@ export class SuperAdminController {
                         action: action.action,
                         campus_ids: action.campus_ids,
                         success: false,
-                        message: error instanceof Error ? error.message : 'Unknown error',
+                        message: error instanceof Error ? error.message : "Unknown error",
                         executed_at: new Date()
                     });
                 }
@@ -744,13 +748,13 @@ export class SuperAdminController {
 
             // Generate system status summary
             const systemStatus = {
-                overall_health: overallHealthScore >= 80 ? 'healthy' : overallHealthScore >= 60 ? 'warning' : 'critical',
+                overall_health: overallHealthScore >= 80 ? "healthy" : (overallHealthScore >= 60 ? "warning" : "critical"),
                 overall_score: overallHealthScore,
                 component_health: {
                     performance: performanceMetrics.current_status,
-                    security: securityStatus.overall_security_score >= 80 ? 'healthy' : 'warning',
+                    security: securityStatus.overall_security_score >= 80 ? "healthy" : "warning",
                     compliance: complianceStatus.compliance_status,
-                    payments: platformAnalytics.avg_collection_rate >= 80 ? 'healthy' : 'warning'
+                    payments: platformAnalytics.avg_collection_rate >= 80 ? "healthy" : "warning"
                 },
                 key_metrics: {
                     total_schools: platformAnalytics.total_schools,
@@ -759,18 +763,18 @@ export class SuperAdminController {
                     avg_collection_rate: platformAnalytics.avg_collection_rate,
                     current_transaction_rate: performanceMetrics.real_time_metrics.current_transaction_rate,
                     error_rate: performanceMetrics.real_time_metrics.error_rate_percent,
-                    compliant_schools: complianceStatus.campus_results.filter(c => c.status === 'compliant').length
+                    compliant_schools: complianceStatus.campus_results.filter(c => c.status === "compliant").length
                 },
                 alerts: [
                     ...performanceMetrics.performance_alerts.map(alert => ({
                         type: alert.alert_type,
-                        category: 'performance',
+                        category: "performance",
                         message: alert.message,
                         action_required: !alert.auto_resolve_available
                     })),
                     ...securityStatus.platform_security_issues.map(issue => ({
-                        type: 'warning' as const,
-                        category: 'security',
+                        type: "warning" as const,
+                        category: "security",
                         message: issue,
                         action_required: true
                     }))
@@ -813,12 +817,12 @@ export class SuperAdminController {
     private static async configureDefaultPaymentGateway(campus_ids: string[]): Promise<{ success: boolean; message: string }> {
         try {
             const defaultGatewayConfig = {
-                gateway: 'razorpay' as const,
+                gateway: "razorpay" as const,
                 configuration: {
-                    key_id: 'rzp_test_default',
-                    key_secret: 'test_secret_default',
+                    key_id: "rzp_test_default",
+                    key_secret: "test_secret_default",
                     enabled: true,
-                    mode: 'test' as const
+                    mode: "test" as const
                 },
                 apply_to_campuses: campus_ids
             };
@@ -829,13 +833,13 @@ export class SuperAdminController {
                 success: result.success,
                 message: result.success 
                     ? `Default payment gateway configured for ${campus_ids.length} campuses`
-                    : 'Failed to configure default payment gateway for some campuses'
+                    : "Failed to configure default payment gateway for some campuses"
             };
 
         } catch (error) {
             return {
                 success: false,
-                message: error instanceof Error ? error.message : 'Unknown error'
+                message: error instanceof Error ? error.message : "Unknown error"
             };
         }
     }
@@ -869,7 +873,7 @@ export class SuperAdminController {
         } catch (error) {
             return {
                 success: false,
-                message: error instanceof Error ? error.message : 'Unknown error'
+                message: error instanceof Error ? error.message : "Unknown error"
             };
         }
     }

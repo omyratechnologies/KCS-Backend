@@ -1,7 +1,8 @@
 import { Context } from "hono";
+
+import log, { LogTypes } from "@/libs/logger";
 import { UploadFactory } from "@/libs/s3/upload.factory";
 import { AndroidApk, IAndroidApk } from "@/models/android_apk.model";
-import log, { LogTypes } from "@/libs/logger";
 
 export class AndroidApkController {
     /**
@@ -9,7 +10,7 @@ export class AndroidApkController {
      */
     public static readonly uploadApk = async (ctx: Context) => {
         try {
-            log(`Starting APK upload process`, LogTypes.LOGS, "APK Controller");
+            log("Starting APK upload process", LogTypes.LOGS, "APK Controller");
             
             let file, packageName, version;
             try {
@@ -17,7 +18,7 @@ export class AndroidApkController {
                 file = body.file;
                 packageName = body.packageName;
                 version = body.version;
-                log(`Parsed body successfully`, LogTypes.LOGS, "APK Controller");
+                log("Parsed body successfully", LogTypes.LOGS, "APK Controller");
             } catch (parseError) {
                 log(`Error parsing request body: ${parseError}`, LogTypes.ERROR, "APK Controller");
                 return ctx.json({
@@ -28,7 +29,7 @@ export class AndroidApkController {
 
             // Validate required fields
             if (!file || typeof file === "string") {
-                log(`No file uploaded or invalid file type`, LogTypes.ERROR, "APK Controller");
+                log("No file uploaded or invalid file type", LogTypes.ERROR, "APK Controller");
                 return ctx.json({
                     success: false,
                     message: "No APK file uploaded",
@@ -46,7 +47,7 @@ export class AndroidApkController {
             log(`Received file: ${file.name}, size: ${file.size}, type: ${file.type}`, LogTypes.LOGS, "APK Controller");
 
             // Validate file type
-            if (!file.name.endsWith('.apk') && file.type !== 'application/vnd.android.package-archive') {
+            if (!file.name.endsWith(".apk") && file.type !== "application/vnd.android.package-archive") {
                 log(`Invalid file type: ${file.type}, name: ${file.name}`, LogTypes.ERROR, "APK Controller");
                 return ctx.json({
                     success: false,
@@ -74,7 +75,7 @@ export class AndroidApkController {
             } catch (findError) {
                 // If it's a "document not found" error or collection doesn't exist, treat as no existing APK
                 if (findError instanceof Error && findError.message.includes("document not found")) {
-                    log(`Collection doesn't exist yet, proceeding with upload`, LogTypes.LOGS, "APK Controller");
+                    log("Collection doesn't exist yet, proceeding with upload", LogTypes.LOGS, "APK Controller");
                     existingApk = null;
                 } else {
                     log(`Error checking for existing APK: ${findError}`, LogTypes.ERROR, "APK Controller");
@@ -97,7 +98,7 @@ export class AndroidApkController {
                 // Add timeout for S3 upload (30 seconds)
                 const uploadPromise = UploadFactory.upload(file);
                 const timeoutPromise = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('Upload timeout after 30 seconds')), 30000)
+                    setTimeout(() => reject(new Error("Upload timeout after 30 seconds")), 30_000)
                 );
                 
                 s3Data = await Promise.race([uploadPromise, timeoutPromise]);
@@ -106,7 +107,7 @@ export class AndroidApkController {
                 log(`Error uploading file to S3: ${uploadError}`, LogTypes.ERROR, "APK Controller");
                 return ctx.json({
                     success: false,
-                    message: uploadError instanceof Error && uploadError.message.includes('timeout') 
+                    message: uploadError instanceof Error && uploadError.message.includes("timeout") 
                         ? "Upload timeout - file too large or network issue" 
                         : "Failed to upload file to storage",
                 }, 500);

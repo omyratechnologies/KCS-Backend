@@ -1,10 +1,11 @@
 import { Context } from "hono";
-import { EnhancedCourseContentService } from "@/services/enhanced-course-content.service";
+
+import { UploadFactory } from "@/libs/s3/upload.factory";
 import { ICourseChapterData } from "@/models/course_chapter.model";
 import { ICourseFolderData } from "@/models/course_folder.model";
 import { ICourseMaterialData } from "@/models/course_material.model";
 import { ICourseWatchHistoryData } from "@/models/course_watch_history.model";
-import { UploadFactory } from "@/libs/s3/upload.factory";
+import { EnhancedCourseContentService } from "@/services/enhanced-course-content.service";
 import { UploadService } from "@/services/upload.service";
 
 export class EnhancedCourseContentController {

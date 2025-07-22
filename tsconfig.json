@@ -7,7 +7,7 @@
         "experimentalDecorators": true,
         "jsx": "react-jsx",
         "jsxImportSource": "hono/jsx",
-        "lib": ["es2018", "es5", "dom"],
+        "lib": ["es2021", "es5", "dom"],
         "module": "ESNext",
         "moduleResolution": "Bundler",
         "noImplicitAny": false,

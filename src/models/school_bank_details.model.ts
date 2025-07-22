@@ -1,4 +1,5 @@
 import { Schema } from "ottoman";
+
 import { ottoman } from "../libs/db";
 import { EncryptedCredential } from "../services/credential_encryption.service";
 
@@ -42,19 +43,19 @@ interface ISchoolBankDetails {
             enabled: boolean;
             configured: boolean;
             last_tested?: Date;
-            test_status?: 'success' | 'failed' | 'untested';
+            test_status?: "success" | "failed" | "untested";
         };
         payu?: {
             enabled: boolean;
             configured: boolean;
             last_tested?: Date;
-            test_status?: 'success' | 'failed' | 'untested';
+            test_status?: "success" | "failed" | "untested";
         };
         cashfree?: {
             enabled: boolean;
             configured: boolean;
             last_tested?: Date;
-            test_status?: 'success' | 'failed' | 'untested';
+            test_status?: "success" | "failed" | "untested";
         };
     };
     
@@ -106,7 +107,7 @@ const SchoolBankDetailsSchema = new Schema({
     is_verified: { type: Boolean, required: true, default: false },
     verified_at: { type: Date, required: false },
     credential_updated_at: { type: Date, required: false },
-    encryption_version: { type: String, required: false, default: 'v1' },
+    encryption_version: { type: String, required: false, default: "v1" },
     meta_data: { type: Object, required: true, default: {} },
     created_at: { type: Date, default: () => new Date() },
     updated_at: { type: Date, default: () => new Date() },
@@ -121,4 +122,4 @@ const SchoolBankDetails = ottoman.model<ISchoolBankDetails>(
     SchoolBankDetailsSchema
 );
 
-export { SchoolBankDetails, type ISchoolBankDetails };
+export { type ISchoolBankDetails,SchoolBankDetails };

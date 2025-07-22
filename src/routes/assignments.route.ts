@@ -24,37 +24,34 @@ import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";
 import { resolver, validator as zValidator } from "hono-openapi/zod";
 
-import { AssignmentController } from "../controllers/assignments.controller";
 import { roleMiddleware } from "@/middlewares/role.middleware";
+
+import { AssignmentController } from "../controllers/assignments.controller";
 import {
-    // Admin schemas
-    createAssignmentRequestBodySchema,
-    createAssignmentResponseSchema,
-    updateAssignmentRequestBodySchema,
-    updateAssignmentResponseSchema,
-    deleteAssignmentResponseSchema,
-    bulkAssignmentOperationRequestBodySchema,
-    bulkAssignmentOperationResponseSchema,
     assignmentAnalyticsResponseSchema,
-    
-    // Teacher schemas
-    gradeSubmissionRequestBodySchema,
-    gradeSubmissionResponseSchema,
-    teacherAssignmentStatsResponseSchema,
-    
-    // Student schemas
-    submitAssignmentRequestBodySchema,
-    submitAssignmentResponseSchema,
-    studentAssignmentViewResponseSchema,
-    assignmentSubmissionSchema,
-    
-    // Parent schemas
-    parentStudentAssignmentViewResponseSchema,
-    
     // Shared schemas
     assignmentSchema,
     assignmentSubmissionDetailsSchema,
+    assignmentSubmissionSchema,
+    bulkAssignmentOperationRequestBodySchema,
+    bulkAssignmentOperationResponseSchema,
+    // Admin schemas
+    createAssignmentRequestBodySchema,
+    createAssignmentResponseSchema,
+    deleteAssignmentResponseSchema,
     errorResponseSchema,
+    // Teacher schemas
+    gradeSubmissionRequestBodySchema,
+    gradeSubmissionResponseSchema,
+    // Parent schemas
+    parentStudentAssignmentViewResponseSchema,
+    studentAssignmentViewResponseSchema,
+    // Student schemas
+    submitAssignmentRequestBodySchema,
+    submitAssignmentResponseSchema,
+    teacherAssignmentStatsResponseSchema,
+    updateAssignmentRequestBodySchema,
+    updateAssignmentResponseSchema,
 } from "../schema/assignments";
 
 const app = new Hono();

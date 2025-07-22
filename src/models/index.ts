@@ -1,14 +1,14 @@
 // Import all models to ensure they are registered with Ottoman
-import { AndroidApk } from "./android_apk.model";
-import { Assignment } from "./assignment.model";
-import { AssignmentSubmission } from "./assignment_submission.model";
-import { Attendance } from "./attendance.model";
-import { Campus } from "./campus.model";
-import { CampusWideNotification } from "./campus_wide_notification.model";
-import { Class } from "./class.model";
-import { ClassNotification } from "./class_notification.model";
-import { ClassQuiz } from "./class_quiz.model";
-import { ClassQuizAttempt } from "./class_quiz_attempt.model";
+
+
+
+
+
+
+
+
+
+
 import { ClassQuizQuestion } from "./class_quiz_question.model";
 import { ClassQuizSession } from "./class_quiz_session.model";
 import { ClassQuizSubmission } from "./class_quiz_submission.model";
@@ -49,16 +49,16 @@ import { User } from "./user.model";
 
 // Export all models for easy access
 export {
-    AndroidApk,
-    Assignment,
-    AssignmentSubmission,
-    Attendance,
-    Campus,
-    CampusWideNotification,
-    Class,
-    ClassNotification,
-    ClassQuiz,
-    ClassQuizAttempt,
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     ClassQuizQuestion,
     ClassQuizSession,
     ClassQuizSubmission,
@@ -97,3 +97,14 @@ export {
     Upload,
     User,
 };
+
+export {AndroidApk} from "./android_apk.model";
+export {Assignment} from "./assignment.model";
+export {AssignmentSubmission} from "./assignment_submission.model";
+export {Attendance} from "./attendance.model";
+export {Campus} from "./campus.model";
+export {CampusWideNotification} from "./campus_wide_notification.model";
+export {Class} from "./class.model";
+export {ClassNotification} from "./class_notification.model";
+export {ClassQuiz} from "./class_quiz.model";
+export {ClassQuizAttempt} from "./class_quiz_attempt.model";

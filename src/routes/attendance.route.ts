@@ -4,22 +4,22 @@ import { resolver, validator as zValidator } from "hono-openapi/zod";
 
 import { AttendanceController } from "@/controllers/attendance.controller";
 import {
+    bulkAttendanceResponseSchema,
     getAttendanceByCampusIdResponseSchema,
     getAttendanceByClassIdAndDateRequestBodySchema,
     getAttendanceByClassIdAndDateResponseSchema,
     getAttendanceByUserIdResponseSchema,
     getAttendancesByDateResponseSchema,
+    getAttendanceStatsByTeacherIdResponseSchema,
+    getClassAttendanceReportResponseSchema,
+    getStudentAttendanceViewResponseSchema,
     markAttendanceRequestBodySchema,
     markAttendanceResponseSchema,
     markBulkAttendanceRequestBodySchema,
     markClassAttendanceRequestBodySchema,
     markClassAttendanceResponseSchema,
-    bulkAttendanceResponseSchema,
     updateAttendanceRequestBodySchema,
     updateAttendanceResponseSchema,
-    getAttendanceStatsByTeacherIdResponseSchema,
-    getClassAttendanceReportResponseSchema,
-    getStudentAttendanceViewResponseSchema,
 } from "@/schema/attendance";
 
 const app = new Hono();

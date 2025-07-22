@@ -1,7 +1,8 @@
 import { Context } from "hono";
-import { EnhancedAssignmentService } from "@/services/enhanced_assignment.service";
+
 import { ClassService } from "@/services/class.service";
 import { CourseService } from "@/services/course.service";
+import { EnhancedAssignmentService } from "@/services/enhanced_assignment.service";
 import { UserService } from "@/services/users.service";
 
 const enhancedAssignmentService = new EnhancedAssignmentService();
@@ -76,8 +77,8 @@ export class AssignmentController {
             return ctx.json({
                 assignments: [],
                 pagination: {
-                    page: parseInt(page) || 1,
-                    limit: parseInt(limit) || 20,
+                    page: Number.parseInt(page) || 1,
+                    limit: Number.parseInt(limit) || 20,
                     total: 0,
                     total_pages: 0,
                 },
@@ -167,8 +168,8 @@ export class AssignmentController {
             }
 
             // Apply pagination
-            const pageNum = parseInt(page) || 1;
-            const limitNum = parseInt(limit) || 20;
+            const pageNum = Number.parseInt(page) || 1;
+            const limitNum = Number.parseInt(limit) || 20;
             const offset = (pageNum - 1) * limitNum;
             const paginatedAssignments = filteredAssignments.slice(offset, offset + limitNum);
 
@@ -340,12 +341,12 @@ export class AssignmentController {
             const filters = {
                 status: status as any,
                 subject_id,
-                due_in_days: due_in_days ? parseInt(due_in_days) : undefined,
+                due_in_days: due_in_days ? Number.parseInt(due_in_days) : undefined,
                 assignment_type: undefined,
                 sort_by: sort_by as any,
                 sort_order: sort_order as "asc" | "desc",
-                page: page ? parseInt(page) : undefined,
-                limit: limit ? parseInt(limit) : undefined,
+                page: page ? Number.parseInt(page) : undefined,
+                limit: limit ? Number.parseInt(limit) : undefined,
             };
 
             const result = await enhancedAssignmentService.getStudentUnifiedAssignments(
@@ -416,11 +417,7 @@ export class AssignmentController {
 
             let status = "pending";
             if (submission) {
-                if (submission.grade !== null && submission.grade !== undefined) {
-                    status = "graded";
-                } else {
-                    status = "submitted";
-                }
+                status = submission.grade !== null && submission.grade !== undefined ? "graded" : "submitted";
             } else if (dueDate < currentDate) {
                 status = "overdue";
             }

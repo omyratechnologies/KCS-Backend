@@ -1,19 +1,20 @@
+import { Assignment, IAssignmentData } from "@/models/assignment.model";
+import { AssignmentSubmission, IAssignmentSubmission } from "@/models/assignment_submission.model";
+import { Class, IClassData } from "@/models/class.model";
+import { Course } from "@/models/course.model";
+import { CourseAssignment, ICourseAssignmentData } from "@/models/course_assignment.model";
+import { CourseAssignmentSubmission, ICourseAssignmentSubmissionData } from "@/models/course_assignment_submission.model";
+import { CourseEnrollment } from "@/models/course_enrollment.model";
 import { 
     EnhancedAssignment, 
     EnhancedAssignmentSubmission,
     IEnhancedAssignmentData,
     IEnhancedAssignmentSubmissionData 
 } from "@/models/enhanced_assignment.model";
-import { Assignment, IAssignmentData } from "@/models/assignment.model";
-import { AssignmentSubmission, IAssignmentSubmission } from "@/models/assignment_submission.model";
-import { CourseAssignment, ICourseAssignmentData } from "@/models/course_assignment.model";
-import { CourseAssignmentSubmission, ICourseAssignmentSubmissionData } from "@/models/course_assignment_submission.model";
-import { Class, IClassData } from "@/models/class.model";
-import { CourseEnrollment } from "@/models/course_enrollment.model";
-import { Course } from "@/models/course.model";
 import { Subject } from "@/models/subject.model";
-import { UserService } from "./users.service";
+
 import { TeacherService } from "./teacher.service";
+import { UserService } from "./users.service";
 
 export interface IUnifiedAssignmentView {
     id: string;
@@ -848,22 +849,27 @@ export class EnhancedAssignmentService {
             let comparison = 0;
             
             switch (sortBy) {
-                case "due_date":
+                case "due_date": {
                     comparison = a.due_date.getTime() - b.due_date.getTime();
                     break;
-                case "priority":
+                }
+                case "priority": {
                     comparison = a.priority_score - b.priority_score;
                     break;
-                case "created_date":
+                }
+                case "created_date": {
                     comparison = a.created_at.getTime() - b.created_at.getTime();
                     break;
-                case "subject":
+                }
+                case "subject": {
                     comparison = a.subject_name.localeCompare(b.subject_name);
                     break;
-                default:
+                }
+                default: {
                     // Default sort by priority score (most urgent first)
                     comparison = b.priority_score - a.priority_score;
                     break;
+                }
             }
             
             return sortOrder === "desc" ? -comparison : comparison;
@@ -945,7 +951,7 @@ export class EnhancedAssignmentService {
         }>();
 
         // Group assignments by subject
-        assignments.forEach(assignment => {
+        for (const assignment of assignments) {
             if (!subjectMap.has(assignment.subject_id)) {
                 subjectMap.set(assignment.subject_id, {
                     subject_id: assignment.subject_id,
@@ -954,10 +960,10 @@ export class EnhancedAssignmentService {
                 });
             }
             subjectMap.get(assignment.subject_id)!.assignments.push(assignment);
-        });
+        }
 
         // Calculate performance for each subject
-        return Array.from(subjectMap.values()).map(subject => {
+        return [...subjectMap.values()].map(subject => {
             const total = subject.assignments.length;
             const submitted = subject.assignments.filter(a => a.submission).length;
             const graded = subject.assignments.filter(a => a.status === "graded").length;

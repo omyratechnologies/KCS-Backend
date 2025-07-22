@@ -909,7 +909,7 @@ export class ClassService {
             );
 
             if (duplicateStudents.length > 0) {
-                throw new Error(`Students with IDs ${duplicateStudents.join(', ')} are already assigned to this class`);
+                throw new Error(`Students with IDs ${duplicateStudents.join(", ")} are already assigned to this class`);
             }
 
             // Merge new student IDs with existing ones
@@ -941,10 +941,10 @@ export class ClassService {
                     // Parse meta_data if it's a string, otherwise use as object
                     let currentMetaData: any = {};
                     if (student.meta_data) {
-                        if (typeof student.meta_data === 'string') {
+                        if (typeof student.meta_data === "string") {
                             try {
                                 currentMetaData = JSON.parse(student.meta_data);
-                            } catch (e) {
+                            } catch {
                                 currentMetaData = {};
                             }
                         } else {
@@ -1009,7 +1009,7 @@ export class ClassService {
             );
 
             if (duplicateTeachers.length > 0) {
-                throw new Error(`Teachers with IDs ${duplicateTeachers.join(', ')} are already assigned to this class`);
+                throw new Error(`Teachers with IDs ${duplicateTeachers.join(", ")} are already assigned to this class`);
             }
 
             // Merge new teacher IDs with existing ones
@@ -1080,7 +1080,7 @@ export class ClassService {
             );
 
             if (studentsNotInClass.length > 0) {
-                throw new Error(`Students with IDs ${studentsNotInClass.join(', ')} are not assigned to this class`);
+                throw new Error(`Students with IDs ${studentsNotInClass.join(", ")} are not assigned to this class`);
             }
 
             // Remove student IDs from class
@@ -1137,7 +1137,7 @@ export class ClassService {
             );
 
             if (teachersNotInClass.length > 0) {
-                throw new Error(`Teachers with IDs ${teachersNotInClass.join(', ')} are not assigned to this class`);
+                throw new Error(`Teachers with IDs ${teachersNotInClass.join(", ")} are not assigned to this class`);
             }
 
             // Remove teacher IDs from class
@@ -1216,7 +1216,7 @@ export class ClassService {
         classes_included: IClassData[];
     }> {
         try {
-            let classesQuery: any = {
+            const classesQuery: any = {
                 campus_id,
                 academic_year,
                 is_active: true,
@@ -1247,13 +1247,13 @@ export class ClassService {
 
             // Collect all unique student IDs from all classes
             const studentIds = new Set<string>();
-            classes.rows.forEach(classData => {
+            for (const classData of classes.rows) {
                 if (classData.student_ids && classData.student_ids.length > 0) {
-                    classData.student_ids.forEach(studentId => {
+                    for (const studentId of classData.student_ids) {
                         studentIds.add(studentId);
-                    });
+                    }
                 }
-            });
+            }
 
             if (studentIds.size === 0) {
                 return {
@@ -1266,7 +1266,7 @@ export class ClassService {
 
             // Get detailed student information
             const studentsData = await Promise.all(
-                Array.from(studentIds).map(async (studentId) => {
+                [...studentIds].map(async (studentId) => {
                     try {
                         return await UserService.getUser(studentId);
                     } catch (error) {

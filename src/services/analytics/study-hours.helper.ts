@@ -1,6 +1,6 @@
-import { ClassQuizAttempt } from "@/models/class_quiz_attempt.model";
 import { AssignmentSubmission } from "@/models/assignment_submission.model";
 import { ClassQuiz } from "@/models/class_quiz.model";
+import { ClassQuizAttempt } from "@/models/class_quiz_attempt.model";
 import { Subject } from "@/models/subject.model";
 import { 
     StudyHoursData, 
@@ -130,33 +130,33 @@ export class StudyHoursAnalyticsHelper {
                 });
 
                 const quizzes = quizResults.rows || [];
-                quizzes.forEach(quiz => {
+                for (const quiz of quizzes) {
                     if (quiz.subject_id) {
                         quizSubjectMap.set(quiz.id, quiz.subject_id);
                     }
-                });
+                }
             }
         } catch (error) {
             console.error("Error mapping quizzes to subjects:", error);
         }
 
         // Calculate hours per subject
-        attempts.forEach(attempt => {
+        for (const attempt of attempts) {
             const subjectId = quizSubjectMap.get(attempt.quiz_id);
             if (subjectId) {
                 const currentHours = subjectHoursMap.get(subjectId) || 0;
                 subjectHoursMap.set(subjectId, currentHours + 0.5); // 30 minutes per attempt
             }
-        });
+        }
 
         // Get subject names
         const subjectNames = await this.getSubjectNames(
-            Array.from(subjectHoursMap.keys()), 
+            [...subjectHoursMap.keys()], 
             campus_id
         );
 
         // Convert to result array
-        return Array.from(subjectHoursMap.entries()).map(([subjectId, hours]) => ({
+        return [...subjectHoursMap.entries()].map(([subjectId, hours]) => ({
             subjectId,
             subjectName: subjectNames[subjectId] || "Unknown Subject",
             hours: Math.round(hours * 100) / 100,
@@ -219,9 +219,9 @@ export class StudyHoursAnalyticsHelper {
                 });
                 
                 const subjects = subjectResult.rows || [];
-                subjects.forEach(subject => {
+                for (const subject of subjects) {
                     subjectNames[subject.id] = subject.name;
-                });
+                }
             } catch (error) {
                 console.error("Error fetching subject names:", error);
             }
@@ -246,16 +246,20 @@ export class StudyHoursAnalyticsHelper {
     /**
      * Estimate study time based on activity type
      */
-    static estimateActivityTime(activityType: 'quiz' | 'assignment' | 'exam'): number {
+    static estimateActivityTime(activityType: "quiz" | "assignment" | "exam"): number {
         switch (activityType) {
-            case 'quiz':
-                return 0.5; // 30 minutes
-            case 'assignment':
-                return 2.0; // 2 hours
-            case 'exam':
-                return 3.0; // 3 hours of preparation
-            default:
+            case "quiz": {
                 return 0.5;
+            } // 30 minutes
+            case "assignment": {
+                return 2;
+            } // 2 hours
+            case "exam": {
+                return 3;
+            } // 3 hours of preparation
+            default: {
+                return 0.5;
+            }
         }
     }
 

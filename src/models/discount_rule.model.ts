@@ -1,4 +1,5 @@
 import { Schema } from "ottoman";
+
 import { ottoman } from "../libs/db";
 
 export interface IDiscountRule {

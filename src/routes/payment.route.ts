@@ -5,22 +5,21 @@ import { resolver, validator as zValidator } from "hono-openapi/zod";
 import { PaymentController } from "@/controllers/payment.controller";
 import { roleMiddleware } from "@/middlewares/role.middleware";
 import {
-    schoolBankDetailsSchema,
+    availableGatewaysResponseSchema,
     createBankDetailsRequestSchema,
-    feeCategorySchema,
     createFeeCategoryRequestSchema,
-    feeTemplateSchema,
     createFeeTemplateRequestSchema,
+    errorResponseSchema,
+    feeCategorySchema,
+    feeTemplateSchema,
     generateFeesRequestSchema,
     initiatePaymentRequestSchema,
-    verifyPaymentRequestSchema,
     paymentHistoryResponseSchema,
-    studentFeesResponseSchema,
-    availableGatewaysResponseSchema,
     paymentTransactionSchema,
+    schoolBankDetailsSchema,
+    studentFeesResponseSchema,
     successResponseSchema,
-    errorResponseSchema
-} from "@/schema/payment";
+    verifyPaymentRequestSchema} from "@/schema/payment";
 
 const app = new Hono();
 

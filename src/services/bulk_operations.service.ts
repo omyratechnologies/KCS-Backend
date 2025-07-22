@@ -728,7 +728,7 @@ export class BulkOperationsService {
         try {
             const { Campus } = await import("@/models/campus.model");
             return await Campus.findById(campus_id);
-        } catch (error) {
+        } catch {
             return { name: "School", id: campus_id };
         }
     }

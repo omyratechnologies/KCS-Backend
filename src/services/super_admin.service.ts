@@ -1,13 +1,14 @@
+import { Campus } from "@/models/campus.model";
+import { ComplianceCheckService } from "@/models/compliance_check.model";
+import { Fee } from "@/models/fee.model";
+import { KeyRotationHistoryService } from "@/models/key_rotation_history.model";
+import { PaymentTransaction } from "@/models/payment_transaction.model";
+import { SchoolBankDetails } from "@/models/school_bank_details.model";
+import { User } from "@/models/user.model";
+
 import { PaymentService } from "./payment.service";
 import { PaymentAnalyticsService } from "./payment_analytics.service";
 import { SecurePaymentCredentialService } from "./secure_payment_credential.service";
-import { Campus } from "@/models/campus.model";
-import { User } from "@/models/user.model";
-import { PaymentTransaction } from "@/models/payment_transaction.model";
-import { Fee } from "@/models/fee.model";
-import { SchoolBankDetails } from "@/models/school_bank_details.model";
-import { KeyRotationHistoryService } from "@/models/key_rotation_history.model";
-import { ComplianceCheckService } from "@/models/compliance_check.model";
 
 export interface SchoolHealthMetrics {
     campus_id: string;
@@ -34,7 +35,7 @@ export interface ComplianceCheckResult {
     campus_name: string;
     compliance_score: number;
     issues: Array<{
-        severity: 'high' | 'medium' | 'low';
+        severity: "high" | "medium" | "low";
         category: string;
         description: string;
         recommendation: string;
@@ -104,7 +105,7 @@ export class SuperAdminService {
                 );
                 setup_status.bank_details = true;
             } catch (error) {
-                console.error('Bank details setup failed:', error);
+                console.error("Bank details setup failed:", error);
             }
 
             // 2. Configure secure payment credentials
@@ -115,7 +116,7 @@ export class SuperAdminService {
                 );
                 setup_status.gateway_credentials = true;
             } catch (error) {
-                console.error('Gateway credentials setup failed:', error);
+                console.error("Gateway credentials setup failed:", error);
             }
 
             // 3. Create fee categories
@@ -125,7 +126,7 @@ export class SuperAdminService {
                 }
                 setup_status.fee_categories = true;
             } catch (error) {
-                console.error('Fee categories setup failed:', error);
+                console.error("Fee categories setup failed:", error);
             }
 
             // 4. Create fee templates
@@ -135,10 +136,10 @@ export class SuperAdminService {
                 }
                 setup_status.fee_templates = true;
             } catch (error) {
-                console.error('Fee templates setup failed:', error);
+                console.error("Fee templates setup failed:", error);
             }
 
-            const success = Object.values(setup_status).every(status => status);
+            const success = Object.values(setup_status).every(Boolean);
 
             return {
                 success,
@@ -232,7 +233,7 @@ export class SuperAdminService {
                             const gateway = transaction.payment_gateway;
                             if (gatewayStats[gateway as keyof typeof gatewayStats]) {
                                 gatewayStats[gateway as keyof typeof gatewayStats].total_count++;
-                                if (transaction.status === 'success') {
+                                if (transaction.status === "success") {
                                     gatewayStats[gateway as keyof typeof gatewayStats].success_count++;
                                 }
                             }
@@ -287,7 +288,7 @@ export class SuperAdminService {
     ): Promise<{
         issues: Array<{
             type: string;
-            severity: 'high' | 'medium' | 'low';
+            severity: "high" | "medium" | "low";
             description: string;
             recommendation: string;
             affected_count: number;
@@ -302,7 +303,7 @@ export class SuperAdminService {
         try {
             const issues: Array<{
                 type: string;
-                severity: 'high' | 'medium' | 'low';
+                severity: "high" | "medium" | "low";
                 description: string;
                 recommendation: string;
                 affected_count: number;
@@ -312,10 +313,10 @@ export class SuperAdminService {
             const bankDetails = await SchoolBankDetails.find({ campus_id });
             if (!bankDetails.rows || bankDetails.rows.length === 0) {
                 issues.push({
-                    type: 'bank_details',
-                    severity: 'high',
-                    description: 'No bank details configured',
-                    recommendation: 'Configure bank account details and payment gateway credentials',
+                    type: "bank_details",
+                    severity: "high",
+                    description: "No bank details configured",
+                    recommendation: "Configure bank account details and payment gateway credentials",
                     affected_count: 1
                 });
             }
@@ -323,15 +324,15 @@ export class SuperAdminService {
             // Check failed transactions
             const failedTransactions = await PaymentTransaction.find({
                 campus_id,
-                status: 'failed'
+                status: "failed"
             });
 
             if (failedTransactions.rows && failedTransactions.rows.length > 0) {
                 issues.push({
-                    type: 'failed_transactions',
-                    severity: 'medium',
+                    type: "failed_transactions",
+                    severity: "medium",
                     description: `${failedTransactions.rows.length} failed transactions found`,
-                    recommendation: 'Review failed transactions and contact payment gateway support',
+                    recommendation: "Review failed transactions and contact payment gateway support",
                     affected_count: failedTransactions.rows.length
                 });
             }
@@ -339,15 +340,15 @@ export class SuperAdminService {
             // Check overdue fees
             const overdueFees = await Fee.find({
                 campus_id,
-                payment_status: 'overdue'
+                payment_status: "overdue"
             });
 
             if (overdueFees.rows && overdueFees.rows.length > 0) {
                 issues.push({
-                    type: 'overdue_fees',
-                    severity: 'medium',
+                    type: "overdue_fees",
+                    severity: "medium",
                     description: `${overdueFees.rows.length} overdue fees found`,
-                    recommendation: 'Send payment reminders and follow up with students/parents',
+                    recommendation: "Send payment reminders and follow up with students/parents",
                     affected_count: overdueFees.rows.length
                 });
             }
@@ -357,28 +358,28 @@ export class SuperAdminService {
                 const credentials = await SecurePaymentCredentialService.getSecureCredentials(campus_id);
                 if (!credentials) {
                     issues.push({
-                        type: 'gateway_credentials',
-                        severity: 'high',
-                        description: 'Payment gateway credentials not configured',
-                        recommendation: 'Configure payment gateway credentials',
+                        type: "gateway_credentials",
+                        severity: "high",
+                        description: "Payment gateway credentials not configured",
+                        recommendation: "Configure payment gateway credentials",
                         affected_count: 1
                     });
                 }
-            } catch (error) {
+            } catch {
                 issues.push({
-                    type: 'gateway_credentials',
-                    severity: 'high',
-                    description: 'Payment gateway credentials configuration error',
-                    recommendation: 'Check and reconfigure payment gateway credentials',
+                    type: "gateway_credentials",
+                    severity: "high",
+                    description: "Payment gateway credentials configuration error",
+                    recommendation: "Check and reconfigure payment gateway credentials",
                     affected_count: 1
                 });
             }
 
             const summary = {
                 total_issues: issues.length,
-                high_priority: issues.filter(i => i.severity === 'high').length,
-                medium_priority: issues.filter(i => i.severity === 'medium').length,
-                low_priority: issues.filter(i => i.severity === 'low').length,
+                high_priority: issues.filter(i => i.severity === "high").length,
+                medium_priority: issues.filter(i => i.severity === "medium").length,
+                low_priority: issues.filter(i => i.severity === "low").length,
             };
 
             return { issues, summary };
@@ -453,7 +454,7 @@ export class SuperAdminService {
 
                 if (!securityStatus.valid) {
                     securityScore -= 50;
-                    issues.push('Invalid or missing encryption configuration');
+                    issues.push("Invalid or missing encryption configuration");
                 }
 
                 // Add security issues based on the actual response structure
@@ -478,8 +479,8 @@ export class SuperAdminService {
                 : 0;
 
             if (overallSecurityScore < 80) {
-                platformSecurityIssues.push('Overall platform security score is below 80%');
-                recommendations.push('Review and improve security configurations across all campuses');
+                platformSecurityIssues.push("Overall platform security score is below 80%");
+                recommendations.push("Review and improve security configurations across all campuses");
             }
 
             return {
@@ -499,7 +500,7 @@ export class SuperAdminService {
      */
     static async updateGatewayConfigurations(
         updates: {
-            gateway: 'razorpay' | 'payu' | 'cashfree';
+            gateway: "razorpay" | "payu" | "cashfree";
             configuration: any;
             apply_to_campuses: string[];
         }[]
@@ -543,7 +544,7 @@ export class SuperAdminService {
                             campus_id,
                             gateway: update.gateway,
                             success: false,
-                            error: error instanceof Error ? error.message : 'Unknown error'
+                            error: error instanceof Error ? error.message : "Unknown error"
                         });
                     }
                 }
@@ -574,7 +575,7 @@ export class SuperAdminService {
         };
         issues: Array<{
             type: string;
-            severity: 'high' | 'medium' | 'low';
+            severity: "high" | "medium" | "low";
             description: string;
             recommendation: string;
         }>;
@@ -590,8 +591,8 @@ export class SuperAdminService {
 
             const transactions = recentTransactions.rows || [];
             const totalTransactions = transactions.length;
-            const successfulTransactions = transactions.filter(t => t.status === 'success').length;
-            const failedTransactions = transactions.filter(t => t.status === 'failed').length;
+            const successfulTransactions = transactions.filter(t => t.status === "success").length;
+            const failedTransactions = transactions.filter(t => t.status === "failed").length;
 
             const successRate = totalTransactions > 0 
                 ? (successfulTransactions / totalTransactions) * 100 
@@ -607,7 +608,7 @@ export class SuperAdminService {
 
             const issues: Array<{
                 type: string;
-                severity: 'high' | 'medium' | 'low';
+                severity: "high" | "medium" | "low";
                 description: string;
                 recommendation: string;
             }> = [];
@@ -617,30 +618,30 @@ export class SuperAdminService {
             if (successRate < 95) {
                 performanceScore -= 30;
                 issues.push({
-                    type: 'low_success_rate',
-                    severity: 'high',
+                    type: "low_success_rate",
+                    severity: "high",
                     description: `Payment success rate is ${successRate.toFixed(1)}% (below 95%)`,
-                    recommendation: 'Investigate payment gateway connectivity and configuration'
+                    recommendation: "Investigate payment gateway connectivity and configuration"
                 });
             }
 
             if (errorRate > 5) {
                 performanceScore -= 20;
                 issues.push({
-                    type: 'high_error_rate',
-                    severity: 'medium',
+                    type: "high_error_rate",
+                    severity: "medium",
                     description: `Error rate is ${errorRate.toFixed(1)}% (above 5%)`,
-                    recommendation: 'Review error logs and improve error handling'
+                    recommendation: "Review error logs and improve error handling"
                 });
             }
 
             if (avgResponseTime > 3) {
                 performanceScore -= 15;
                 issues.push({
-                    type: 'slow_response',
-                    severity: 'medium',
+                    type: "slow_response",
+                    severity: "medium",
                     description: `Average response time is ${avgResponseTime}s (above 3s)`,
-                    recommendation: 'Optimize database queries and API performance'
+                    recommendation: "Optimize database queries and API performance"
                 });
             }
 
@@ -729,9 +730,9 @@ export class SuperAdminService {
                             campus_id: campus.id,
                             campus_name: campus.name,
                             rotation_success: false,
-                            old_key_backup: '',
-                            new_key_id: '',
-                            error: 'No credentials found to rotate'
+                            old_key_backup: "",
+                            new_key_id: "",
+                            error: "No credentials found to rotate"
                         });
                     }
                 } catch (error) {
@@ -739,9 +740,9 @@ export class SuperAdminService {
                         campus_id: campus.id,
                         campus_name: campus.name,
                         rotation_success: false,
-                        old_key_backup: '',
-                        new_key_id: '',
-                        error: error instanceof Error ? error.message : 'Unknown error'
+                        old_key_backup: "",
+                        new_key_id: "",
+                        error: error instanceof Error ? error.message : "Unknown error"
                     });
                 }
             }
@@ -768,31 +769,31 @@ export class SuperAdminService {
      * Automated compliance monitoring with remediation suggestions
      */
     static async runAutomatedComplianceCheck(): Promise<{
-        compliance_status: 'compliant' | 'partial' | 'non_compliant';
+        compliance_status: "compliant" | "partial" | "non_compliant";
         overall_score: number;
         campus_results: Array<{
             campus_id: string;
             campus_name: string;
             compliance_score: number;
-            status: 'compliant' | 'partial' | 'non_compliant';
+            status: "compliant" | "partial" | "non_compliant";
             critical_issues: Array<{
                 issue: string;
-                severity: 'critical' | 'high' | 'medium';
+                severity: "critical" | "high" | "medium";
                 auto_remediation_available: boolean;
                 remediation_steps: string[];
             }>;
             last_payment_activity: Date | null;
             gateway_health: {
-                razorpay: 'healthy' | 'degraded' | 'down';
-                payu: 'healthy' | 'degraded' | 'down';
-                cashfree: 'healthy' | 'degraded' | 'down';
+                razorpay: "healthy" | "degraded" | "down";
+                payu: "healthy" | "degraded" | "down";
+                cashfree: "healthy" | "degraded" | "down";
             };
         }>;
         platform_recommendations: string[];
         auto_remediation_actions: Array<{
             action: string;
             campus_ids: string[];
-            estimated_impact: 'high' | 'medium' | 'low';
+            estimated_impact: "high" | "medium" | "low";
             requires_approval: boolean;
         }>;
     }> {
@@ -804,25 +805,25 @@ export class SuperAdminService {
                 campus_id: string;
                 campus_name: string;
                 compliance_score: number;
-                status: 'compliant' | 'partial' | 'non_compliant';
+                status: "compliant" | "partial" | "non_compliant";
                 critical_issues: Array<{
                     issue: string;
-                    severity: 'critical' | 'high' | 'medium';
+                    severity: "critical" | "high" | "medium";
                     auto_remediation_available: boolean;
                     remediation_steps: string[];
                 }>;
                 last_payment_activity: Date | null;
                 gateway_health: {
-                    razorpay: 'healthy' | 'degraded' | 'down';
-                    payu: 'healthy' | 'degraded' | 'down';
-                    cashfree: 'healthy' | 'degraded' | 'down';
+                    razorpay: "healthy" | "degraded" | "down";
+                    payu: "healthy" | "degraded" | "down";
+                    cashfree: "healthy" | "degraded" | "down";
                 };
             }> = [];
 
             const autoRemediationActions: Array<{
                 action: string;
                 campus_ids: string[];
-                estimated_impact: 'high' | 'medium' | 'low';
+                estimated_impact: "high" | "medium" | "low";
                 requires_approval: boolean;
             }> = [];
 
@@ -835,7 +836,7 @@ export class SuperAdminService {
                 // Enhanced compliance check with more detailed analysis
                 const criticalIssues: Array<{
                     issue: string;
-                    severity: 'critical' | 'high' | 'medium';
+                    severity: "critical" | "high" | "medium";
                     auto_remediation_available: boolean;
                     remediation_steps: string[];
                 }> = [];
@@ -843,54 +844,54 @@ export class SuperAdminService {
                 // Check for critical compliance issues
                 if (complianceResult.compliance_score < 60) {
                     criticalIssues.push({
-                        issue: 'Overall compliance score below 60%',
-                        severity: 'critical',
+                        issue: "Overall compliance score below 60%",
+                        severity: "critical",
                         auto_remediation_available: false,
                         remediation_steps: [
-                            'Review all payment gateway configurations',
-                            'Ensure bank details are properly configured',
-                            'Set up automated payment reminders',
-                            'Train staff on payment collection procedures'
+                            "Review all payment gateway configurations",
+                            "Ensure bank details are properly configured",
+                            "Set up automated payment reminders",
+                            "Train staff on payment collection procedures"
                         ]
                     });
                 }
 
                 // Check payment gateway health
                 const gatewayHealth = {
-                    razorpay: healthMetrics.gateway_status.razorpay ? 'healthy' : 'down',
-                    payu: healthMetrics.gateway_status.payu ? 'healthy' : 'down',
-                    cashfree: healthMetrics.gateway_status.cashfree ? 'healthy' : 'down'
+                    razorpay: healthMetrics.gateway_status.razorpay ? "healthy" : "down",
+                    payu: healthMetrics.gateway_status.payu ? "healthy" : "down",
+                    cashfree: healthMetrics.gateway_status.cashfree ? "healthy" : "down"
                 } as const;
 
                 // Check for gateway issues
                 const enabledGateways = Object.values(healthMetrics.gateway_status).filter(Boolean).length;
                 if (enabledGateways === 0) {
                     criticalIssues.push({
-                        issue: 'No payment gateways configured',
-                        severity: 'critical',
+                        issue: "No payment gateways configured",
+                        severity: "critical",
                         auto_remediation_available: true,
                         remediation_steps: [
-                            'Configure at least one payment gateway',
-                            'Test gateway configuration',
-                            'Enable payment collection'
+                            "Configure at least one payment gateway",
+                            "Test gateway configuration",
+                            "Enable payment collection"
                         ]
                     });
 
                     // Add to auto-remediation actions
                     autoRemediationActions.push({
-                        action: 'Configure default payment gateway',
+                        action: "Configure default payment gateway",
                         campus_ids: [campus.id],
-                        estimated_impact: 'high',
+                        estimated_impact: "high",
                         requires_approval: true
                     });
                 } else if (enabledGateways === 1) {
                     criticalIssues.push({
-                        issue: 'Only one payment gateway configured (no redundancy)',
-                        severity: 'medium',
+                        issue: "Only one payment gateway configured (no redundancy)",
+                        severity: "medium",
                         auto_remediation_available: true,
                         remediation_steps: [
-                            'Configure additional payment gateway for redundancy',
-                            'Test backup gateway functionality'
+                            "Configure additional payment gateway for redundancy",
+                            "Test backup gateway functionality"
                         ]
                     });
                 }
@@ -899,46 +900,46 @@ export class SuperAdminService {
                 if (healthMetrics.collection_rate < 70) {
                     criticalIssues.push({
                         issue: `Low collection rate: ${healthMetrics.collection_rate.toFixed(1)}%`,
-                        severity: 'high',
+                        severity: "high",
                         auto_remediation_available: true,
                         remediation_steps: [
-                            'Enable automated payment reminders',
-                            'Implement penalty system for overdue payments',
-                            'Provide multiple payment options',
-                            'Set up payment plans for struggling families'
+                            "Enable automated payment reminders",
+                            "Implement penalty system for overdue payments",
+                            "Provide multiple payment options",
+                            "Set up payment plans for struggling families"
                         ]
                     });
 
                     autoRemediationActions.push({
-                        action: 'Enable automated payment reminders',
+                        action: "Enable automated payment reminders",
                         campus_ids: [campus.id],
-                        estimated_impact: 'medium',
+                        estimated_impact: "medium",
                         requires_approval: false
                     });
                 }
 
                 // Determine campus compliance status
-                let campusStatus: 'compliant' | 'partial' | 'non_compliant';
+                let campusStatus: "compliant" | "partial" | "non_compliant";
                 if (complianceResult.compliance_score >= 80) {
-                    campusStatus = 'compliant';
+                    campusStatus = "compliant";
                 } else if (complianceResult.compliance_score >= 60) {
-                    campusStatus = 'partial';
+                    campusStatus = "partial";
                 } else {
-                    campusStatus = 'non_compliant';
+                    campusStatus = "non_compliant";
                 }
 
                 // Store compliance check result
             await ComplianceCheckService.createComplianceCheck({
                 campus_id: campus.id,
-                check_type: 'automated',
+                check_type: "automated",
                 check_date: new Date(),
                 compliance_score: complianceResult.compliance_score,
                 status: campusStatus,
                 issues: criticalIssues.map(issue => ({
                     severity: issue.severity,
-                    category: 'payment_system',
+                    category: "payment_system",
                     description: issue.issue,
-                    recommendation: issue.remediation_steps.join('; '),
+                    recommendation: issue.remediation_steps.join("; "),
                     auto_remediation_available: issue.auto_remediation_available,
                     remediation_steps: issue.remediation_steps
                 })),
@@ -962,20 +963,20 @@ export class SuperAdminService {
             const overallScore = allCampuses.length > 0 ? totalComplianceScore / allCampuses.length : 0;
             
             // Determine overall compliance status
-            let overallStatus: 'compliant' | 'partial' | 'non_compliant';
+            let overallStatus: "compliant" | "partial" | "non_compliant";
             if (overallScore >= 80) {
-                overallStatus = 'compliant';
+                overallStatus = "compliant";
             } else if (overallScore >= 60) {
-                overallStatus = 'partial';
+                overallStatus = "partial";
             } else {
-                overallStatus = 'non_compliant';
+                overallStatus = "non_compliant";
             }
 
             // Generate platform recommendations
             const platformRecommendations: string[] = [];
             
-            const nonCompliantCount = campusResults.filter(c => c.status === 'non_compliant').length;
-            const partiallyCompliantCount = campusResults.filter(c => c.status === 'partial').length;
+            const nonCompliantCount = campusResults.filter(c => c.status === "non_compliant").length;
+            const partiallyCompliantCount = campusResults.filter(c => c.status === "partial").length;
             
             if (nonCompliantCount > 0) {
                 platformRecommendations.push(`${nonCompliantCount} schools are non-compliant and require immediate attention`);
@@ -986,7 +987,7 @@ export class SuperAdminService {
             }
 
             if (overallScore < 75) {
-                platformRecommendations.push('Consider implementing platform-wide compliance improvement program');
+                platformRecommendations.push("Consider implementing platform-wide compliance improvement program");
             }
 
             // Consolidate auto-remediation actions
@@ -1009,7 +1010,7 @@ export class SuperAdminService {
      * Enhanced performance monitoring with real-time metrics
      */
     static async getEnhancedPerformanceMetrics(): Promise<{
-        current_status: 'healthy' | 'degraded' | 'critical';
+        current_status: "healthy" | "degraded" | "critical";
         performance_score: number;
         real_time_metrics: {
             active_sessions: number;
@@ -1038,7 +1039,7 @@ export class SuperAdminService {
             };
         };
         performance_alerts: Array<{
-            alert_type: 'warning' | 'critical';
+            alert_type: "warning" | "critical";
             message: string;
             affected_systems: string[];
             recommended_action: string;
@@ -1084,7 +1085,7 @@ export class SuperAdminService {
                 current_transaction_rate: currentHourTransactions.length,
                 avg_response_time_ms: 1200 + Math.floor(Math.random() * 800), // Mock data
                 error_rate_percent: transactions24h.length > 0 
-                    ? (transactions24h.filter(t => t.status === 'failed').length / transactions24h.length) * 100
+                    ? (transactions24h.filter(t => t.status === "failed").length / transactions24h.length) * 100
                     : 0,
                 gateway_response_times: {
                     razorpay: 1100 + Math.floor(Math.random() * 400),
@@ -1094,7 +1095,7 @@ export class SuperAdminService {
             };
 
             // Calculate historical trends
-            const successCount24h = transactions24h.filter(t => t.status === 'success').length;
+            const successCount24h = transactions24h.filter(t => t.status === "success").length;
             const successRate24h = transactions24h.length > 0 
                 ? (successCount24h / transactions24h.length) * 100 
                 : 0;
@@ -1118,11 +1119,11 @@ export class SuperAdminService {
                 });
 
                 const daySuccessRate = dayTransactions.length > 0 
-                    ? (dayTransactions.filter(t => t.status === 'success').length / dayTransactions.length) * 100
+                    ? (dayTransactions.filter(t => t.status === "success").length / dayTransactions.length) * 100
                     : 0;
 
                 dailyAverages.push({
-                    date: date.toISOString().split('T')[0],
+                    date: date.toISOString().split("T")[0],
                     transaction_count: dayTransactions.length,
                     success_rate: daySuccessRate,
                     avg_response_time: 1200 + Math.floor(Math.random() * 800) // Mock data
@@ -1131,7 +1132,7 @@ export class SuperAdminService {
 
             // Generate performance alerts
             const performanceAlerts: Array<{
-                alert_type: 'warning' | 'critical';
+                alert_type: "warning" | "critical";
                 message: string;
                 affected_systems: string[];
                 recommended_action: string;
@@ -1140,20 +1141,20 @@ export class SuperAdminService {
 
             if (realTimeMetrics.error_rate_percent > 10) {
                 performanceAlerts.push({
-                    alert_type: 'critical',
+                    alert_type: "critical",
                     message: `High error rate detected: ${realTimeMetrics.error_rate_percent.toFixed(1)}%`,
-                    affected_systems: ['Payment Processing'],
-                    recommended_action: 'Investigate payment gateway connectivity and configuration',
+                    affected_systems: ["Payment Processing"],
+                    recommended_action: "Investigate payment gateway connectivity and configuration",
                     auto_resolve_available: false
                 });
             }
 
             if (realTimeMetrics.avg_response_time_ms > 3000) {
                 performanceAlerts.push({
-                    alert_type: 'warning',
+                    alert_type: "warning",
                     message: `Slow response times detected: ${realTimeMetrics.avg_response_time_ms}ms`,
-                    affected_systems: ['API Response'],
-                    recommended_action: 'Check database performance and optimize queries',
+                    affected_systems: ["API Response"],
+                    recommended_action: "Check database performance and optimize queries",
                     auto_resolve_available: true
                 });
             }
@@ -1166,13 +1167,13 @@ export class SuperAdminService {
             if (successRate24h < 95) performanceScore -= 25;
 
             // Determine current status
-            let currentStatus: 'healthy' | 'degraded' | 'critical';
+            let currentStatus: "healthy" | "degraded" | "critical";
             if (performanceScore >= 80) {
-                currentStatus = 'healthy';
+                currentStatus = "healthy";
             } else if (performanceScore >= 60) {
-                currentStatus = 'degraded';
+                currentStatus = "degraded";
             } else {
-                currentStatus = 'critical';
+                currentStatus = "critical";
             }
 
             // Calculate capacity metrics
@@ -1219,9 +1220,9 @@ export class SuperAdminService {
     /**
      * Calculate health metrics for a specific school
      */
-    private static async calculateSchoolHealthMetrics(campus_id: string): Promise<Omit<SchoolHealthMetrics, 'campus_name'>> {
+    private static async calculateSchoolHealthMetrics(campus_id: string): Promise<Omit<SchoolHealthMetrics, "campus_name">> {
         try {
-            const students = await User.find({ campus_id, user_type: 'Student' });
+            const students = await User.find({ campus_id, user_type: "Student" });
             const fees = await Fee.find({ campus_id });
             const transactions = await PaymentTransaction.find({ campus_id });
 
@@ -1232,19 +1233,19 @@ export class SuperAdminService {
             const totalFeesGenerated = allFees.length;
             const totalRevenue = allFees.reduce((sum, fee) => sum + fee.paid_amount, 0);
             const pendingAmount = allFees.reduce((sum, fee) => sum + fee.due_amount, 0);
-            const overdueFees = allFees.filter(fee => fee.payment_status === 'overdue').length;
+            const overdueFees = allFees.filter(fee => fee.payment_status === "overdue").length;
 
             const collectionRate = totalRevenue > 0 
                 ? (totalRevenue / (totalRevenue + pendingAmount)) * 100 
                 : 0;
 
-            const successfulTransactions = allTransactions.filter(t => t.status === 'success').length;
+            const successfulTransactions = allTransactions.filter(t => t.status === "success").length;
             const paymentSuccessRate = allTransactions.length > 0 
                 ? (successfulTransactions / allTransactions.length) * 100 
                 : 0;
 
             const lastPaymentDate = allTransactions
-                .filter(t => t.status === 'success')
+                .filter(t => t.status === "success")
                 .sort((a, b) => new Date(b.completed_at || 0).getTime() - new Date(a.completed_at || 0).getTime())[0]
                 ?.completed_at;
 
@@ -1262,7 +1263,7 @@ export class SuperAdminService {
                     gatewayStatus.payu = credentials.payu?.enabled || false;
                     gatewayStatus.cashfree = credentials.cashfree?.enabled || false;
                 }
-            } catch (error) {
+            } catch {
                 // Gateway status remains false
             }
 
@@ -1271,10 +1272,10 @@ export class SuperAdminService {
             const complianceScore = complianceResult.compliance_score;
 
             const issues: string[] = [];
-            if (collectionRate < 80) issues.push('Low collection rate');
-            if (paymentSuccessRate < 95) issues.push('Low payment success rate');
-            if (overdueFees > totalFeesGenerated * 0.1) issues.push('High overdue fees');
-            if (!Object.values(gatewayStatus).some(status => status)) issues.push('No payment gateways configured');
+            if (collectionRate < 80) issues.push("Low collection rate");
+            if (paymentSuccessRate < 95) issues.push("Low payment success rate");
+            if (overdueFees > totalFeesGenerated * 0.1) issues.push("High overdue fees");
+            if (!Object.values(gatewayStatus).some(Boolean)) issues.push("No payment gateways configured");
 
             return {
                 campus_id,
@@ -1299,10 +1300,10 @@ export class SuperAdminService {
     /**
      * Check compliance for a specific school
      */
-    private static async checkSchoolCompliance(campus_id: string): Promise<Omit<ComplianceCheckResult, 'campus_name'>> {
+    private static async checkSchoolCompliance(campus_id: string): Promise<Omit<ComplianceCheckResult, "campus_name">> {
         try {
             const issues: Array<{
-                severity: 'high' | 'medium' | 'low';
+                severity: "high" | "medium" | "low";
                 category: string;
                 description: string;
                 recommendation: string;
@@ -1315,10 +1316,10 @@ export class SuperAdminService {
             if (!bankDetails.rows || bankDetails.rows.length === 0) {
                 complianceScore -= 20;
                 issues.push({
-                    severity: 'high',
-                    category: 'bank_details',
-                    description: 'No bank details configured',
-                    recommendation: 'Configure bank account details'
+                    severity: "high",
+                    category: "bank_details",
+                    description: "No bank details configured",
+                    recommendation: "Configure bank account details"
                 });
             }
 
@@ -1328,19 +1329,19 @@ export class SuperAdminService {
                 if (!credentials) {
                     complianceScore -= 25;
                     issues.push({
-                        severity: 'high',
-                        category: 'gateway_credentials',
-                        description: 'No payment gateway credentials configured',
-                        recommendation: 'Configure at least one payment gateway'
+                        severity: "high",
+                        category: "gateway_credentials",
+                        description: "No payment gateway credentials configured",
+                        recommendation: "Configure at least one payment gateway"
                     });
                 }
-            } catch (error) {
+            } catch {
                 complianceScore -= 25;
                 issues.push({
-                    severity: 'high',
-                    category: 'gateway_credentials',
-                    description: 'Payment gateway credentials configuration error',
-                    recommendation: 'Fix payment gateway configuration'
+                    severity: "high",
+                    category: "gateway_credentials",
+                    description: "Payment gateway credentials configuration error",
+                    recommendation: "Fix payment gateway configuration"
                 });
             }
 
@@ -1349,24 +1350,24 @@ export class SuperAdminService {
             if (categories.length === 0) {
                 complianceScore -= 15;
                 issues.push({
-                    severity: 'medium',
-                    category: 'fee_categories',
-                    description: 'No fee categories configured',
-                    recommendation: 'Create fee categories for different types of fees'
+                    severity: "medium",
+                    category: "fee_categories",
+                    description: "No fee categories configured",
+                    recommendation: "Create fee categories for different types of fees"
                 });
             }
 
             // Check overdue fees
-            const overdueFees = await Fee.find({ campus_id, payment_status: 'overdue' });
+            const overdueFees = await Fee.find({ campus_id, payment_status: "overdue" });
             if (overdueFees.rows && overdueFees.rows.length > 0) {
                 const overdueCount = overdueFees.rows.length;
                 if (overdueCount > 50) {
                     complianceScore -= 10;
                     issues.push({
-                        severity: 'medium',
-                        category: 'overdue_fees',
+                        severity: "medium",
+                        category: "overdue_fees",
                         description: `High number of overdue fees (${overdueCount})`,
-                        recommendation: 'Implement automated payment reminders'
+                        recommendation: "Implement automated payment reminders"
                     });
                 }
             }
@@ -1397,12 +1398,12 @@ export class SuperAdminService {
                 rotation_date: new Date(),
                 old_key_id: old_key_backup,
                 new_key_id,
-                key_type: 'payment_credentials',
-                rotation_reason: 'manual',
-                rotated_by: 'super_admin',
-                rotation_status: 'completed',
+                key_type: "payment_credentials",
+                rotation_reason: "manual",
+                rotated_by: "super_admin",
+                rotation_status: "completed",
                 backup_location: `backup/${old_key_backup}`,
-                verification_status: 'verified'
+                verification_status: "verified"
             });
         } catch (error) {
             console.error(`Failed to update key rotation history for campus ${campus_id}:`, error);
@@ -1416,38 +1417,38 @@ export class SuperAdminService {
         actions: Array<{
             action: string;
             campus_ids: string[];
-            estimated_impact: 'high' | 'medium' | 'low';
+            estimated_impact: "high" | "medium" | "low";
             requires_approval: boolean;
         }>
     ): Array<{
         action: string;
         campus_ids: string[];
-        estimated_impact: 'high' | 'medium' | 'low';
+        estimated_impact: "high" | "medium" | "low";
         requires_approval: boolean;
     }> {
         const consolidatedMap = new Map<string, {
             action: string;
             campus_ids: string[];
-            estimated_impact: 'high' | 'medium' | 'low';
+            estimated_impact: "high" | "medium" | "low";
             requires_approval: boolean;
         }>();
 
-        actions.forEach(action => {
+        for (const action of actions) {
             if (consolidatedMap.has(action.action)) {
                 const existing = consolidatedMap.get(action.action)!;
                 existing.campus_ids = [...new Set([...existing.campus_ids, ...action.campus_ids])];
                 // Keep highest impact level
-                if (action.estimated_impact === 'high') existing.estimated_impact = 'high';
-                else if (action.estimated_impact === 'medium' && existing.estimated_impact === 'low') {
-                    existing.estimated_impact = 'medium';
+                if (action.estimated_impact === "high") existing.estimated_impact = "high";
+                else if (action.estimated_impact === "medium" && existing.estimated_impact === "low") {
+                    existing.estimated_impact = "medium";
                 }
                 // Keep most restrictive approval requirement
                 if (action.requires_approval) existing.requires_approval = true;
             } else {
                 consolidatedMap.set(action.action, { ...action });
             }
-        });
+        }
 
-        return Array.from(consolidatedMap.values());
+        return [...consolidatedMap.values()];
     }
 }

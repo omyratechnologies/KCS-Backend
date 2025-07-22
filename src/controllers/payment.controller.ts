@@ -1,7 +1,8 @@
 import { Context } from "hono";
+
 import { PaymentService } from "@/services/payment.service";
-import { PaymentNotificationService } from "@/services/payment_notification.service";
 import { PaymentAnalyticsService } from "@/services/payment_analytics.service";
+import { PaymentNotificationService } from "@/services/payment_notification.service";
 import { SecurePaymentCredentialService } from "@/services/secure_payment_credential.service";
 
 export class PaymentController {
@@ -485,48 +486,51 @@ export class PaymentController {
             const availableGateways: any[] = [];
 
             // Build gateway list based on enabled gateways
-            gatewayInfo.enabled.forEach(gatewayId => {
+            for (const gatewayId of gatewayInfo.enabled) {
                 const config = gatewayInfo.configurations[gatewayId];
                 
                 switch (gatewayId) {
-                    case 'razorpay':
+                    case "razorpay": {
                         if (config.enabled && config.configured) {
                             availableGateways.push({
-                                id: 'razorpay',
-                                name: 'Razorpay',
-                                description: 'Pay using Credit/Debit Card, Net Banking, UPI, Wallets',
-                                logo: 'https://razorpay.com/assets/logo.png',
+                                id: "razorpay",
+                                name: "Razorpay",
+                                description: "Pay using Credit/Debit Card, Net Banking, UPI, Wallets",
+                                logo: "https://razorpay.com/assets/logo.png",
                                 test_status: config.test_status,
                                 last_tested: config.last_tested
                             });
                         }
                         break;
-                    case 'payu':
+                    }
+                    case "payu": {
                         if (config.enabled && config.configured) {
                             availableGateways.push({
-                                id: 'payu',
-                                name: 'PayU',
-                                description: 'Secure payment gateway with multiple payment options',
-                                logo: 'https://payu.in/assets/logo.png',
+                                id: "payu",
+                                name: "PayU",
+                                description: "Secure payment gateway with multiple payment options",
+                                logo: "https://payu.in/assets/logo.png",
                                 test_status: config.test_status,
                                 last_tested: config.last_tested
                             });
                         }
                         break;
-                    case 'cashfree':
+                    }
+                    case "cashfree": {
                         if (config.enabled && config.configured) {
                             availableGateways.push({
-                                id: 'cashfree',
-                                name: 'Cashfree',
-                                description: 'Fast and secure payments',
-                                logo: 'https://cashfree.com/assets/logo.png',
+                                id: "cashfree",
+                                name: "Cashfree",
+                                description: "Fast and secure payments",
+                                logo: "https://cashfree.com/assets/logo.png",
                                 test_status: config.test_status,
                                 last_tested: config.last_tested
                             });
                         }
                         break;
+                    }
                 }
-            });
+            }
 
             return ctx.json({
                 success: true,
@@ -602,19 +606,15 @@ export class PaymentController {
             
             const isOverdue = fee.payment_status === "overdue";
             
-            if (isOverdue) {
-                await PaymentNotificationService.sendPaymentOverdueNotification(
+            await (isOverdue ? PaymentNotificationService.sendPaymentOverdueNotification(
                     campus_id, fee, studentData, schoolData
-                );
-            } else {
-                await PaymentNotificationService.sendPaymentDueReminder(
+                ) : PaymentNotificationService.sendPaymentDueReminder(
                     campus_id, fee, studentData, schoolData
-                );
-            }
+                ));
 
             return ctx.json({
                 success: true,
-                message: `${isOverdue ? 'Overdue' : 'Due'} reminder sent successfully`
+                message: `${isOverdue ? "Overdue" : "Due"} reminder sent successfully`
             });
         } catch (error) {
             return ctx.json({
@@ -788,7 +788,7 @@ export class PaymentController {
             }
 
             const { limit } = ctx.req.query();
-            const limitNum = limit ? parseInt(limit as string) : 10;
+            const limitNum = limit ? Number.parseInt(limit as string) : 10;
 
             const topStudents = await PaymentAnalyticsService.getTopPayingStudents(
                 campus_id,
@@ -1161,7 +1161,7 @@ export class PaymentController {
                 return ctx.json({ error: "Unauthorized" }, 403);
             }
 
-            if (!['razorpay', 'payu', 'cashfree'].includes(gateway)) {
+            if (!["razorpay", "payu", "cashfree"].includes(gateway)) {
                 return ctx.json({ 
                     error: "Invalid gateway. Supported: razorpay, payu, cashfree" 
                 }, 400);
@@ -1169,7 +1169,7 @@ export class PaymentController {
 
             const result = await PaymentService.testGatewayConfiguration(
                 campus_id,
-                gateway as 'razorpay' | 'payu' | 'cashfree'
+                gateway as "razorpay" | "payu" | "cashfree"
             );
 
             return ctx.json({
@@ -1207,7 +1207,7 @@ export class PaymentController {
                 }, 400);
             }
 
-            if (!['razorpay', 'payu', 'cashfree'].includes(gateway)) {
+            if (!["razorpay", "payu", "cashfree"].includes(gateway)) {
                 return ctx.json({ 
                     error: "Invalid gateway. Supported: razorpay, payu, cashfree" 
                 }, 400);
@@ -1215,14 +1215,14 @@ export class PaymentController {
 
             const result = await PaymentService.toggleGateway(
                 campus_id,
-                gateway as 'razorpay' | 'payu' | 'cashfree',
+                gateway as "razorpay" | "payu" | "cashfree",
                 enabled
             );
 
             return ctx.json({
                 success: true,
                 data: result,
-                message: `${gateway} gateway ${enabled ? 'enabled' : 'disabled'} successfully`
+                message: `${gateway} gateway ${enabled ? "enabled" : "disabled"} successfully`
             });
         } catch (error) {
             return ctx.json({

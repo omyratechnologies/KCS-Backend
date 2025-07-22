@@ -168,6 +168,8 @@ All course endpoints are prefixed with: `/api/course`
 
 ## Course Content Management APIs
 
+**🎯 Design Philosophy:** The Course Content API uses a **simplified request schema** for optimal developer experience. Send basic fields, and the system automatically generates comprehensive course content with smart defaults.
+
 ### 1. Create Course Content
 
 **Endpoint:** `POST /api/course/{course_id}/content`
@@ -177,87 +179,59 @@ All course endpoints are prefixed with: `/api/course`
 **Path Parameters:**
 - `course_id` (string): Course identifier
 
-**Request Body:**
+**Request Body:** *(Simplified Schema)*
 ```json
 {
-  "content_title": "Week 1: Introduction to Programming",
-  "content_description": "This week covers basic programming concepts",
-  "content_type": "lesson",
-  "content_format": "video",
-  "content_data": {
-    "video_url": "https://example.com/video.mp4",
-    "duration": 1800,
-    "thumbnail_url": "https://example.com/thumb.jpg"
-  },
-  "step_data": {
-    "step_number": 1,
-    "step_type": "content",
-    "step_title": "Introduction",
-    "step_instructions": "Watch the introductory video",
-    "estimated_time": 30,
-    "learning_objectives": ["Understand basic programming concepts"]
-  },
-  "access_settings": {
-    "access_level": "free",
-    "available_from": "2023-01-15T00:00:00Z"
-  },
-  "interaction_settings": {
-    "allow_comments": true,
-    "allow_notes": true,
-    "allow_bookmarks": true,
-    "require_completion": true
-  },
-  "sort_order": 1,
-  "meta_data": {
-    "created_by": "teacher123",
-    "tags": ["programming", "basics"],
-    "difficulty_level": "beginner",
-    "estimated_completion_time": 45,
-    "language": "en"
-  }
+  "title": "Week 1: Introduction to Programming",
+  "content": "This week covers basic programming concepts and fundamental coding principles",
+  "content_type": "text",
+  "order": 1
 }
 ```
 
-**Response (200):**
+**Field Descriptions:**
+- `title` (string, required): Content title/heading
+- `content` (string, required): Main content description/body
+- `content_type` (string, required): Type of content - `"text"`, `"video"`, `"audio"`, etc.
+- `order` (number, required): Display order (sort position)
+
+**🔧 Auto-Generated Features:**
+The API automatically creates the following with smart defaults:
+- **Content Data**: Formatted HTML, duration estimates, metadata
+- **Access Settings**: Free access, 1-year availability
+- **Interaction Settings**: Comments, notes, bookmarks enabled
+- **Meta Data**: Creator info, tags, timestamps
+
+**Response (200):** *(Full Enhanced Object)*
 ```json
 {
   "id": "content123",
-  "campus_id": "campus123",
+  "campus_id": "campus123", 
   "course_id": "course123",
   "content_title": "Week 1: Introduction to Programming",
-  "content_description": "This week covers basic programming concepts",
+  "content_description": "This week covers basic programming concepts and fundamental coding principles",
   "content_type": "lesson",
-  "content_format": "video",
+  "content_format": "text",
   "content_data": {
-    "video_url": "https://example.com/video.mp4",
-    "duration": 1800,
-    "thumbnail_url": "https://example.com/thumb.jpg"
-  },
-  "step_data": {
-    "step_number": 1,
-    "step_type": "content",
-    "step_title": "Introduction",
-    "step_instructions": "Watch the introductory video",
-    "estimated_time": 30,
-    "learning_objectives": ["Understand basic programming concepts"]
+    "text_content": "This week covers basic programming concepts and fundamental coding principles",
+    "html_content": "<p>This week covers basic programming concepts and fundamental coding principles</p>",
+    "duration": 1800
   },
   "access_settings": {
     "access_level": "free",
-    "available_from": "2023-01-15T00:00:00Z"
+    "available_from": "2023-01-01T00:00:00Z",
+    "available_until": "2024-01-01T00:00:00Z"
   },
   "interaction_settings": {
     "allow_comments": true,
     "allow_notes": true,
     "allow_bookmarks": true,
-    "require_completion": true
+    "require_completion": false
   },
   "sort_order": 1,
   "meta_data": {
-    "created_by": "teacher123",
-    "tags": ["programming", "basics"],
-    "difficulty_level": "beginner",
-    "estimated_completion_time": 45,
-    "language": "en"
+    "created_by": "system",
+    "tags": []
   },
   "is_active": true,
   "is_deleted": false,
@@ -265,6 +239,12 @@ All course endpoints are prefixed with: `/api/course`
   "updated_at": "2023-01-01T00:00:00Z"
 }
 ```
+
+**💡 Key Benefits:**
+- ✅ **Simple Input**: Only 4 required fields
+- ✅ **Rich Output**: Full-featured content object  
+- ✅ **Smart Defaults**: Optimal settings auto-applied
+- ✅ **Extensible**: Can add advanced fields later
 
 ### 2. Get All Course Contents
 
@@ -299,7 +279,15 @@ All course endpoints are prefixed with: `/api/course`
 - `course_id` (string): Course identifier
 - `content_id` (string): Content identifier
 
-**Request Body:** Same structure as create, but all fields optional
+**Request Body:** *(Same simplified structure, all fields optional)*
+```json
+{
+  "title": "Updated Week 1: Advanced Introduction to Programming",
+  "content": "Updated content covering advanced programming concepts",
+  "content_type": "text",
+  "order": 2
+}
+```
 
 **Response (200):** Updated content object
 
@@ -314,6 +302,139 @@ All course endpoints are prefixed with: `/api/course`
 - `content_id` (string): Content identifier
 
 **Response (200):** Confirmation message
+
+## Course Assignment Submission APIs
+
+### 1. Create Course Assignment Submission
+
+**Endpoint:** `POST /api/course/{course_id}/assignment/{assignment_id}/submission`
+**Access:** Student, Teacher, Admin
+**Authentication:** Required
+
+**Path Parameters:**
+- `course_id` (string): Course identifier
+- `assignment_id` (string): Assignment identifier
+
+**Request Body:**
+```json
+{
+  "submission_data": {
+    "submitted_files": [
+      {
+        "file_name": "assignment1.pdf",
+        "file_url": "https://storage.example.com/files/assignment1.pdf",
+        "file_type": "pdf"
+      }
+    ],
+    "submission_text": "This is my submission text",
+    "submission_notes": "Additional notes about the submission"
+  },
+  "meta_data": {
+    "submission_type": "file_upload",
+    "late_submission": false
+  }
+}
+```
+
+**Response (200):**
+```json
+{
+  "id": "submission123",
+  "campus_id": "campus123",
+  "course_id": "course123", 
+  "assignment_id": "assignment123",
+  "user_id": "user123",
+  "submission_data": {
+    "submitted_files": [...],
+    "submission_text": "This is my submission text",
+    "submission_notes": "Additional notes about the submission"
+  },
+  "grade": null,
+  "feedback": null,
+  "submission_status": "submitted",
+  "submitted_at": "2023-01-20T10:30:00Z",
+  "graded_at": null,
+  "meta_data": {
+    "submission_type": "file_upload",
+    "late_submission": false
+  },
+  "created_at": "2023-01-20T10:30:00Z",
+  "updated_at": "2023-01-20T10:30:00Z"
+}
+```
+
+### 2. Get All Assignment Submissions
+
+**Endpoint:** `GET /api/course/{course_id}/assignment/{assignment_id}/submission`
+**Access:** Teacher, Admin
+**Authentication:** Required
+
+**Path Parameters:**
+- `course_id` (string): Course identifier
+- `assignment_id` (string): Assignment identifier
+
+**Response (200):** Array of submission objects
+
+### 3. Get Assignment Submission by ID
+
+**Endpoint:** `GET /api/course/{course_id}/assignment/{assignment_id}/submission/{submission_id}`
+**Access:** Student (own submission), Teacher, Admin
+**Authentication:** Required
+
+**Path Parameters:**
+- `course_id` (string): Course identifier
+- `assignment_id` (string): Assignment identifier 
+- `submission_id` (string): Submission identifier
+
+**Response (200):** Individual submission object
+
+### 4. Update Assignment Submission
+
+**Endpoint:** `PUT /api/course/{course_id}/assignment/{assignment_id}/submission/{submission_id}`
+**Access:** Student (own submission before deadline), Teacher, Admin
+**Authentication:** Required
+
+**Path Parameters:**
+- `course_id` (string): Course identifier
+- `assignment_id` (string): Assignment identifier
+- `submission_id` (string): Submission identifier
+
+**Request Body:**
+```json
+{
+  "grade": 85,
+  "feedback": "Good work! Consider improving the conclusion.",
+  "submission_status": "graded",
+  "graded_at": "2023-01-25T14:30:00Z"
+}
+```
+
+**Response (200):** Updated submission object
+
+### 5. Delete Assignment Submission
+
+**Endpoint:** `DELETE /api/course/{course_id}/assignment/{assignment_id}/submission/{submission_id}`
+**Access:** Student (own submission before deadline), Admin
+**Authentication:** Required
+
+**Path Parameters:**
+- `course_id` (string): Course identifier
+- `assignment_id` (string): Assignment identifier
+- `submission_id` (string): Submission identifier
+
+**Response (200):** Confirmation message
+
+## Advanced Course Content (Enhanced API)
+
+**For Advanced Use Cases:** If you need more control over course content structure, step-by-step lessons, or complex content data, use the Enhanced Course Content API at `/api/course-content` which provides:
+
+- **Chapter Management**: Create structured course chapters
+- **Lesson Builder**: Step-by-step lesson creation with learning objectives  
+- **Material Management**: File uploads, folder organization
+- **Analytics**: Watch history, progress tracking
+- **Advanced Settings**: Custom access controls, interaction settings
+
+See Enhanced Course Content API documentation for full details.
 
 ## Course Enrollment APIs
 
@@ -496,10 +617,11 @@ All endpoints return consistent error responses:
 1. **Authentication**: Always include valid JWT token in Authorization header
 2. **Role Checking**: API responses are filtered based on user roles automatically
 3. **Campus Context**: All operations are scoped to the user's campus
-4. **Pagination**: For large result sets, consider implementing pagination
-5. **Error Handling**: Always check for error responses and handle appropriately
-6. **Content Ordering**: Use `sort_order` field to control content sequence
-7. **Meta Data**: Utilize `meta_data` fields for extensible custom properties
+4. **Simplified Content Creation**: Use basic fields (`title`, `content`, `content_type`, `order`) for quick content creation
+5. **Content Ordering**: Use `order` field to control content sequence
+6. **Advanced Features**: Use Enhanced Course Content API (`/api/course-content`) for complex requirements
+7. **Error Handling**: Always check for error responses and handle appropriately
+8. **Progressive Enhancement**: Start with simple content, enhance with advanced features as needed
 
 ## API Flow Examples
 

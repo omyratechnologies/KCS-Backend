@@ -1,10 +1,10 @@
+import { Class } from "@/models/class.model";
+import { ExamTerm } from "@/models/exam_term.model";
 import {
     IStudentPerformanceData,
     StudentPerformance,
 } from "@/models/student_performance.model";
 import { StudentRecord } from "@/models/student_record.model";
-import { ExamTerm } from "@/models/exam_term.model";
-import { Class } from "@/models/class.model";
 
 export class StudentPerformanceService {
     // Get student performance by semester
@@ -101,7 +101,7 @@ export class StudentPerformanceService {
 
         if (existingRecord) {
             // Update existing record
-            const updatedRecord = await StudentPerformance.replaceById(
+            return await StudentPerformance.replaceById(
                 existingRecord.id,
                 {
                     ...existingRecord,
@@ -109,10 +109,9 @@ export class StudentPerformanceService {
                     updated_at: new Date(),
                 }
             );
-            return updatedRecord;
         } else {
             // Create new record
-            const newRecord = await StudentPerformance.create({
+            return await StudentPerformance.create({
                 campus_id,
                 student_id,
                 academic_year,
@@ -122,7 +121,6 @@ export class StudentPerformanceService {
                 created_at: new Date(),
                 updated_at: new Date(),
             });
-            return newRecord;
         }
     };
 
@@ -189,7 +187,7 @@ export class StudentPerformanceService {
         let totalMarksPossible = 0;
         const subjects: any[] = [];
 
-        studentRecords.forEach((record) => {
+        for (const record of studentRecords) {
             record.record_data.forEach((termData: any) => {
                 termData.marks.forEach((mark: any) => {
                     totalMarksObtained += mark.mark_gained;
@@ -205,7 +203,7 @@ export class StudentPerformanceService {
                     });
                 });
             });
-        });
+        }
 
         const overallPercentage = totalMarksPossible > 0 
             ? (totalMarksObtained / totalMarksPossible) * 100 
@@ -290,13 +288,13 @@ export class StudentPerformanceService {
 
     // Helper method to calculate GPA
     private static calculateGPA = (percentage: number): number => {
-        if (percentage >= 90) return 4.0;
+        if (percentage >= 90) return 4;
         if (percentage >= 80) return 3.5;
-        if (percentage >= 70) return 3.0;
+        if (percentage >= 70) return 3;
         if (percentage >= 60) return 2.5;
-        if (percentage >= 50) return 2.0;
+        if (percentage >= 50) return 2;
         if (percentage >= 40) return 1.5;
-        return 0.0;
+        return 0;
     };
 
     // Get performance summary for multiple semesters

@@ -124,4 +124,4 @@ const PaymentInvoice = ottoman.model<IPaymentInvoice>(
     PaymentInvoiceSchema
 );
 
-export { PaymentInvoice, type IPaymentInvoice };
+export { type IPaymentInvoice,PaymentInvoice };

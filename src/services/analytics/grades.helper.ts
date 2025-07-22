@@ -1,15 +1,14 @@
 import { StudentRecord } from "@/models/student_record.model";
 import { Subject } from "@/models/subject.model";
 import { 
-    GradesData, 
     CurrentTermGrade, 
-    TermGradesData, 
-    TermSubjectGrade,
-    SubjectWiseGrades,
+    GradesData, 
+    ImprovementArea, 
     SubjectGradeEntry,
+    SubjectWiseGrades,
     TermAverage,
-    ImprovementArea 
-} from "@/types";
+    TermGradesData, 
+    TermSubjectGrade} from "@/types";
 
 export class GradesAnalyticsHelper {
     
@@ -74,7 +73,7 @@ export class GradesAnalyticsHelper {
         if (!latestRecord.record_data || !Array.isArray(latestRecord.record_data)) return [];
 
         // Get the latest term from the record
-        const currentTerm = latestRecord.record_data[latestRecord.record_data.length - 1];
+        const currentTerm = latestRecord.record_data.at(-1);
         if (!currentTerm.marks || !Array.isArray(currentTerm.marks)) return [];
 
         // Get subject names
@@ -103,7 +102,7 @@ export class GradesAnalyticsHelper {
         const subjectIds = new Set<string>();
 
         // Collect all subject IDs first
-        records.forEach(record => {
+        for (const record of records) {
             if (record.record_data && Array.isArray(record.record_data)) {
                 record.record_data.forEach((termData: any) => {
                     if (termData.marks && Array.isArray(termData.marks)) {
@@ -115,13 +114,13 @@ export class GradesAnalyticsHelper {
                     }
                 });
             }
-        });
+        }
 
         // Get subject names
-        const subjectNames = await this.getSubjectNames(Array.from(subjectIds), campus_id);
+        const subjectNames = await this.getSubjectNames([...subjectIds], campus_id);
 
         // Process terms
-        records.forEach(record => {
+        for (const record of records) {
             if (record.record_data && Array.isArray(record.record_data)) {
                 record.record_data.forEach((termData: any) => {
                     if (termData.marks && Array.isArray(termData.marks)) {
@@ -149,7 +148,7 @@ export class GradesAnalyticsHelper {
                     }
                 });
             }
-        });
+        }
 
         return allTerms.sort((a, b) => b.termId.localeCompare(a.termId));
     }
@@ -170,7 +169,7 @@ export class GradesAnalyticsHelper {
         }>();
 
         // Process all records to group by subject
-        records.forEach(record => {
+        for (const record of records) {
             if (record.record_data && Array.isArray(record.record_data)) {
                 record.record_data.forEach((termData: any) => {
                     if (termData.marks && Array.isArray(termData.marks)) {
@@ -201,14 +200,14 @@ export class GradesAnalyticsHelper {
                     }
                 });
             }
-        });
+        }
 
         // Get subject names
-        const subjectIds = Array.from(subjectGrades.keys());
+        const subjectIds = [...subjectGrades.keys()];
         const subjectNames = await this.getSubjectNames(subjectIds, campus_id);
 
         // Convert to result array
-        return Array.from(subjectGrades.values()).map((subject) => ({
+        return [...subjectGrades.values()].map((subject) => ({
             subjectId: subject.subjectId,
             subjectName: subjectNames[subject.subjectId] || "Unknown Subject",
             grades: subject.grades,
@@ -228,7 +227,7 @@ export class GradesAnalyticsHelper {
     private static calculateTermWiseAverages(records: any[]): TermAverage[] {
         const termAverages: TermAverage[] = [];
 
-        records.forEach(record => {
+        for (const record of records) {
             if (record.record_data && Array.isArray(record.record_data)) {
                 record.record_data.forEach((termData: any) => {
                     if (termData.marks && Array.isArray(termData.marks)) {
@@ -245,7 +244,7 @@ export class GradesAnalyticsHelper {
                     }
                 });
             }
-        });
+        }
 
         return termAverages.sort((a, b) => a.termId.localeCompare(b.termId));
     }
@@ -294,23 +293,16 @@ export class GradesAnalyticsHelper {
         const suggestions: string[] = [];
         
         if (subject.averagePercentage < 50) {
-            suggestions.push("Seek immediate help from teacher or tutor");
-            suggestions.push("Review fundamental concepts");
-            suggestions.push("Dedicate extra study time daily");
+            suggestions.push("Seek immediate help from teacher or tutor", "Review fundamental concepts", "Dedicate extra study time daily");
         } else if (subject.averagePercentage < 65) {
-            suggestions.push("Increase study time for this subject");
-            suggestions.push("Practice more past papers and exercises");
-            suggestions.push("Form study group with classmates");
+            suggestions.push("Increase study time for this subject", "Practice more past papers and exercises", "Form study group with classmates");
         } else {
-            suggestions.push("Focus on challenging topics");
-            suggestions.push("Practice advanced problems");
-            suggestions.push("Seek clarification on weak areas");
+            suggestions.push("Focus on challenging topics", "Practice advanced problems", "Seek clarification on weak areas");
         }
 
         // Add trend-based suggestions
         if (subject.trend === "declining") {
-            suggestions.push("Identify what changed recently");
-            suggestions.push("Review study methods and habits");
+            suggestions.push("Identify what changed recently", "Review study methods and habits");
         }
 
         return suggestions.slice(0, 4); // Limit to 4 suggestions
@@ -335,9 +327,9 @@ export class GradesAnalyticsHelper {
                 });
                 
                 const subjects = subjectResult.rows || [];
-                subjects.forEach(subject => {
+                for (const subject of subjects) {
                     subjectNames[subject.id] = subject.name;
-                });
+                }
             } catch (error) {
                 console.error("Error fetching subject names:", error);
             }
@@ -395,15 +387,15 @@ export class GradesAnalyticsHelper {
      * Convert percentage to grade points (4.0 scale)
      */
     private static percentageToGradePoints(percentage: number): number {
-        if (percentage >= 90) return 4.0;
+        if (percentage >= 90) return 4;
         if (percentage >= 85) return 3.7;
         if (percentage >= 80) return 3.3;
-        if (percentage >= 75) return 3.0;
+        if (percentage >= 75) return 3;
         if (percentage >= 70) return 2.7;
         if (percentage >= 65) return 2.3;
-        if (percentage >= 60) return 2.0;
+        if (percentage >= 60) return 2;
         if (percentage >= 55) return 1.7;
-        if (percentage >= 50) return 1.0;
-        return 0.0;
+        if (percentage >= 50) return 1;
+        return 0;
     }
 }

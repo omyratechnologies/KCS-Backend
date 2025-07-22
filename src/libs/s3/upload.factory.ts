@@ -36,7 +36,7 @@ export class UploadFactory {
             const file_data = this.client.file(file_name);
             const buffer = await file.arrayBuffer();
             
-            log(`File converted to buffer, uploading to S3...`, LogTypes.LOGS, "S3 Uploader");
+            log("File converted to buffer, uploading to S3...", LogTypes.LOGS, "S3 Uploader");
             
             await file_data.write(buffer, {
                 acl: "public-read",

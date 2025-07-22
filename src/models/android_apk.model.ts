@@ -21,18 +21,16 @@ export const AndroidApk = ottoman.model("android_apks", AndroidApkSchema);
 // Add static methods to the model
 AndroidApk.findByPackageName = async function(packageName: string) {
   try {
-    const result = await this.findOne({ packageName });
-    return result;
-  } catch (error) {
+    return await this.findOne({ packageName });
+  } catch {
     return null;
   }
 };
 
 AndroidApk.findByVersion = async function(version: string) {
   try {
-    const result = await this.findOne({ version });
-    return result;
-  } catch (error) {
+    return await this.findOne({ version });
+  } catch {
     return null;
   }
 };

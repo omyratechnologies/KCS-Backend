@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import crypto from "node:crypto";
 
 export interface EncryptedCredential {
     encrypted_data: string;
@@ -13,24 +13,24 @@ export interface PaymentGatewayCredentials {
         key_secret: string;
         webhook_secret?: string;
         enabled: boolean;
-        mode?: 'test' | 'live';
+        mode?: "test" | "live";
     };
     payu?: {
         merchant_key: string;
         merchant_salt: string;
         enabled: boolean;
-        mode?: 'test' | 'live';
+        mode?: "test" | "live";
     };
     cashfree?: {
         app_id: string;
         secret_key: string;
         enabled: boolean;
-        mode?: 'test' | 'live';
+        mode?: "test" | "live";
     };
 }
 
 export class CredentialEncryptionService {
-    private static readonly ALGORITHM = 'aes-256-gcm';
+    private static readonly ALGORITHM = "aes-256-gcm";
     private static readonly KEY_LENGTH = 32; // 256 bits
     private static readonly IV_LENGTH = 16; // 128 bits
     
@@ -40,21 +40,21 @@ export class CredentialEncryptionService {
     private static getEncryptionKey(): Buffer {
         const key = process.env.PAYMENT_CREDENTIAL_ENCRYPTION_KEY;
         if (!key) {
-            throw new Error('PAYMENT_CREDENTIAL_ENCRYPTION_KEY environment variable not set');
+            throw new Error("PAYMENT_CREDENTIAL_ENCRYPTION_KEY environment variable not set");
         }
         
         // If key is base64 encoded
-        if (key.length === 44 && key.endsWith('=')) {
-            return Buffer.from(key, 'base64');
+        if (key.length === 44 && key.endsWith("=")) {
+            return Buffer.from(key, "base64");
         }
         
         // If key is hex encoded
         if (key.length === 64) {
-            return Buffer.from(key, 'hex');
+            return Buffer.from(key, "hex");
         }
         
         // Generate key from string (less secure, not recommended for production)
-        return crypto.scryptSync(key, 'salt', this.KEY_LENGTH);
+        return crypto.scryptSync(key, "salt", this.KEY_LENGTH);
     }
 
     /**
@@ -62,7 +62,7 @@ export class CredentialEncryptionService {
      */
     static generateEncryptionKey(): string {
         const key = crypto.randomBytes(this.KEY_LENGTH);
-        return key.toString('base64');
+        return key.toString("base64");
     }
 
     /**
@@ -76,15 +76,15 @@ export class CredentialEncryptionService {
             const cipher = crypto.createCipheriv(this.ALGORITHM, key, iv);
             
             const credentialString = JSON.stringify(credentials);
-            let encrypted = cipher.update(credentialString, 'utf8', 'hex');
-            encrypted += cipher.final('hex');
+            let encrypted = cipher.update(credentialString, "utf8", "hex");
+            encrypted += cipher.final("hex");
             
             const tag = (cipher as any).getAuthTag();
             
             return {
                 encrypted_data: encrypted,
-                iv: iv.toString('hex'),
-                tag: tag.toString('hex'),
+                iv: iv.toString("hex"),
+                tag: tag.toString("hex"),
                 algorithm: this.ALGORITHM
             };
         } catch (error) {
@@ -98,14 +98,14 @@ export class CredentialEncryptionService {
     static decryptCredentials(encryptedCredential: EncryptedCredential): PaymentGatewayCredentials {
         try {
             const key = this.getEncryptionKey();
-            const iv = Buffer.from(encryptedCredential.iv, 'hex');
-            const tag = Buffer.from(encryptedCredential.tag, 'hex');
+            const iv = Buffer.from(encryptedCredential.iv, "hex");
+            const tag = Buffer.from(encryptedCredential.tag, "hex");
             
             const decipher = crypto.createDecipheriv(this.ALGORITHM, key, iv);
             (decipher as any).setAuthTag(tag);
             
-            let decrypted = decipher.update(encryptedCredential.encrypted_data, 'hex', 'utf8');
-            decrypted += decipher.final('utf8');
+            let decrypted = decipher.update(encryptedCredential.encrypted_data, "hex", "utf8");
+            decrypted += decipher.final("utf8");
             
             return JSON.parse(decrypted);
         } catch (error) {
@@ -117,7 +117,7 @@ export class CredentialEncryptionService {
      * Encrypt specific gateway credentials
      */
     static encryptGatewayCredentials(
-        gateway: 'razorpay' | 'payu' | 'cashfree',
+        gateway: "razorpay" | "payu" | "cashfree",
         credentials: any
     ): EncryptedCredential {
         const gatewayCredentials: PaymentGatewayCredentials = {
@@ -130,7 +130,7 @@ export class CredentialEncryptionService {
      * Decrypt specific gateway credentials
      */
     static decryptGatewayCredentials(
-        gateway: 'razorpay' | 'payu' | 'cashfree',
+        gateway: "razorpay" | "payu" | "cashfree",
         encryptedCredential: EncryptedCredential
     ): any {
         const decrypted = this.decryptCredentials(encryptedCredential);
@@ -143,16 +143,14 @@ export class CredentialEncryptionService {
     static maskCredentials(credentials: PaymentGatewayCredentials): any {
         const masked = JSON.parse(JSON.stringify(credentials));
         
-        Object.keys(masked).forEach(gateway => {
+        for (const gateway of Object.keys(masked)) {
             const creds = masked[gateway];
-            Object.keys(creds).forEach(key => {
-                if (key.includes('secret') || key.includes('key') || key.includes('salt')) {
-                    if (typeof creds[key] === 'string' && creds[key].length > 8) {
-                        creds[key] = creds[key].substring(0, 4) + '***' + creds[key].substring(creds[key].length - 4);
+            for (const key of Object.keys(creds)) {
+                if ((key.includes("secret") || key.includes("key") || key.includes("salt")) && typeof creds[key] === "string" && creds[key].length > 8) {
+                        creds[key] = creds[key].slice(0, 4) + "***" + creds[key].slice(Math.max(0, creds[key].length - 4));
                     }
-                }
-            });
-        });
+            }
+        }
         
         return masked;
     }
@@ -172,20 +170,20 @@ export class CredentialEncryptionService {
             }
             
             // Test encryption/decryption
-            const testData = { test: 'data' };
+            const testData = { test: "data" };
             const encrypted = this.encryptCredentials(testData as any);
             const decrypted = this.decryptCredentials(encrypted);
             
             if (JSON.stringify(testData) !== JSON.stringify(decrypted)) {
                 return {
                     valid: false,
-                    message: 'Encryption key validation failed - encryption/decryption mismatch'
+                    message: "Encryption key validation failed - encryption/decryption mismatch"
                 };
             }
             
             return {
                 valid: true,
-                message: 'Encryption key is valid'
+                message: "Encryption key is valid"
             };
         } catch (error) {
             return {

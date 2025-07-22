@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 
 export interface PaymentGatewayConfig {
     razorpay?: {
@@ -47,13 +47,13 @@ export interface PaymentVerificationRequest {
     amount: number;
 }
 
-export class PaymentGatewayService {
+export const PaymentGatewayService = {
     
     /**
      * Create payment order with Razorpay
      */
-    static async createRazorpayOrder(
-        config: PaymentGatewayConfig['razorpay'],
+    async createRazorpayOrder(
+        config: PaymentGatewayConfig["razorpay"],
         orderRequest: PaymentOrderRequest
     ): Promise<PaymentOrderResponse> {
         if (!config || !config.enabled) {
@@ -64,8 +64,8 @@ export class PaymentGatewayService {
             // For production, install razorpay package: npm install razorpay
             // For now, we'll simulate the API call
             const simulatedOrder = {
-                id: `rzp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                status: 'created',
+                id: `rzp_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
+                status: "created",
                 amount: orderRequest.amount * 100,
                 currency: orderRequest.currency,
                 receipt: orderRequest.receipt,
@@ -77,16 +77,16 @@ export class PaymentGatewayService {
                 status: simulatedOrder.status,
             };
         } catch (error: any) {
-            console.error('Razorpay order creation failed:', error);
-            throw new Error(`Razorpay order creation failed: ${error?.message || 'Unknown error'}`);
+            console.error("Razorpay order creation failed:", error);
+            throw new Error(`Razorpay order creation failed: ${error?.message || "Unknown error"}`);
         }
-    }
+    },
 
     /**
      * Create payment order with PayU
      */
-    static async createPayUOrder(
-        config: PaymentGatewayConfig['payu'],
+    async createPayUOrder(
+        config: PaymentGatewayConfig["payu"],
         orderRequest: PaymentOrderRequest
     ): Promise<PaymentOrderResponse> {
         if (!config || !config.enabled) {
@@ -94,7 +94,7 @@ export class PaymentGatewayService {
         }
 
         try {
-            const txnid = `TXN_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            const txnid = `TXN_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
             const productinfo = `Fee Payment - ${orderRequest.fee_id}`;
             const firstname = `Student_${orderRequest.student_id}`;
             const email = "payment@school.com"; // This should come from student details
@@ -102,7 +102,7 @@ export class PaymentGatewayService {
 
             // Create hash
             const hashString = `${config.merchant_key}|${txnid}|${orderRequest.amount}|${productinfo}|${firstname}|${email}|||||||||||${config.merchant_salt}`;
-            const hash = crypto.createHash('sha512').update(hashString).digest('hex');
+            const hash = crypto.createHash("sha512").update(hashString).digest("hex");
 
             const formData = {
                 key: config.merchant_key,
@@ -129,16 +129,16 @@ export class PaymentGatewayService {
                 status: "created",
             };
         } catch (error: any) {
-            console.error('PayU order creation failed:', error);
-            throw new Error(`PayU order creation failed: ${error?.message || 'Unknown error'}`);
+            console.error("PayU order creation failed:", error);
+            throw new Error(`PayU order creation failed: ${error?.message || "Unknown error"}`);
         }
-    }
+    },
 
     /**
      * Create payment order with Cashfree
      */
-    static async createCashfreeOrder(
-        config: PaymentGatewayConfig['cashfree'],
+    async createCashfreeOrder(
+        config: PaymentGatewayConfig["cashfree"],
         orderRequest: PaymentOrderRequest
     ): Promise<PaymentOrderResponse> {
         if (!config || !config.enabled) {
@@ -146,7 +146,7 @@ export class PaymentGatewayService {
         }
 
         try {
-            const orderId = `CF_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            const orderId = `CF_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
             
             const orderData = {
                 order_id: orderId,
@@ -173,16 +173,16 @@ export class PaymentGatewayService {
                 status: "ACTIVE",
             };
         } catch (error: any) {
-            console.error('Cashfree order creation failed:', error);
-            throw new Error(`Cashfree order creation failed: ${error?.message || 'Unknown error'}`);
+            console.error("Cashfree order creation failed:", error);
+            throw new Error(`Cashfree order creation failed: ${error?.message || "Unknown error"}`);
         }
-    }
+    },
 
     /**
      * Verify Razorpay payment
      */
-    static verifyRazorpayPayment(
-        config: PaymentGatewayConfig['razorpay'],
+    verifyRazorpayPayment(
+        config: PaymentGatewayConfig["razorpay"],
         verification: PaymentVerificationRequest
     ): boolean {
         if (!config || !config.enabled) {
@@ -198,16 +198,16 @@ export class PaymentGatewayService {
 
             return expectedSignature === verification.signature;
         } catch (error) {
-            console.error('Razorpay payment verification failed:', error);
+            console.error("Razorpay payment verification failed:", error);
             return false;
         }
-    }
+    },
 
     /**
      * Verify PayU payment
      */
-    static verifyPayUPayment(
-        config: PaymentGatewayConfig['payu'],
+    verifyPayUPayment(
+        config: PaymentGatewayConfig["payu"],
         verification: PaymentVerificationRequest & { 
             status: string;
             txnid: string;
@@ -223,20 +223,20 @@ export class PaymentGatewayService {
 
         try {
             const hashString = `${config.merchant_salt}|${verification.status}|||||||||||${verification.email}|${verification.firstname}|${verification.productinfo}|${verification.amount}|${verification.txnid}|${config.merchant_key}`;
-            const hash = crypto.createHash('sha512').update(hashString).digest('hex');
+            const hash = crypto.createHash("sha512").update(hashString).digest("hex");
 
             return hash === verification.signature;
         } catch (error) {
-            console.error('PayU payment verification failed:', error);
+            console.error("PayU payment verification failed:", error);
             return false;
         }
-    }
+    },
 
     /**
      * Verify Cashfree payment
      */
-    static verifyCashfreePayment(
-        config: PaymentGatewayConfig['cashfree'],
+    verifyCashfreePayment(
+        config: PaymentGatewayConfig["cashfree"],
         verification: PaymentVerificationRequest
     ): boolean {
         if (!config || !config.enabled) {
@@ -248,21 +248,21 @@ export class PaymentGatewayService {
             // For now, we'll simulate verification
             return true;
         } catch (error) {
-            console.error('Cashfree payment verification failed:', error);
+            console.error("Cashfree payment verification failed:", error);
             return false;
         }
-    }
+    },
 
     /**
      * Get available payment gateways for a campus
      */
-    static getAvailableGateways(config: PaymentGatewayConfig): string[] {
+    getAvailableGateways(config: PaymentGatewayConfig): string[] {
         const gateways: string[] = [];
         
-        if (config.razorpay?.enabled) gateways.push('razorpay');
-        if (config.payu?.enabled) gateways.push('payu');
-        if (config.cashfree?.enabled) gateways.push('cashfree');
+        if (config.razorpay?.enabled) gateways.push("razorpay");
+        if (config.payu?.enabled) gateways.push("payu");
+        if (config.cashfree?.enabled) gateways.push("cashfree");
         
         return gateways;
-    }
-}
+    },
+};

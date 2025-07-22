@@ -1,6 +1,6 @@
 import { IFeeData } from "@/models/fee.model";
-import { IPaymentTransaction } from "@/models/payment_transaction.model";
 import { IPaymentInvoice } from "@/models/payment_invoice.model";
+import { IPaymentTransaction } from "@/models/payment_transaction.model";
 
 export interface PaymentNotificationTemplate {
     id: string;
@@ -312,14 +312,14 @@ Thank you for your payment!
         let content = template;
         
         // Replace all available variables
-        content = content.replace(/{{student_name}}/g, data.student_name);
-        content = content.replace(/{{school_name}}/g, data.school_name);
-        content = content.replace(/{{fee_amount}}/g, data.fee_amount.toString());
-        content = content.replace(/{{due_date}}/g, data.due_date);
-        content = content.replace(/{{payment_url}}/g, data.payment_url || "");
-        content = content.replace(/{{invoice_url}}/g, data.invoice_url || "");
-        content = content.replace(/{{transaction_id}}/g, data.transaction_id || "");
-        content = content.replace(/{{late_fee_amount}}/g, (data.late_fee_amount || 0).toString());
+        content = content.replaceAll("{{student_name}}", data.student_name);
+        content = content.replaceAll("{{school_name}}", data.school_name);
+        content = content.replaceAll("{{fee_amount}}", data.fee_amount.toString());
+        content = content.replaceAll("{{due_date}}", data.due_date);
+        content = content.replaceAll("{{payment_url}}", data.payment_url || "");
+        content = content.replaceAll("{{invoice_url}}", data.invoice_url || "");
+        content = content.replaceAll("{{transaction_id}}", data.transaction_id || "");
+        content = content.replaceAll("{{late_fee_amount}}", (data.late_fee_amount || 0).toString());
 
         return content;
     }
@@ -329,14 +329,14 @@ Thank you for your payment!
      */
     private static truncateForSMS(content: string): string {
         // Remove extra whitespace and line breaks
-        const cleaned = content.replace(/\s+/g, ' ').trim();
+        const cleaned = content.replaceAll(/\s+/g, " ").trim();
         
         if (cleaned.length <= 160) {
             return cleaned;
         }
         
         // Truncate and add ellipsis
-        return cleaned.substring(0, 157) + "...";
+        return cleaned.slice(0, 157) + "...";
     }
 
     /**

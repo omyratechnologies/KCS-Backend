@@ -1,4 +1,4 @@
-import { ClassQuizService } from '@/services/class_quiz.service';
+import { ClassQuizService } from "@/services/class_quiz.service";
 
 /**
  * Background service for handling quiz session timeouts and maintenance tasks
@@ -12,7 +12,7 @@ export class QuizBackgroundService {
      */
     public static start(intervalMinutes: number = 1): void {
         if (this.intervalId) {
-            console.log('Quiz background service is already running');
+            console.log("Quiz background service is already running");
             return;
         }
 
@@ -36,7 +36,7 @@ export class QuizBackgroundService {
         if (this.intervalId) {
             clearInterval(this.intervalId);
             this.intervalId = null;
-            console.log('Quiz background service stopped');
+            console.log("Quiz background service stopped");
         }
     }
 
@@ -51,12 +51,12 @@ export class QuizBackgroundService {
                 console.log(`[${new Date().toISOString()}] Auto-submitted ${results.length} expired quiz sessions`);
                 
                 // Log each auto-submission for audit purposes
-                results.forEach(result => {
+                for (const result of results) {
                     console.log(`  - User ${result.user_id}: Quiz ${result.quiz_id}, Score: ${result.result.score}/${result.result.total_questions}`);
-                });
+                }
             }
         } catch (error) {
-            console.error('[Quiz Background Service] Error checking expired sessions:', error);
+            console.error("[Quiz Background Service] Error checking expired sessions:", error);
         }
     }
 
@@ -64,7 +64,7 @@ export class QuizBackgroundService {
      * Manual trigger for checking expired sessions
      */
     public static async manualCheck(): Promise<void> {
-        console.log('Manual check for expired sessions triggered');
+        console.log("Manual check for expired sessions triggered");
         await this.checkExpiredSessions();
     }
 
@@ -134,16 +134,12 @@ export class QuizTimeUtils {
      * Format time remaining for display
      */
     public static formatTimeRemaining(seconds: number): string {
-        if (seconds < 0) return 'No time limit';
+        if (seconds < 0) return "No time limit";
         
         const hours = Math.floor(seconds / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);
         const secs = seconds % 60;
         
-        if (hours > 0) {
-            return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        } else {
-            return `${minutes}:${secs.toString().padStart(2, '0')}`;
-        }
+        return hours > 0 ? `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}` : `${minutes}:${secs.toString().padStart(2, "0")}`;
     }
 }

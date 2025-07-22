@@ -1,4 +1,4 @@
-import { IDiscountRule, IDiscountApplication, IDiscountSummary } from "@/models/discount_rule.model";
+import { IDiscountApplication, IDiscountRule, IDiscountSummary } from "@/models/discount_rule.model";
 import { IFeeData } from "@/models/fee.model";
 
 export interface DiscountEligibilityResult {
@@ -30,7 +30,7 @@ export class DiscountService {
      */
     static async createDiscountRule(
         campus_id: string,
-        ruleData: Omit<IDiscountRule, 'id' | 'campus_id' | 'used_count' | 'created_at' | 'updated_at'>,
+        ruleData: Omit<IDiscountRule, "id" | "campus_id" | "used_count" | "created_at" | "updated_at">,
         created_by: string
     ): Promise<IDiscountRule> {
         try {
@@ -38,7 +38,7 @@ export class DiscountService {
             
             const discountRule: IDiscountRule = {
                 ...ruleData,
-                id: `discount_rule_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                id: `discount_rule_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
                 campus_id,
                 used_count: 0,
                 created_by,
@@ -49,9 +49,7 @@ export class DiscountService {
             // Validate rule conditions
             await this.validateDiscountRule(discountRule);
 
-            const result = await DiscountRule.create(discountRule);
-            
-            return result;
+            return await DiscountRule.create(discountRule);
         } catch (error) {
             throw new Error(`Failed to create discount rule: ${error}`);
         }
@@ -252,7 +250,7 @@ export class DiscountService {
 
             const rule = applicableDiscount.rule;
             const discountApplication: IDiscountApplication = {
-                id: `discount_app_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                id: `discount_app_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
                 campus_id,
                 discount_rule_id,
                 fee_id,
@@ -497,17 +495,17 @@ export class DiscountService {
                 total_discounts_given: totalDiscountsGiven,
                 total_discount_amount: totalDiscountAmount,
                 total_students_benefited: totalStudentsBenefited,
-                discount_by_type: Array.from(discountByType.entries()).map(([type, data]) => ({
+                discount_by_type: [...discountByType.entries()].map(([type, data]) => ({
                     type,
                     count: data.count,
                     amount: data.amount
                 })),
-                discount_by_class: Array.from(discountByClass.entries()).map(([className, data]) => ({
+                discount_by_class: [...discountByClass.entries()].map(([className, data]) => ({
                     class_name: className,
                     count: data.count,
                     amount: data.amount
                 })),
-                top_discount_rules: Array.from(ruleUsage.values())
+                top_discount_rules: [...ruleUsage.values()]
                     .sort((a, b) => b.amount - a.amount)
                     .slice(0, 10)
                     .map(rule => ({
@@ -534,11 +532,9 @@ export class DiscountService {
         }
 
         // Validate conditions
-        if (rule.conditions.valid_from && rule.conditions.valid_until) {
-            if (rule.conditions.valid_from >= rule.conditions.valid_until) {
+        if (rule.conditions.valid_from && rule.conditions.valid_until && rule.conditions.valid_from >= rule.conditions.valid_until) {
                 throw new Error("Valid from date must be before valid until date");
             }
-        }
 
         // Additional validations...
     }
@@ -558,9 +554,9 @@ export class DiscountService {
 
         // Check fee categories
         if (conditions.applicable_fee_categories && conditions.applicable_fee_categories.length > 0) {
-            const feeCategories = fee.items.map(item => item.category_id);
+            const feeCategories = new Set(fee.items.map(item => item.category_id));
             const hasApplicableCategory = conditions.applicable_fee_categories.some(cat => 
-                feeCategories.includes(cat)
+                feeCategories.has(cat)
             );
             if (!hasApplicableCategory) {
                 return { eligible: false, reason: "Fee category not applicable" };
@@ -568,11 +564,9 @@ export class DiscountService {
         }
 
         // Check classes
-        if (conditions.applicable_classes && conditions.applicable_classes.length > 0) {
-            if (!studentClass || !conditions.applicable_classes.includes(studentClass.id)) {
+        if (conditions.applicable_classes && conditions.applicable_classes.length > 0 && (!studentClass || !conditions.applicable_classes.includes(studentClass.id))) {
                 return { eligible: false, reason: "Class not applicable" };
             }
-        }
 
         // Check amount limits
         if (conditions.min_amount && fee.total_amount < conditions.min_amount) {
@@ -611,14 +605,17 @@ export class DiscountService {
         let discountAmount = 0;
 
         switch (rule.discount_type) {
-            case "percentage":
+            case "percentage": {
                 discountAmount = (originalAmount * rule.discount_value) / 100;
                 break;
-            case "fixed_amount":
+            }
+            case "fixed_amount": {
                 discountAmount = rule.discount_value;
                 break;
-            default:
+            }
+            default: {
                 discountAmount = 0;
+            }
         }
 
         // Apply maximum discount limit
@@ -658,7 +655,7 @@ export class DiscountService {
         try {
             const { DiscountRule } = await import("@/models/discount_rule.model");
             return await DiscountRule.findById(rule_id);
-        } catch (error) {
+        } catch {
             return null;
         }
     }

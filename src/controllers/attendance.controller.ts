@@ -1,7 +1,7 @@
 import { Context } from "hono";
 
-import { AttendanceService } from "@/services/attendance.service";
 import { Class } from "@/models/class.model";
+import { AttendanceService } from "@/services/attendance.service";
 
 type AttendanceStatus = "present" | "absent" | "late" | "leave";
 type UserType = "Student" | "Teacher";
@@ -71,7 +71,7 @@ export class AttendanceController {
             return ctx.json(
                 {
                     message: "Error in marking attendance",
-                    error: error instanceof Error ? error.message : 'Unknown error',
+                    error: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -110,7 +110,7 @@ export class AttendanceController {
             return ctx.json(
                 {
                     message: "Error in marking bulk attendance",
-                    error: error instanceof Error ? error.message : 'Unknown error',
+                    error: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -152,7 +152,7 @@ export class AttendanceController {
             return ctx.json(
                 {
                     message: "Error in marking class attendance",
-                    error: error instanceof Error ? error.message : 'Unknown error',
+                    error: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -194,7 +194,7 @@ export class AttendanceController {
             return ctx.json(
                 {
                     message: "Error in updating attendance",
-                    error: error instanceof Error ? error.message : 'Unknown error',
+                    error: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -279,7 +279,7 @@ export class AttendanceController {
             return ctx.json(
                 {
                     message: "Error retrieving class attendance",
-                    error: error instanceof Error ? error.message : 'Unknown error',
+                    error: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -318,7 +318,7 @@ export class AttendanceController {
             return ctx.json(
                 {
                     message: "Error retrieving class attendance",
-                    error: error instanceof Error ? error.message : 'Unknown error',
+                    error: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -355,7 +355,7 @@ export class AttendanceController {
             return ctx.json(
                 {
                     message: "Error retrieving attendance statistics",
-                    error: error instanceof Error ? error.message : 'Unknown error',
+                    error: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -402,7 +402,7 @@ export class AttendanceController {
             return ctx.json(
                 {
                     message: "Error retrieving classes",
-                    error: error instanceof Error ? error.message : 'Unknown error',
+                    error: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -452,7 +452,7 @@ export class AttendanceController {
             return ctx.json(
                 {
                     message: "Error generating attendance report",
-                    error: error instanceof Error ? error.message : 'Unknown error',
+                    error: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -502,7 +502,7 @@ export class AttendanceController {
             return ctx.json(
                 {
                     message: "Error generating student attendance view",
-                    error: error instanceof Error ? error.message : 'Unknown error',
+                    error: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );

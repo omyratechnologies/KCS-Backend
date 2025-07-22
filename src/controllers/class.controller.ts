@@ -721,7 +721,7 @@ export class ClassController {
             const { days } = ctx.req.query();
             const campus_id = ctx.get("campus_id");
 
-            const daysAhead = days ? parseInt(days as string) : 7;
+            const daysAhead = days ? Number.parseInt(days as string) : 7;
 
             const assignments = await classService.getAssignmentsDueSoon(
                 student_id,

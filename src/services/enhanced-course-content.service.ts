@@ -1,9 +1,9 @@
 import { CourseChapter, ICourseChapterData } from "@/models/course_chapter.model";
+import { CourseContent, ICourseContentData } from "@/models/course_content.model";
 import { CourseFolder, ICourseFolderData } from "@/models/course_folder.model";
 import { CourseMaterial, ICourseMaterialData } from "@/models/course_material.model";
 import { CourseProgress, ICourseProgressData } from "@/models/course_progress.model";
 import { CourseWatchHistory, ICourseWatchHistoryData } from "@/models/course_watch_history.model";
-import { CourseContent, ICourseContentData } from "@/models/course_content.model";
 
 export class EnhancedCourseContentService {
     // ==================== CHAPTER MANAGEMENT ====================
@@ -61,12 +61,12 @@ export class EnhancedCourseContentService {
         const rootChapters: any[] = [];
 
         // Create map of all chapters
-        chapters.forEach(chapter => {
+        for (const chapter of chapters) {
             chapterMap.set(chapter.id, { ...chapter, children: [] });
-        });
+        }
 
         // Build hierarchy
-        chapters.forEach(chapter => {
+        for (const chapter of chapters) {
             const chapterNode = chapterMap.get(chapter.id);
             if (chapter.parent_chapter_id) {
                 const parent = chapterMap.get(chapter.parent_chapter_id);
@@ -76,7 +76,7 @@ export class EnhancedCourseContentService {
             } else {
                 rootChapters.push(chapterNode);
             }
-        });
+        }
 
         return rootChapters;
     }
@@ -163,12 +163,12 @@ export class EnhancedCourseContentService {
         );
 
         // Create map of accessible folders
-        accessibleFolders.forEach(folder => {
+        for (const folder of accessibleFolders) {
             folderMap.set(folder.id, { ...folder, children: [], materials: [] });
-        });
+        }
 
         // Build hierarchy
-        accessibleFolders.forEach(folder => {
+        for (const folder of accessibleFolders) {
             const folderNode = folderMap.get(folder.id);
             if (folder.parent_folder_id) {
                 const parent = folderMap.get(folder.parent_folder_id);
@@ -178,7 +178,7 @@ export class EnhancedCourseContentService {
             } else {
                 rootFolders.push(folderNode);
             }
-        });
+        }
 
         return rootFolders;
     }
@@ -515,22 +515,18 @@ export class EnhancedCourseContentService {
     }
 
     private static calculateDeviceStats(watchHistory: ICourseWatchHistoryData[]): any {
-        const deviceStats = watchHistory.reduce((stats, record) => {
+        return watchHistory.reduce((stats, record) => {
             const device = record.device_info.device_type;
             stats[device] = (stats[device] || 0) + 1;
             return stats;
         }, {} as any);
-
-        return deviceStats;
     }
 
     private static calculateQualityStats(watchHistory: ICourseWatchHistoryData[]): any {
-        const qualityStats = watchHistory.reduce((stats, record) => {
+        return watchHistory.reduce((stats, record) => {
             const quality = record.watch_quality;
             stats[quality] = (stats[quality] || 0) + 1;
             return stats;
         }, {} as any);
-
-        return qualityStats;
     }
 }

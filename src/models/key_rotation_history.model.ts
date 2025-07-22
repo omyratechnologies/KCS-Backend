@@ -1,4 +1,5 @@
 import { Schema } from "ottoman";
+
 import { ottoman } from "../libs/db";
 
 export interface IKeyRotationHistory {
@@ -7,12 +8,12 @@ export interface IKeyRotationHistory {
     rotation_date: Date;
     old_key_id: string;
     new_key_id: string;
-    key_type: 'payment_credentials' | 'encryption_master' | 'signing_key';
-    rotation_reason: 'scheduled' | 'security_incident' | 'compliance_requirement' | 'manual';
+    key_type: "payment_credentials" | "encryption_master" | "signing_key";
+    rotation_reason: "scheduled" | "security_incident" | "compliance_requirement" | "manual";
     rotated_by: string;
-    rotation_status: 'completed' | 'failed' | 'pending';
+    rotation_status: "completed" | "failed" | "pending";
     backup_location: string;
-    verification_status: 'verified' | 'pending' | 'failed';
+    verification_status: "verified" | "pending" | "failed";
     created_at: Date;
     updated_at: Date;
 }
@@ -41,13 +42,12 @@ const KeyRotationHistory = ottoman.model<IKeyRotationHistory>("key_rotation_hist
 
 export class KeyRotationHistoryService {
 
-    public static async createRotationRecord(data: Omit<IKeyRotationHistory, 'id' | 'created_at' | 'updated_at'>): Promise<IKeyRotationHistory> {
-        const rotationRecord = await KeyRotationHistory.create({
+    public static async createRotationRecord(data: Omit<IKeyRotationHistory, "id" | "created_at" | "updated_at">): Promise<IKeyRotationHistory> {
+        return await KeyRotationHistory.create({
             ...data,
             created_at: new Date(),
             updated_at: new Date()
         });
-        return rotationRecord;
     }
 
     public static async getRotationHistory(campus_id: string): Promise<IKeyRotationHistory[]> {
@@ -61,7 +61,7 @@ export class KeyRotationHistoryService {
         const lastRotation = await KeyRotationHistory.find({
             campus_id,
             key_type,
-            rotation_status: 'completed'
+            rotation_status: "completed"
         });
         
         const rotations = lastRotation.rows || [];
@@ -76,8 +76,8 @@ export class KeyRotationHistoryService {
 
     public static async updateRotationStatus(
         id: string, 
-        status: 'completed' | 'failed' | 'pending',
-        verification_status?: 'verified' | 'pending' | 'failed'
+        status: "completed" | "failed" | "pending",
+        verification_status?: "verified" | "pending" | "failed"
     ): Promise<IKeyRotationHistory> {
         const updateData: Partial<IKeyRotationHistory> = {
             rotation_status: status,
@@ -103,16 +103,16 @@ export class KeyRotationHistoryService {
         const rotations = allRotations.rows || [];
         
         const total = rotations.length;
-        const successful = rotations.filter(r => r.rotation_status === 'completed').length;
-        const failed = rotations.filter(r => r.rotation_status === 'failed').length;
-        const pending = rotations.filter(r => r.rotation_status === 'pending').length;
+        const successful = rotations.filter(r => r.rotation_status === "completed").length;
+        const failed = rotations.filter(r => r.rotation_status === "failed").length;
+        const pending = rotations.filter(r => r.rotation_status === "pending").length;
         
         const lastRotation = rotations.length > 0 
             ? rotations.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
             : null;
         
         // Calculate average rotation interval
-        const completedRotations = rotations.filter(r => r.rotation_status === 'completed')
+        const completedRotations = rotations.filter(r => r.rotation_status === "completed")
             .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
         
         let avgIntervalDays = 0;

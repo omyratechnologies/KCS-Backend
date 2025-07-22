@@ -8,7 +8,7 @@ import { z } from "zod";
 const userIdSchema = z.string()
     .min(1, "User ID is required")
     .max(50, "User ID must be less than 50 characters")
-    .regex(/^[a-zA-Z0-9_-]+$/, "User ID can only contain alphanumeric characters, underscores, and hyphens");
+    .regex(/^[\w-]+$/, "User ID can only contain alphanumeric characters, underscores, and hyphens");
 
 const emailSchema = z.string()
     .email("Invalid email format")
@@ -19,7 +19,7 @@ const passwordSchema = z.string();
 const nameSchema = z.string()
     .min(1, "Name is required")
     .max(100, "Name must be less than 100 characters")
-    .regex(/^[a-zA-Z\s'-]+$/, "Name can only contain letters, spaces, hyphens, and apostrophes");
+    .regex(/^[\s'a-z-]+$/i, "Name can only contain letters, spaces, hyphens, and apostrophes");
 
 const phoneSchema = z.string()
     .regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number format");
@@ -46,7 +46,7 @@ export const createUserSchema = z.object({
     phone: phoneSchema,
     address: addressSchema,
     meta_data: z.union([z.string(), z.record(z.any())]).optional().transform((val) => 
-        val && typeof val !== 'string' ? JSON.stringify(val) : val
+        val && typeof val !== "string" ? JSON.stringify(val) : val
     ),
     user_type: userTypeSchema,
     campus_id: campusIdSchema.optional(),
@@ -61,7 +61,7 @@ export const updateUserSchema = z.object({
     phone: phoneSchema.optional(),
     address: addressSchema.optional(),
     meta_data: z.union([z.string(), z.record(z.any())]).optional().transform((val) => 
-        val && typeof val !== 'string' ? JSON.stringify(val) : val
+        val && typeof val !== "string" ? JSON.stringify(val) : val
     ),
     is_active: z.boolean().optional(),
     is_deleted: z.boolean().optional(),

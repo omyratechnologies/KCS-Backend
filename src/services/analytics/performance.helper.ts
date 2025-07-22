@@ -1,14 +1,13 @@
 import { AssignmentSubmission } from "@/models/assignment_submission.model";
+import { Class } from "@/models/class.model";
 import { ClassQuizSubmission } from "@/models/class_quiz_submission.model";
 import { StudentRecord } from "@/models/student_record.model";
-import { Class } from "@/models/class.model";
 import { Subject } from "@/models/subject.model";
 import { 
-    PerformanceMetrics, 
-    SubjectPerformance, 
+    ClassRankData, 
     MonthlyTrendData, 
-    ClassRankData 
-} from "@/types";
+    PerformanceMetrics, 
+    SubjectPerformance} from "@/types";
 
 export class PerformanceAnalyticsHelper {
     
@@ -100,27 +99,27 @@ export class PerformanceAnalyticsHelper {
         let totalItems = 0;
 
         // Process assignment submissions
-        submissions.forEach(sub => {
+        for (const sub of submissions) {
             if (sub.grade && sub.grade > 0) {
                 totalScore += sub.grade;
                 maxScore += 100; // Assuming assignments are graded out of 100
                 gradePoints += this.convertGradeToPoints(sub.grade);
                 totalItems++;
             }
-        });
+        }
 
         // Process quiz submissions
-        quizResults.forEach(quiz => {
+        for (const quiz of quizResults) {
             if (quiz.score && quiz.score > 0) {
                 totalScore += quiz.score;
                 maxScore += 100; // Assuming quizzes are scored out of 100
                 gradePoints += this.convertGradeToPoints(quiz.score);
                 totalItems++;
             }
-        });
+        }
 
         // Process exam records
-        examRecords.forEach(record => {
+        for (const record of examRecords) {
             if (record.record_data && Array.isArray(record.record_data)) {
                 record.record_data.forEach((termData: any) => {
                     if (termData.marks && Array.isArray(termData.marks)) {
@@ -136,7 +135,7 @@ export class PerformanceAnalyticsHelper {
                     }
                 });
             }
-        });
+        }
 
         const percentageScore = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
         const averageGradePoint = totalItems > 0 ? gradePoints / totalItems : 0;
@@ -170,7 +169,7 @@ export class PerformanceAnalyticsHelper {
         const subjectIds = new Set<string>();
 
         // Process exam records to get subject performance
-        examRecords.forEach(record => {
+        for (const record of examRecords) {
             if (record.record_data && Array.isArray(record.record_data)) {
                 record.record_data.forEach((termData: any) => {
                     if (termData.marks && Array.isArray(termData.marks)) {
@@ -201,30 +200,30 @@ export class PerformanceAnalyticsHelper {
                     }
                 });
             }
-        });
+        }
 
         // Get subject names
-        let subjectNames: { [key: string]: string } = {};
+        const subjectNames: { [key: string]: string } = {};
         if (subjectIds.size > 0) {
             try {
                 const subjectResult = await Subject.find({
                     campus_id,
-                    id: { $in: Array.from(subjectIds) },
+                    id: { $in: [...subjectIds] },
                     is_active: true,
                     is_deleted: false,
                 });
                 
                 const subjects = subjectResult.rows || [];
-                subjects.forEach(subject => {
+                for (const subject of subjects) {
                     subjectNames[subject.id] = subject.name;
-                });
+                }
             } catch (error) {
                 console.error("Error fetching subject names:", error);
             }
         }
 
         // Convert to result array
-        return Array.from(subjectMap.entries()).map(([subjectId, data]) => ({
+        return [...subjectMap.entries()].map(([subjectId, data]) => ({
             subjectId,
             subjectName: subjectNames[subjectId] || "Unknown Subject",
             averageScore: data.count > 0 ? Math.round((data.totalScore / data.count) * 100) / 100 : 0,
@@ -261,14 +260,14 @@ export class PerformanceAnalyticsHelper {
                     : 0;
 
                 months.push({
-                    month: monthDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+                    month: monthDate.toLocaleDateString("en-US", { month: "short", year: "numeric" }),
                     score: Math.round(avgScore * 100) / 100,
                     assessments: submissions.length,
                 });
             } catch (error) {
                 console.error(`Error calculating trend for month ${i}:`, error);
                 months.push({
-                    month: monthDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+                    month: monthDate.toLocaleDateString("en-US", { month: "short", year: "numeric" }),
                     score: 0,
                     assessments: 0,
                 });
@@ -301,11 +300,11 @@ export class PerformanceAnalyticsHelper {
             const classes = classResults.rows || [];
             const allStudentIds = new Set<string>();
             
-            classes.forEach(cls => {
+            for (const cls of classes) {
                 if (cls.student_ids && Array.isArray(cls.student_ids)) {
                     cls.student_ids.forEach((id: string) => allStudentIds.add(id));
                 }
-            });
+            }
 
             const totalStudents = allStudentIds.size;
 
@@ -346,11 +345,11 @@ export class PerformanceAnalyticsHelper {
      * Convert score to grade points (4.0 scale)
      */
     private static convertGradeToPoints(score: number): number {
-        if (score >= 90) return 4.0;
-        if (score >= 80) return 3.0;
-        if (score >= 70) return 2.0;
-        if (score >= 60) return 1.0;
-        return 0.0;
+        if (score >= 90) return 4;
+        if (score >= 80) return 3;
+        if (score >= 70) return 2;
+        if (score >= 60) return 1;
+        return 0;
     }
 
     /**

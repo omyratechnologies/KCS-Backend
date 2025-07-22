@@ -230,7 +230,7 @@ export class PaymentAnalyticsService {
             const trendsMap = new Map<string, { amount: number; transactions: number }>();
 
             for (const transaction of transactions.rows || []) {
-                const date = transaction.completed_at?.toISOString().split('T')[0] || "";
+                const date = transaction.completed_at?.toISOString().split("T")[0] || "";
                 const existing = trendsMap.get(date) || { amount: 0, transactions: 0 };
                 trendsMap.set(date, {
                     amount: existing.amount + transaction.amount,
@@ -239,15 +239,13 @@ export class PaymentAnalyticsService {
             }
 
             // Convert to array and sort by date
-            const trends = Array.from(trendsMap.entries())
+            return [...trendsMap.entries()]
                 .map(([date, data]) => ({
                     date,
                     amount: data.amount,
                     transactions: data.transactions
                 }))
                 .sort((a, b) => a.date.localeCompare(b.date));
-
-            return trends;
 
         } catch (error) {
             throw new Error(`Failed to get payment trends: ${error}`);
@@ -315,7 +313,7 @@ export class PaymentAnalyticsService {
                         total_paid: payment_data.total_paid,
                         transaction_count: payment_data.transaction_count
                     });
-                } catch (error) {
+                } catch {
                     // Skip if student data not found
                     console.warn(`Student data not found for ID: ${student_id}`);
                 }
@@ -393,7 +391,7 @@ export class PaymentAnalyticsService {
                 const transactionCount = monthTransactions.rows?.length || 0;
 
                 trends.push({
-                    month: monthStart.toLocaleDateString('en-US', { year: 'numeric', month: 'short' }),
+                    month: monthStart.toLocaleDateString("en-US", { year: "numeric", month: "short" }),
                     revenue,
                     transactions: transactionCount,
                     collection_rate: 0 // Calculate based on fees if needed
@@ -469,13 +467,13 @@ export class PaymentAnalyticsService {
             }
         }
 
-        const totalAmount = Array.from(methodStats.values()).reduce((sum, stat) => sum + stat.amount, 0);
+        const totalAmount = [...methodStats.values()].reduce((sum, stat) => sum + stat.amount, 0);
 
-        return Array.from(methodStats.entries()).map(([method, stats]) => ({
+        return [...methodStats.entries()].map(([method, stats]) => ({
             method,
             count: stats.count,
             amount: stats.amount,
-            percentage: totalAmount > 0 ? Math.round((stats.amount / totalAmount) * 10000) / 100 : 0
+            percentage: totalAmount > 0 ? Math.round((stats.amount / totalAmount) * 10_000) / 100 : 0
         }));
     }
 
@@ -558,7 +556,7 @@ export class PaymentAnalyticsService {
             });
         }
 
-        const overdueByClassArray = Array.from(overdueByClass.entries()).map(([classId, data]) => ({
+        const overdueByClassArray = [...overdueByClass.entries()].map(([classId, data]) => ({
             class_name: classId, // You might want to resolve class name
             overdue_count: data.count,
             overdue_amount: data.amount
@@ -605,7 +603,7 @@ export class PaymentAnalyticsService {
                         payment_method: transaction.payment_method || "Unknown",
                         date: transaction.initiated_at
                     });
-                } catch (error) {
+                } catch {
                     // Skip if student not found
                     console.warn(`Student not found for transaction: ${transaction.id}`);
                 }
@@ -625,27 +623,32 @@ export class PaymentAnalyticsService {
         const today = new Date();
         
         switch (type) {
-            case "daily":
+            case "daily": {
                 return {
                     start_date: new Date(today.getFullYear(), today.getMonth(), today.getDate()),
                     end_date: today
                 };
-            case "weekly":
+            }
+            case "weekly": {
                 const weekStart = new Date(today);
                 weekStart.setDate(today.getDate() - 7);
                 return {
                     start_date: weekStart,
                     end_date: today
                 };
-            case "monthly":
+            }
+            case "monthly": {
                 return {
                     start_date: new Date(today.getFullYear(), today.getMonth(), 1),
                     end_date: today
                 };
-            case "custom":
+            }
+            case "custom": {
                 return customRange || { start_date: today, end_date: today };
-            default:
+            }
+            default: {
                 return { start_date: today, end_date: today };
+            }
         }
     }
 
@@ -699,7 +702,7 @@ export class PaymentAnalyticsService {
                     gateway: transaction.payment_gateway,
                     date: transaction.initiated_at
                 });
-            } catch (error) {
+            } catch {
                 // Skip if data not found
                 console.warn(`Error getting details for transaction: ${transaction.id}`);
             }
@@ -713,11 +716,11 @@ export class PaymentAnalyticsService {
         const dailyCollections = new Map<string, number>();
         
         for (const transaction of transactions.filter(t => t.status === "success")) {
-            const date = transaction.completed_at?.toISOString().split('T')[0] || "";
+            const date = transaction.completed_at?.toISOString().split("T")[0] || "";
             dailyCollections.set(date, (dailyCollections.get(date) || 0) + transaction.amount);
         }
 
-        const dailyCollectionsArray = Array.from(dailyCollections.entries())
+        const dailyCollectionsArray = [...dailyCollections.entries()]
             .map(([date, amount]) => ({ date, amount }))
             .sort((a, b) => a.date.localeCompare(b.date));
 

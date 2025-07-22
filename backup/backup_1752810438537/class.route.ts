@@ -5,11 +5,11 @@ import { z } from "zod";
 
 import { ClassController } from "@/controllers/class.controller";
 import {
+    assignmentResponseSchema,
     assignmentSchema,
     assignmentSubmissionSchema,
     assignStudentsRequestBodySchema,
     assignTeachersRequestBodySchema,
-    assignmentResponseSchema,
     classSchema,
     classSubjectSchema,
     createAssignmentRequestBodySchema,

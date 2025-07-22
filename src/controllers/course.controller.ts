@@ -270,6 +270,19 @@ export class CourseController {
                 modelData
             );
 
+            // Optional: Transform response to match API format
+            // Uncomment if you want consistent field names
+            // const apiResponse = {
+            //     id: content.id,
+            //     title: content.content_title,
+            //     content: content.content_description,
+            //     content_type: content.content_format,
+            //     order: content.sort_order,
+            //     created_at: content.created_at,
+            //     updated_at: content.updated_at
+            // };
+            // return ctx.json(apiResponse);
+
             return ctx.json(content);
         } catch (error) {
             if (error instanceof Error) {
@@ -308,9 +321,9 @@ export class CourseController {
 
     public static readonly getCourseContentById = async (ctx: Context) => {
         try {
-            const { course_id } = ctx.req.param();
+            const { content_id } = ctx.req.param();
 
-            const content = await CourseService.getCourseContentById(course_id);
+            const content = await CourseService.getCourseContentById(content_id);
 
             return ctx.json(content);
         } catch (error) {
@@ -327,7 +340,7 @@ export class CourseController {
 
     public static readonly updateCourseContent = async (ctx: Context) => {
         try {
-            const { course_id } = ctx.req.param();
+            const { course_id, content_id } = ctx.req.param();
 
             // Get simple schema data from API request
             const requestData = await ctx.req.json();
@@ -355,9 +368,22 @@ export class CourseController {
             }
 
             const content = await CourseService.updateCourseContent(
-                course_id,
+                content_id,
                 modelData
             );
+
+            // Optional: Transform response to match API format  
+            // Uncomment if you want consistent field names
+            // const apiResponse = {
+            //     id: content.id,
+            //     title: content.content_title,
+            //     content: content.content_description,
+            //     content_type: content.content_format,
+            //     order: content.sort_order,
+            //     created_at: content.created_at,
+            //     updated_at: content.updated_at
+            // };
+            // return ctx.json(apiResponse);
 
             return ctx.json(content);
         } catch (error) {
@@ -374,9 +400,9 @@ export class CourseController {
 
     public static readonly deleteCourseContent = async (ctx: Context) => {
         try {
-            const { course_id } = ctx.req.param();
+            const { content_id } = ctx.req.param();
 
-            const content = await CourseService.deleteCourseContent(course_id);
+            const content = await CourseService.deleteCourseContent(content_id);
 
             return ctx.json(content);
         } catch (error) {
