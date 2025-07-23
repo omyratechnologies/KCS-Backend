@@ -1005,6 +1005,49 @@ app.get(
 );
 
 app.get(
+    "/student/:studentId",
+    describeRoute({
+        tags: ["Class"],
+        operationId: "getClassesByStudentId",
+        summary: "Get classes by student ID",
+        description: "Retrieves all classes that a student is enrolled in",
+        parameters: [
+            {
+                name: "studentId",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Student ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "List of classes for the student",
+                content: {
+                    "application/json": {
+                        schema: resolver(getClassesResponseSchema),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                error: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    ClassController.getClassesByStudentUserId
+);
+
+app.get(
     "/student/:student_id/assignments/due-soon",
     describeRoute({
         tags: ["Class"],
