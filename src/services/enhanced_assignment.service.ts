@@ -70,6 +70,7 @@ export interface IStudentAssignmentDashboard {
         urgency: "critical" | "high" | "medium" | "low";
     }>;
     overdue_assignments: IUnifiedAssignmentView[];
+    submitted_assignments: IUnifiedAssignmentView[];
     recent_grades: Array<{
         assignment: IUnifiedAssignmentView;
         grade: number;
@@ -99,6 +100,10 @@ export interface IStudentAssignmentDashboard {
 }
 
 export class EnhancedAssignmentService {
+    private loggedMissingSubjects: Set<string> = new Set();
+    private loggedMissingTeachers: Set<string> = new Set();
+    private loggedMissingClasses: Set<string> = new Set();
+    private loggedMissingCourses: Set<string> = new Set();
     
     /**
      * Get all assignments for a student across their class and enrolled courses
@@ -277,6 +282,7 @@ export class EnhancedAssignmentService {
                 return {
                     upcoming_assignments: [],
                     overdue_assignments: [],
+                    submitted_assignments: [],
                     recent_grades: [],
                     due_today: [],
                     due_this_week: [],
@@ -337,6 +343,20 @@ export class EnhancedAssignmentService {
                 a.due_date <= weekEnd
             );
 
+            // Get submitted assignments (assignments that have been submitted, including graded ones)
+            const submittedAssignments = assignments
+                .filter(a => a.status === "submitted" || a.status === "graded")
+                .sort((a, b) => {
+                    // Sort by submission date descending
+                    const aDate = a.submission?.submission_date;
+                    const bDate = b.submission?.submission_date;
+                    if (!aDate && !bDate) return 0;
+                    if (!aDate) return 1;
+                    if (!bDate) return -1;
+                    return new Date(bDate).getTime() - new Date(aDate).getTime();
+                })
+                .slice(0, 20); // Show latest 20 submitted assignments
+
             // Calculate statistics
             const statistics = this.calculateDetailedStatistics(assignments);
 
@@ -346,6 +366,7 @@ export class EnhancedAssignmentService {
             return {
                 upcoming_assignments: upcomingAssignments,
                 overdue_assignments: overdueAssignments,
+                submitted_assignments: submittedAssignments,
                 recent_grades: recentGrades,
                 due_today: dueToday,
                 due_this_week: dueThisWeek,
@@ -374,7 +395,7 @@ export class EnhancedAssignmentService {
                     campus_id,
                     class_id,
                 }).catch(error => {
-                    console.error("Error fetching legacy assignments:", error);
+                    console.warn("Legacy assignments fetch failed for class:", class_id);
                     return { rows: [] };
                 }),
                 EnhancedAssignment.find({
@@ -383,11 +404,15 @@ export class EnhancedAssignmentService {
                     is_active: true,
                     is_deleted: false,
                 }).catch(error => {
-                    console.error("Error fetching enhanced assignments:", error);
+                    console.warn("Enhanced assignments fetch failed for class:", class_id);
                     return { rows: [] };
                 }),
                 Class.findById(class_id).catch(error => {
-                    console.error("Error fetching class by ID:", class_id, error);
+                    // Only log once per class_id to avoid spam
+                    if (!this.loggedMissingClasses.has(class_id)) {
+                        this.loggedMissingClasses.add(class_id);
+                        console.warn(`Class not found: ${class_id}`);
+                    }
                     return null;
                 })
             ]);
@@ -412,7 +437,7 @@ export class EnhancedAssignmentService {
                         unifiedAssignments.push(unifiedAssignment);
                     }
                 } catch (error) {
-                    console.error("Error converting legacy assignment:", assignment.id, error);
+                    // Silently skip problematic assignments instead of logging errors
                 }
             }
 
@@ -429,7 +454,7 @@ export class EnhancedAssignmentService {
                         unifiedAssignments.push(unifiedAssignment);
                     }
                 } catch (error) {
-                    console.error("Error converting enhanced assignment:", assignment.id, error);
+                    // Silently skip problematic assignments instead of logging errors
                 }
             }
 
@@ -456,7 +481,7 @@ export class EnhancedAssignmentService {
                     campus_id,
                     course_id,
                 }).catch(error => {
-                    console.error("Error fetching legacy course assignments:", error);
+                    console.warn("Legacy course assignments fetch failed for course:", course_id);
                     return { rows: [] };
                 }),
                 EnhancedAssignment.find({
@@ -465,11 +490,15 @@ export class EnhancedAssignmentService {
                     is_active: true,
                     is_deleted: false,
                 }).catch(error => {
-                    console.error("Error fetching enhanced course assignments:", error);
+                    console.warn("Enhanced course assignments fetch failed for course:", course_id);
                     return { rows: [] };
                 }),
                 Course.findById(course_id).catch(error => {
-                    console.error("Error fetching course by ID:", course_id, error);
+                    // Only log once per course_id to avoid spam
+                    if (!this.loggedMissingCourses.has(course_id)) {
+                        this.loggedMissingCourses.add(course_id);
+                        console.warn(`Course not found: ${course_id}`);
+                    }
                     return null;
                 })
             ]);
@@ -494,7 +523,7 @@ export class EnhancedAssignmentService {
                         unifiedAssignments.push(unifiedAssignment);
                     }
                 } catch (error) {
-                    console.error("Error converting legacy course assignment:", assignment.id, error);
+                    // Silently skip problematic course assignments instead of logging errors
                 }
             }
 
@@ -511,7 +540,7 @@ export class EnhancedAssignmentService {
                         unifiedAssignments.push(unifiedAssignment);
                     }
                 } catch (error) {
-                    console.error("Error converting enhanced course assignment:", assignment.id, error);
+                    // Silently skip problematic enhanced course assignments instead of logging errors
                 }
             }
 
@@ -543,11 +572,19 @@ export class EnhancedAssignmentService {
             // Get subject and teacher info
             const [subjectData, teacherData] = await Promise.all([
                 Subject.findById(assignment.subject_id).catch(error => {
-                    console.error("Error fetching subject:", assignment.subject_id, error);
+                    // Only log once per subject_id to avoid spam
+                    if (!this.loggedMissingSubjects.has(assignment.subject_id)) {
+                        this.loggedMissingSubjects.add(assignment.subject_id);
+                        console.warn(`Subject not found: ${assignment.subject_id}`);
+                    }
                     return null;
                 }),
                 TeacherService.getTeacherById(assignment.user_id).catch(error => {
-                    console.error("Error fetching teacher:", assignment.user_id, error);
+                    // Only log once per user_id to avoid spam
+                    if (!this.loggedMissingTeachers.has(assignment.user_id)) {
+                        this.loggedMissingTeachers.add(assignment.user_id);
+                        console.warn(`Teacher not found: ${assignment.user_id}`);
+                    }
                     return null;
                 })
             ]);
@@ -669,11 +706,19 @@ export class EnhancedAssignmentService {
             // Get subject and teacher info
             const [subjectData, teacherData] = await Promise.all([
                 Subject.findById(assignment.subject_id).catch(error => {
-                    console.error("Error fetching subject:", assignment.subject_id, error);
+                    // Only log once per subject_id to avoid spam
+                    if (!this.loggedMissingSubjects.has(assignment.subject_id)) {
+                        this.loggedMissingSubjects.add(assignment.subject_id);
+                        console.warn(`Subject not found: ${assignment.subject_id}`);
+                    }
                     return null;
                 }),
                 TeacherService.getTeacherById(assignment.user_id).catch(error => {
-                    console.error("Error fetching teacher:", assignment.user_id, error);
+                    // Only log once per user_id to avoid spam
+                    if (!this.loggedMissingTeachers.has(assignment.user_id)) {
+                        this.loggedMissingTeachers.add(assignment.user_id);
+                        console.warn(`Teacher not found: ${assignment.user_id}`);
+                    }
                     return null;
                 })
             ]);

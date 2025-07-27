@@ -723,13 +723,8 @@ export class ClassService {
                 }
             );
 
-            if (assignmentSubmissions.rows.length === 0) {
-                throw new Error(
-                    "No assignment submissions found for this assignment"
-                );
-            }
-
-            return assignmentSubmissions.rows;
+            // Return empty array if no submissions found - this is a normal case
+            return assignmentSubmissions.rows || [];
         } catch (error) {
             console.error(
                 "Error fetching assignment submissions by assignment ID:",

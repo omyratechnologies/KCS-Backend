@@ -3,6 +3,9 @@ import { Context } from "hono";
 import { PaymentService } from "@/services/payment.service";
 import { PaymentAnalyticsService } from "@/services/payment_analytics.service";
 import { PaymentNotificationService } from "@/services/payment_notification.service";
+import PaymentErrorHandler from "@/services/payment_error_handler.service";
+import PaymentSecurityMonitor from "@/services/payment_security_monitor.service";
+import { handlePaymentError } from "@/middlewares/payment_monitoring.middleware";
 import { SecurePaymentCredentialService } from "@/services/secure_payment_credential.service";
 
 export class PaymentController {
@@ -272,7 +275,13 @@ export class PaymentController {
             } else if (user_type === "Student") {
                 actual_student_id = user_id;
             } else {
-                return ctx.json({ error: "Unauthorized user type" }, 403);
+                const authError = PaymentErrorHandler.createError(
+                    "AUTH_002",
+                    { userType: user_type, operation: 'payment_initiation' },
+                    "Unauthorized user type for payment initiation"
+                );
+                const errorResponse = PaymentErrorHandler.formatErrorResponse(authError);
+                return ctx.json(errorResponse, 403 as any);
             }
 
             const result = await PaymentService.initiatePayment(
@@ -292,10 +301,13 @@ export class PaymentController {
                 message: "Payment initiated successfully"
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            const errorHandling = PaymentErrorHandler.handleError(error, {
+                operation: 'initiate_payment',
+                campus_id: ctx.get("campus_id"),
+                user_id: ctx.get("user_id")
+            });
+            const errorResponse = PaymentErrorHandler.formatErrorResponse(errorHandling.error);
+            return ctx.json(errorResponse, errorHandling.httpStatus as any);
         }
     };
 
@@ -310,6 +322,17 @@ export class PaymentController {
                 signature,
                 ...additionalData
             } = await ctx.req.json();
+
+            // Validate required parameters
+            if (!transaction_id) {
+                const validationError = PaymentErrorHandler.createError(
+                    "VAL_001",
+                    { field: 'transaction_id', operation: 'payment_verification' },
+                    "Transaction ID is required for payment verification"
+                );
+                const errorResponse = PaymentErrorHandler.formatErrorResponse(validationError);
+                return ctx.json(errorResponse, 400 as any);
+            }
 
             const result = await PaymentService.verifyAndUpdatePayment(
                 transaction_id,
@@ -327,10 +350,12 @@ export class PaymentController {
                 message: result.success ? "Payment verified successfully" : "Payment verification failed"
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            const errorHandling = PaymentErrorHandler.handleError(error, {
+                operation: 'verify_payment',
+                transaction_id: ctx.req.param('transaction_id')
+            });
+            const errorResponse = PaymentErrorHandler.formatErrorResponse(errorHandling.error);
+            return ctx.json(errorResponse, errorHandling.httpStatus as any);
         }
     };
 
@@ -1384,6 +1409,111 @@ export class PaymentController {
                 success: false,
                 message: error instanceof Error ? error.message : "Unknown error"
             }, 500);
+        }
+    };
+
+    // ========================= SECURITY DASHBOARD =========================
+
+    /**
+     * Get comprehensive security dashboard
+     */
+    public static readonly getSecurityDashboard = async (ctx: Context) => {
+        try {
+            const campus_id = ctx.get("campus_id");
+            const user_type = ctx.get("user_type");
+
+            // Only admin can view security dashboard
+            if (!["Admin", "Super Admin"].includes(user_type)) {
+                const error = PaymentErrorHandler.handleError('AUTH_002');
+                return ctx.json(error, 403 as any);
+            }
+
+            // Get security metrics from the last 24 hours
+            const securityMetrics = PaymentSecurityMonitor.getSecurityMetrics(campus_id);
+            
+            // Get recent security events (last 100)
+            const recentEvents = PaymentSecurityMonitor.getRecentSecurityEvents(campus_id, 100);
+            
+            // Get audit logs (last 50)
+            const auditLogs = PaymentSecurityMonitor.getAuditLogs(campus_id, 50);
+            
+            // Get gateway status
+            const gatewayStatus = await PaymentService.getAvailableGateways(campus_id);
+            
+            // Get encryption validation
+            const { CredentialEncryptionService } = await import("@/services/credential_encryption.service");
+            const encryptionStatus = CredentialEncryptionService.validateEncryptionKey();
+
+            return ctx.json({
+                success: true,
+                data: {
+                    security_metrics: securityMetrics,
+                    recent_events: recentEvents,
+                    audit_logs: auditLogs,
+                    gateway_status: gatewayStatus,
+                    encryption_status: encryptionStatus,
+                    dashboard_generated_at: new Date(),
+                    campus_id
+                }
+            });
+        } catch (error) {
+            const errorResponse = PaymentErrorHandler.handleError('SYS_001', {
+                operation: 'security_dashboard',
+                original_error: error instanceof Error ? error.message : String(error)
+            });
+            return ctx.json(errorResponse, 500 as any);
+        }
+    };
+
+    /**
+     * Get detailed security event by ID
+     */
+    public static readonly getSecurityEventDetails = async (ctx: Context) => {
+        try {
+            const campus_id = ctx.get("campus_id");
+            const user_type = ctx.get("user_type");
+            const { event_id } = ctx.req.param();
+
+            // Only admin can view security events
+            if (!["Admin", "Super Admin"].includes(user_type)) {
+                const error = PaymentErrorHandler.handleError('AUTH_002');
+                return ctx.json(error, 403 as any);
+            }
+
+            if (!event_id) {
+                const error = PaymentErrorHandler.handleError('VAL_001', {
+                    missing_fields: { event_id: true }
+                });
+                return ctx.json(error, 400 as any);
+            }
+
+            const eventDetails = PaymentSecurityMonitor.getSecurityEventById(event_id);
+            
+            if (!eventDetails) {
+                const error = PaymentErrorHandler.handleError('NOT_001', {
+                    resource: 'security_event',
+                    identifier: event_id
+                });
+                return ctx.json(error, 404 as any);
+            }
+
+            // Check if user has access to this campus's events
+            if (eventDetails.campus_id && eventDetails.campus_id !== campus_id) {
+                const error = PaymentErrorHandler.handleError('AUTH_002');
+                return ctx.json(error, 403 as any);
+            }
+
+            return ctx.json({
+                success: true,
+                data: eventDetails
+            });
+        } catch (error) {
+            const errorResponse = PaymentErrorHandler.handleError('SYS_001', {
+                operation: 'get_security_event_details',
+                event_id: ctx.req.param().event_id,
+                original_error: error instanceof Error ? error.message : String(error)
+            });
+            return ctx.json(errorResponse, 500 as any);
         }
     };
 

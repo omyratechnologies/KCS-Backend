@@ -151,35 +151,98 @@ export const courseContentSchema = z
         id: z.string().openapi({ example: "content123" }),
         campus_id: z.string().openapi({ example: "campus123" }),
         course_id: z.string().openapi({ example: "course123" }),
-        title: z.string().openapi({ example: "Week 1: Introduction" }),
-        content: z
+        title: z.string().openapi({ example: "Introduction to Programming" }),
+        description: z
             .string()
             .openapi({
-                example: "This week we will cover the basics of programming",
+                example: "Basic programming concepts",
             }),
-        content_type: z.string().openapi({ example: "text" }),
+        content_type: z.enum(["text", "video", "resource"]).openapi({ example: "text" }),
+        content_data: z.object({
+            text_content: z.string().optional().openapi({ example: "This lesson covers variables, functions, and basic syntax." }),
+            video_url: z.string().optional().openapi({ example: "https://your-storage.com/video.mp4" }),
+            video_duration: z.number().optional().openapi({ example: 1800 }),
+            thumbnail_url: z.string().optional().openapi({ example: "https://your-storage.com/thumbnail.jpg" }),
+            file_size: z.number().optional().openapi({ example: 52428800 }),
+            resources_url: z.string().optional().openapi({ example: "https://your-storage.com/handbook.pdf" }),
+            resources_size: z.number().optional().openapi({ example: 2048000 }),
+            file_type: z.string().optional().openapi({ example: "pdf" }),
+            file_name: z.string().optional().openapi({ example: "programming-handbook.pdf" })
+        }).openapi({ example: { text_content: "This lesson covers variables, functions, and basic syntax." } }),
         order: z.number().openapi({ example: 1 }),
-        is_deleted: z.boolean().openapi({ example: false }),
         created_at: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
         updated_at: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
     })
     .openapi({ ref: "CourseContent" });
 
-// Create Course Content Request
+// Week-based Course Content Request
 export const createCourseContentRequestBodySchema = z
     .object({
-        title: z.string().openapi({ example: "Week 1: Introduction" }),
-        content: z
-            .string()
-            .openapi({
-                example: "This week we will cover the basics of programming",
-            }),
-        content_type: z.string().openapi({ example: "text" }),
-        order: z.number().openapi({ example: 1 }),
+        title: z.string().openapi({ example: "Week 1: Introduction to Programming" }),
+        description: z.string().openapi({ example: "This week covers basic programming concepts and fundamental coding principles" }),
+        contents: z.array(z.object({
+            title: z.string().openapi({ example: "Introduction to Programming" }),
+            description: z.string().openapi({ example: "Basic programming concepts" }),
+            content_type: z.enum(["text", "video", "resource"]).openapi({ example: "text" }),
+            content_data: z.object({
+                text_content: z.string().optional().openapi({ example: "This lesson covers variables, functions, and basic syntax." }),
+                video_url: z.string().optional().openapi({ example: "https://your-storage.com/video.mp4" }),
+                video_duration: z.number().optional().openapi({ example: 1800 }),
+                thumbnail_url: z.string().optional().openapi({ example: "https://your-storage.com/thumbnail.jpg" }),
+                file_size: z.number().optional().openapi({ example: 52428800 }),
+                resources_url: z.string().optional().openapi({ example: "https://your-storage.com/handbook.pdf" }),
+                resources_size: z.number().optional().openapi({ example: 2048000 }),
+                file_type: z.string().optional().openapi({ example: "pdf" }),
+                file_name: z.string().optional().openapi({ example: "programming-handbook.pdf" })
+            }).openapi({ example: { text_content: "This lesson covers variables, functions, and basic syntax." } })
+        })).openapi({ 
+            example: [
+                {
+                    title: "Introduction to Programming",
+                    description: "Basic programming concepts",
+                    content_type: "text",
+                    content_data: { text_content: "This lesson covers variables, functions, and basic syntax." }
+                },
+                {
+                    title: "Programming Tutorial Video",
+                    description: "Video lesson on programming basics",
+                    content_type: "video",
+                    content_data: {
+                        video_url: "https://your-storage.com/video.mp4",
+                        video_duration: 1800,
+                        thumbnail_url: "https://your-storage.com/thumbnail.jpg",
+                        file_size: 52428800
+                    }
+                }
+            ]
+        }),
+        access_settings: z.object({
+            access_level: z.enum(["free", "paid"]).openapi({ example: "free" }),
+            course_price: z.number().optional().openapi({ example: 20000 }),
+            available_from: z.string().optional().openapi({ example: "2023-01-01T00:00:00Z" }),
+            available_until: z.string().optional().openapi({ example: "2024-01-01T00:00:00Z" })
+        }).optional(),
+        interaction_settings: z.object({
+            allow_comments: z.boolean().optional().openapi({ example: true }),
+            allow_notes: z.boolean().optional().openapi({ example: true }),
+            allow_bookmarks: z.boolean().optional().openapi({ example: true }),
+            discussion: z.boolean().optional().openapi({ example: false }),
+            require_completion: z.boolean().optional().openapi({ example: false })
+        }).optional(),
+        meta_data: z.object({
+            tags: z.array(z.string()).optional().openapi({ example: ["programming", "basics"] })
+        }).optional(),
+        order: z.number().optional().openapi({ example: 1 })
     })
     .openapi({ ref: "CreateCourseContentRequest" });
 
-export const createCourseContentResponseSchema = courseContentSchema.openapi({
+export const createCourseContentResponseSchema = z.object({
+    week_title: z.string().openapi({ example: "Week 1: Introduction to Programming" }),
+    week_description: z.string().openapi({ example: "This week covers basic programming concepts" }),
+    week_order: z.number().openapi({ example: 1 }),
+    contents_count: z.number().openapi({ example: 3 }),
+    contents: z.array(courseContentSchema)
+}).openapi({
     ref: "CreateCourseContentResponse",
 });
 

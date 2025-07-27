@@ -228,62 +228,85 @@ export class CourseController {
     public static readonly createCourseContent = async (ctx: Context) => {
         try {
             const campus_id = ctx.get("campus_id");
+            const user_id = ctx.get("user_id");
             const { course_id } = ctx.req.param();
 
-            // Get simple schema data from API request
+            // Get week-based content data from API request
             const requestData = await ctx.req.json();
             
-            // Transform simple schema to complex model schema
-            const modelData: Partial<ICourseContentData> = {
-                content_title: requestData.title,
-                content_description: requestData.content,
-                content_type: requestData.content_type === "text" ? "lesson" : requestData.content_type,
-                content_format: requestData.content_type === "text" ? "text" : requestData.content_type,
-                content_data: {
-                    text_content: requestData.content,
-                    html_content: `<p>${requestData.content}</p>`,
-                    duration: 1800
-                },
-                access_settings: {
-                    access_level: "free",
-                    available_from: new Date(),
-                    available_until: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year from now
-                },
-                interaction_settings: {
-                    allow_comments: true,
-                    allow_notes: true,
-                    allow_bookmarks: true,
-                    require_completion: false
-                },
-                sort_order: requestData.order || 1,
-                meta_data: {
-                    created_by: "system",
-                    tags: []
-                },
-                is_active: true,
-                is_deleted: false
+            // Validate required fields
+            if (!requestData.title || !requestData.contents || !Array.isArray(requestData.contents)) {
+                return ctx.json(
+                    { message: "Missing required fields: title, contents array" },
+                    400
+                );
+            }
+
+            const createdContents: ICourseContentData[] = [];
+            
+            // Process each content item in the array
+            for (let i = 0; i < requestData.contents.length; i++) {
+                const contentItem = requestData.contents[i];
+                
+                // Transform each content item to model schema
+                const modelData: Partial<ICourseContentData> = {
+                    content_title: contentItem.title,
+                    content_description: contentItem.description || requestData.description,
+                    content_type: CourseController.mapContentType(contentItem.content_type),
+                    content_format: CourseController.mapContentFormat(contentItem.content_type),
+                    content_data: CourseController.transformContentData(contentItem.content_type, contentItem.content_data),
+                    access_settings: {
+                        access_level: requestData.access_settings?.access_level || "free",
+                        available_from: requestData.access_settings?.available_from 
+                            ? new Date(requestData.access_settings.available_from) 
+                            : new Date(),
+                        available_until: requestData.access_settings?.available_until 
+                            ? new Date(requestData.access_settings.available_until)
+                            : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+                    },
+                    interaction_settings: {
+                        allow_comments: requestData.interaction_settings?.allow_comments ?? true,
+                        allow_notes: requestData.interaction_settings?.allow_notes ?? true,
+                        allow_bookmarks: requestData.interaction_settings?.allow_bookmarks ?? true,
+                        require_completion: requestData.interaction_settings?.require_completion ?? false
+                    },
+                    sort_order: (requestData.order || 1) * 100 + i, // Week order * 100 + content index
+                    meta_data: {
+                        created_by: user_id || "system",
+                        tags: requestData.meta_data?.tags || []
+                    },
+                    is_active: true,
+                    is_deleted: false
+                };
+
+                const content = await CourseService.createCourseContent(
+                    campus_id,
+                    course_id,
+                    modelData
+                );
+
+                createdContents.push(content);
+            }
+
+            // Return week-based response
+            const response = {
+                week_title: requestData.title,
+                week_description: requestData.description,
+                week_order: requestData.order || 1,
+                contents_count: createdContents.length,
+                contents: createdContents.map(content => ({
+                    id: content.id,
+                    title: content.content_title,
+                    description: content.content_description,
+                    content_type: content.content_format,
+                    content_data: content.content_data,
+                    order: content.sort_order,
+                    created_at: content.created_at,
+                    updated_at: content.updated_at
+                }))
             };
 
-            const content = await CourseService.createCourseContent(
-                campus_id,
-                course_id,
-                modelData
-            );
-
-            // Optional: Transform response to match API format
-            // Uncomment if you want consistent field names
-            // const apiResponse = {
-            //     id: content.id,
-            //     title: content.content_title,
-            //     content: content.content_description,
-            //     content_type: content.content_format,
-            //     order: content.sort_order,
-            //     created_at: content.created_at,
-            //     updated_at: content.updated_at
-            // };
-            // return ctx.json(apiResponse);
-
-            return ctx.json(content);
+            return ctx.json(response);
         } catch (error) {
             if (error instanceof Error) {
                 return ctx.json(
@@ -295,6 +318,61 @@ export class CourseController {
             }
         }
     };
+
+    // Helper method to map content types
+    private static mapContentType(contentType: string): "lesson" | "quiz" | "assignment" | "resource" | "assessment" | "interactive" {
+        switch (contentType) {
+            case "text":
+                return "lesson";
+            case "video":
+                return "lesson";
+            case "resource":
+                return "resource";
+            default:
+                return "lesson";
+        }
+    }
+
+    // Helper method to map content format
+    private static mapContentFormat(contentType: string): "text" | "video" | "audio" | "document" | "presentation" | "interactive" {
+        switch (contentType) {
+            case "text":
+                return "text";
+            case "video":
+                return "video";
+            case "resource":
+                return "document";
+            default:
+                return "text";
+        }
+    }
+
+    // Helper method to transform content data based on type
+    private static transformContentData(contentType: string, contentData: any): any {
+        switch (contentType) {
+            case "text":
+                return {
+                    text_content: contentData.text_content,
+                    html_content: `<p>${contentData.text_content}</p>`,
+                    duration: contentData.duration || 1800
+                };
+            case "video":
+                return {
+                    video_url: contentData.video_url,
+                    duration: contentData.video_duration,
+                    thumbnail_url: contentData.thumbnail_url,
+                    file_size: contentData.file_size
+                };
+            case "resource":
+                return {
+                    document_url: contentData.resources_url,
+                    file_size: contentData.resources_size,
+                    duration: 0
+                };
+            default:
+                return contentData;
+        }
+    }
 
     public static readonly getAllCourseContents = async (ctx: Context) => {
         try {

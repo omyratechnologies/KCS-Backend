@@ -38,6 +38,7 @@ const CourseEnrollmentSchema = new Schema({
 
 CourseEnrollmentSchema.index.findByCampusId = { by: "campus_id" };
 CourseEnrollmentSchema.index.findByCourseId = { by: "course_id" };
+CourseEnrollmentSchema.index.findByUserId = { by: "user_id" };
 
 const CourseEnrollment = ottoman.model<ICourseEnrollmentData>(
     "course_enrollment",

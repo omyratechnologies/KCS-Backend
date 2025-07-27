@@ -4,6 +4,7 @@ import { resolver, validator as zValidator } from "hono-openapi/zod";
 
 import { PaymentController } from "@/controllers/payment.controller";
 import { roleMiddleware } from "@/middlewares/role.middleware";
+import { paymentMonitoringMiddleware } from "@/middlewares/payment_monitoring.middleware";
 import {
     availableGatewaysResponseSchema,
     createBankDetailsRequestSchema,
@@ -237,6 +238,7 @@ app.post(
 // Payment Initiation (Students/Parents)
 app.post(
     "/initiate-payment",
+    paymentMonitoringMiddleware,
     describeRoute({
         tags: ["Payment Processing"],
         operationId: "initiatePayment",
@@ -260,6 +262,7 @@ app.post(
 // Payment Verification (Webhook/Callback)
 app.post(
     "/verify-payment/:transaction_id",
+    paymentMonitoringMiddleware,
     describeRoute({
         tags: ["Payment Processing"],
         operationId: "verifyPayment",
@@ -421,6 +424,7 @@ app.get(
 // Gateway Configuration (Admin only)
 app.post(
     "/secure-credentials",
+    paymentMonitoringMiddleware,
     describeRoute({
         tags: ["Gateway Management"],
         operationId: "configureSecureCredentials",
@@ -537,6 +541,58 @@ app.post(
         },
     }),
     PaymentController.migrateLegacyCredentials
+);
+
+// Security Dashboard and Monitoring (Admin only)
+app.get(
+    "/security/dashboard",
+    describeRoute({
+        tags: ["Payment Security"],
+        operationId: "getSecurityDashboard",
+        summary: "Get comprehensive security dashboard",
+        description: "Admin can view payment security metrics, recent events, and audit logs",
+        responses: {
+            200: {
+                description: "Security dashboard data retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(successResponseSchema),
+                    },
+                },
+            },
+            403: {
+                description: "Unauthorized - Admin access required",
+            },
+        },
+    }),
+    PaymentController.getSecurityDashboard
+);
+
+app.get(
+    "/security/events/:event_id",
+    describeRoute({
+        tags: ["Payment Security"],
+        operationId: "getSecurityEventDetails",
+        summary: "Get detailed security event information",
+        description: "Admin can view detailed information about a specific security event",
+        responses: {
+            200: {
+                description: "Security event details retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(successResponseSchema),
+                    },
+                },
+            },
+            403: {
+                description: "Unauthorized - Admin access required",
+            },
+            404: {
+                description: "Security event not found",
+            },
+        },
+    }),
+    PaymentController.getSecurityEventDetails
 );
 
 export default app;

@@ -9,6 +9,7 @@ import campusesRoute from "@/routes/campuses.route";
 import classRoute from "@/routes/class.route";
 import classQuizRoute from "@/routes/class_quiz.route";
 import courseRoute from "@/routes/course.route";
+import coursesRoute from "@/routes/courses.route";
 import courseQuizRoute from "@/routes/cousre_quiz.route";
 import curriculumRoute from "@/routes/curriculum.route";
 import dashboardRoute from "@/routes/dashboard.route";
@@ -22,6 +23,7 @@ import messagesRoute from "@/routes/message.route";
 import notificationRoute from "@/routes/notification.route";
 import parentRoute from "@/routes/parent.route";
 import paymentRoute from "@/routes/payment.route";
+import studentCoursesRoute from "@/routes/student-courses.route";
 import studentPerformanceRoute from "@/routes/student_performance.route";
 import studentRecordRoute from "@/routes/student_record.route";
 import subjectRoute from "@/routes/subject.route";
@@ -48,6 +50,8 @@ app.route("/attendance", attendanceRoute);
 app.route("/class", classRoute);
 app.route("/curriculum", curriculumRoute);
 app.route("/course", courseRoute);
+app.route("/courses", coursesRoute); // New student-friendly courses listing
+app.route("/course", studentCoursesRoute); // New student course reports
 app.route("/course-content", enhancedCourseContentRoute); // New enhanced course content routes
 app.route("/subject", subjectRoute);
 app.route("/library", libraryRoute);

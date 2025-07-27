@@ -17,8 +17,20 @@ export class UploadController {
                 return ctx.json({
                     success: false,
                     message: "No file uploaded",
-                });
+                }, 400);
             }
+
+            // Validate file size (max 100MB)
+            const maxSize = 100 * 1024 * 1024; // 100MB in bytes
+            if (file.size > maxSize) {
+                return ctx.json({
+                    success: false,
+                    message: "File too large. Maximum size allowed is 100MB",
+                }, 400);
+            }
+
+            // Initialize S3 client
+            UploadFactory.createUploadClient();
 
             const s3Data = await UploadFactory.upload(file);
 
@@ -41,9 +53,14 @@ export class UploadController {
         } catch (error) {
             if (error instanceof Error) {
                 return ctx.json({
+                    success: false,
                     message: error.message,
-                });
+                }, 500);
             }
+            return ctx.json({
+                success: false,
+                message: "An unexpected error occurred",
+            }, 500);
         }
     };
 
@@ -57,9 +74,14 @@ export class UploadController {
         } catch (error) {
             if (error instanceof Error) {
                 return ctx.json({
+                    success: false,
                     message: error.message,
-                });
+                }, 500);
             }
+            return ctx.json({
+                success: false,
+                message: "An unexpected error occurred",
+            }, 500);
         }
     };
 
@@ -73,9 +95,14 @@ export class UploadController {
         } catch (error) {
             if (error instanceof Error) {
                 return ctx.json({
+                    success: false,
                     message: error.message,
-                });
+                }, 500);
             }
+            return ctx.json({
+                success: false,
+                message: "An unexpected error occurred",
+            }, 500);
         }
     };
 
@@ -89,9 +116,14 @@ export class UploadController {
         } catch (error) {
             if (error instanceof Error) {
                 return ctx.json({
+                    success: false,
                     message: error.message,
-                });
+                }, 500);
             }
+            return ctx.json({
+                success: false,
+                message: "An unexpected error occurred",
+            }, 500);
         }
     };
 }
