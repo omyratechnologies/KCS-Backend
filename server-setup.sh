@@ -62,12 +62,16 @@ sudo yum update -y
 
 # Install essential packages
 print_status "📦 Installing essential packages..."
-sudo yum install -y git curl wget unzip htop nano vim build-essential
+sudo yum install -y git curl wget unzip htop nano vim gcc gcc-c++ make
 
 # Install Node.js and npm
 print_status "📦 Installing Node.js and npm..."
 curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
 sudo yum install -y nodejs
+
+# Install Python3 for MediaSoup compilation
+print_status "📦 Installing Python3 for MediaSoup..."
+sudo yum install -y python3 python3-pip
 
 # Install Bun
 print_status "🚀 Installing Bun runtime..."
