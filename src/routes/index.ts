@@ -23,6 +23,7 @@ import messagesRoute from "@/routes/message.route";
 import notificationRoute from "@/routes/notification.route";
 import parentRoute from "@/routes/parent.route";
 import paymentRoute from "@/routes/payment.route";
+import paymentSettlementRoute from "@/routes/payment_settlement.route";
 import studentCoursesRoute from "@/routes/student-courses.route";
 import studentPerformanceRoute from "@/routes/student_performance.route";
 import studentRecordRoute from "@/routes/student_record.route";
@@ -72,6 +73,7 @@ app.route("/student-performance", studentPerformanceRoute);
 app.route("/teacher", teacherRoute);
 app.route("/parent", parentRoute);
 app.route("/payment", paymentRoute);
+app.route("/payment-settlement", paymentSettlementRoute);
 app.route("/super-admin", superAdminRoute);
 
 export default app;

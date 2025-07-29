@@ -959,7 +959,36 @@ export class AssignmentController {
             const { assignment_id } = ctx.req.param();
             const data = await ctx.req.json();
 
-            const result = await classService.updateAssignment(assignment_id, data);
+            // First try to update as a class assignment
+            let result: any = await classService.updateAssignment(assignment_id, data);
+            let isClassAssignment = true;
+
+            // If not found as class assignment, try course assignment
+            if (!result) {
+                try {
+                    // For course assignments, we need to map the field names
+                    const courseData = {
+                        ...data,
+                        assignment_title: data.title,
+                        assignment_description: data.description,
+                        // Remove the class assignment specific fields
+                        title: undefined,
+                        description: undefined,
+                    };
+                    // Clean up undefined fields
+                    Object.keys(courseData).forEach(key => {
+                        if (courseData[key] === undefined) {
+                            delete courseData[key];
+                        }
+                    });
+                    
+                    result = await CourseService.updateCourseAssignment(assignment_id, courseData);
+                    isClassAssignment = false;
+                } catch (error) {
+                    console.error("Course assignment update failed:", error);
+                    result = null;
+                }
+            }
 
             if (!result) {
                 return ctx.json({ 
@@ -972,6 +1001,7 @@ export class AssignmentController {
                 success: true,
                 message: "Assignment updated successfully",
                 data: result,
+                assignment_type: isClassAssignment ? "class" : "course"
             });
         } catch (error) {
             console.error("Error updating assignment:", error);
@@ -986,7 +1016,21 @@ export class AssignmentController {
         try {
             const { assignment_id } = ctx.req.param();
 
-            const success = await classService.deleteAssignment(assignment_id);
+            // First try to delete as a class assignment
+            let success = await classService.deleteAssignment(assignment_id);
+            let isClassAssignment = true;
+
+            // If not found as class assignment, try course assignment
+            if (!success) {
+                try {
+                    await CourseService.deleteCourseAssignment(assignment_id);
+                    success = true;
+                    isClassAssignment = false;
+                } catch (error) {
+                    console.error("Course assignment deletion failed:", error);
+                    success = false;
+                }
+            }
 
             if (!success) {
                 return ctx.json({ 
@@ -998,6 +1042,7 @@ export class AssignmentController {
             return ctx.json({
                 success: true,
                 message: "Assignment deleted successfully",
+                assignment_type: isClassAssignment ? "class" : "course"
             });
         } catch (error) {
             console.error("Error deleting assignment:", error);

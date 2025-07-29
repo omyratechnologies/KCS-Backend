@@ -19,12 +19,36 @@
    - Test accounts and credentials
    - Performance metrics and status
 
+3. **[Payment Settlement System Documentation](./PAYMENT_SETTLEMENT_SYSTEM_DOCUMENTATION.md)**
+   - **NEW** Complete SaaS payment gateway flow architecture
+   - Multi-gateway settlement processing with Razorpay, PayU, Cashfree
+   - Advanced security features and compliance reporting
+   - School bank account management and fee structures
+   - Parent/student payment flows and API endpoints
+
+4. **[Payment Gateway Flow Diagrams](./PAYMENT_GATEWAY_FLOW_DIAGRAMS.md)**
+   - **NEW** Visual system architecture with Mermaid diagrams
+   - Detailed payment processing sequences
+   - Security and monitoring flow charts
+   - Settlement and reconciliation workflows
+   - Error handling and recovery processes
+
+5. **[Payment Implementation Guide](./PAYMENT_IMPLEMENTATION_GUIDE.md)**
+   - **NEW** Step-by-step implementation walkthrough
+   - School onboarding and gateway setup
+   - Frontend integration examples (React)
+   - Webhook configuration and testing
+   - Production deployment checklist
+
 ### 📖 **Supporting Documentation**
 
-3. **[Backend Developer Guide](./BACKEND_DEVELOPER_GUIDE.md)**
+6. **[Backend Developer Guide](./BACKEND_DEVELOPER_GUIDE.md)**
    - Server-side implementation details
    - Database schemas and relationships
    - API architecture and design patterns
+
+7. **[Course API Documentation](./COURSES_API_DOCUMENTATION.md)**
+   - Course management system APIs
 
 4. **[Course API Documentation](./COURSES_API_DOCUMENTATION.md)**
    - Course management system APIs

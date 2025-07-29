@@ -613,9 +613,10 @@ export class ClassService {
     // delete assignment
     public async deleteAssignment(id: string): Promise<boolean> {
         try {
-            await Assignment.findByIdAndDelete(id);
-
-            return true;
+            const deletedAssignment = await Assignment.removeById(id);
+            
+            // Return true if deletion was successful (assignment existed and was deleted)
+            return !!deletedAssignment;
         } catch (error) {
             console.error("Error deleting assignment:", error);
             return false;
