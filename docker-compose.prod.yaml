@@ -1,0 +1,114 @@
+version: '3.8'
+
+services:
+  # Kubernetes-style deployment configuration
+  api:
+    image: kcs-backend:latest
+    deploy:
+      replicas: 3
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        order: start-first
+      rollback_config:
+        parallelism: 1
+        delay: 5s
+        failure_action: pause
+        order: stop-first
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.5'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
+    ports:
+      - "4500:4500"
+      - "4501:4501"
+      - "40000-40100:40000-40100/udp"
+      - "40000-40100:40000-40100/tcp"
+    environment:
+      - NODE_ENV=production
+      - MEDIASOUP_WORKER_COUNT=4
+      - MEDIASOUP_LISTEN_IP=0.0.0.0
+      - MEDIASOUP_ANNOUNCED_IP=${MEDIASOUP_ANNOUNCED_IP}
+    volumes:
+      - uploads:/app/uploads
+      - recordings:/app/recordings
+      - logs:/app/logs
+    networks:
+      - kcs-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4500/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  redis:
+    image: redis:7-alpine
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    networks:
+      - kcs-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  nginx:
+    image: nginx:alpine
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 5s
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+          cpus: '0.25'
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - api
+    networks:
+      - kcs-network
+
+volumes:
+  uploads:
+    driver: local
+  recordings:
+    driver: local
+  logs:
+    driver: local
+  redis-data:
+    driver: local
+
+networks:
+  kcs-network:
+    driver: overlay
+    attachable: true

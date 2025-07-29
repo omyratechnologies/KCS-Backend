@@ -1,6 +1,7 @@
 import { type Context } from "hono";
 
 import { User } from "@/models/user.model";
+import { WebRTCService } from "@/services/webrtc.service";
 
 export class HealthController {
     /**
@@ -71,5 +72,40 @@ export class HealthController {
 
         const statusCode = healthChecks.status === "healthy" ? 200 : 503;
         return c.json(healthChecks, statusCode);
+    };
+
+    /**
+     * Check WebRTC service status
+     */
+    public static readonly checkWebRTC = async (c: Context) => {
+        try {
+            const status = WebRTCService.getStatus();
+            
+            return c.json({
+                success: true,
+                message: status.available ? "WebRTC service healthy" : "WebRTC in compatibility mode",
+                timestamp: new Date().toISOString(),
+                service: "MediaSoup WebRTC",
+                status: {
+                    available: status.available,
+                    workers: status.workers,
+                    activeRouters: status.routers,
+                    activeRooms: status.activeRooms,
+                    mode: status.available ? "Full WebRTC" : "Participant Management Only"
+                }
+            });
+        } catch (error) {
+            console.error("WebRTC health check failed:", error);
+            
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            
+            return c.json({
+                success: false,
+                message: "WebRTC service check failed",
+                error: errorMessage,
+                timestamp: new Date().toISOString(),
+                service: "MediaSoup WebRTC"
+            }, 503);
+        }
     };
 }
