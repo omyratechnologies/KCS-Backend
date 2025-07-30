@@ -2,9 +2,12 @@ import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";
 import { resolver, validator as zValidator } from "hono-openapi/zod";
 import { z } from "zod";
+import { compress } from "hono/compress";
 
 import { MeetingController } from "@/controllers/meeting.controller";
 import { HealthController } from "@/controllers/health.controller";
+import { meetingRateLimit, strictMeetingRateLimit } from "@/middlewares/rate_limiting.middleware";
+import { meetingSecurityMiddleware, meetingAccessControl } from "@/middlewares/meeting_security.middleware";
 import {
     createMeetingRequestBodySchema,
     createMeetingResponseSchema,
@@ -20,11 +23,17 @@ import {
  */
 const app = new Hono();
 
-// Enhanced meeting creation schema
+// Apply middleware stack
+app.use("/*", compress()); // Response compression
+app.use("/*", meetingSecurityMiddleware()); // Security headers
+app.use("/*", meetingRateLimit()); // Rate limiting
+app.use("/*", meetingAccessControl()); // Access control
+
+// Enhanced meeting creation schema with strict validation
 const enhancedCreateMeetingSchema = createMeetingRequestBodySchema.extend({
     meeting_type: z.enum(['scheduled', 'instant', 'recurring']).optional(),
     max_participants: z.number().min(2).max(10000).optional(),
-    meeting_password: z.string().optional(),
+    meeting_password: z.string().min(6).max(50).optional().transform(val => val?.trim()),
     waiting_room_enabled: z.boolean().optional(),
     require_host_approval: z.boolean().optional(),
     features: z.object({
@@ -43,13 +52,47 @@ const enhancedCreateMeetingSchema = createMeetingRequestBodySchema.extend({
         record_audio: z.boolean().optional(),
         record_chat: z.boolean().optional(),
         storage_location: z.enum(['local', 'cloud']).optional(),
-        retention_days: z.number().optional(),
+        retention_days: z.number().min(1).max(365).optional(),
     }).optional(),
+}).refine(data => {
+    if (data.meeting_start_time && data.meeting_end_time) {
+        return new Date(data.meeting_start_time) < new Date(data.meeting_end_time);
+    }
+    return true;
+}, {
+    message: "Meeting end time must be after start time"
 });
 
 const joinMeetingSchema = z.object({
-    meeting_password: z.string().optional(),
+    meeting_password: z.string().optional().transform(val => val?.trim()),
 });
+
+// Parameter validation schemas
+const meetingIdSchema = z.object({
+    meeting_id: z.string().min(1, "Meeting ID is required"),
+});
+
+const participantManagementSchema = z.object({
+    participants: z.array(z.object({
+        user_id: z.string().optional(),
+        email: z.string().email().optional(),
+        name: z.string().min(1).max(100).optional().transform(val => val?.trim()),
+        phone: z.string().optional(),
+        role: z.enum(['host', 'co_host', 'presenter', 'attendee']).optional(),
+    })).min(1, "At least one participant is required"),
+    send_invitation: z.boolean().optional(),
+    invitation_message: z.string().max(500).optional().transform(val => val?.trim()),
+    participant_role: z.enum(['host', 'co_host', 'presenter', 'attendee']).optional(),
+    notify_existing_participants: z.boolean().optional(),
+}).refine(data => {
+    // Ensure each participant has either user_id or email
+    return data.participants.every(p => p.user_id || p.email);
+}, {
+    message: "Each participant must have either user_id or email"
+});
+
+// Apply rate limiting middleware
+app.use("/*", meetingRateLimit());
 
 // Create meeting
 app.post(

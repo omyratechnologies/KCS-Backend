@@ -13,6 +13,7 @@ import {
 } from "@/models/meeting.model";
 import { WebRTCService } from "./webrtc.service";
 import { SocketService } from "./socket.service";
+import { MeetingErrorMonitor } from "@/utils/meeting_error_monitor";
 
 /**
  * 🎪 Enhanced Meeting Service for Real-time Video Conferencing
@@ -65,114 +66,128 @@ export class MeetingService {
             };
         }
     ): Promise<IMeetingData> => {
-        const meeting_room_id = `room_${uuidv4()}`;
-        
-        // Generate WebRTC configuration
-        const webrtc_config = {
-            ice_servers: [
-                { urls: ['stun:stun.l.google.com:19302'] },
-                { urls: ['stun:stun1.l.google.com:19302'] },
-                // Add TURN servers for better connectivity
-                WebRTCService.generateTurnCredentials(creator_id),
-            ],
-            media_constraints: {
-                video: {
-                    enabled: data.features?.video_enabled ?? true,
-                    quality: 'medium' as const,
-                    frameRate: 30,
+        try {
+            const meeting_room_id = `room_${uuidv4()}`;
+            
+            // Generate WebRTC configuration
+            const webrtc_config = {
+                ice_servers: [
+                    { urls: ['stun:stun.l.google.com:19302'] },
+                    { urls: ['stun:stun1.l.google.com:19302'] },
+                    // Add TURN servers for better connectivity
+                    WebRTCService.generateTurnCredentials(creator_id),
+                ],
+                media_constraints: {
+                    video: {
+                        enabled: data.features?.video_enabled ?? true,
+                        quality: 'medium' as const,
+                        frameRate: 30,
+                    },
+                    audio: {
+                        enabled: data.features?.audio_enabled ?? true,
+                        noise_suppression: true,
+                        echo_cancellation: true,
+                    },
                 },
-                audio: {
-                    enabled: data.features?.audio_enabled ?? true,
-                    noise_suppression: true,
-                    echo_cancellation: true,
+            };
+            
+            const meeting = await Meeting.create({
+                campus_id,
+                creator_id,
+                participants: data.participants,
+                meeting_name: data.meeting_name,
+                meeting_description: data.meeting_description,
+                meeting_start_time: data.meeting_start_time,
+                meeting_end_time: data.meeting_end_time,
+                meeting_location: data.meeting_location,
+                meeting_meta_data: data.meeting_meta_data,
+                
+                // Enhanced real-time features
+                meeting_room_id,
+                meeting_type: data.meeting_type || 'scheduled',
+                meeting_status: data.meeting_type === 'instant' ? 'live' : 'scheduled',
+                max_participants: data.max_participants || 100,
+                current_participants: [],
+                
+                // Security & Access Control
+                meeting_password: data.meeting_password,
+                waiting_room_enabled: data.waiting_room_enabled || false,
+                require_host_approval: data.require_host_approval || false,
+                allow_guests: true,
+                
+                // Meeting Features
+                features: {
+                    video_enabled: data.features?.video_enabled ?? true,
+                    audio_enabled: data.features?.audio_enabled ?? true,
+                    screen_sharing_enabled: data.features?.screen_sharing_enabled ?? true,
+                    chat_enabled: data.features?.chat_enabled ?? true,
+                    recording_enabled: data.features?.recording_enabled ?? false,
+                    breakout_rooms_enabled: data.features?.breakout_rooms_enabled ?? false,
+                    whiteboard_enabled: data.features?.whiteboard_enabled ?? false,
+                    hand_raise_enabled: data.features?.hand_raise_enabled ?? true,
                 },
-            },
-        };
-        
-        const meeting = await Meeting.create({
-            campus_id,
-            creator_id,
-            participants: data.participants,
-            meeting_name: data.meeting_name,
-            meeting_description: data.meeting_description,
-            meeting_start_time: data.meeting_start_time,
-            meeting_end_time: data.meeting_end_time,
-            meeting_location: data.meeting_location,
-            meeting_meta_data: data.meeting_meta_data,
-            
-            // Enhanced real-time features
-            meeting_room_id,
-            meeting_type: data.meeting_type || 'scheduled',
-            meeting_status: data.meeting_type === 'instant' ? 'live' : 'scheduled',
-            max_participants: data.max_participants || 100,
-            current_participants: [],
-            
-            // Security & Access Control
-            meeting_password: data.meeting_password,
-            waiting_room_enabled: data.waiting_room_enabled || false,
-            require_host_approval: data.require_host_approval || false,
-            allow_guests: true,
-            
-            // Meeting Features
-            features: {
-                video_enabled: data.features?.video_enabled ?? true,
-                audio_enabled: data.features?.audio_enabled ?? true,
-                screen_sharing_enabled: data.features?.screen_sharing_enabled ?? true,
-                chat_enabled: data.features?.chat_enabled ?? true,
-                recording_enabled: data.features?.recording_enabled ?? false,
-                breakout_rooms_enabled: data.features?.breakout_rooms_enabled ?? false,
-                whiteboard_enabled: data.features?.whiteboard_enabled ?? false,
-                hand_raise_enabled: data.features?.hand_raise_enabled ?? true,
-            },
-            
-            // Recording Configuration
-            recording_config: {
-                auto_record: data.recording_config?.auto_record ?? false,
-                record_video: data.recording_config?.record_video ?? true,
-                record_audio: data.recording_config?.record_audio ?? true,
-                record_chat: data.recording_config?.record_chat ?? false,
-                storage_location: data.recording_config?.storage_location || 'cloud',
-                retention_days: data.recording_config?.retention_days || 30,
-            },
-            
-            // WebRTC Configuration
-            webrtc_config,
-            
-            // Analytics
-            analytics: {
-                total_duration_minutes: 0,
-                peak_participants: 0,
-                total_participants_joined: 0,
-                connection_quality_avg: 0,
-                chat_messages_count: 0,
-                screen_shares_count: 0,
-            },
-            
-            // Audit Trail
-            audit_trail: [{
-                timestamp: new Date(),
-                action: 'meeting_created',
-                user_id: creator_id,
-                details: {
-                    meeting_type: data.meeting_type || 'scheduled',
-                    max_participants: data.max_participants || 100,
+                
+                // Recording Configuration
+                recording_config: {
+                    auto_record: data.recording_config?.auto_record ?? false,
+                    record_video: data.recording_config?.record_video ?? true,
+                    record_audio: data.recording_config?.record_audio ?? true,
+                    record_chat: data.recording_config?.record_chat ?? false,
+                    storage_location: data.recording_config?.storage_location || 'cloud',
+                    retention_days: data.recording_config?.retention_days || 30,
                 },
-            }],
-            
-            is_active: true,
-            is_deleted: false,
-            created_at: new Date(),
-            updated_at: new Date(),
-        });
+                
+                // WebRTC Configuration
+                webrtc_config,
+                
+                // Analytics
+                analytics: {
+                    total_duration_minutes: 0,
+                    peak_participants: 0,
+                    total_participants_joined: 0,
+                    connection_quality_avg: 0,
+                    chat_messages_count: 0,
+                    screen_shares_count: 0,
+                },
+                
+                // Audit Trail
+                audit_trail: [{
+                    timestamp: new Date(),
+                    action: 'meeting_created',
+                    user_id: creator_id,
+                    details: {
+                        meeting_type: data.meeting_type || 'scheduled',
+                        max_participants: data.max_participants || 100,
+                    },
+                }],
+                
+                is_active: true,
+                is_deleted: false,
+                created_at: new Date(),
+                updated_at: new Date(),
+            });
 
-        if (!meeting) throw new Error("Meeting not created");
+            if (!meeting) {
+                const error = new Error("Meeting not created");
+                MeetingErrorMonitor.logError('createMeeting', error, { campus_id, creator_id, meeting_type: data.meeting_type });
+                throw error;
+            }
 
-        // If instant meeting, initialize WebRTC infrastructure
-        if (data.meeting_type === 'instant') {
-            await WebRTCService.createMeetingRouter(meeting.id);
+            // If instant meeting, initialize WebRTC infrastructure
+            if (data.meeting_type === 'instant') {
+                try {
+                    await WebRTCService.createMeetingRouter(meeting.id);
+                } catch (webrtcError) {
+                    MeetingErrorMonitor.logError('createMeeting:webrtc', webrtcError as Error, { meeting_id: meeting.id });
+                    // Continue without failing the meeting creation
+                }
+            }
+
+            return meeting;
+        } catch (error) {
+            MeetingErrorMonitor.logError('createMeeting', error as Error, { campus_id, creator_id, meeting_name: data.meeting_name });
+            throw error;
         }
-
-        return meeting;
     };
 
     /**
@@ -182,49 +197,78 @@ export class MeetingService {
         campus_id: string,
         creator_id: string
     ): Promise<IMeetingData[]> => {
-        const meetings = await Meeting.find(
-            { campus_id, creator_id, is_deleted: false },
-            {
-                sort: { updated_at: "DESC" },
-            }
-        );
-
-        if (meetings.rows.length === 0) throw new Error("Meetings not found");
-
-        // Enhance with real-time participant counts
-        const enhancedMeetings = await Promise.all(
-            meetings.rows.map(async (meeting) => {
-                if (meeting.meeting_status === 'live') {
-                    const liveParticipants = await MeetingParticipant.find({
-                        meeting_id: meeting.id,
-                        connection_status: 'connected',
-                    });
-                    meeting.current_participants = liveParticipants.rows?.map(p => p.user_id) || [];
+        try {
+            const meetings = await Meeting.find(
+                { campus_id, creator_id, is_deleted: false },
+                {
+                    sort: { updated_at: "DESC" },
                 }
-                return meeting;
-            })
-        );
+            );
 
-        return enhancedMeetings;
+            if (meetings.rows.length === 0) {
+                const error = new Error("Meetings not found");
+                MeetingErrorMonitor.logError('getAllMeetings:notFound', error, { campus_id, creator_id });
+                throw error;
+            }
+
+            // Enhance with real-time participant counts
+            const enhancedMeetings = await Promise.all(
+                meetings.rows.map(async (meeting) => {
+                    try {
+                        if (meeting.meeting_status === 'live') {
+                            const liveParticipants = await MeetingParticipant.find({
+                                meeting_id: meeting.id,
+                                connection_status: 'connected',
+                            });
+                            meeting.current_participants = liveParticipants.rows?.map(p => p.user_id) || [];
+                        }
+                        return meeting;
+                    } catch (participantError) {
+                        MeetingErrorMonitor.logError('getAllMeetings:participants', participantError as Error, { meeting_id: meeting.id });
+                        // Return meeting without live participant data
+                        return meeting;
+                    }
+                })
+            );
+
+            return enhancedMeetings;
+        } catch (error) {
+            MeetingErrorMonitor.logError('getAllMeetings', error as Error, { campus_id, creator_id });
+            throw error;
+        }
     };
 
     /**
      * Get meeting by ID with full real-time details
      */
     public static readonly getMeetingById = async (id: string): Promise<IMeetingData> => {
-        const meeting = await Meeting.findById(id);
-        if (!meeting) throw new Error("Meeting not found");
+        try {
+            const meeting = await Meeting.findById(id);
+            if (!meeting) {
+                const error = new Error("Meeting not found");
+                MeetingErrorMonitor.logError('getMeetingById:notFound', error, { meeting_id: id });
+                throw error;
+            }
 
-        // Add real-time participant information
-        if (meeting.meeting_status === 'live') {
-            const liveParticipants = await MeetingParticipant.find({
-                meeting_id: id,
-                connection_status: 'connected',
-            });
-            meeting.current_participants = liveParticipants.rows?.map(p => p.user_id) || [];
+            // Add real-time participant information
+            if (meeting.meeting_status === 'live') {
+                try {
+                    const liveParticipants = await MeetingParticipant.find({
+                        meeting_id: id,
+                        connection_status: 'connected',
+                    });
+                    meeting.current_participants = liveParticipants.rows?.map(p => p.user_id) || [];
+                } catch (participantError) {
+                    MeetingErrorMonitor.logError('getMeetingById:participants', participantError as Error, { meeting_id: id });
+                    // Continue without live participant data
+                }
+            }
+
+            return meeting;
+        } catch (error) {
+            MeetingErrorMonitor.logError('getMeetingById', error as Error, { meeting_id: id });
+            throw error;
         }
-
-        return meeting;
     };
 
     /**
@@ -256,31 +300,65 @@ export class MeetingService {
         data: Partial<IMeetingData>,
         updated_by?: string
     ): Promise<IMeetingData> => {
-        const meeting = await Meeting.findById(id);
-        if (!meeting) throw new Error("Meeting not found");
+        try {
+            const meeting = await Meeting.findById(id);
+            if (!meeting) {
+                const error = new Error("Meeting not found");
+                MeetingErrorMonitor.logError('updateMeeting:meetingNotFound', error, { meeting_id: id });
+                throw error;
+            }
 
-        // Add to audit trail
-        const auditEntry = {
-            timestamp: new Date(),
-            action: 'meeting_updated',
-            user_id: updated_by || 'system',
-            details: data,
-        };
+            // Add to audit trail
+            const auditEntry = {
+                timestamp: new Date(),
+                action: 'meeting_updated',
+                user_id: updated_by || 'system',
+                details: data,
+            };
 
-        const updatedMeeting = await Meeting.updateById(id, {
-            ...data,
-            audit_trail: [...(meeting.audit_trail || []), auditEntry],
-            updated_at: new Date(),
-        });
+            try {
+                const updatedMeeting = await Meeting.updateById(id, {
+                    ...data,
+                    audit_trail: [...(meeting.audit_trail || []), auditEntry],
+                    updated_at: new Date(),
+                });
 
-        if (!updatedMeeting) throw new Error("Meeting not updated");
+                if (!updatedMeeting) {
+                    const error = new Error("Meeting not updated");
+                    MeetingErrorMonitor.logError('updateMeeting:updateFailed', error, { meeting_id: id });
+                    throw error;
+                }
 
-        // Notify participants if meeting is live
-        if (meeting.meeting_status === 'live') {
-            SocketService.sendToMeeting(id, 'meeting-updated', updatedMeeting);
+                // Notify participants if meeting is live
+                if (meeting.meeting_status === 'live') {
+                    try {
+                        SocketService.sendToMeeting(id, 'meeting-updated', updatedMeeting);
+                    } catch (socketError) {
+                        MeetingErrorMonitor.logError('updateMeeting:socket', socketError as Error, { 
+                            meeting_id: id,
+                            meeting_status: meeting.meeting_status 
+                        });
+                        // Don't fail the update if socket notification fails
+                    }
+                }
+
+                return updatedMeeting;
+            } catch (dbError) {
+                MeetingErrorMonitor.logError('updateMeeting:database', dbError as Error, { 
+                    meeting_id: id,
+                    updated_by: updated_by || 'system',
+                    update_fields: Object.keys(data)
+                });
+                throw dbError;
+            }
+        } catch (error) {
+            MeetingErrorMonitor.logError('updateMeeting', error as Error, { 
+                meeting_id: id, 
+                updated_by: updated_by || 'system',
+                update_fields: Object.keys(data) 
+            });
+            throw error;
         }
-
-        return updatedMeeting;
     };
 
     /**
@@ -290,70 +368,126 @@ export class MeetingService {
         id: string,
         deleted_by?: string
     ): Promise<IMeetingData> => {
-        const meeting = await Meeting.findById(id);
-        if (!meeting) throw new Error("Meeting not found");
+        try {
+            const meeting = await Meeting.findById(id);
+            if (!meeting) {
+                const error = new Error("Meeting not found");
+                MeetingErrorMonitor.logError('deleteMeeting:meetingNotFound', error, { meeting_id: id });
+                throw error;
+            }
 
-        // End meeting if it's live
-        if (meeting.meeting_status === 'live') {
-            await this.endMeeting(id, deleted_by);
+            // End meeting if it's live
+            if (meeting.meeting_status === 'live') {
+                try {
+                    await MeetingService.endMeeting(id, deleted_by || 'system');
+                } catch (endError) {
+                    MeetingErrorMonitor.logError('deleteMeeting:endMeeting', endError as Error, { 
+                        meeting_id: id,
+                        meeting_status: meeting.meeting_status 
+                    });
+                    // Continue with deletion even if ending fails
+                }
+            }
+
+            try {
+                const deletedMeeting = await Meeting.findByIdAndUpdate(
+                    id,
+                    { 
+                        meeting_status: 'deleted',
+                        deleted_by: deleted_by || 'system',
+                        deleted_at: new Date(),
+                        updated_at: new Date(),
+                    },
+                    { new: true }
+                );
+
+                if (!deletedMeeting) {
+                    const error = new Error("Meeting not deleted");
+                    MeetingErrorMonitor.logError('deleteMeeting:deleteFailed', error, { meeting_id: id });
+                    throw error;
+                }
+
+                return deletedMeeting;
+            } catch (dbError) {
+                MeetingErrorMonitor.logError('deleteMeeting:database', dbError as Error, { 
+                    meeting_id: id,
+                    deleted_by: deleted_by || 'system'
+                });
+                throw dbError;
+            }
+        } catch (error) {
+            MeetingErrorMonitor.logError('deleteMeeting', error as Error, { 
+                meeting_id: id, 
+                deleted_by: deleted_by || 'system' 
+            });
+            throw error;
         }
-
-        const auditEntry = {
-            timestamp: new Date(),
-            action: 'meeting_deleted',
-            user_id: deleted_by || 'system',
-            details: { reason: 'deleted_by_user' },
-        };
-
-        const deletedMeeting = await Meeting.updateById(id, {
-            is_deleted: true,
-            meeting_status: 'cancelled',
-            audit_trail: [...(meeting.audit_trail || []), auditEntry],
-            updated_at: new Date(),
-        });
-
-        if (!deletedMeeting) throw new Error("Meeting not deleted");
-
-        return deletedMeeting;
-    };
-
-    /**
+    };    /**
      * Start a scheduled meeting
      */
     public static readonly startMeeting = async (
         meetingId: string,
         started_by: string
     ): Promise<IMeetingData> => {
-        const meeting = await Meeting.findById(meetingId);
-        if (!meeting) throw new Error("Meeting not found");
+        try {
+            const meeting = await Meeting.findById(meetingId);
+            if (!meeting) {
+                const error = new Error("Meeting not found");
+                MeetingErrorMonitor.logError('startMeeting:notFound', error, { meeting_id: meetingId, started_by });
+                throw error;
+            }
 
-        if (meeting.meeting_status !== 'scheduled') {
-            throw new Error("Meeting cannot be started");
+            if (meeting.meeting_status !== 'scheduled') {
+                const error = new Error("Meeting cannot be started");
+                MeetingErrorMonitor.logError('startMeeting:invalidStatus', error, { 
+                    meeting_id: meetingId, 
+                    current_status: meeting.meeting_status,
+                    started_by 
+                });
+                throw error;
+            }
+
+            // Initialize WebRTC infrastructure
+            try {
+                await WebRTCService.createMeetingRouter(meetingId);
+            } catch (webrtcError) {
+                MeetingErrorMonitor.logError('startMeeting:webrtc', webrtcError as Error, { meeting_id: meetingId });
+                // Continue without failing the meeting start
+            }
+
+            // Update meeting status
+            const auditEntry = {
+                timestamp: new Date(),
+                action: 'meeting_started',
+                user_id: started_by,
+                details: { started_at: new Date() },
+            };
+
+            const updatedMeeting = await Meeting.updateById(meetingId, {
+                meeting_status: 'live',
+                audit_trail: [...(meeting.audit_trail || []), auditEntry],
+                updated_at: new Date(),
+            });
+
+            if (!updatedMeeting) {
+                const error = new Error("Failed to start meeting");
+                MeetingErrorMonitor.logError('startMeeting:updateFailed', error, { meeting_id: meetingId, started_by });
+                throw error;
+            }
+
+            // Notify participants
+            try {
+                SocketService.sendToMeeting(meetingId, 'meeting-started', updatedMeeting);
+            } catch (socketError) {
+                MeetingErrorMonitor.logError('startMeeting:notification', socketError as Error, { meeting_id: meetingId });
+                // Continue without failing the meeting start
+            }
+
+            return updatedMeeting;
+        } catch (error) {
+            MeetingErrorMonitor.logError('startMeeting', error as Error, { meeting_id: meetingId, started_by });
+            throw error;
         }
-
-        // Initialize WebRTC infrastructure
-        await WebRTCService.createMeetingRouter(meetingId);
-
-        // Update meeting status
-        const auditEntry = {
-            timestamp: new Date(),
-            action: 'meeting_started',
-            user_id: started_by,
-            details: { started_at: new Date() },
-        };
-
-        const updatedMeeting = await Meeting.updateById(meetingId, {
-            meeting_status: 'live',
-            audit_trail: [...(meeting.audit_trail || []), auditEntry],
-            updated_at: new Date(),
-        });
-
-        if (!updatedMeeting) throw new Error("Failed to start meeting");
-
-        // Notify participants
-        SocketService.sendToMeeting(meetingId, 'meeting-started', updatedMeeting);
-
-        return updatedMeeting;
     };
 
     /**
@@ -363,49 +497,87 @@ export class MeetingService {
         meetingId: string,
         ended_by?: string
     ): Promise<IMeetingData> => {
-        const meeting = await Meeting.findById(meetingId);
-        if (!meeting) throw new Error("Meeting not found");
+        try {
+            const meeting = await Meeting.findById(meetingId);
+            if (!meeting) {
+                const error = new Error("Meeting not found");
+                MeetingErrorMonitor.logError('endMeeting:meetingNotFound', error, { meeting_id: meetingId });
+                throw error;
+            }
 
-        // Calculate final analytics
-        const participants = await MeetingParticipant.find({ meeting_id: meetingId });
-        const chatMessages = await MeetingChat.find({ meeting_id: meetingId });
+            try {
+                // Calculate final analytics
+                const participants = await MeetingParticipant.find({ meeting_id: meetingId });
+                const chatMessages = await MeetingChat.find({ meeting_id: meetingId });
 
-        const analytics = {
-            ...meeting.analytics,
-            total_participants_joined: participants.rows?.length || 0,
-            chat_messages_count: chatMessages.rows?.length || 0,
-            total_duration_minutes: Math.floor(
-                (Date.now() - meeting.created_at.getTime()) / (1000 * 60)
-            ),
-        };
+                const analytics = {
+                    ...meeting.analytics,
+                    total_participants_joined: participants.rows?.length || 0,
+                    chat_messages_count: chatMessages.rows?.length || 0,
+                    total_duration_minutes: Math.floor(
+                        (Date.now() - meeting.created_at.getTime()) / (1000 * 60)
+                    ),
+                };
 
-        // Clean up WebRTC resources
-        await WebRTCService.closeMeetingRoom(meetingId);
+                // Clean up WebRTC resources
+                try {
+                    await WebRTCService.closeMeetingRoom(meetingId);
+                } catch (webrtcError) {
+                    MeetingErrorMonitor.logError('endMeeting:webrtc', webrtcError as Error, { 
+                        meeting_id: meetingId 
+                    });
+                    // Continue even if WebRTC cleanup fails
+                }
 
-        // Update meeting status
-        const auditEntry = {
-            timestamp: new Date(),
-            action: 'meeting_ended',
-            user_id: ended_by || 'system',
-            details: { ended_at: new Date(), final_analytics: analytics },
-        };
+                // Update meeting status
+                const auditEntry = {
+                    timestamp: new Date(),
+                    action: 'meeting_ended',
+                    user_id: ended_by || 'system',
+                    details: { ended_at: new Date(), final_analytics: analytics },
+                };
 
-        const updatedMeeting = await Meeting.updateById(meetingId, {
-            meeting_status: 'ended',
-            analytics,
-            audit_trail: [...(meeting.audit_trail || []), auditEntry],
-            updated_at: new Date(),
-        });
+                const updatedMeeting = await Meeting.updateById(meetingId, {
+                    meeting_status: 'ended',
+                    analytics,
+                    audit_trail: [...(meeting.audit_trail || []), auditEntry],
+                    updated_at: new Date(),
+                });
 
-        if (!updatedMeeting) throw new Error("Failed to end meeting");
+                if (!updatedMeeting) {
+                    const error = new Error("Failed to end meeting");
+                    MeetingErrorMonitor.logError('endMeeting:updateFailed', error, { meeting_id: meetingId });
+                    throw error;
+                }
 
-        // Notify participants
-        SocketService.sendToMeeting(meetingId, 'meeting-ended', {
-            message: 'Meeting has ended',
-            analytics,
-        });
+                // Notify participants
+                try {
+                    SocketService.sendToMeeting(meetingId, 'meeting-ended', {
+                        message: 'Meeting has ended',
+                        analytics,
+                    });
+                } catch (socketError) {
+                    MeetingErrorMonitor.logError('endMeeting:socket', socketError as Error, { 
+                        meeting_id: meetingId 
+                    });
+                    // Don't fail if notification fails
+                }
 
-        return updatedMeeting;
+                return updatedMeeting;
+            } catch (processError) {
+                MeetingErrorMonitor.logError('endMeeting:process', processError as Error, { 
+                    meeting_id: meetingId,
+                    ended_by: ended_by || 'system'
+                });
+                throw processError;
+            }
+        } catch (error) {
+            MeetingErrorMonitor.logError('endMeeting', error as Error, { 
+                meeting_id: meetingId, 
+                ended_by: ended_by || 'system' 
+            });
+            throw error;
+        }
     };
 
     /**
@@ -569,79 +741,97 @@ export class MeetingService {
         try {
             const meeting = await Meeting.findById(meeting_id);
             if (!meeting) {
-                throw new Error('Meeting not found');
+                const error = new Error('Meeting not found');
+                MeetingErrorMonitor.logError('addParticipants:meetingNotFound', error, { meeting_id });
+                throw error;
             }
 
             // Check if adding participants would exceed max limit
             const currentCount = meeting.current_participants?.length || 0;
             if (currentCount + participants.length > meeting.max_participants) {
-                throw new Error(`Adding ${participants.length} participants would exceed maximum limit of ${meeting.max_participants}`);
+                const error = new Error(`Adding ${participants.length} participants would exceed maximum limit of ${meeting.max_participants}`);
+                MeetingErrorMonitor.logError('addParticipants:limitExceeded', error, { 
+                    meeting_id, 
+                    current_count: currentCount, 
+                    trying_to_add: participants.length,
+                    max_limit: meeting.max_participants 
+                });
+                throw error;
             }
 
             const addedParticipants: IMeetingParticipant[] = [];
 
             for (const participantData of participants) {
-                // Check if participant is already in the meeting
-                const existingParticipant = meeting.current_participants?.find(
-                    (p: any) => p.user_id === participantData.user_id || p.email === participantData.email
-                );
+                try {
+                    // Check if participant is already in the meeting
+                    const existingParticipant = meeting.current_participants?.find(
+                        (p: any) => p.user_id === participantData.user_id || p.email === participantData.email
+                    );
 
-                if (existingParticipant) {
-                    continue; // Skip if already a participant
-                }
-
-                const participantId = uuidv4();
-                const participant: IMeetingParticipant = {
-                    id: participantId,
-                    meeting_id: meeting_id,
-                    user_id: participantData.user_id || '',
-                    participant_name: participantData.name || 'Guest',
-                    participant_email: participantData.email || undefined,
-                    connection_status: 'disconnected',
-                    connection_quality: 'fair',
-                    joined_at: new Date(),
-                    left_at: undefined,
-                    media_status: {
-                        video_enabled: true,
-                        audio_enabled: true,
-                        screen_sharing: false,
-                        is_speaking: false,
-                        is_muted_by_host: false,
-                    },
-                    permissions: {
-                        can_share_screen: participantData.role !== 'attendee',
-                        can_use_chat: true,
-                        can_use_whiteboard: true,
-                        is_moderator: ['host', 'co_host'].includes(participantData.role || 'attendee'),
-                        is_host: participantData.role === 'host',
-                    },
-                    peer_connection_id: '',
-                    socket_id: '',
-                    ip_address: '',
-                    user_agent: '',
-                    created_at: new Date(),
-                    updated_at: new Date(),
-                };
-
-                // Create participant record
-                const participantDoc = new MeetingParticipant(participant);
-                await participantDoc.save();
-
-                // Add to meeting's current_participants array
-                await Meeting.findByIdAndUpdate(
-                    meeting_id,
-                    { 
-                        $push: { current_participants: participantId },
-                        $set: { updated_at: new Date() }
+                    if (existingParticipant) {
+                        continue; // Skip if already a participant
                     }
-                );
 
-                addedParticipants.push(participant);
+                    const participantId = uuidv4();
+                    const participant: IMeetingParticipant = {
+                        id: participantId,
+                        meeting_id: meeting_id,
+                        user_id: participantData.user_id || '',
+                        participant_name: participantData.name || 'Guest',
+                        participant_email: participantData.email || undefined,
+                        connection_status: 'disconnected',
+                        connection_quality: 'fair',
+                        joined_at: new Date(),
+                        left_at: undefined,
+                        media_status: {
+                            video_enabled: true,
+                            audio_enabled: true,
+                            screen_sharing: false,
+                            is_speaking: false,
+                            is_muted_by_host: false,
+                        },
+                        permissions: {
+                            can_share_screen: participantData.role !== 'attendee',
+                            can_use_chat: true,
+                            can_use_whiteboard: true,
+                            is_moderator: ['host', 'co_host'].includes(participantData.role || 'attendee'),
+                            is_host: participantData.role === 'host',
+                        },
+                        peer_connection_id: '',
+                        socket_id: '',
+                        ip_address: '',
+                        user_agent: '',
+                        created_at: new Date(),
+                        updated_at: new Date(),
+                    };
+
+                    // Create participant record
+                    const participantDoc = new MeetingParticipant(participant);
+                    await participantDoc.save();
+
+                    // Add to meeting's current_participants array
+                    await Meeting.findByIdAndUpdate(
+                        meeting_id,
+                        { 
+                            $push: { current_participants: participantId },
+                            $set: { updated_at: new Date() }
+                        }
+                    );
+
+                    addedParticipants.push(participant);
+                } catch (participantError) {
+                    MeetingErrorMonitor.logError('addParticipants:individual', participantError as Error, { 
+                        meeting_id, 
+                        participant_email: participantData.email,
+                        participant_user_id: participantData.user_id
+                    });
+                    // Continue with other participants
+                }
             }
 
             return addedParticipants;
         } catch (error) {
-            console.error('Error adding participants:', error);
+            MeetingErrorMonitor.logError('addParticipants', error as Error, { meeting_id, participant_count: participants.length });
             throw error;
         }
     };
@@ -661,50 +851,67 @@ export class MeetingService {
         try {
             const meeting = await Meeting.findById(meeting_id);
             if (!meeting) {
-                throw new Error('Meeting not found');
+                const error = new Error('Meeting not found');
+                MeetingErrorMonitor.logError('removeParticipants:meetingNotFound', error, { meeting_id });
+                throw error;
             }
 
             const removedParticipants: IMeetingParticipant[] = [];
 
             for (const participantId of participant_ids) {
-                // Get participant details before removing
-                const participant = await MeetingParticipant.findOne({ id: participantId });
-                if (participant) {
-                    // Update participant record with removal info
-                    await MeetingParticipant.findOneAndUpdate(
-                        { id: participantId },
-                        {
-                            left_at: metadata.removed_at,
-                            connection_status: 'disconnected',
+                try {
+                    // Get participant details before removing
+                    const participant = await MeetingParticipant.findOne({ id: participantId });
+                    if (participant) {
+                        // Update participant record with removal info
+                        await MeetingParticipant.findOneAndUpdate(
+                            { id: participantId },
+                            {
+                                left_at: metadata.removed_at,
+                                connection_status: 'disconnected',
+                            }
+                        );
+
+                        removedParticipants.push(participant);
+                    }
+
+                    // Remove from meeting's current_participants array
+                    await Meeting.findByIdAndUpdate(
+                        meeting_id,
+                        { 
+                            $pull: { current_participants: participantId },
+                            $set: { updated_at: new Date() }
                         }
                     );
 
-                    removedParticipants.push(participant);
-                }
-
-                // Remove from meeting's current_participants array
-                await Meeting.findByIdAndUpdate(
-                    meeting_id,
-                    { 
-                        $pull: { current_participants: participantId },
-                        $set: { updated_at: new Date() }
+                    // If meeting is live, notify via Socket.IO that participant was removed
+                    if (meeting.meeting_status === 'live') {
+                        try {
+                            // SocketService will handle disconnecting the participant
+                            console.log(`Participant ${participantId} removed from live meeting ${meeting_id}`);
+                        } catch (socketError) {
+                            MeetingErrorMonitor.logError('removeParticipants:socket', socketError as Error, { 
+                                meeting_id, 
+                                participant_id: participantId 
+                            });
+                        }
                     }
-                );
-
-                // If meeting is live, notify via Socket.IO that participant was removed
-                if (meeting.meeting_status === 'live') {
-                    try {
-                        // SocketService will handle disconnecting the participant
-                        console.log(`Participant ${participantId} removed from live meeting ${meeting_id}`);
-                    } catch (error) {
-                        console.warn('Failed to disconnect participant from live meeting:', error);
-                    }
+                } catch (participantError) {
+                    MeetingErrorMonitor.logError('removeParticipants:individual', participantError as Error, { 
+                        meeting_id, 
+                        participant_id: participantId 
+                    });
+                    // Continue with other participants
                 }
             }
 
             return removedParticipants;
         } catch (error) {
-            console.error('Error removing participants:', error);
+            MeetingErrorMonitor.logError('removeParticipants', error as Error, { 
+                meeting_id, 
+                participant_count: participant_ids.length,
+                removed_by: metadata.removed_by 
+            });
             throw error;
         }
     };

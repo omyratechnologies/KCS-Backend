@@ -16,9 +16,30 @@ const app = new Hono();
 
 app.use(
     cors({
-        origin: "*",
-        allowHeaders: ["Content-Type", "Authorization"],
+        origin: (origin) => {
+            // Allow requests from localhost and your domains
+            const allowedOrigins = [
+                "http://localhost:3000",
+                "http://localhost:3001", 
+                "http://localhost:5173",
+                "https://dev.letscatchup-kcs.com",
+                "https://letscatchup-kcs.com",
+                "https://dev-api.letscatchup-kcs.com"
+            ];
+            
+            // Allow requests with no origin (mobile apps, Postman, etc.)
+            if (!origin) return origin;
+            
+            // Check if origin is allowed
+            if (allowedOrigins.includes(origin) || origin.startsWith("http://localhost:")) {
+                return origin;
+            }
+            
+            return null; // Reject origin
+        },
+        allowHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"],
         allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+        credentials: true,
         maxAge: 3600,
     })
 );

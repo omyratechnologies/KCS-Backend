@@ -4,6 +4,7 @@ import { IMeetingData } from "@/models/meeting.model";
 import { MeetingService } from "@/services/meeting.service";
 import { WebRTCService } from "@/services/webrtc.service";
 import { SocketService } from "@/services/socket.service";
+import { MeetingErrorMonitor } from "@/utils/meeting_error_monitor";
 
 /**
  * 🎪 Enhanced Meeting Controller for Real-time Video Conferencing
@@ -22,6 +23,14 @@ export class MeetingController {
         try {
             const campus_id = ctx.get("campus_id");
             const creator_id = ctx.get("user_id");
+
+            // Validate required context
+            if (!campus_id || !creator_id) {
+                return ctx.json({
+                    success: false,
+                    message: 'Authentication required',
+                }, 401);
+            }
 
             const {
                 meeting_description,
