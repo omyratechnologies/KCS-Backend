@@ -516,7 +516,7 @@ export class MeetingController {
     public static readonly joinMeeting = async (ctx: Context) => {
         try {
             const { meeting_id } = ctx.req.param();
-            const { password } = await ctx.req.json();
+            const { meeting_password } = await ctx.req.json();
             const user_id = ctx.get("user_id");
             const campus_id = ctx.get("campus_id");
 
@@ -531,7 +531,7 @@ export class MeetingController {
             }
 
             // Check password if required
-            if (meeting.meeting_password && meeting.meeting_password !== password) {
+            if (meeting.meeting_password && meeting.meeting_password !== meeting_password) {
                 return ctx.json({
                     success: false,
                     message: 'Invalid meeting password',

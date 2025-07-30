@@ -118,9 +118,9 @@ export class SocketService {
         const { userId, userName, campusId } = socket.data;
         
         // Join meeting room
-        socket.on('join-meeting', async (data: { meetingId: string; password?: string }) => {
+        socket.on('join-meeting', async (data: { meetingId: string; meeting_password?: string }) => {
             try {
-                const { meetingId, password } = data;
+                const { meetingId, meeting_password } = data;
                 
                 // Verify meeting exists and user has access
                 const meeting = await Meeting.findById(meetingId);
@@ -135,7 +135,7 @@ export class SocketService {
                 }
                 
                 // Check password if required
-                if (meeting.meeting_password && meeting.meeting_password !== password) {
+                if (meeting.meeting_password && meeting.meeting_password !== meeting_password) {
                     socket.emit('error', { message: 'Invalid meeting password' });
                     return;
                 }

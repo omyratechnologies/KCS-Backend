@@ -48,7 +48,7 @@ const enhancedCreateMeetingSchema = createMeetingRequestBodySchema.extend({
 });
 
 const joinMeetingSchema = z.object({
-    password: z.string().optional(),
+    meeting_password: z.string().optional(),
 });
 
 // Create meeting
