@@ -1,401 +1,505 @@
 import z from "zod";
-
 import "zod-openapi/extend";
 
-// Schema for course data
-export const courseSchema = z
-    .object({
-        id: z.string().openapi({ example: "course123" }),
-        campus_id: z.string().openapi({ example: "campus123" }),
-        course_name: z
-            .string()
-            .openapi({ example: "Introduction to Computer Science" }),
-        course_code: z.string().openapi({ example: "CS101" }),
-        course_description: z
-            .string()
-            .openapi({
-                example:
-                    "A comprehensive introduction to computer science principles",
-            }),
-        course_meta_data: z
-            .record(z.string(), z.any())
-            .openapi({ example: { credits: 3, level: "Beginner" } }),
-        is_active: z.boolean().openapi({ example: true }),
-        is_deleted: z.boolean().openapi({ example: false }),
-        created_at: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
-        updated_at: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
-    })
-    .openapi({ ref: "Course" });
+// ==================== COURSE SCHEMAS ====================
 
-// Create Course Request
-export const createCourseRequestBodySchema = z
-    .object({
-        course_name: z
-            .string()
-            .openapi({ example: "Introduction to Computer Science" }),
-        course_code: z.string().openapi({ example: "CS101" }),
-        course_description: z
-            .string()
-            .openapi({
-                example:
-                    "A comprehensive introduction to computer science principles",
-            }),
-        course_meta_data: z
-            .record(z.string(), z.any())
-            .openapi({ example: { credits: 3, level: "Beginner" } }),
-    })
-    .openapi({ ref: "CreateCourseRequest" });
+export const createCourseRequestBodySchema = z.object({
+    title: z.string().min(1).max(200).openapi({ example: "Technical Analysis Mastery" }),
+    description: z.string().min(10).max(5000).openapi({ 
+        example: "Complete course on technical analysis covering candlestick patterns, chart analysis, and trading strategies" 
+    }),
+    short_description: z.string().max(500).optional().openapi({ 
+        example: "Master technical analysis with live chart examples" 
+    }),
+    class_id: z.string().openapi({ example: "class_123" }),
+    instructor_ids: z.array(z.string()).default([]).openapi({ 
+        example: ["user_123", "user_456"] 
+    }),
+    thumbnail: z.string().url().optional().openapi({ 
+        example: "https://example.com/thumbnail.jpg" 
+    }),
+    preview_video: z.string().url().optional().openapi({ 
+        example: "https://example.com/preview.mp4" 
+    }),
+    category: z.string().openapi({ example: "Finance" }),
+    sub_category: z.string().optional().openapi({ example: "Trading" }),
+    difficulty_level: z.enum(["beginner", "intermediate", "advanced"]).default("beginner"),
+    language: z.string().default("English"),
+    estimated_duration_hours: z.number().positive().optional(),
+    price: z.number().min(0).default(0),
+    discount_price: z.number().min(0).optional(),
+    currency: z.string().default("USD"),
+    requirements: z.array(z.string()).default([]),
+    learning_objectives: z.array(z.string()).default([]),
+    target_audience: z.array(z.string()).default([]),
+    tags: z.array(z.string()).default([]),
+    is_featured: z.boolean().default(false),
+    is_certificate_enabled: z.boolean().default(true),
+    max_enrollments: z.number().positive().optional(),
+    enrollment_start_date: z.string().datetime().optional(),
+    enrollment_end_date: z.string().datetime().optional(),
+    course_start_date: z.string().datetime().optional(),
+    course_end_date: z.string().datetime().optional(),
+    meta_data: z.object({
+        seo_keywords: z.array(z.string()).optional(),
+        seo_description: z.string().optional(),
+        promotional_video: z.string().url().optional(),
+        course_outcomes: z.array(z.string()).optional(),
+        course_features: z.array(z.string()).optional(),
+        instructor_bio: z.string().optional(),
+        settings: z.object({
+            allow_downloads: z.boolean().default(true),
+            allow_discussions: z.boolean().default(true),
+            auto_enroll: z.boolean().default(false),
+            send_notifications: z.boolean().default(true),
+            drip_content: z.boolean().default(false),
+            content_protection: z.boolean().default(true),
+        }).optional(),
+    }).default({}),
+}).openapi({ ref: "createCourseRequestBody" });
 
-export const createCourseResponseSchema = courseSchema.openapi({
-    ref: "CreateCourseResponse",
-});
+export const updateCourseRequestBodySchema = createCourseRequestBodySchema.partial().extend({
+    status: z.enum(["draft", "published", "archived", "suspended"]).optional(),
+}).openapi({ ref: "updateCourseRequestBody" });
 
-// Update Course Request
-export const updateCourseRequestBodySchema = z
-    .object({
-        course_name: z
-            .string()
-            .optional()
-            .openapi({ example: "Advanced Computer Science" }),
-        course_code: z.string().optional().openapi({ example: "CS201" }),
-        course_description: z
-            .string()
-            .optional()
-            .openapi({
-                example: "An advanced course in computer science principles",
-            }),
-        course_meta_data: z
-            .record(z.string(), z.any())
-            .optional()
-            .openapi({ example: { credits: 4, level: "Intermediate" } }),
-        is_active: z.boolean().optional().openapi({ example: true }),
-    })
-    .openapi({ ref: "UpdateCourseRequest" });
+export const courseResponseSchema = z.object({
+    id: z.string(),
+    campus_id: z.string(),
+    title: z.string(),
+    description: z.string(),
+    short_description: z.string().optional(),
+    class_id: z.string(),
+    created_by: z.string(),
+    instructor_ids: z.array(z.string()),
+    thumbnail: z.string().optional(),
+    preview_video: z.string().optional(),
+    status: z.enum(["draft", "published", "archived", "suspended"]),
+    category: z.string(),
+    sub_category: z.string().optional(),
+    difficulty_level: z.enum(["beginner", "intermediate", "advanced"]),
+    language: z.string(),
+    estimated_duration_hours: z.number().optional(),
+    price: z.number(),
+    discount_price: z.number().optional(),
+    currency: z.string(),
+    requirements: z.array(z.string()),
+    learning_objectives: z.array(z.string()),
+    target_audience: z.array(z.string()),
+    tags: z.array(z.string()),
+    rating: z.number(),
+    rating_count: z.number(),
+    enrollment_count: z.number(),
+    completion_count: z.number(),
+    is_featured: z.boolean(),
+    is_certificate_enabled: z.boolean(),
+    certificate_template_id: z.string().optional(),
+    max_enrollments: z.number().optional(),
+    enrollment_start_date: z.string().datetime().optional(),
+    enrollment_end_date: z.string().datetime().optional(),
+    course_start_date: z.string().datetime().optional(),
+    course_end_date: z.string().datetime().optional(),
+    last_updated_by: z.string(),
+    version: z.number(),
+    meta_data: z.object({}),
+    created_at: z.string().datetime(),
+    updated_at: z.string().datetime(),
+}).openapi({ ref: "courseResponse" });
 
-export const updateCourseResponseSchema = courseSchema.openapi({
-    ref: "UpdateCourseResponse",
-});
-
-// Get Courses Response
-export const getCoursesResponseSchema = z
-    .array(courseSchema)
-    .openapi({ ref: "GetCoursesResponse" });
-
-// Delete Course Response
-export const deleteCourseResponseSchema = courseSchema.openapi({
-    ref: "DeleteCourseResponse",
-});
-
-// Course Assignment Schema
-export const courseAssignmentSchema = z
-    .object({
-        id: z.string().openapi({ example: "assignment123" }),
-        campus_id: z.string().openapi({ example: "campus123" }),
-        course_id: z.string().openapi({ example: "course123" }),
-        title: z.string().openapi({ example: "Midterm Project" }),
-        description: z
-            .string()
-            .openapi({ example: "Create a simple web application" }),
-        due_date: z.string().openapi({ example: "2023-03-15T23:59:59Z" }),
-        is_active: z.boolean().openapi({ example: true }),
-        is_deleted: z.boolean().openapi({ example: false }),
-        created_at: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
-        updated_at: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
-    })
-    .openapi({ ref: "CourseAssignment" });
-
-// Create Course Assignment Request
-export const createCourseAssignmentRequestBodySchema = z
-    .object({
-        title: z.string().openapi({ example: "Midterm Project" }),
-        description: z
-            .string()
-            .openapi({ example: "Create a simple web application" }),
-        due_date: z.string().openapi({ example: "2023-03-15T23:59:59Z" }),
-    })
-    .openapi({ ref: "CreateCourseAssignmentRequest" });
-
-export const createCourseAssignmentResponseSchema =
-    courseAssignmentSchema.openapi({ ref: "CreateCourseAssignmentResponse" });
-
-// Update Course Assignment Request
-export const updateCourseAssignmentRequestBodySchema = z
-    .object({
-        title: z
-            .string()
-            .optional()
-            .openapi({ example: "Updated Midterm Project" }),
-        description: z
-            .string()
-            .optional()
-            .openapi({ example: "Create a full-stack web application" }),
-        due_date: z
-            .string()
-            .optional()
-            .openapi({ example: "2023-03-20T23:59:59Z" }),
-        is_active: z.boolean().optional().openapi({ example: true }),
-    })
-    .openapi({ ref: "UpdateCourseAssignmentRequest" });
-
-export const updateCourseAssignmentResponseSchema =
-    courseAssignmentSchema.openapi({ ref: "UpdateCourseAssignmentResponse" });
-
-// Get Course Assignments Response
-export const getCourseAssignmentsResponseSchema = z
-    .array(courseAssignmentSchema)
-    .openapi({ ref: "GetCourseAssignmentsResponse" });
-
-// Course Content Schema
-export const courseContentSchema = z
-    .object({
-        id: z.string().openapi({ example: "content123" }),
-        campus_id: z.string().openapi({ example: "campus123" }),
-        course_id: z.string().openapi({ example: "course123" }),
-        title: z.string().openapi({ example: "Introduction to Programming" }),
-        description: z
-            .string()
-            .openapi({
-                example: "Basic programming concepts",
-            }),
-        content_type: z.enum(["text", "video", "resource"]).openapi({ example: "text" }),
-        content_data: z.object({
-            text_content: z.string().optional().openapi({ example: "This lesson covers variables, functions, and basic syntax." }),
-            video_url: z.string().optional().openapi({ example: "https://your-storage.com/video.mp4" }),
-            video_duration: z.number().optional().openapi({ example: 1800 }),
-            thumbnail_url: z.string().optional().openapi({ example: "https://your-storage.com/thumbnail.jpg" }),
-            file_size: z.number().optional().openapi({ example: 52428800 }),
-            resources_url: z.string().optional().openapi({ example: "https://your-storage.com/handbook.pdf" }),
-            resources_size: z.number().optional().openapi({ example: 2048000 }),
-            file_type: z.string().optional().openapi({ example: "pdf" }),
-            file_name: z.string().optional().openapi({ example: "programming-handbook.pdf" })
-        }).openapi({ example: { text_content: "This lesson covers variables, functions, and basic syntax." } }),
-        order: z.number().openapi({ example: 1 }),
-        created_at: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
-        updated_at: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
-    })
-    .openapi({ ref: "CourseContent" });
-
-// Week-based Course Content Request
-export const createCourseContentRequestBodySchema = z
-    .object({
-        title: z.string().openapi({ example: "Week 1: Introduction to Programming" }),
-        description: z.string().openapi({ example: "This week covers basic programming concepts and fundamental coding principles" }),
-        contents: z.array(z.object({
-            title: z.string().openapi({ example: "Introduction to Programming" }),
-            description: z.string().openapi({ example: "Basic programming concepts" }),
-            content_type: z.enum(["text", "video", "resource"]).openapi({ example: "text" }),
-            content_data: z.object({
-                text_content: z.string().optional().openapi({ example: "This lesson covers variables, functions, and basic syntax." }),
-                video_url: z.string().optional().openapi({ example: "https://your-storage.com/video.mp4" }),
-                video_duration: z.number().optional().openapi({ example: 1800 }),
-                thumbnail_url: z.string().optional().openapi({ example: "https://your-storage.com/thumbnail.jpg" }),
-                file_size: z.number().optional().openapi({ example: 52428800 }),
-                resources_url: z.string().optional().openapi({ example: "https://your-storage.com/handbook.pdf" }),
-                resources_size: z.number().optional().openapi({ example: 2048000 }),
-                file_type: z.string().optional().openapi({ example: "pdf" }),
-                file_name: z.string().optional().openapi({ example: "programming-handbook.pdf" })
-            }).openapi({ example: { text_content: "This lesson covers variables, functions, and basic syntax." } })
-        })).openapi({ 
-            example: [
-                {
-                    title: "Introduction to Programming",
-                    description: "Basic programming concepts",
-                    content_type: "text",
-                    content_data: { text_content: "This lesson covers variables, functions, and basic syntax." }
-                },
-                {
-                    title: "Programming Tutorial Video",
-                    description: "Video lesson on programming basics",
-                    content_type: "video",
-                    content_data: {
-                        video_url: "https://your-storage.com/video.mp4",
-                        video_duration: 1800,
-                        thumbnail_url: "https://your-storage.com/thumbnail.jpg",
-                        file_size: 52428800
-                    }
-                }
-            ]
+export const coursesListResponseSchema = z.object({
+    success: z.boolean(),
+    data: z.object({
+        courses: z.array(courseResponseSchema),
+        pagination: z.object({
+            current_page: z.number(),
+            per_page: z.number(),
+            total_items: z.number(),
+            total_pages: z.number(),
+            has_next: z.boolean(),
+            has_previous: z.boolean(),
         }),
-        access_settings: z.object({
-            access_level: z.enum(["free", "paid"]).openapi({ example: "free" }),
-            course_price: z.number().optional().openapi({ example: 20000 }),
-            available_from: z.string().optional().openapi({ example: "2023-01-01T00:00:00Z" }),
-            available_until: z.string().optional().openapi({ example: "2024-01-01T00:00:00Z" })
+        filters_applied: z.object({
+            status: z.string().optional(),
+            category: z.string().optional(),
+            difficulty_level: z.string().optional(),
+            price_range: z.string().optional(),
+            search_query: z.string().optional(),
+        }),
+        summary: z.object({
+            total_courses: z.number(),
+            published_courses: z.number(),
+            draft_courses: z.number(),
+            featured_courses: z.number(),
+            free_courses: z.number(),
+            paid_courses: z.number(),
+        }),
+    }),
+    message: z.string(),
+}).openapi({ ref: "coursesListResponse" });
+
+// ==================== COURSE SECTION SCHEMAS ====================
+
+export const createCourseSectionRequestBodySchema = z.object({
+    title: z.string().min(1).max(200).openapi({ example: "Course Introduction" }),
+    description: z.string().max(1000).optional().openapi({ 
+        example: "Welcome to the course and overview of what you'll learn" 
+    }),
+    section_order: z.number().positive(),
+    is_preview: z.boolean().default(false),
+    estimated_duration_minutes: z.number().min(0).default(0),
+    is_published: z.boolean().default(true),
+    meta_data: z.object({
+        learning_objectives: z.array(z.string()).optional(),
+        section_notes: z.string().optional(),
+        required_resources: z.array(z.string()).optional(),
+        completion_criteria: z.string().optional(),
+    }).default({}),
+}).openapi({ ref: "createCourseSectionRequestBody" });
+
+export const updateCourseSectionRequestBodySchema = createCourseSectionRequestBodySchema.partial()
+    .openapi({ ref: "updateCourseSectionRequestBody" });
+
+export const courseSectionResponseSchema = z.object({
+    id: z.string(),
+    course_id: z.string(),
+    campus_id: z.string(),
+    title: z.string(),
+    description: z.string().optional(),
+    section_order: z.number(),
+    is_preview: z.boolean(),
+    estimated_duration_minutes: z.number(),
+    is_published: z.boolean(),
+    meta_data: z.object({}),
+    lecture_count: z.number().optional(),
+    total_duration_minutes: z.number().optional(),
+    created_at: z.string().datetime(),
+    updated_at: z.string().datetime(),
+}).openapi({ ref: "courseSectionResponse" });
+
+// ==================== COURSE LECTURE SCHEMAS ====================
+
+export const createCourseLectureRequestBodySchema = z.object({
+    title: z.string().min(1).max(200).openapi({ example: "What's in this course?" }),
+    description: z.string().max(1000).optional().openapi({ 
+        example: "Overview of course content and learning outcomes" 
+    }),
+    lecture_order: z.number().positive(),
+    lecture_type: z.enum(["video", "resource", "quiz", "assignment", "text", "live_session"]),
+    content_data: z.object({
+        // Video content
+        video_url: z.string().url().optional(),
+        video_duration_seconds: z.number().optional(),
+        video_thumbnail: z.string().url().optional(),
+        video_quality: z.array(z.object({
+            quality: z.string(),
+            url: z.string().url(),
+            file_size_mb: z.number(),
+        })).optional(),
+        subtitles: z.array(z.object({
+            language: z.string(),
+            url: z.string().url(),
+        })).optional(),
+        
+        // Resource content
+        resource_files: z.array(z.object({
+            id: z.string(),
+            name: z.string(),
+            type: z.enum(["pdf", "doc", "ppt", "excel", "image", "audio", "other"]),
+            url: z.string().url(),
+            file_size_mb: z.number(),
+            is_downloadable: z.boolean().default(true),
+            description: z.string().optional(),
+        })).optional(),
+        
+        // Quiz content
+        quiz_id: z.string().optional(),
+        quiz_data: z.object({
+            passing_score: z.number().min(0).max(100),
+            max_attempts: z.number().positive(),
+            time_limit_minutes: z.number().positive().optional(),
+            show_results_immediately: z.boolean().default(true),
         }).optional(),
-        interaction_settings: z.object({
-            allow_comments: z.boolean().optional().openapi({ example: true }),
-            allow_notes: z.boolean().optional().openapi({ example: true }),
-            allow_bookmarks: z.boolean().optional().openapi({ example: true }),
-            discussion: z.boolean().optional().openapi({ example: false }),
-            require_completion: z.boolean().optional().openapi({ example: false })
+        
+        // Assignment content
+        assignment_id: z.string().optional(),
+        assignment_data: z.object({
+            due_date: z.string().datetime().optional(),
+            max_score: z.number().positive(),
+            submission_types: z.array(z.enum(["text", "file", "url"])),
         }).optional(),
-        meta_data: z.object({
-            tags: z.array(z.string()).optional().openapi({ example: ["programming", "basics"] })
+        
+        // Text content
+        text_content: z.string().optional(),
+        rich_text_content: z.string().optional(),
+        
+        // Live session content
+        live_session_data: z.object({
+            scheduled_start: z.string().datetime(),
+            scheduled_end: z.string().datetime(),
+            meeting_url: z.string().url().optional(),
+            meeting_id: z.string().optional(),
+            is_recurring: z.boolean().default(false),
+            recording_url: z.string().url().optional(),
         }).optional(),
-        order: z.number().optional().openapi({ example: 1 })
-    })
-    .openapi({ ref: "CreateCourseContentRequest" });
+    }),
+    is_preview: z.boolean().default(false),
+    is_mandatory: z.boolean().default(true),
+    estimated_duration_minutes: z.number().min(0).default(0),
+    is_published: z.boolean().default(true),
+    completion_criteria: z.object({
+        auto_complete_video: z.boolean().default(true),
+        manual_mark_complete: z.boolean().default(false),
+        quiz_required: z.boolean().default(false),
+        assignment_required: z.boolean().default(false),
+        minimum_watch_percentage: z.number().min(0).max(100).default(80),
+    }).default({}),
+    meta_data: z.object({
+        learning_notes: z.string().optional(),
+        instructor_notes: z.string().optional(),
+        external_links: z.array(z.object({
+            title: z.string(),
+            url: z.string().url(),
+            description: z.string().optional(),
+        })).optional(),
+        downloadable_resources: z.array(z.string()).optional(),
+        discussion_enabled: z.boolean().default(true),
+        comments_enabled: z.boolean().default(true),
+    }).default({}),
+}).openapi({ ref: "createCourseLectureRequestBody" });
 
-export const createCourseContentResponseSchema = z.object({
-    week_title: z.string().openapi({ example: "Week 1: Introduction to Programming" }),
-    week_description: z.string().openapi({ example: "This week covers basic programming concepts" }),
-    week_order: z.number().openapi({ example: 1 }),
-    contents_count: z.number().openapi({ example: 3 }),
-    contents: z.array(courseContentSchema)
-}).openapi({
-    ref: "CreateCourseContentResponse",
-});
+export const updateCourseLectureRequestBodySchema = createCourseLectureRequestBodySchema.partial()
+    .openapi({ ref: "updateCourseLectureRequestBody" });
 
-// Update Course Content Request
-export const updateCourseContentRequestBodySchema = z
-    .object({
-        title: z
-            .string()
-            .optional()
-            .openapi({ example: "Week 1: Revised Introduction" }),
-        content: z
-            .string()
-            .optional()
-            .openapi({ example: "Updated content for week 1" }),
-        content_type: z.string().optional().openapi({ example: "text" }),
-        order: z.number().optional().openapi({ example: 2 }),
-    })
-    .openapi({ ref: "UpdateCourseContentRequest" });
+export const courseLectureResponseSchema = z.object({
+    id: z.string(),
+    course_id: z.string(),
+    section_id: z.string(),
+    campus_id: z.string(),
+    title: z.string(),
+    description: z.string().optional(),
+    lecture_order: z.number(),
+    lecture_type: z.enum(["video", "resource", "quiz", "assignment", "text", "live_session"]),
+    content_data: z.object({}),
+    is_preview: z.boolean(),
+    is_mandatory: z.boolean(),
+    estimated_duration_minutes: z.number(),
+    is_published: z.boolean(),
+    completion_criteria: z.object({}),
+    meta_data: z.object({}),
+    user_progress: z.object({
+        progress_status: z.enum(["not_started", "in_progress", "completed", "skipped"]).optional(),
+        completion_percentage: z.number().optional(),
+        last_accessed_at: z.string().datetime().optional(),
+        resume_position_seconds: z.number().optional(),
+    }).optional(),
+    created_at: z.string().datetime(),
+    updated_at: z.string().datetime(),
+}).openapi({ ref: "courseLectureResponse" });
 
-export const updateCourseContentResponseSchema = courseContentSchema.openapi({
-    ref: "UpdateCourseContentResponse",
-});
+// ==================== COURSE ENROLLMENT SCHEMAS ====================
 
-// Get Course Contents Response
-export const getCourseContentsResponseSchema = z
-    .array(courseContentSchema)
-    .openapi({ ref: "GetCourseContentsResponse" });
+export const enrollInCourseRequestBodySchema = z.object({
+    enrollment_type: z.enum(["free", "paid", "admin_assigned", "bulk_enrollment"]).default("free"),
+    payment_reference: z.string().optional(),
+    referral_code: z.string().optional(),
+    enrollment_source: z.enum(["web", "mobile", "admin", "api", "bulk_import"]).default("web"),
+    meta_data: z.object({
+        enrollment_reason: z.string().optional(),
+        learning_path_id: z.string().optional(),
+        cohort_id: z.string().optional(),
+        custom_fields: z.record(z.any()).optional(),
+    }).default({}),
+}).openapi({ ref: "enrollInCourseRequestBody" });
 
-// Course Assignment Submission Schema
-export const courseAssignmentSubmissionSchema = z
-    .object({
-        id: z.string().openapi({ example: "submission123" }),
-        campus_id: z.string().openapi({ example: "campus123" }),
-        course_id: z.string().openapi({ example: "course123" }),
-        assignment_id: z.string().openapi({ example: "assignment123" }),
-        user_id: z.string().openapi({ example: "user123" }),
-        content: z
-            .string()
-            .openapi({ example: "My submission for the midterm project" }),
-        submission_date: z
-            .string()
-            .openapi({ example: "2023-03-14T15:30:00Z" }),
-        grade: z.number().optional().openapi({ example: 85 }),
-        feedback: z
-            .string()
-            .optional()
-            .openapi({
-                example: "Good work, but could improve code organization",
-            }),
-        is_active: z.boolean().openapi({ example: true }),
-        is_deleted: z.boolean().openapi({ example: false }),
-        created_at: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
-        updated_at: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
-    })
-    .openapi({ ref: "CourseAssignmentSubmission" });
+export const courseEnrollmentResponseSchema = z.object({
+    id: z.string(),
+    course_id: z.string(),
+    user_id: z.string(),
+    campus_id: z.string(),
+    enrollment_type: z.enum(["free", "paid", "admin_assigned", "bulk_enrollment"]),
+    enrollment_status: z.enum(["active", "completed", "dropped", "suspended", "expired"]),
+    progress_percentage: z.number(),
+    enrollment_date: z.string().datetime(),
+    completion_date: z.string().datetime().optional(),
+    expiry_date: z.string().datetime().optional(),
+    last_accessed_at: z.string().datetime().optional(),
+    certificate_issued: z.boolean(),
+    certificate_id: z.string().optional(),
+    grade: z.number().optional(),
+    completion_time_hours: z.number().optional(),
+    access_details: z.object({
+        total_lectures: z.number(),
+        completed_lectures: z.number(),
+        completed_lecture_ids: z.array(z.string()),
+        current_lecture_id: z.string().optional(),
+        current_section_id: z.string().optional(),
+        bookmarked_lectures: z.array(z.string()),
+        notes_count: z.number(),
+        quiz_attempts: z.number(),
+        assignment_submissions: z.number(),
+    }),
+    course_details: z.object({
+        title: z.string(),
+        thumbnail: z.string().optional(),
+        instructor_name: z.string().optional(),
+        total_duration_hours: z.number().optional(),
+    }).optional(),
+    created_at: z.string().datetime(),
+    updated_at: z.string().datetime(),
+}).openapi({ ref: "courseEnrollmentResponse" });
 
-// Create Course Assignment Submission Request
-export const createCourseAssignmentSubmissionRequestBodySchema = z
-    .object({
-        user_id: z.string().openapi({ example: "user123" }),
-        content: z
-            .string()
-            .openapi({ example: "My submission for the midterm project" }),
-        submission_date: z
-            .string()
-            .openapi({ example: "2023-03-14T15:30:00Z" }),
-    })
-    .openapi({ ref: "CreateCourseAssignmentSubmissionRequest" });
+// ==================== COURSE PROGRESS SCHEMAS ====================
 
-export const createCourseAssignmentSubmissionResponseSchema =
-    courseAssignmentSubmissionSchema.openapi({
-        ref: "CreateCourseAssignmentSubmissionResponse",
-    });
+export const updateProgressRequestBodySchema = z.object({
+    progress_status: z.enum(["not_started", "in_progress", "completed", "skipped"]).optional(),
+    watch_time_seconds: z.number().min(0).optional(),
+    completion_percentage: z.number().min(0).max(100).optional(),
+    resume_position_seconds: z.number().min(0).optional(),
+    interaction_data: z.object({
+        play_count: z.number().optional(),
+        pause_count: z.number().optional(),
+        seek_count: z.number().optional(),
+        speed_changes: z.number().optional(),
+        quality_changes: z.number().optional(),
+        fullscreen_toggles: z.number().optional(),
+        bookmarked: z.boolean().optional(),
+        liked: z.boolean().optional(),
+        difficulty_rating: z.number().min(1).max(5).optional(),
+    }).optional(),
+    device_info: z.object({
+        device_type: z.enum(["web", "mobile", "tablet"]),
+        browser: z.string().optional(),
+        os: z.string().optional(),
+        app_version: z.string().optional(),
+    }).optional(),
+    notes: z.array(z.object({
+        timestamp_seconds: z.number().min(0),
+        note_text: z.string().min(1),
+        is_public: z.boolean().default(false),
+    })).optional(),
+}).openapi({ ref: "updateProgressRequestBody" });
 
-// Update Course Assignment Submission Request
-export const updateCourseAssignmentSubmissionRequestBodySchema = z
-    .object({
-        content: z
-            .string()
-            .optional()
-            .openapi({ example: "Updated submission for the midterm project" }),
-        grade: z.number().optional().openapi({ example: 90 }),
-        feedback: z
-            .string()
-            .optional()
-            .openapi({ example: "Excellent improvement in code organization" }),
-    })
-    .openapi({ ref: "UpdateCourseAssignmentSubmissionRequest" });
+export const courseProgressResponseSchema = z.object({
+    id: z.string(),
+    course_id: z.string(),
+    user_id: z.string(),
+    lecture_id: z.string(),
+    campus_id: z.string(),
+    progress_status: z.enum(["not_started", "in_progress", "completed", "skipped"]),
+    watch_time_seconds: z.number(),
+    total_duration_seconds: z.number(),
+    completion_percentage: z.number(),
+    first_accessed_at: z.string().datetime(),
+    last_accessed_at: z.string().datetime(),
+    completed_at: z.string().datetime().optional(),
+    resume_position_seconds: z.number().optional(),
+    interaction_data: z.object({}),
+    notes: z.array(z.object({
+        id: z.string(),
+        timestamp_seconds: z.number(),
+        note_text: z.string(),
+        is_public: z.boolean(),
+        created_at: z.string().datetime(),
+        updated_at: z.string().datetime(),
+    })),
+    device_info: z.object({}),
+    created_at: z.string().datetime(),
+    updated_at: z.string().datetime(),
+}).openapi({ ref: "courseProgressResponse" });
 
-export const updateCourseAssignmentSubmissionResponseSchema =
-    courseAssignmentSubmissionSchema.openapi({
-        ref: "UpdateCourseAssignmentSubmissionResponse",
-    });
+// ==================== GENERIC RESPONSE SCHEMAS ====================
 
-// Get Course Assignment Submissions Response
-export const getCourseAssignmentSubmissionsResponseSchema = z
-    .array(courseAssignmentSubmissionSchema)
-    .openapi({ ref: "GetCourseAssignmentSubmissionsResponse" });
+export const successResponseSchema = z.object({
+    success: z.boolean(),
+    data: z.any().optional(),
+    message: z.string(),
+}).openapi({ ref: "successResponse" });
 
-// Course Enrollment Schema
-export const courseEnrollmentSchema = z
-    .object({
-        id: z.string().openapi({ example: "enrollment123" }),
-        campus_id: z.string().openapi({ example: "campus123" }),
-        course_id: z.string().openapi({ example: "course123" }),
-        user_id: z.string().openapi({ example: "user123" }),
-        enrollment_date: z
-            .string()
-            .openapi({ example: "2023-01-15T00:00:00Z" }),
-        status: z.string().openapi({ example: "active" }),
-        progress: z.number().openapi({ example: 25 }),
-        is_deleted: z.boolean().openapi({ example: false }),
-        created_at: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
-        updated_at: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
-    })
-    .openapi({ ref: "CourseEnrollment" });
+export const errorResponseSchema = z.object({
+    success: z.boolean().default(false),
+    error: z.string(),
+    details: z.any().optional(),
+}).openapi({ ref: "errorResponse" });
 
-// Create Course Enrollment Request
-export const createCourseEnrollmentRequestBodySchema = z
-    .object({
-        enrollmentData: z
-            .object({
-                enrollment_date: z
-                    .string()
-                    .openapi({ example: "2023-01-15T00:00:00Z" }),
-                status: z.string().openapi({ example: "active" }),
-                progress: z.number().openapi({ example: 0 }),
-            })
-            .openapi({
-                example: {
-                    enrollment_date: "2023-01-15T00:00:00Z",
-                    status: "active",
-                    progress: 0,
-                },
-            }),
-    })
-    .openapi({ ref: "CreateCourseEnrollmentRequest" });
+export const paginationSchema = z.object({
+    page: z.string().regex(/^\d+$/).transform(Number).optional(),
+    limit: z.string().regex(/^\d+$/).transform(Number).optional(),
+    sort_by: z.string().optional(),
+    sort_order: z.enum(["asc", "desc"]).optional(),
+}).openapi({ ref: "paginationQuery" });
 
-export const createCourseEnrollmentResponseSchema =
-    courseEnrollmentSchema.openapi({ ref: "CreateCourseEnrollmentResponse" });
+// ==================== ANALYTICS SCHEMAS ====================
 
-// Update Course Enrollment Request
-export const updateCourseEnrollmentRequestBodySchema = z
-    .object({
-        status: z.string().optional().openapi({ example: "completed" }),
-        progress: z.number().optional().openapi({ example: 100 }),
-    })
-    .openapi({ ref: "UpdateCourseEnrollmentRequest" });
+export const courseAnalyticsResponseSchema = z.object({
+    success: z.boolean(),
+    data: z.object({
+        course_overview: z.object({
+            total_enrollments: z.number(),
+            active_enrollments: z.number(),
+            completed_enrollments: z.number(),
+            completion_rate: z.number(),
+            average_completion_time_hours: z.number(),
+            average_rating: z.number(),
+            total_revenue: z.number(),
+        }),
+        engagement_metrics: z.object({
+            total_watch_time_hours: z.number(),
+            average_session_duration_minutes: z.number(),
+            video_completion_rate: z.number(),
+            quiz_attempt_rate: z.number(),
+            assignment_submission_rate: z.number(),
+            discussion_participation_rate: z.number(),
+        }),
+        content_performance: z.array(z.object({
+            lecture_id: z.string(),
+            lecture_title: z.string(),
+            lecture_type: z.string(),
+            view_count: z.number(),
+            completion_rate: z.number(),
+            average_watch_time_percentage: z.number(),
+            dropout_rate: z.number(),
+            engagement_score: z.number(),
+        })),
+        student_progress: z.array(z.object({
+            user_id: z.string(),
+            student_name: z.string(),
+            enrollment_date: z.string().datetime(),
+            progress_percentage: z.number(),
+            last_accessed: z.string().datetime(),
+            completion_status: z.string(),
+            grade: z.number().optional(),
+        })),
+        time_series_data: z.object({
+            daily_enrollments: z.array(z.object({
+                date: z.string(),
+                count: z.number(),
+            })),
+            weekly_engagement: z.array(z.object({
+                week: z.string(),
+                total_hours: z.number(),
+                unique_learners: z.number(),
+            })),
+        }),
+    }),
+    message: z.string(),
+}).openapi({ ref: "courseAnalyticsResponse" });
 
-export const updateCourseEnrollmentResponseSchema =
-    courseEnrollmentSchema.openapi({ ref: "UpdateCourseEnrollmentResponse" });
+// ==================== ORDERING SCHEMAS ====================
 
-// Get Course Enrollments Response
-export const getCourseEnrollmentsResponseSchema = z
-    .array(courseEnrollmentSchema)
-    .openapi({ ref: "GetCourseEnrollmentsResponse" });
+export const updateSectionOrderRequestBodySchema = z.object({
+    section_orders: z.array(z.object({
+        id: z.string(),
+        section_order: z.number(),
+    })),
+}).openapi({ ref: "updateSectionOrderRequest" });
+
+export const updateLectureOrderRequestBodySchema = z.object({
+    lecture_orders: z.array(z.object({
+        id: z.string(),
+        lecture_order: z.number(),
+    })),
+}).openapi({ ref: "updateLectureOrderRequest" });
+
+export const bulkEnrollStudentsRequestBodySchema = z.object({
+    student_ids: z.array(z.string()),
+    enrollment_type: z.enum(["free", "paid", "admin_assigned", "bulk_enrollment"]).default("admin_assigned"),
+}).openapi({ ref: "bulkEnrollStudentsRequest" });

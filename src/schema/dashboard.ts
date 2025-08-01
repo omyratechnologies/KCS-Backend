@@ -89,6 +89,49 @@ const eventSchema = z.object({
     description: z.string().optional(),
 });
 
+const courseSchema = z.object({
+    id: z.string(),
+    title: z.string(),
+    thumbnail: z.string().nullable().optional(),
+    instructor_names: z.array(z.string()).optional(),
+    progress_percentage: z.number().optional(),
+    enrollment_date: z.string().optional(),
+    last_accessed_at: z.string().optional(),
+    status: z.string().optional(),
+    category: z.string().optional(),
+    difficulty_level: z.string().optional(),
+    estimated_duration_hours: z.number().optional(),
+    completed_lectures: z.number().optional(),
+    total_lectures: z.number().optional(),
+    certificate_issued: z.boolean().optional(),
+    certificate_id: z.string().optional(),
+    rating: z.number().optional(),
+    total_enrollments: z.number().optional(),
+    active_enrollments: z.number().optional(),
+    completed_enrollments: z.number().optional(),
+    completion_rate: z.number().optional(),
+    rating_count: z.number().optional(),
+    created_at: z.string().optional(),
+    updated_at: z.string().optional()
+});
+
+const coursesDataSchema = z.object({
+    enrolled: z.array(courseSchema),
+    inProgress: z.array(courseSchema),
+    completed: z.array(courseSchema),
+    totalCourses: z.number(),
+    totalProgress: z.number(),
+    certificates: z.number(),
+}).optional();
+
+const teachingCoursesDataSchema = z.object({
+    teaching: z.array(courseSchema),
+    totalCourses: z.number(),
+    totalEnrollments: z.number(),
+    totalCompletions: z.number(),
+    averageRating: z.number(),
+}).optional();
+
 // Student Dashboard Schema
 export const studentDashboardResponseSchema = z.object({
     success: z.boolean(),
@@ -122,6 +165,7 @@ export const studentDashboardResponseSchema = z.object({
             booksIssued: z.array(libraryBookSchema),
             dueBooks: z.array(libraryBookSchema),
         }),
+        courses: coursesDataSchema,
     }),
 }).openapi({ ref: "StudentDashboardResponse" });
 
@@ -149,6 +193,7 @@ export const teacherDashboardResponseSchema = z.object({
             recent: z.array(notificationSchema),
         }),
         quickActions: z.array(quickActionSchema),
+        courses: teachingCoursesDataSchema,
     }),
 }).openapi({ ref: "TeacherDashboardResponse" });
 
@@ -166,6 +211,7 @@ export const parentDashboardResponseSchema = z.object({
             }),
             recentActivities: z.array(z.any()),
             upcomingEvents: z.array(eventSchema),
+            courses: coursesDataSchema,
         })),
         notifications: z.object({
             unread: z.number(),
@@ -184,6 +230,9 @@ export const adminDashboardResponseSchema = z.object({
             totalTeachers: z.number(),
             totalClasses: z.number(),
             activeCourses: z.number(),
+            totalEnrollments: z.number().optional(),
+            completedEnrollments: z.number().optional(),
+            certificatesIssued: z.number().optional(),
         }),
         attendance: z.object({
             today: z.number(),

@@ -1,451 +1,1488 @@
+import { nanoid } from "napi-nanoid";
+
 import { Course, ICourseData } from "@/models/course.model";
-import {
-    CourseAssignment,
-    ICourseAssignmentData,
-} from "@/models/course_assignment.model";
-import {
-    CourseAssignmentSubmission,
-    ICourseAssignmentSubmissionData,
-} from "@/models/course_assignment_submission.model";
-import {
-    CourseContent,
-    ICourseContentData,
-} from "@/models/course_content.model";
-import {
-    CourseEnrollment,
-    ICourseEnrollmentData,
-} from "@/models/course_enrollment.model";
+import { CourseSection, ICourseSectionData } from "@/models/course_section.model";
+import { CourseLecture, ICourseLectureData } from "@/models/course_lecture.model";
+import { CourseEnrollment, ICourseEnrollmentData } from "@/models/course_enrollment.model";
+import { CourseProgress, ICourseProgressData } from "@/models/course_progress.model";
+import { CourseCertificate, ICourseCertificateData } from "@/models/course_certificate.model";
+import { User } from "@/models/user.model";
 
 export class CourseService {
-    // create course
-    public static async createCourse(
-        campus_id: string,
-        courseData: Partial<ICourseData>
-    ): Promise<ICourseData> {
-        return await Course.create({
-            ...courseData,
-            campus_id: campus_id,
-            is_active: true,
-            is_deleted: false,
-            created_at: new Date(),
-            updated_at: new Date(),
-        });
-    }
-
-    // get all courses
-    public static async getAllCourses(
-        campus_id: string
-    ): Promise<ICourseData[]> {
-        const courses: { rows: ICourseData[] } = await Course.find(
-            {
+    
+    // ==================== COURSE MANAGEMENT ====================
+    
+    /**
+     * Create a new course
+     */
+    static async createCourse(campus_id: string, created_by: string, courseData: Partial<ICourseData>) {
+        try {
+            const course = await Course.create({
+                id: nanoid(),
                 campus_id,
-            },
-            {
-                sort: {
-                    updated_at: "DESC",
-                },
-            }
-        );
+                created_by,
+                last_updated_by: created_by,
+                status: "draft",
+                rating: 0,
+                rating_count: 0,
+                enrollment_count: 0,
+                completion_count: 0,
+                version: 1,
+                ...courseData,
+                created_at: new Date(),
+                updated_at: new Date(),
+            });
 
-        if (!courses) throw new Error("Courses not found");
-
-        return courses.rows;
+            return {
+                success: true,
+                data: course,
+                message: "Course created successfully"
+            };
+        } catch (error) {
+            throw new Error(`Failed to create course: ${error}`);
+        }
     }
 
-    // get course by id
-    public static async getCourseById(course_id: string): Promise<ICourseData> {
-        const course: ICourseData = await Course.findById(course_id);
+    /**
+     * Get courses with advanced filtering and pagination
+     */
+    static async getCourses(campus_id: string, filters: {
+        page?: number;
+        limit?: number;
+        status?: string;
+        category?: string;
+        difficulty_level?: string;
+        price_range?: string;
+        search_query?: string;
+        instructor_id?: string;
+        class_id?: string;
+        is_featured?: boolean;
+        sort_by?: string;
+        sort_order?: "asc" | "desc";
+    } = {}) {
+        try {
+            const {
+                page = 1,
+                limit = 20,
+                status,
+                category,
+                difficulty_level,
+                price_range,
+                search_query,
+                instructor_id,
+                class_id,
+                is_featured,
+                sort_by = "created_at",
+                sort_order = "desc"
+            } = filters;
 
-        if (!course) throw new Error("Course not found");
+            // Build query conditions
+            const queryConditions: any = { campus_id };
 
-        return course;
-    }
+            if (status) queryConditions.status = status;
+            if (category) queryConditions.category = category;
+            if (difficulty_level) queryConditions.difficulty_level = difficulty_level;
+            if (class_id) queryConditions.class_id = class_id;
+            if (is_featured !== undefined) queryConditions.is_featured = is_featured;
+            if (instructor_id) queryConditions.instructor_ids = { $in: [instructor_id] };
 
-    // update course
-    public static async updateCourse(
-        course_id: string,
-        courseData: Partial<ICourseData>
-    ): Promise<ICourseData> {
-        const course: ICourseData = await Course.updateById(course_id, {
-            ...courseData,
-            updated_at: new Date(),
-        });
-
-        if (!course) throw new Error("Course not updated");
-
-        return course;
-    }
-
-    // delete course
-    public static async deleteCourse(course_id: string): Promise<ICourseData> {
-        const course: ICourseData = await Course.updateById(course_id, {
-            is_deleted: true,
-        });
-
-        if (!course) throw new Error("Course not deleted");
-
-        return course;
-    }
-
-    // create course assignment
-    public static async createCourseAssignment(
-        campus_id: string,
-        course_id: string,
-        assignmentData: Partial<ICourseAssignmentData>
-    ): Promise<ICourseAssignmentData> {
-        return await CourseAssignment.create({
-            ...assignmentData,
-            campus_id: campus_id,
-            course_id: course_id,
-            is_active: true,
-            is_deleted: false,
-            created_at: new Date(),
-            updated_at: new Date(),
-        });
-    }
-
-    // get all course assignments
-    public static async getAllCourseAssignments(
-        campus_id: string,
-        course_id: string
-    ): Promise<ICourseAssignmentData[]> {
-        const assignments: { rows: ICourseAssignmentData[] } =
-            await CourseAssignment.find(
-                {
-                    campus_id,
-                    course_id,
-                },
-                {
-                    sort: {
-                        updated_at: "DESC",
-                    },
+            // Price range filter
+            if (price_range) {
+                const [min, max] = price_range.split("-").map(Number);
+                if (!isNaN(min) && !isNaN(max)) {
+                    queryConditions.price = { $gte: min, $lte: max };
+                } else if (price_range === "free") {
+                    queryConditions.price = 0;
+                } else if (price_range === "paid") {
+                    queryConditions.price = { $gt: 0 };
                 }
+            }
+
+            // Search functionality
+            if (search_query) {
+                queryConditions.$or = [
+                    { title: { $regex: search_query, $options: "i" } },
+                    { description: { $regex: search_query, $options: "i" } },
+                    { tags: { $in: [new RegExp(search_query, "i")] } },
+                ];
+            }
+
+            // Pagination
+            const skip = (page - 1) * limit;
+            
+            // Get courses with pagination
+            const coursesQuery = await Course.find(queryConditions);
+            const totalCourses = coursesQuery.rows.length;
+            
+            // Apply sorting and pagination (simplified for Ottoman)
+            let courses = coursesQuery.rows;
+            
+            // Sort courses
+            courses.sort((a, b) => {
+                let aValue = a[sort_by];
+                let bValue = b[sort_by];
+                
+                if (sort_by === "created_at" || sort_by === "updated_at") {
+                    aValue = new Date(aValue).getTime();
+                    bValue = new Date(bValue).getTime();
+                }
+                
+                if (sort_order === "asc") {
+                    return aValue > bValue ? 1 : -1;
+                } else {
+                    return aValue < bValue ? 1 : -1;
+                }
+            });
+            
+            // Apply pagination
+            const paginatedCourses = courses.slice(skip, skip + limit);
+
+            // Get course statistics
+            const stats = await this.getCourseStatistics(campus_id);
+
+            return {
+                success: true,
+                data: {
+                    courses: paginatedCourses,
+                    pagination: {
+                        current_page: page,
+                        per_page: limit,
+                        total_items: totalCourses,
+                        total_pages: Math.ceil(totalCourses / limit),
+                        has_next: page < Math.ceil(totalCourses / limit),
+                        has_previous: page > 1,
+                    },
+                    filters_applied: {
+                        status,
+                        category,
+                        difficulty_level,
+                        price_range,
+                        search_query,
+                    },
+                    summary: stats,
+                },
+                message: "Courses retrieved successfully"
+            };
+        } catch (error) {
+            throw new Error(`Failed to get courses: ${error}`);
+        }
+    }
+
+    /**
+     * Get course statistics
+     */
+    static async getCourseStatistics(campus_id: string) {
+        try {
+            const allCourses = await Course.find({ campus_id });
+            const courses = allCourses.rows;
+
+            return {
+                total_courses: courses.length,
+                published_courses: courses.filter(c => c.status === "published").length,
+                draft_courses: courses.filter(c => c.status === "draft").length,
+                featured_courses: courses.filter(c => c.is_featured).length,
+                free_courses: courses.filter(c => c.price === 0).length,
+                paid_courses: courses.filter(c => c.price > 0).length,
+            };
+        } catch (error) {
+            throw new Error(`Failed to get course statistics: ${error}`);
+        }
+    }
+
+    /**
+     * Get course by ID with detailed information
+     */
+    static async getCourseById(course_id: string, campus_id: string, user_id?: string) {
+        try {
+            const courseResult = await Course.findById(course_id);
+            if (!courseResult || courseResult.campus_id !== campus_id) {
+                throw new Error("Course not found");
+            }
+
+            // Get course sections and lectures
+            const sectionsResult = await CourseSection.find({ 
+                course_id, 
+                campus_id,
+                is_published: true 
+            });
+            
+            const sections = sectionsResult.rows.sort((a, b) => a.section_order - b.section_order);
+
+            // Get lectures for each section
+            const sectionsWithLectures = await Promise.all(
+                sections.map(async (section) => {
+                    const lecturesResult = await CourseLecture.find({ 
+                        section_id: section.id,
+                        is_published: true 
+                    });
+                    
+                    const lectures = lecturesResult.rows.sort((a, b) => a.lecture_order - b.lecture_order);
+
+                    // If user is provided, get their progress for each lecture
+                    let lecturesWithProgress = lectures;
+                    if (user_id) {
+                        lecturesWithProgress = await Promise.all(
+                            lectures.map(async (lecture) => {
+                                const progressResult = await CourseProgress.find({
+                                    user_id,
+                                    lecture_id: lecture.id
+                                });
+                                
+                                const progress = progressResult.rows[0];
+                                return {
+                                    ...lecture,
+                                    user_progress: progress ? {
+                                        progress_status: progress.progress_status,
+                                        completion_percentage: progress.completion_percentage,
+                                        last_accessed_at: progress.last_accessed_at,
+                                        resume_position_seconds: progress.resume_position_seconds,
+                                    } : null
+                                };
+                            })
+                        );
+                    }
+
+                    return {
+                        ...section,
+                        lectures: lecturesWithProgress,
+                        lecture_count: lectures.length,
+                        total_duration_minutes: lectures.reduce((sum, lecture) => 
+                            sum + lecture.estimated_duration_minutes, 0
+                        ),
+                    };
+                })
             );
 
-        if (!assignments) throw new Error("Assignments not found");
+            // Get enrollment info if user is provided
+            let enrollmentInfo = null;
+            if (user_id) {
+                const enrollmentResult = await CourseEnrollment.find({
+                    user_id,
+                    course_id
+                });
+                enrollmentInfo = enrollmentResult.rows[0] || null;
+            }
 
-        return assignments.rows;
-    }
-
-    // get course assignment by id
-    public static async getCourseAssignmentById(
-        assignment_id: string
-    ): Promise<ICourseAssignmentData> {
-        const assignment: ICourseAssignmentData =
-            await CourseAssignment.findById(assignment_id);
-
-        if (!assignment) throw new Error("Assignment not found");
-
-        return assignment;
-    }
-
-    // update course assignment
-    public static async updateCourseAssignment(
-        assignment_id: string,
-        assignmentData: Partial<ICourseAssignmentData>
-    ): Promise<ICourseAssignmentData> {
-        const assignment: ICourseAssignmentData =
-            await CourseAssignment.updateById(assignment_id, {
-                ...assignmentData,
-                updated_at: new Date(),
-            });
-
-        if (!assignment) throw new Error("Assignment not updated");
-
-        return assignment;
-    }
-
-    // delete course assignment
-    public static async deleteCourseAssignment(
-        assignment_id: string
-    ): Promise<ICourseAssignmentData> {
-        const assignment: ICourseAssignmentData =
-            await CourseAssignment.updateById(assignment_id, {
-                is_deleted: true,
-            });
-
-        if (!assignment) throw new Error("Assignment not deleted");
-
-        return assignment;
-    }
-
-    // create course assignment submission
-    public static async createCourseAssignmentSubmission(
-        campus_id: string,
-        course_id: string,
-        assignment_id: string,
-        submissionData: Partial<ICourseAssignmentSubmissionData>
-    ): Promise<ICourseAssignmentSubmissionData> {
-        return await CourseAssignmentSubmission.create({
-            ...submissionData,
-            campus_id: campus_id,
-            course_id: course_id,
-            assignment_id: assignment_id,
-            is_active: true,
-            is_deleted: false,
-            created_at: new Date(),
-            updated_at: new Date(),
-        });
-    }
-
-    // get all course assignment submissions
-    public static async getAllCourseAssignmentSubmissions(
-        campus_id: string,
-        course_id: string,
-        assignment_id: string
-    ): Promise<ICourseAssignmentSubmissionData[]> {
-        const submissions: { rows: ICourseAssignmentSubmissionData[] } =
-            await CourseAssignmentSubmission.find(
-                {
-                    campus_id,
-                    course_id,
-                    assignment_id,
-                },
-                {
-                    sort: {
-                        updated_at: "DESC",
-                    },
-                }
+            // Get instructor details
+            const instructorDetails = await Promise.all(
+                courseResult.instructor_ids.map(async (instructor_id) => {
+                    const userResult = await User.findById(instructor_id);
+                    return userResult ? {
+                        id: userResult.id,
+                        name: `${userResult.first_name} ${userResult.last_name}`,
+                        email: userResult.email,
+                        profile_image: userResult.meta_data?.profile_image,
+                    } : null;
+                })
             );
 
-        if (!submissions) throw new Error("Submissions not found");
-
-        return submissions.rows;
+            return {
+                success: true,
+                data: {
+                    ...courseResult,
+                    sections: sectionsWithLectures,
+                    total_sections: sections.length,
+                    total_lectures: sectionsWithLectures.reduce((sum, section) => 
+                        sum + section.lectures.length, 0
+                    ),
+                    total_duration_minutes: sectionsWithLectures.reduce((sum, section) => 
+                        sum + section.total_duration_minutes, 0
+                    ),
+                    instructors: instructorDetails.filter(Boolean),
+                    enrollment_info: enrollmentInfo,
+                },
+                message: "Course retrieved successfully"
+            };
+        } catch (error) {
+            throw new Error(`Failed to get course: ${error}`);
+        }
     }
 
-    // get course assignment submission by id
-    public static async getCourseAssignmentSubmissionById(
-        submission_id: string
-    ): Promise<ICourseAssignmentSubmissionData> {
-        const submission: ICourseAssignmentSubmissionData =
-            await CourseAssignmentSubmission.findById(submission_id);
+    /**
+     * Update course
+     */
+    static async updateCourse(course_id: string, campus_id: string, user_id: string, updateData: Partial<ICourseData>) {
+        try {
+            const existingCourse = await Course.findById(course_id);
+            if (!existingCourse || existingCourse.campus_id !== campus_id) {
+                throw new Error("Course not found");
+            }
 
-        if (!submission) throw new Error("Submission not found");
-
-        return submission;
-    }
-
-    // update course assignment submission
-    public static async updateCourseAssignmentSubmission(
-        submission_id: string,
-        submissionData: Partial<ICourseAssignmentSubmissionData>
-    ): Promise<ICourseAssignmentSubmissionData> {
-        const submission: ICourseAssignmentSubmissionData =
-            await CourseAssignmentSubmission.updateById(submission_id, {
-                ...submissionData,
+            const updatedCourse = await Course.updateById(course_id, {
+                ...updateData,
+                last_updated_by: user_id,
+                version: existingCourse.version + 1,
                 updated_at: new Date(),
             });
 
-        if (!submission) throw new Error("Submission not updated");
-
-        return submission;
+            return {
+                success: true,
+                data: updatedCourse,
+                message: "Course updated successfully"
+            };
+        } catch (error) {
+            throw new Error(`Failed to update course: ${error}`);
+        }
     }
 
-    // delete course assignment submission
-    public static async deleteCourseAssignmentSubmission(
-        submission_id: string
-    ): Promise<ICourseAssignmentSubmissionData> {
-        const submission: ICourseAssignmentSubmissionData =
-            await CourseAssignmentSubmission.updateById(submission_id, {
-                is_deleted: true,
+    /**
+     * Publish course
+     */
+    static async publishCourse(course_id: string, campus_id: string, user_id: string) {
+        try {
+            const course = await Course.findById(course_id);
+            if (!course || course.campus_id !== campus_id) {
+                throw new Error("Course not found");
+            }
+
+            // Validate course has required content before publishing
+            const sectionsResult = await CourseSection.find({ course_id, is_published: true });
+            if (sectionsResult.rows.length === 0) {
+                throw new Error("Course must have at least one published section to be published");
+            }
+
+            const lecturesResult = await CourseLecture.find({ course_id, is_published: true });
+            if (lecturesResult.rows.length === 0) {
+                throw new Error("Course must have at least one published lecture to be published");
+            }
+
+            const updatedCourse = await Course.updateById(course_id, {
+                status: "published",
+                last_updated_by: user_id,
+                updated_at: new Date(),
             });
 
-        if (!submission) throw new Error("Submission not deleted");
-
-        return submission;
+            return {
+                success: true,
+                data: updatedCourse,
+                message: "Course published successfully"
+            };
+        } catch (error) {
+            throw new Error(`Failed to publish course: ${error}`);
+        }
     }
 
-    // create course content
-    public static async createCourseContent(
-        campus_id: string,
-        course_id: string,
-        contentData: Partial<ICourseContentData>
-    ): Promise<ICourseContentData> {
-        const content: ICourseContentData = await CourseContent.create({
-            ...contentData,
-            campus_id,
-            course_id,
-            created_at: new Date(),
-            updated_at: new Date(),
-        });
+    /**
+     * Delete course (soft delete by archiving)
+     */
+    static async deleteCourse(course_id: string, campus_id: string, user_id: string) {
+        try {
+            const course = await Course.findById(course_id);
+            if (!course || course.campus_id !== campus_id) {
+                throw new Error("Course not found");
+            }
 
-        if (!content) throw new Error("Content not created");
+            // Check if course has active enrollments
+            const enrollmentsResult = await CourseEnrollment.find({ 
+                course_id, 
+                enrollment_status: "active" 
+            });
+            
+            if (enrollmentsResult.rows.length > 0) {
+                throw new Error("Cannot delete course with active enrollments. Archive it instead.");
+            }
 
-        return content;
+            await Course.updateById(course_id, {
+                status: "archived",
+                last_updated_by: user_id,
+                updated_at: new Date(),
+            });
+
+            return {
+                success: true,
+                message: "Course archived successfully"
+            };
+        } catch (error) {
+            throw new Error(`Failed to delete course: ${error}`);
+        }
     }
 
-    // get all course contents
-    public static async getAllCourseContents(
-        campus_id: string,
-        course_id: string
-    ): Promise<ICourseContentData[]> {
-        const contents: {
-            rows: ICourseContentData[];
-        } = await CourseContent.find(
-            {
+    // ==================== SECTION MANAGEMENT ====================
+
+    /**
+     * Create course section
+     */
+    static async createCourseSection(course_id: string, campus_id: string, sectionData: Partial<ICourseSectionData>) {
+        try {
+            // Verify course exists
+            const course = await Course.findById(course_id);
+            if (!course || course.campus_id !== campus_id) {
+                throw new Error("Course not found");
+            }
+
+            const section = await CourseSection.create({
+                id: nanoid(),
+                course_id,
                 campus_id,
-                course_id,
-                is_deleted: false,
-            },
-            {
-                sort: {
-                    updated_at: "DESC",
-                },
-            }
-        );
-
-        if (!contents) throw new Error("Contents not found");
-
-        return contents.rows;
-    }
-
-    // get course content by id
-    public static async getCourseContentById(
-        content_id: string
-    ): Promise<ICourseContentData> {
-        const content: ICourseContentData =
-            await CourseContent.findById(content_id);
-
-        if (!content) throw new Error("Content not found");
-
-        return content;
-    }
-
-    // update course content
-    public static async updateCourseContent(
-        content_id: string,
-        contentData: Partial<ICourseContentData>
-    ): Promise<ICourseContentData> {
-        const content: ICourseContentData = await CourseContent.updateById(
-            content_id,
-            {
-                ...contentData,
+                ...sectionData,
+                created_at: new Date(),
                 updated_at: new Date(),
+            });
+
+            return {
+                success: true,
+                data: section,
+                message: "Course section created successfully"
+            };
+        } catch (error) {
+            throw new Error(`Failed to create course section: ${error}`);
+        }
+    }
+
+    /**
+     * Update section order
+     */
+    static async updateSectionOrder(course_id: string, campus_id: string, sectionOrders: Array<{id: string, section_order: number}>) {
+        try {
+            const updatePromises = sectionOrders.map(({ id, section_order }) => 
+                CourseSection.updateById(id, { 
+                    section_order, 
+                    updated_at: new Date() 
+                })
+            );
+
+            await Promise.all(updatePromises);
+
+            return {
+                success: true,
+                message: "Section order updated successfully"
+            };
+        } catch (error) {
+            throw new Error(`Failed to update section order: ${error}`);
+        }
+    }
+
+    // ==================== LECTURE MANAGEMENT ====================
+
+    /**
+     * Create course lecture
+     */
+    static async createCourseLecture(section_id: string, campus_id: string, lectureData: Partial<ICourseLectureData>) {
+        try {
+            // Verify section exists
+            const section = await CourseSection.findById(section_id);
+            if (!section || section.campus_id !== campus_id) {
+                throw new Error("Course section not found");
             }
-        );
 
-        if (!content) throw new Error("Content not updated");
+            const lecture = await CourseLecture.create({
+                id: nanoid(),
+                course_id: section.course_id,
+                section_id,
+                campus_id,
+                ...lectureData,
+                created_at: new Date(),
+                updated_at: new Date(),
+            });
 
-        return content;
+            return {
+                success: true,
+                data: lecture,
+                message: "Course lecture created successfully"
+            };
+        } catch (error) {
+            throw new Error(`Failed to create course lecture: ${error}`);
+        }
     }
 
-    // delete course content
-    public static async deleteCourseContent(
-        content_id: string
-    ): Promise<ICourseContentData> {
-        const content: ICourseContentData = await CourseContent.updateById(
-            content_id,
-            {
-                is_deleted: true,
+    /**
+     * Update lecture order within section
+     */
+    static async updateLectureOrder(section_id: string, campus_id: string, lectureOrders: Array<{id: string, lecture_order: number}>) {
+        try {
+            const updatePromises = lectureOrders.map(({ id, lecture_order }) => 
+                CourseLecture.updateById(id, { 
+                    lecture_order, 
+                    updated_at: new Date() 
+                })
+            );
+
+            await Promise.all(updatePromises);
+
+            return {
+                success: true,
+                message: "Lecture order updated successfully"
+            };
+        } catch (error) {
+            throw new Error(`Failed to update lecture order: ${error}`);
+        }
+    }
+
+    // ==================== ENROLLMENT MANAGEMENT ====================
+
+    /**
+     * Enroll user in course
+     */
+    static async enrollInCourse(course_id: string, user_id: string, campus_id: string, enrollmentData: Partial<ICourseEnrollmentData> = {}) {
+        try {
+            // Check if course exists and is published
+            const course = await Course.findById(course_id);
+            if (!course || course.campus_id !== campus_id) {
+                throw new Error("Course not found");
             }
-        );
 
-        if (!content) throw new Error("Content not deleted");
+            if (course.status !== "published") {
+                throw new Error("Can only enroll in published courses");
+            }
 
-        return content;
-    }
-
-    // enroll in course
-    public static async enrollInCourse(
-        campus_id: string,
-        course_id: string,
-        user_id: string,
-        enrollmentData: Partial<ICourseEnrollmentData>
-    ): Promise<ICourseEnrollmentData> {
-        return await CourseEnrollment.create({
-            user_id,
-            ...enrollmentData,
-            campus_id,
-            course_id,
-            created_at: new Date(),
-            updated_at: new Date(),
-        });
-    }
-
-    // get course enrollment by id
-    public static async getCourseEnrollmentById(
-        enrollment_id: string
-    ): Promise<ICourseEnrollmentData> {
-        const enrollment: ICourseEnrollmentData =
-            await CourseEnrollment.findById(enrollment_id);
-
-        if (!enrollment) throw new Error("Enrollment not found");
-
-        return enrollment;
-    }
-
-    // get course enrollment by course id
-    public static async getCourseEnrollmentByCourseId(
-        course_id: string
-    ): Promise<ICourseEnrollmentData[]> {
-        const enrollments: {
-            rows: ICourseEnrollmentData[];
-        } = await CourseEnrollment.find(
-            {
+            // Check if user is already enrolled
+            const existingEnrollment = await CourseEnrollment.find({
                 course_id,
-                is_deleted: false,
-            },
-            {
-                sort: {
-                    updated_at: "DESC",
-                },
+                user_id
+            });
+
+            if (existingEnrollment.rows.length > 0) {
+                throw new Error("User is already enrolled in this course");
             }
-        );
 
-        if (!enrollments) throw new Error("Enrollments not found");
+            // Check enrollment limits
+            if (course.max_enrollments) {
+                const currentEnrollments = await CourseEnrollment.find({
+                    course_id,
+                    enrollment_status: { $in: ["active", "completed"] }
+                });
 
-        return enrollments.rows;
-    }
+                if (currentEnrollments.rows.length >= course.max_enrollments) {
+                    throw new Error("Course enrollment limit reached");
+                }
+            }
 
-    // get course enrollment by user id
-    public static async getCourseEnrollmentByUserId(
-        user_id: string
-    ): Promise<ICourseEnrollmentData[]> {
-        const enrollments: {
-            rows: ICourseEnrollmentData[];
-        } = await CourseEnrollment.find(
-            {
+            // Check enrollment dates
+            const now = new Date();
+            if (course.enrollment_start_date && now < new Date(course.enrollment_start_date)) {
+                throw new Error("Enrollment has not started yet");
+            }
+            if (course.enrollment_end_date && now > new Date(course.enrollment_end_date)) {
+                throw new Error("Enrollment period has ended");
+            }
+
+            // Get total lectures count
+            const lecturesResult = await CourseLecture.find({ course_id, is_published: true });
+            const totalLectures = lecturesResult.rows.length;
+
+            // Create enrollment
+            const enrollment = await CourseEnrollment.create({
+                id: nanoid(),
+                course_id,
                 user_id,
-                is_deleted: false,
-            },
-            {
-                sort: {
-                    updated_at: "DESC",
+                campus_id,
+                enrollment_type: enrollmentData.enrollment_type || "free",
+                enrollment_status: "active",
+                progress_percentage: 0,
+                enrollment_date: now,
+                payment_status: course.price > 0 ? "pending" : "completed",
+                certificate_issued: false,
+                access_details: {
+                    total_lectures: totalLectures,
+                    completed_lectures: 0,
+                    completed_lecture_ids: [],
+                    bookmarked_lectures: [],
+                    notes_count: 0,
+                    quiz_attempts: 0,
+                    assignment_submissions: 0,
                 },
-            }
-        );
+                enrollment_source: enrollmentData.enrollment_source || "web",
+                meta_data: enrollmentData.meta_data || {},
+                created_at: now,
+                updated_at: now,
+            });
 
-        if (!enrollments) throw new Error("Enrollments not found");
+            // Update course enrollment count
+            await Course.updateById(course_id, {
+                enrollment_count: course.enrollment_count + 1,
+                updated_at: now,
+            });
 
-        return enrollments.rows;
+            return {
+                success: true,
+                data: enrollment,
+                message: "Successfully enrolled in course"
+            };
+        } catch (error) {
+            throw new Error(`Failed to enroll in course: ${error}`);
+        }
     }
 
-    // update course enrollment
-    public static async updateCourseEnrollment(
-        enrollment_id: string,
-        enrollmentData: Partial<ICourseEnrollmentData>
-    ): Promise<ICourseEnrollmentData> {
-        const enrollment: ICourseEnrollmentData =
-            await CourseEnrollment.updateById(enrollment_id, {
-                ...enrollmentData,
+    /**
+     * Get user's enrolled courses
+     */
+    static async getUserEnrolledCourses(user_id: string, campus_id: string, filters: {
+        status?: string;
+        progress?: string;
+        page?: number;
+        limit?: number;
+    } = {}) {
+        try {
+            const { status, progress, page = 1, limit = 20 } = filters;
+
+            // Build query conditions
+            const queryConditions: any = { user_id, campus_id };
+            if (status) queryConditions.enrollment_status = status;
+
+            const enrollmentsResult = await CourseEnrollment.find(queryConditions);
+            let enrollments = enrollmentsResult.rows;
+
+            // Filter by progress if specified
+            if (progress) {
+                if (progress === "not_started") {
+                    enrollments = enrollments.filter(e => e.progress_percentage === 0);
+                } else if (progress === "in_progress") {
+                    enrollments = enrollments.filter(e => e.progress_percentage > 0 && e.progress_percentage < 100);
+                } else if (progress === "completed") {
+                    enrollments = enrollments.filter(e => e.progress_percentage === 100);
+                }
+            }
+
+            // Pagination
+            const skip = (page - 1) * limit;
+            const paginatedEnrollments = enrollments.slice(skip, skip + limit);
+
+        // Get course details for each enrollment
+        const enrollmentsWithCourses = await Promise.all(
+            paginatedEnrollments.map(async (enrollment) => {
+                const course = await Course.findById(enrollment.course_id);
+                
+                // Get total lectures and completed count for progress calculation
+                const lecturesResult = await CourseLecture.find({ 
+                    course_id: enrollment.course_id, 
+                    is_published: true 
+                });
+                const totalLectures = lecturesResult.rows.length;
+                
+                // Calculate time remaining based on watch progress
+                const progressResult = await CourseProgress.find({
+                    course_id: enrollment.course_id,
+                    user_id: enrollment.user_id
+                });
+                const totalWatchTime = progressResult.rows.reduce((sum, p) => sum + p.watch_time_seconds, 0);
+                const estimatedRemainingHours = course && course.estimated_duration_hours ? 
+                    Math.max(0, course.estimated_duration_hours - (totalWatchTime / 3600)) : 0;
+
+                return {
+                    ...enrollment,
+                    course_details: course ? {
+                        title: course.title,
+                        thumbnail: course.thumbnail,
+                        category: course.category,
+                        difficulty_level: course.difficulty_level,
+                        estimated_duration_hours: course.estimated_duration_hours,
+                        rating: course.rating,
+                        total_lectures: totalLectures,
+                        completed_lectures: enrollment.access_details?.completed_lectures || 0,
+                        time_remaining_hours: estimatedRemainingHours,
+                        last_updated: course.updated_at,
+                    } : null
+                };
+            })
+        );            return {
+                success: true,
+                data: {
+                    enrollments: enrollmentsWithCourses,
+                    pagination: {
+                        current_page: page,
+                        per_page: limit,
+                        total_items: enrollments.length,
+                        total_pages: Math.ceil(enrollments.length / limit),
+                        has_next: page < Math.ceil(enrollments.length / limit),
+                        has_previous: page > 1,
+                    },
+                },
+                message: "Enrolled courses retrieved successfully"
+            };
+        } catch (error) {
+            throw new Error(`Failed to get enrolled courses: ${error}`);
+        }
+    }
+
+    /**
+     * Update course progress
+     */
+    static async updateCourseProgress(
+        course_id: string, 
+        lecture_id: string, 
+        user_id: string, 
+        campus_id: string, 
+        progressData: Partial<ICourseProgressData>
+    ) {
+        try {
+            // Check if user is enrolled
+            const enrollmentResult = await CourseEnrollment.find({
+                course_id,
+                user_id,
+                enrollment_status: "active"
+            });
+
+            if (enrollmentResult.rows.length === 0) {
+                throw new Error("User is not enrolled in this course");
+            }
+
+            const enrollment = enrollmentResult.rows[0];
+
+            // Get or create progress record
+            const existingProgressResult = await CourseProgress.find({
+                user_id,
+                lecture_id
+            });
+
+            let progress;
+            const now = new Date();
+
+            if (existingProgressResult.rows.length === 0) {
+                // Create new progress record
+                progress = await CourseProgress.create({
+                    id: nanoid(),
+                    course_id,
+                    user_id,
+                    lecture_id,
+                    campus_id,
+                    progress_status: "not_started",
+                    watch_time_seconds: 0,
+                    total_duration_seconds: 0,
+                    completion_percentage: 0,
+                    first_accessed_at: now,
+                    last_accessed_at: now,
+                    interaction_data: {
+                        play_count: 0,
+                        pause_count: 0,
+                        seek_count: 0,
+                        speed_changes: 0,
+                        quality_changes: 0,
+                        fullscreen_toggles: 0,
+                        notes_taken: 0,
+                        bookmarked: false,
+                        liked: false
+                    },
+                    notes: [],
+                    device_info: {
+                        device_type: "web"
+                    },
+                    meta_data: {},
+                    created_at: now,
+                    updated_at: now,
+                    ...progressData,
+                });
+            } else {
+                // Update existing progress
+                const existingProgress = existingProgressResult.rows[0];
+                progress = await CourseProgress.updateById(existingProgress.id, {
+                    ...progressData,
+                    last_accessed_at: now,
+                    updated_at: now,
+                });
+            }
+
+            // Update enrollment progress if lecture is completed
+            if (progressData.progress_status === "completed") {
+                await this.updateEnrollmentProgress(course_id, user_id);
+            }
+
+            return {
+                success: true,
+                data: progress,
+                message: "Progress updated successfully"
+            };
+        } catch (error) {
+            throw new Error(`Failed to update progress: ${error}`);
+        }
+    }
+
+    /**
+     * Update overall enrollment progress
+     */
+    private static async updateEnrollmentProgress(course_id: string, user_id: string) {
+        try {
+            // Get all lectures in the course
+            const lecturesResult = await CourseLecture.find({ 
+                course_id, 
+                is_published: true, 
+                is_mandatory: true 
+            });
+            const totalMandatoryLectures = lecturesResult.rows.length;
+
+            // Get completed lectures
+            const completedProgressResult = await CourseProgress.find({
+                course_id,
+                user_id,
+                progress_status: "completed"
+            });
+            const completedLectures = completedProgressResult.rows.length;
+
+            // Calculate progress percentage
+            const progressPercentage = totalMandatoryLectures > 0 
+                ? Math.round((completedLectures / totalMandatoryLectures) * 100) 
+                : 0;
+
+            // Determine enrollment status
+            let enrollmentStatus = "active";
+            let completionDate: Date | null = null;
+
+            if (progressPercentage >= 100) {
+                enrollmentStatus = "completed";
+                completionDate = new Date();
+            }
+
+            // Update enrollment
+            const enrollment = await CourseEnrollment.find({ course_id, user_id });
+            if (enrollment.rows.length > 0) {
+                await CourseEnrollment.updateById(enrollment.rows[0].id, {
+                    progress_percentage: progressPercentage,
+                    enrollment_status: enrollmentStatus,
+                    completion_date: completionDate,
+                    access_details: {
+                        ...enrollment.rows[0].access_details,
+                        completed_lectures: completedLectures,
+                        completed_lecture_ids: completedProgressResult.rows.map(p => p.lecture_id),
+                    },
+                    updated_at: new Date(),
+                });
+
+                // If course is completed, generate certificate if enabled
+                if (progressPercentage >= 100) {
+                    const course = await Course.findById(course_id);
+                    if (course && course.is_certificate_enabled) {
+                        await this.generateCourseCertificate(course_id, user_id, enrollment.rows[0].id);
+                    }
+
+                    // Update course completion count
+                    await Course.updateById(course_id, {
+                        completion_count: course.completion_count + 1,
+                        updated_at: new Date(),
+                    });
+                }
+            }
+        } catch (error) {
+            console.error("Failed to update enrollment progress:", error);
+        }
+    }
+
+    /**
+     * Generate course certificate
+     */
+    private static async generateCourseCertificate(course_id: string, user_id: string, enrollment_id: string) {
+        try {
+            const course = await Course.findById(course_id);
+            const user = await User.findById(user_id);
+            const enrollment = await CourseEnrollment.findById(enrollment_id);
+
+            if (!course || !user || !enrollment) {
+                throw new Error("Missing required data for certificate generation");
+            }
+
+            const certificateNumber = `CERT-${course.campus_id}-${course_id.substring(0, 8)}-${user_id.substring(0, 8)}-${Date.now()}`;
+            const verificationCode = nanoid().substring(0, 16).toUpperCase();
+
+            const certificate = await CourseCertificate.create({
+                id: nanoid(),
+                course_id,
+                user_id,
+                enrollment_id,
+                campus_id: course.campus_id,
+                certificate_number: certificateNumber,
+                certificate_type: "completion",
+                status: "generated",
+                issue_date: new Date(),
+                grade: enrollment.grade,
+                completion_time_hours: enrollment.completion_time_hours || 0,
+                skills_acquired: course.learning_objectives,
+                certificate_data: {
+                    template_id: course.certificate_template_id || "default",
+                    template_version: "1.0",
+                    verification_url: `${process.env.FRONTEND_URL}/verify-certificate/${verificationCode}`,
+                },
+                verification_details: {
+                    verification_code: verificationCode,
+                    is_verifiable: true,
+                    verification_link: `${process.env.FRONTEND_URL}/verify-certificate/${verificationCode}`,
+                    issuer_details: {
+                        institution_name: "KCS Learning Platform",
+                        instructor_name: `${user.first_name} ${user.last_name}`,
+                        instructor_credentials: "",
+                    },
+                },
+                recipient_details: {
+                    full_name: `${user.first_name} ${user.last_name}`,
+                    email: user.email,
+                    student_id: user.id,
+                },
+                course_details: {
+                    course_title: course.title,
+                    course_duration_hours: course.estimated_duration_hours || 0,
+                    completion_percentage: 100,
+                    skills_covered: course.learning_objectives,
+                    learning_outcomes_achieved: course.learning_objectives,
+                },
+                delivery_status: {
+                    email_sent: false,
+                    download_count: 0,
+                    shared_count: 0,
+                },
+                meta_data: {},
+                created_at: new Date(),
                 updated_at: new Date(),
             });
 
-        if (!enrollment) throw new Error("Enrollment not updated");
+            // Update enrollment with certificate info
+            await CourseEnrollment.updateById(enrollment_id, {
+                certificate_issued: true,
+                certificate_id: certificate.id,
+                certificate_issued_at: new Date(),
+                updated_at: new Date(),
+            });
 
-        return enrollment;
+            return certificate;
+        } catch (error) {
+            console.error("Failed to generate certificate:", error);
+            throw error;
+        }
     }
 
-    // delete course enrollment
-    public static async deleteCourseEnrollment(
-        enrollment_id: string
-    ): Promise<ICourseEnrollmentData> {
-        const enrollment: ICourseEnrollmentData =
-            await CourseEnrollment.updateById(enrollment_id, {
-                is_deleted: true,
+    /**
+     * Get detailed course progress with lecture completion status (like Udemy)
+     */
+    static async getCourseProgressDetails(course_id: string, user_id: string, campus_id: string) {
+        try {
+            // Verify enrollment
+            const enrollmentResult = await CourseEnrollment.find({
+                course_id,
+                user_id,
+                campus_id
             });
-        if (!enrollment) throw new Error("Enrollment not updated");
 
-        return enrollment;
+            if (enrollmentResult.rows.length === 0) {
+                throw new Error("User is not enrolled in this course");
+            }
+
+            const enrollment = enrollmentResult.rows[0];
+            const course = await Course.findById(course_id);
+
+            // Get sections with detailed progress
+            const sectionsResult = await CourseSection.find({ 
+                course_id, 
+                campus_id,
+                is_published: true 
+            });
+            
+            const sections = sectionsResult.rows.sort((a, b) => a.section_order - b.section_order);
+
+            const sectionsWithProgress = await Promise.all(
+                sections.map(async (section) => {
+                    const lecturesResult = await CourseLecture.find({ 
+                        section_id: section.id,
+                        is_published: true 
+                    });
+                    
+                    const lectures = lecturesResult.rows.sort((a, b) => a.lecture_order - b.lecture_order);
+
+                    const lecturesWithProgress = await Promise.all(
+                        lectures.map(async (lecture) => {
+                            const progressResult = await CourseProgress.find({
+                                user_id,
+                                lecture_id: lecture.id
+                            });
+                            
+                            const progress = progressResult.rows[0];
+                            const isCompleted = progress?.progress_status === "completed";
+                            const watchPercentage = progress?.completion_percentage || 0;
+                            
+                            return {
+                                id: lecture.id,
+                                title: lecture.title,
+                                lecture_type: lecture.lecture_type,
+                                estimated_duration_minutes: lecture.estimated_duration_minutes,
+                                is_mandatory: lecture.is_mandatory,
+                                is_preview: lecture.is_preview,
+                                lecture_order: lecture.lecture_order,
+                                resources_count: lecture.resources?.length || 0,
+                                // Progress details (like Udemy)
+                                is_completed: isCompleted,
+                                watch_percentage: watchPercentage,
+                                watch_time_seconds: progress?.watch_time_seconds || 0,
+                                last_accessed_at: progress?.last_accessed_at,
+                                resume_position_seconds: progress?.resume_position_seconds || 0,
+                                is_bookmarked: progress?.interaction_data?.bookmarked || false,
+                                notes_count: progress?.notes?.length || 0,
+                                // Status indicators
+                                status: isCompleted ? "completed" : watchPercentage > 0 ? "in_progress" : "not_started"
+                            };
+                        })
+                    );
+
+                    const sectionProgress = {
+                        total_lectures: lectures.length,
+                        completed_lectures: lecturesWithProgress.filter(l => l.is_completed).length,
+                        total_duration_minutes: lectures.reduce((sum, l) => sum + l.estimated_duration_minutes, 0),
+                        watched_duration_minutes: Math.round(lecturesWithProgress.reduce((sum, l) => 
+                            sum + (l.watch_time_seconds / 60), 0
+                        ))
+                    };
+
+                    return {
+                        id: section.id,
+                        title: section.title,
+                        description: section.description,
+                        section_order: section.section_order,
+                        lectures: lecturesWithProgress,
+                        progress: sectionProgress,
+                        completion_percentage: sectionProgress.total_lectures > 0 
+                            ? Math.round((sectionProgress.completed_lectures / sectionProgress.total_lectures) * 100)
+                            : 0
+                    };
+                })
+            );
+
+            // Calculate overall progress
+            const totalLectures = sectionsWithProgress.reduce((sum, s) => sum + s.progress.total_lectures, 0);
+            const completedLectures = sectionsWithProgress.reduce((sum, s) => sum + s.progress.completed_lectures, 0);
+            const totalWatchTime = sectionsWithProgress.reduce((sum, s) => sum + s.progress.watched_duration_minutes, 0);
+            const estimatedTotalTime = sectionsWithProgress.reduce((sum, s) => sum + s.progress.total_duration_minutes, 0);
+
+            return {
+                success: true,
+                data: {
+                    course_info: {
+                        id: course.id,
+                        title: course.title,
+                        description: course.description,
+                        thumbnail: course.thumbnail,
+                        category: course.category,
+                        difficulty_level: course.difficulty_level,
+                        rating: course.rating,
+                        instructor_names: course.instructor_ids, // TODO: Get actual names
+                        last_updated: course.updated_at,
+                    },
+                    enrollment_info: {
+                        enrollment_date: enrollment.enrollment_date,
+                        enrollment_status: enrollment.enrollment_status,
+                        progress_percentage: enrollment.progress_percentage,
+                        certificate_issued: enrollment.certificate_issued,
+                        certificate_id: enrollment.certificate_id,
+                    },
+                    progress_summary: {
+                        total_lectures: totalLectures,
+                        completed_lectures: completedLectures,
+                        completion_percentage: totalLectures > 0 ? Math.round((completedLectures / totalLectures) * 100) : 0,
+                        total_duration_minutes: estimatedTotalTime,
+                        watched_duration_minutes: totalWatchTime,
+                        estimated_remaining_minutes: Math.max(0, estimatedTotalTime - totalWatchTime),
+                        time_to_completion: this.calculateTimeToCompletion(totalWatchTime, estimatedTotalTime),
+                    },
+                    sections: sectionsWithProgress,
+                    next_lecture: this.findNextLecture(sectionsWithProgress),
+                    bookmarked_lectures: sectionsWithProgress
+                        .flatMap(s => s.lectures)
+                        .filter(l => l.is_bookmarked)
+                        .map(l => ({ id: l.id, title: l.title, section_title: sectionsWithProgress.find(s => s.lectures.includes(l))?.title }))
+                },
+                message: "Course progress details retrieved successfully"
+            };
+        } catch (error) {
+            throw new Error(`Failed to get course progress details: ${error}`);
+        }
+    }
+
+    /**
+     * Helper method to calculate estimated time to completion
+     */
+    private static calculateTimeToCompletion(watchedMinutes: number, totalMinutes: number) {
+        if (totalMinutes === 0) return "N/A";
+        
+        const remainingMinutes = Math.max(0, totalMinutes - watchedMinutes);
+        const hours = Math.floor(remainingMinutes / 60);
+        const minutes = remainingMinutes % 60;
+        
+        if (hours === 0) return `${minutes}min`;
+        if (minutes === 0) return `${hours}hr`;
+        return `${hours}hr ${minutes}min`;
+    }
+
+    /**
+     * Helper method to find next lecture to watch
+     */
+    private static findNextLecture(sections: any[]) {
+        for (const section of sections) {
+            for (const lecture of section.lectures) {
+                if (lecture.status === "not_started" || lecture.status === "in_progress") {
+                    return {
+                        lecture_id: lecture.id,
+                        lecture_title: lecture.title,
+                        section_title: section.title,
+                        resume_position_seconds: lecture.resume_position_seconds,
+                        estimated_duration_minutes: lecture.estimated_duration_minutes
+                    };
+                }
+            }
+        }
+        return null; // All lectures completed
+    }
+
+    /**
+     * Set learning schedule and reminders (like Udemy's schedule feature)
+     */
+    static async setLearningSchedule(user_id: string, course_id: string, scheduleData: {
+        target_completion_date?: Date;
+        daily_study_minutes?: number;
+        study_days?: string[]; // ["monday", "tuesday", etc.]
+        reminder_time?: string; // "19:00"
+        timezone?: string;
+        send_reminders?: boolean;
+    }) {
+        try {
+            // Verify enrollment
+            const enrollmentResult = await CourseEnrollment.find({
+                course_id,
+                user_id
+            });
+
+            if (enrollmentResult.rows.length === 0) {
+                throw new Error("User is not enrolled in this course");
+            }
+
+            const enrollment = enrollmentResult.rows[0];
+            const course = await Course.findById(course_id);
+
+            // Calculate recommended schedule based on course duration
+            let recommendedDailyMinutes = scheduleData.daily_study_minutes;
+            if (!recommendedDailyMinutes && scheduleData.target_completion_date && course) {
+                const daysUntilTarget = Math.ceil(
+                    (new Date(scheduleData.target_completion_date).getTime() - new Date().getTime()) / 
+                    (1000 * 60 * 60 * 24)
+                );
+                const totalMinutesRemaining = (course.estimated_duration_hours || 0) * 60;
+                const studyDaysPerWeek = scheduleData.study_days?.length || 5;
+                const totalStudyDays = Math.floor((daysUntilTarget / 7) * studyDaysPerWeek);
+                
+                recommendedDailyMinutes = totalStudyDays > 0 
+                    ? Math.ceil(totalMinutesRemaining / totalStudyDays)
+                    : 30; // Default 30 minutes
+            }
+
+            // Update enrollment with learning schedule
+            const updatedEnrollment = await CourseEnrollment.updateById(enrollment.id, {
+                learning_schedule: {
+                    target_completion_date: scheduleData.target_completion_date,
+                    daily_study_minutes: recommendedDailyMinutes || 30,
+                    study_days: scheduleData.study_days || ["monday", "tuesday", "wednesday", "thursday", "friday"],
+                    reminder_time: scheduleData.reminder_time || "19:00",
+                    timezone: scheduleData.timezone || "UTC",
+                    send_reminders: scheduleData.send_reminders !== false,
+                    created_at: new Date(),
+                    last_reminder_sent: null,
+                } as any,
+                updated_at: new Date(),
+            });
+
+            return {
+                success: true,
+                data: {
+                    learning_schedule: (updatedEnrollment as any).learning_schedule,
+                    recommendations: {
+                        daily_study_minutes: recommendedDailyMinutes,
+                        estimated_completion_date: scheduleData.target_completion_date,
+                        total_study_sessions: scheduleData.target_completion_date ? 
+                            Math.ceil(((course?.estimated_duration_hours || 0) * 60) / (recommendedDailyMinutes || 30)) : null,
+                    }
+                },
+                message: "Learning schedule set successfully"
+            };
+        } catch (error) {
+            throw new Error(`Failed to set learning schedule: ${error}`);
+        }
+    }
+
+    /**
+     * Get learning statistics and achievements (like Udemy insights)
+     */
+    static async getLearningStatistics(user_id: string, campus_id: string, timeframe: "week" | "month" | "year" = "month") {
+        try {
+            const endDate = new Date();
+            const startDate = new Date();
+            
+            switch (timeframe) {
+                case "week":
+                    startDate.setDate(endDate.getDate() - 7);
+                    break;
+                case "month":
+                    startDate.setMonth(endDate.getMonth() - 1);
+                    break;
+                case "year":
+                    startDate.setFullYear(endDate.getFullYear() - 1);
+                    break;
+            }
+
+            // Get user's progress records
+            const progressResult = await CourseProgress.find({
+                user_id,
+                campus_id,
+                updated_at: { $gte: startDate, $lte: endDate }
+            });
+            const progressRecords = progressResult.rows;
+
+            // Get user's enrollments
+            const enrollmentsResult = await CourseEnrollment.find({ user_id, campus_id });
+            const enrollments = enrollmentsResult.rows;
+
+            // Calculate statistics
+            const totalWatchTime = progressRecords.reduce((sum, p) => sum + p.watch_time_seconds, 0);
+            const uniqueLectures = new Set(progressRecords.map(p => p.lecture_id)).size;
+            const completedLectures = progressRecords.filter(p => p.progress_status === "completed").length;
+            const coursesInProgress = enrollments.filter(e => 
+                e.enrollment_status === "active" && e.progress_percentage > 0 && e.progress_percentage < 100
+            ).length;
+            const coursesCompleted = enrollments.filter(e => e.enrollment_status === "completed").length;
+
+            // Calculate streaks and consistency
+            const dailyActivity: Array<{
+                date: Date;
+                minutes: number;
+                lectures_watched: number;
+                lectures_completed: number;
+            }> = this.calculateDailyActivity(progressRecords, startDate, endDate);
+            const currentStreak = this.calculateCurrentStreak(dailyActivity);
+            const longestStreak = this.calculateLongestStreak(dailyActivity);
+
+            return {
+                success: true,
+                data: {
+                    timeframe,
+                    period: {
+                        start_date: startDate,
+                        end_date: endDate,
+                    },
+                    statistics: {
+                        total_watch_time_hours: Math.round((totalWatchTime / 3600) * 10) / 10,
+                        total_watch_time_minutes: Math.round(totalWatchTime / 60),
+                        unique_lectures_watched: uniqueLectures,
+                        lectures_completed: completedLectures,
+                        courses_in_progress: coursesInProgress,
+                        courses_completed: coursesCompleted,
+                        average_daily_minutes: Math.round((totalWatchTime / 60) / Math.max(1, 
+                            Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+                        )),
+                    },
+                    engagement: {
+                        current_streak_days: currentStreak,
+                        longest_streak_days: longestStreak,
+                        active_days: dailyActivity.filter(d => d.minutes > 0).length,
+                        consistency_percentage: Math.round(
+                            (dailyActivity.filter(d => d.minutes > 0).length / dailyActivity.length) * 100
+                        ),
+                    },
+                    daily_activity: dailyActivity,
+                    achievements: this.calculateAchievements(enrollments, progressRecords, totalWatchTime),
+                },
+                message: "Learning statistics retrieved successfully"
+            };
+        } catch (error) {
+            throw new Error(`Failed to get learning statistics: ${error}`);
+        }
+    }
+
+    /**
+     * Helper methods for learning statistics
+     */
+    private static calculateDailyActivity(progressRecords: any[], startDate: Date, endDate: Date): Array<{
+        date: Date;
+        minutes: number;
+        lectures_watched: number;
+        lectures_completed: number;
+    }> {
+        const dailyActivity: Array<{
+            date: Date;
+            minutes: number;
+            lectures_watched: number;
+            lectures_completed: number;
+        }> = [];
+        const currentDate = new Date(startDate);
+        
+        while (currentDate <= endDate) {
+            const dayStart = new Date(currentDate);
+            dayStart.setHours(0, 0, 0, 0);
+            const dayEnd = new Date(currentDate);
+            dayEnd.setHours(23, 59, 59, 999);
+            
+            const dayProgress = progressRecords.filter(p => {
+                const updateDate = new Date(p.updated_at);
+                return updateDate >= dayStart && updateDate <= dayEnd;
+            });
+            
+            const watchTime = dayProgress.reduce((sum, p) => sum + p.watch_time_seconds, 0);
+            
+            dailyActivity.push({
+                date: new Date(currentDate),
+                minutes: Math.round(watchTime / 60),
+                lectures_watched: dayProgress.length,
+                lectures_completed: dayProgress.filter(p => p.progress_status === "completed").length,
+            });
+            
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+        
+        return dailyActivity;
+    }
+
+    private static calculateCurrentStreak(dailyActivity: Array<{ minutes: number; }>) {
+        let streak = 0;
+        for (let i = dailyActivity.length - 1; i >= 0; i--) {
+            if (dailyActivity[i].minutes > 0) {
+                streak++;
+            } else {
+                break;
+            }
+        }
+        return streak;
+    }
+
+    private static calculateLongestStreak(dailyActivity: Array<{ minutes: number; }>) {
+        let longestStreak = 0;
+        let currentStreak = 0;
+        
+        for (const day of dailyActivity) {
+            if (day.minutes > 0) {
+                currentStreak++;
+                longestStreak = Math.max(longestStreak, currentStreak);
+            } else {
+                currentStreak = 0;
+            }
+        }
+        
+        return longestStreak;
+    }
+
+    private static calculateAchievements(enrollments: any[], progressRecords: any[], totalWatchTime: number): Array<{
+        type: string;
+        title: string;
+        description: string;
+    }> {
+        const achievements: Array<{
+            type: string;
+            title: string;
+            description: string;
+        }> = [];
+        
+        // Time-based achievements
+        const totalHours = totalWatchTime / 3600;
+        if (totalHours >= 1) achievements.push({ type: "time", title: "First Hour", description: "Completed 1 hour of learning" });
+        if (totalHours >= 10) achievements.push({ type: "time", title: "Dedicated Learner", description: "Completed 10 hours of learning" });
+        if (totalHours >= 50) achievements.push({ type: "time", title: "Learning Machine", description: "Completed 50 hours of learning" });
+        
+        // Course completion achievements
+        const completedCourses = enrollments.filter(e => e.enrollment_status === "completed").length;
+        if (completedCourses >= 1) achievements.push({ type: "completion", title: "Course Finisher", description: "Completed your first course" });
+        if (completedCourses >= 5) achievements.push({ type: "completion", title: "Multi-Course Master", description: "Completed 5 courses" });
+        
+        // Lecture completion achievements
+        const completedLectures = progressRecords.filter(p => p.progress_status === "completed").length;
+        if (completedLectures >= 10) achievements.push({ type: "progress", title: "Lecture Lover", description: "Completed 10 lectures" });
+        if (completedLectures >= 50) achievements.push({ type: "progress", title: "Content Consumer", description: "Completed 50 lectures" });
+        
+        return achievements;
+    }
+
+    // ==================== ANALYTICS ====================
+
+    /**
+     * Get course analytics
+     */
+    static async getCourseAnalytics(course_id: string, campus_id: string) {
+        try {
+            const course = await Course.findById(course_id);
+            if (!course || course.campus_id !== campus_id) {
+                throw new Error("Course not found");
+            }
+
+            // Get enrollment analytics
+            const enrollmentsResult = await CourseEnrollment.find({ course_id });
+            const enrollments = enrollmentsResult.rows;
+
+            const activeEnrollments = enrollments.filter(e => e.enrollment_status === "active").length;
+            const completedEnrollments = enrollments.filter(e => e.enrollment_status === "completed").length;
+            const completionRate = enrollments.length > 0 ? (completedEnrollments / enrollments.length) * 100 : 0;
+
+            // Get progress analytics
+            const progressResult = await CourseProgress.find({ course_id });
+            const progressRecords = progressResult.rows;
+
+            const totalWatchTime = progressRecords.reduce((sum, p) => sum + p.watch_time_seconds, 0);
+            const averageSessionDuration = progressRecords.length > 0 
+                ? progressRecords.reduce((sum, p) => sum + p.watch_time_seconds, 0) / progressRecords.length / 60 
+                : 0;
+
+            // Get lecture performance
+            const lecturesResult = await CourseLecture.find({ course_id });
+            const lectures = lecturesResult.rows;
+
+            const lecturePerformance = await Promise.all(
+                lectures.map(async (lecture) => {
+                    const lectureProgressResult = await CourseProgress.find({ lecture_id: lecture.id });
+                    const lectureProgress = lectureProgressResult.rows;
+
+                    const viewCount = lectureProgress.length;
+                    const completionRate = viewCount > 0 
+                        ? lectureProgress.filter(p => p.progress_status === "completed").length / viewCount * 100 
+                        : 0;
+                    const averageWatchTime = viewCount > 0 
+                        ? lectureProgress.reduce((sum, p) => sum + p.completion_percentage, 0) / viewCount 
+                        : 0;
+
+                    return {
+                        lecture_id: lecture.id,
+                        lecture_title: lecture.title,
+                        lecture_type: lecture.lecture_type,
+                        view_count: viewCount,
+                        completion_rate: completionRate,
+                        average_watch_time_percentage: averageWatchTime,
+                        dropout_rate: 100 - completionRate,
+                        engagement_score: (completionRate + averageWatchTime) / 2,
+                    };
+                })
+            );
+
+            return {
+                success: true,
+                data: {
+                    course_overview: {
+                        total_enrollments: enrollments.length,
+                        active_enrollments: activeEnrollments,
+                        completed_enrollments: completedEnrollments,
+                        completion_rate: completionRate,
+                        average_completion_time_hours: enrollments.length > 0 
+                            ? enrollments.reduce((sum, e) => sum + (e.completion_time_hours || 0), 0) / enrollments.length 
+                            : 0,
+                        average_rating: course.rating,
+                        total_revenue: enrollments.reduce((sum, e) => 
+                            sum + (e.enrollment_type === "paid" ? course.price : 0), 0
+                        ),
+                    },
+                    engagement_metrics: {
+                        total_watch_time_hours: totalWatchTime / 3600,
+                        average_session_duration_minutes: averageSessionDuration,
+                        video_completion_rate: lecturePerformance
+                            .filter(l => l.lecture_type === "video")
+                            .reduce((sum, l) => sum + l.completion_rate, 0) / 
+                            lecturePerformance.filter(l => l.lecture_type === "video").length || 0,
+                        quiz_attempt_rate: 0, // TODO: Calculate from quiz data
+                        assignment_submission_rate: 0, // TODO: Calculate from assignment data
+                        discussion_participation_rate: 0, // TODO: Calculate from discussion data
+                    },
+                    content_performance: lecturePerformance,
+                    student_progress: enrollments.slice(0, 50).map(enrollment => ({
+                        user_id: enrollment.user_id,
+                        student_name: "Student", // TODO: Get from user data
+                        enrollment_date: enrollment.enrollment_date,
+                        progress_percentage: enrollment.progress_percentage,
+                        last_accessed: enrollment.last_accessed_at,
+                        completion_status: enrollment.enrollment_status,
+                        grade: enrollment.grade,
+                    })),
+                    time_series_data: {
+                        daily_enrollments: [], // TODO: Implement time series data
+                        weekly_engagement: [],
+                    },
+                },
+                message: "Course analytics retrieved successfully"
+            };
+        } catch (error) {
+            throw new Error(`Failed to get course analytics: ${error}`);
+        }
     }
 }

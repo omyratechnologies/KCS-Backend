@@ -2,88 +2,128 @@ import { Schema } from "ottoman";
 
 import { ottoman } from "../libs/db";
 
-interface ICourseProgressData {
+export interface ICourseProgressData {
     id: string;
-    campus_id: string;
     course_id: string;
     user_id: string;
-    enrollment_id: string;
-    overall_progress: number; // 0-100
-    chapters_completed: number;
-    total_chapters: number;
-    assignments_completed: number;
-    total_assignments: number;
-    quizzes_completed: number;
-    total_quizzes: number;
-    total_watch_time: number; // in seconds
-    completion_percentage: number;
-    is_completed: boolean;
-    completion_date?: Date;
-    certificates_earned: string[];
-    current_chapter_id?: string;
+    lecture_id: string;
+    campus_id: string;
+    progress_status: "not_started" | "in_progress" | "completed" | "skipped";
+    watch_time_seconds: number; // For video lectures
+    total_duration_seconds: number; // Total lecture duration
+    completion_percentage: number; // 0-100
+    first_accessed_at: Date;
     last_accessed_at: Date;
-    streak_days: number;
-    performance_metrics: {
-        average_quiz_score: number;
-        average_assignment_score: number;
-        engagement_score: number;
-        learning_velocity: number; // chapters per week
+    completed_at?: Date;
+    resume_position_seconds?: number; // For videos - where user left off
+    interaction_data: {
+        play_count: number;
+        pause_count: number;
+        seek_count: number;
+        speed_changes: number;
+        quality_changes: number;
+        fullscreen_toggles: number;
+        notes_taken: number;
+        bookmarked: boolean;
+        liked: boolean;
+        difficulty_rating?: number; // 1-5
     };
-    badges_earned: string[];
-    study_patterns: {
-        preferred_study_time: string;
-        average_session_duration: number;
-        study_frequency: number;
+    quiz_data?: {
+        attempts: number;
+        best_score: number;
+        latest_score: number;
+        time_spent_minutes: number;
+        completed_at?: Date;
+    };
+    assignment_data?: {
+        submitted: boolean;
+        submission_date?: Date;
+        grade?: number;
+        feedback?: string;
+        resubmissions: number;
+    };
+    notes: Array<{
+        id: string;
+        timestamp_seconds: number; // For videos
+        note_text: string;
+        is_public: boolean;
+        created_at: Date;
+        updated_at: Date;
+    }>;
+    device_info: {
+        device_type: "web" | "mobile" | "tablet";
+        browser?: string;
+        os?: string;
+        app_version?: string;
+    };
+    meta_data: {
+        learning_streaks?: number;
+        difficulty_feedback?: string;
+        help_requests?: number;
+        custom_markers?: Array<{
+            timestamp: number;
+            label: string;
+            type: string;
+        }>;
     };
     created_at: Date;
     updated_at: Date;
 }
 
 const CourseProgressSchema = new Schema({
-    campus_id: { type: String, required: true },
     course_id: { type: String, required: true },
     user_id: { type: String, required: true },
-    enrollment_id: { type: String, required: true },
-    overall_progress: { type: Number, required: true },
-    chapters_completed: { type: Number, required: true },
-    total_chapters: { type: Number, required: true },
-    assignments_completed: { type: Number, required: true },
-    total_assignments: { type: Number, required: true },
-    quizzes_completed: { type: Number, required: true },
-    total_quizzes: { type: Number, required: true },
-    total_watch_time: { type: Number, required: true },
-    completion_percentage: { type: Number, required: true },
-    is_completed: { type: Boolean, required: true },
-    completion_date: { type: Date, required: false },
-    certificates_earned: { type: [String], required: true },
-    current_chapter_id: { type: String, required: false },
-    last_accessed_at: { type: Date, required: true },
-    streak_days: { type: Number, required: true },
-    performance_metrics: {
-        average_score: { type: Number, default: 0 },
-        time_spent_learning: { type: Number, default: 0 },
-        completion_rate: { type: Number, default: 0 },
-        engagement_score: { type: Number, default: 0 },
-        difficulty_progression: { type: Number, default: 0 },
+    lecture_id: { type: String, required: true },
+    campus_id: { type: String, required: true },
+    progress_status: { 
+        type: String, 
+        enum: ["not_started", "in_progress", "completed", "skipped"],
+        default: "not_started"
     },
-    badges_earned: { type: [String], default: [] },
-    study_patterns: {
-        preferred_time_slots: { type: [String], default: [] },
-        average_session_duration: { type: Number, default: 0 },
-        study_frequency: { type: Number, default: 0 },
+    watch_time_seconds: { type: Number, default: 0 },
+    total_duration_seconds: { type: Number, default: 0 },
+    completion_percentage: { type: Number, default: 0 },
+    first_accessed_at: { type: Date, default: () => new Date() },
+    last_accessed_at: { type: Date, default: () => new Date() },
+    completed_at: { type: Date },
+    resume_position_seconds: { type: Number, default: 0 },
+    interaction_data: { 
+        type: Object, 
+        default: {
+            play_count: 0,
+            pause_count: 0,
+            seek_count: 0,
+            speed_changes: 0,
+            quality_changes: 0,
+            fullscreen_toggles: 0,
+            notes_taken: 0,
+            bookmarked: false,
+            liked: false
+        }
     },
+    quiz_data: { type: Object },
+    assignment_data: { type: Object },
+    notes: { type: [Object], default: [] },
+    device_info: { 
+        type: Object, 
+        default: {
+            device_type: "web"
+        }
+    },
+    meta_data: { type: Object, default: {} },
     created_at: { type: Date, default: () => new Date() },
     updated_at: { type: Date, default: () => new Date() },
 });
 
-CourseProgressSchema.index.findByCampusId = { by: "campus_id" };
+// Compound indexes for efficient queries
 CourseProgressSchema.index.findByCourseId = { by: "course_id" };
 CourseProgressSchema.index.findByUserId = { by: "user_id" };
-CourseProgressSchema.index.findByEnrollmentId = { by: "enrollment_id" };
+CourseProgressSchema.index.findByLectureId = { by: "lecture_id" };
+CourseProgressSchema.index.findByCampusId = { by: "campus_id" };
+CourseProgressSchema.index.findByUserAndCourse = { by: ["user_id", "course_id"] };
+CourseProgressSchema.index.findByUserAndLecture = { by: ["user_id", "lecture_id"] };
+CourseProgressSchema.index.findByStatus = { by: "progress_status" };
 
-const CourseProgress = ottoman.model<ICourseProgressData>(
-    "course_progress",
-    CourseProgressSchema
-);
+const CourseProgress = ottoman.model<ICourseProgressData>("course_progress", CourseProgressSchema);
 
-export { CourseProgress, type ICourseProgressData };
+export { CourseProgress };

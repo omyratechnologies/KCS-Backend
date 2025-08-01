@@ -9,7 +9,29 @@ export class Cache {
 
     public static readonly init = () => {
         this.redis = new Redis(config.REDIS_URI);
-        log("Redis connected", LogTypes.LOGS, "Cache");
+        
+        // Add proper error handling for Redis
+        this.redis.on('error', (error) => {
+            log(`Redis error: ${error.message}`, LogTypes.ERROR, "Cache");
+        });
+
+        this.redis.on('connect', () => {
+            log("Redis connected successfully", LogTypes.LOGS, "Cache");
+        });
+
+        this.redis.on('ready', () => {
+            log("Redis ready to accept commands", LogTypes.LOGS, "Cache");
+        });
+
+        this.redis.on('close', () => {
+            log("Redis connection closed", LogTypes.ERROR, "Cache");
+        });
+
+        this.redis.on('reconnecting', () => {
+            log("Redis reconnecting...", LogTypes.LOGS, "Cache");
+        });
+
+        log("Redis client initialized", LogTypes.LOGS, "Cache");
     };
 
     public static readonly getInstance = () => {
