@@ -37,27 +37,9 @@ export class SocketService {
     public static initialize(httpServer: HTTPServer): void {
         this.io = new SocketIOServer(httpServer, {
             cors: {
-                origin: (origin, callback) => {
-                    const allowedOrigins = [
-                        "http://localhost:3000",
-                        "http://localhost:3001", 
-                        "http://localhost:5173",
-                        "https://dev.letscatchup-kcs.com",
-                        "https://letscatchup-kcs.com"
-                    ];
-                    
-                    // Allow requests with no origin (mobile apps)
-                    if (!origin) return callback(null, true);
-                    
-                    // Check if origin is allowed
-                    if (allowedOrigins.includes(origin) || origin.startsWith("http://localhost:")) {
-                        return callback(null, true);
-                    }
-                    
-                    return callback(new Error('Not allowed by CORS'), false);
-                },
+                origin: "*", // Allow all origins for development
                 methods: ["GET", "POST"],
-                credentials: true,
+                credentials: false, // Note: credentials must be false when origin is "*"
             },
             transports: ['websocket', 'polling'],
             pingTimeout: 60000,
