@@ -14,6 +14,8 @@ RUN apt-get update && apt-get install -y \
     g++ \
     libuv1-dev \
     libssl-dev \
+    nodejs \
+    npm \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -50,6 +52,8 @@ RUN apt-get update && apt-get install -y \
     g++ \
     libuv1-dev \
     libssl-dev \
+    nodejs \
+    npm \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd -r bunuser && useradd -r -g bunuser bunuser
 
