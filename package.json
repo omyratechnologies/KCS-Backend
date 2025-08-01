@@ -34,7 +34,7 @@
         "hyperflake": "^0.1.4",
         "ioredis": "^5.6.1",
         "kurento-client": "^7.2.0",
-        "mediasoup": "^3.17.0",
+        "mediasoup": "^3.18.0",
         "mustache": "^4.2.0",
         "napi-nanoid": "^0.2.0",
         "node-fetch": "^3.3.2",

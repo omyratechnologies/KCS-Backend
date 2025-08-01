@@ -9,12 +9,9 @@ import campusesRoute from "@/routes/campuses.route";
 import classRoute from "@/routes/class.route";
 import classQuizRoute from "@/routes/class_quiz.route";
 import courseRoute from "@/routes/course.route";
-import coursesRoute from "@/routes/courses.route";
-import courseQuizRoute from "@/routes/cousre_quiz.route";
 import curriculumRoute from "@/routes/curriculum.route";
 import dashboardRoute from "@/routes/dashboard.route";
 import documentStoreoute from "@/routes/document_store.route";
-import enhancedCourseContentRoute from "@/routes/enhanced-course-content.route";
 import examRoute from "@/routes/exam.route";
 import feeRoute from "@/routes/fee.route";
 import libraryRoute from "@/routes/library.route";
@@ -24,7 +21,6 @@ import notificationRoute from "@/routes/notification.route";
 import parentRoute from "@/routes/parent.route";
 import paymentRoute from "@/routes/payment.route";
 import paymentSettlementRoute from "@/routes/payment_settlement.route";
-import studentCoursesRoute from "@/routes/student-courses.route";
 import studentPerformanceRoute from "@/routes/student_performance.route";
 import studentRecordRoute from "@/routes/student_record.route";
 import subjectRoute from "@/routes/subject.route";
@@ -49,11 +45,8 @@ app.route("/user", usersRoute);
 app.route("/campus", campusesRoute);
 app.route("/attendance", attendanceRoute);
 app.route("/class", classRoute);
+app.route("/courses", courseRoute);
 app.route("/curriculum", curriculumRoute);
-app.route("/course", courseRoute);
-app.route("/courses", coursesRoute); // New student-friendly courses listing
-app.route("/course", studentCoursesRoute); // New student course reports
-app.route("/course-content", enhancedCourseContentRoute); // New enhanced course content routes
 app.route("/subject", subjectRoute);
 app.route("/library", libraryRoute);
 app.route("/assignments", assignmentRoute); // New unified assignment routes
@@ -65,7 +58,6 @@ app.route("/notification", notificationRoute);
 app.route("/messages", messagesRoute);
 app.route("/meeting", meetingRoute);
 app.route("/class-quiz", classQuizRoute);
-app.route("/course-quiz", courseQuizRoute);
 app.route("/syllabus", syllabusRoute);
 app.route("/upload", uploadRoute);
 app.route("/student-record", studentRecordRoute);

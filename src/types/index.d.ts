@@ -58,6 +58,14 @@ export interface StudentDashboardData {
     performance: PerformanceMetrics;
     hoursSpent: StudyHoursData;
     grades: GradesData;
+    courses?: {
+        enrolled: any[];
+        inProgress: any[];
+        completed: any[];
+        totalCourses: number;
+        totalProgress: number;
+        certificates: number;
+    };
 }
 
 export interface TeacherDashboardData {
@@ -86,6 +94,13 @@ export interface TeacherDashboardData {
         recent: any[];
     };
     quickActions: any[];
+    courses?: {
+        teaching: any[];
+        totalCourses: number;
+        totalEnrollments: number;
+        totalCompletions: number;
+        averageRating: number;
+    };
 }
 
 export interface ParentDashboardData {
@@ -143,6 +158,14 @@ export interface ChildDashboardData {
     performance: PerformanceMetrics;
     hoursSpent: StudyHoursData;
     grades: GradesData;
+    courses?: {
+        enrolled: any[];
+        inProgress: any[];
+        completed: any[];
+        totalCourses: number;
+        totalProgress: number;
+        certificates: number;
+    };
 }
 
 export interface AdminDashboardData {
@@ -157,6 +180,9 @@ export interface AdminDashboardData {
         totalTeachers: number;
         totalClasses: number;
         activeCourses: number;
+        totalEnrollments?: number;
+        completedEnrollments?: number;
+        certificatesIssued?: number;
     };
     attendance: {
         today: number;

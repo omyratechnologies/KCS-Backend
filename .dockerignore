@@ -1,0 +1,63 @@
+# Dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build output
+dist
+build
+*.tsbuildinfo
+
+# Development files
+.env.local
+.env.development
+.env.test
+*.log
+
+# Git
+.git
+.gitignore
+
+# Docker files
+Dockerfile*
+docker-compose*.yml
+*.md
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Test files
+tests/
+coverage/
+*.test.ts
+*.spec.ts
+
+# Backup files
+backup/
+
+# Documentation
+docs/
+
+# Scripts
+*.sh
+
+# Lock files (only keep the one we need)
+package-lock.json
+yarn.lock
+
+# Temporary files
+tmp/
+temp/

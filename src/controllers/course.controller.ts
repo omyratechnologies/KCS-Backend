@@ -1,764 +1,724 @@
 import { Context } from "hono";
 
-import { ICourseData } from "@/models/course.model";
-import { ICourseAssignmentData } from "@/models/course_assignment.model";
-import { ICourseAssignmentSubmissionData } from "@/models/course_assignment_submission.model";
-import { ICourseContentData } from "@/models/course_content.model";
-import { ICourseEnrollmentData } from "@/models/course_enrollment.model";
 import { CourseService } from "@/services/course.service";
 
 export class CourseController {
+    
+    // ==================== ADMIN/TEACHER COURSE MANAGEMENT ====================
+    
+    /**
+     * Create a new course
+     * Admin/Teacher only
+     */
     public static readonly createCourse = async (ctx: Context) => {
         try {
             const campus_id = ctx.get("campus_id");
-
-            const data: Partial<ICourseData> = await ctx.req.json();
-
-            const attendance = await CourseService.createCourse(
-                campus_id,
-                data
-            );
-
-            return ctx.json(attendance);
-        } catch (error) {
-            if (error instanceof Error) {
-                return ctx.json(
-                    {
-                        message: error.message,
-                    },
-                    500
-                );
-            }
-        }
-    };
-
-    public static readonly getAllCourses = async (ctx: Context) => {
-        try {
-            const campus_id = ctx.get("campus_id");
-
-            const courses = await CourseService.getAllCourses(campus_id);
-
-            return ctx.json(courses);
-        } catch (error) {
-            if (error instanceof Error) {
-                return ctx.json(
-                    {
-                        message: error.message,
-                    },
-                    500
-                );
-            }
-        }
-    };
-
-    public static readonly getCourseById = async (ctx: Context) => {
-        try {
-            const { course_id } = ctx.req.param();
-
-            const course = await CourseService.getCourseById(course_id);
-
-            return ctx.json(course);
-        } catch (error) {
-            if (error instanceof Error) {
-                return ctx.json(
-                    {
-                        message: error.message,
-                    },
-                    500
-                );
-            }
-        }
-    };
-
-    public static readonly updateCourse = async (ctx: Context) => {
-        try {
-            const { course_id } = ctx.req.param();
-
-            const data: Partial<ICourseData> = await ctx.req.json();
-
-            const course = await CourseService.updateCourse(course_id, data);
-
-            return ctx.json(course);
-        } catch (error) {
-            if (error instanceof Error) {
-                return ctx.json(
-                    {
-                        message: error.message,
-                    },
-                    500
-                );
-            }
-        }
-    };
-
-    public static readonly deleteCourse = async (ctx: Context) => {
-        try {
-            const { course_id } = ctx.req.param();
-
-            const course = await CourseService.deleteCourse(course_id);
-
-            return ctx.json(course);
-        } catch (error) {
-            if (error instanceof Error) {
-                return ctx.json(
-                    {
-                        message: error.message,
-                    },
-                    500
-                );
-            }
-        }
-    };
-
-    public static readonly createCourseAssignment = async (ctx: Context) => {
-        try {
-            const campus_id = ctx.get("campus_id");
-
-            const { course_id } = ctx.req.param();
-
-            const data: Partial<ICourseAssignmentData> = await ctx.req.json();
-
-            const assignment = await CourseService.createCourseAssignment(
-                campus_id,
-                course_id,
-                data
-            );
-
-            return ctx.json(assignment);
-        } catch (error) {
-            if (error instanceof Error) {
-                return ctx.json(
-                    {
-                        message: error.message,
-                    },
-                    500
-                );
-            }
-        }
-    };
-
-    public static readonly getAllCourseAssignments = async (ctx: Context) => {
-        try {
-            const campus_id = ctx.get("campus_id");
-
-            const { course_id } = ctx.req.param();
-
-            const assignments = await CourseService.getAllCourseAssignments(
-                campus_id,
-                course_id
-            );
-
-            return ctx.json(assignments);
-        } catch (error) {
-            if (error instanceof Error) {
-                return ctx.json(
-                    {
-                        message: error.message,
-                    },
-                    500
-                );
-            }
-        }
-    };
-
-    public static readonly getCourseAssignmentById = async (ctx: Context) => {
-        try {
-            const { assignment_id } = ctx.req.param();
-
-            const assignment =
-                await CourseService.getCourseAssignmentById(assignment_id);
-
-            return ctx.json(assignment);
-        } catch (error) {
-            if (error instanceof Error) {
-                return ctx.json(
-                    {
-                        message: error.message,
-                    },
-                    500
-                );
-            }
-        }
-    };
-
-    public static readonly updateCourseAssignment = async (ctx: Context) => {
-        try {
-            const { assignment_id } = ctx.req.param();
-
-            const data: Partial<ICourseAssignmentData> = await ctx.req.json();
-
-            const assignment = await CourseService.updateCourseAssignment(
-                assignment_id,
-                data
-            );
-
-            return ctx.json(assignment);
-        } catch (error) {
-            if (error instanceof Error) {
-                return ctx.json(
-                    {
-                        message: error.message,
-                    },
-                    500
-                );
-            }
-        }
-    };
-
-    public static readonly deleteCourseAssignment = async (ctx: Context) => {
-        try {
-            const { assignment_id } = ctx.req.param();
-
-            const assignment =
-                await CourseService.deleteCourseAssignment(assignment_id);
-
-            return ctx.json(assignment);
-        } catch (error) {
-            if (error instanceof Error) {
-                return ctx.json(
-                    {
-                        message: error.message,
-                    },
-                    500
-                );
-            }
-        }
-    };
-
-    public static readonly createCourseContent = async (ctx: Context) => {
-        try {
-            const campus_id = ctx.get("campus_id");
             const user_id = ctx.get("user_id");
-            const { course_id } = ctx.req.param();
+            const courseData = await ctx.req.json();
 
-            // Get week-based content data from API request
-            const requestData = await ctx.req.json();
+            const result = await CourseService.createCourse(campus_id, user_id, courseData);
+
+            return ctx.json({
+                success: true,
+                data: result.data,
+                message: result.message,
+            }, 201);
+        } catch (error) {
+            console.error("Error creating course:", error);
+            return ctx.json({
+                success: false,
+                error: error instanceof Error ? error.message : "Failed to create course",
+            }, 500);
+        }
+    };
+
+    /**
+     * Get all courses with filtering
+     * Public access with different data based on role
+     */
+    public static readonly getCourses = async (ctx: Context) => {
+        try {
+            const campus_id = ctx.get("campus_id");
+            const user_type = ctx.get("user_type");
             
-            // Validate required fields
-            if (!requestData.title || !requestData.contents || !Array.isArray(requestData.contents)) {
-                return ctx.json(
-                    { message: "Missing required fields: title, contents array" },
-                    400
-                );
-            }
-
-            const createdContents: ICourseContentData[] = [];
-            
-            // Process each content item in the array
-            for (let i = 0; i < requestData.contents.length; i++) {
-                const contentItem = requestData.contents[i];
-                
-                // Transform each content item to model schema
-                const modelData: Partial<ICourseContentData> = {
-                    content_title: contentItem.title,
-                    content_description: contentItem.description || requestData.description,
-                    content_type: CourseController.mapContentType(contentItem.content_type),
-                    content_format: CourseController.mapContentFormat(contentItem.content_type),
-                    content_data: CourseController.transformContentData(contentItem.content_type, contentItem.content_data),
-                    access_settings: {
-                        access_level: requestData.access_settings?.access_level || "free",
-                        available_from: requestData.access_settings?.available_from 
-                            ? new Date(requestData.access_settings.available_from) 
-                            : new Date(),
-                        available_until: requestData.access_settings?.available_until 
-                            ? new Date(requestData.access_settings.available_until)
-                            : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-                    },
-                    interaction_settings: {
-                        allow_comments: requestData.interaction_settings?.allow_comments ?? true,
-                        allow_notes: requestData.interaction_settings?.allow_notes ?? true,
-                        allow_bookmarks: requestData.interaction_settings?.allow_bookmarks ?? true,
-                        require_completion: requestData.interaction_settings?.require_completion ?? false
-                    },
-                    sort_order: (requestData.order || 1) * 100 + i, // Week order * 100 + content index
-                    meta_data: {
-                        created_by: user_id || "system",
-                        tags: requestData.meta_data?.tags || []
-                    },
-                    is_active: true,
-                    is_deleted: false
-                };
-
-                const content = await CourseService.createCourseContent(
-                    campus_id,
-                    course_id,
-                    modelData
-                );
-
-                createdContents.push(content);
-            }
-
-            // Return week-based response
-            const response = {
-                week_title: requestData.title,
-                week_description: requestData.description,
-                week_order: requestData.order || 1,
-                contents_count: createdContents.length,
-                contents: createdContents.map(content => ({
-                    id: content.id,
-                    title: content.content_title,
-                    description: content.content_description,
-                    content_type: content.content_format,
-                    content_data: content.content_data,
-                    order: content.sort_order,
-                    created_at: content.created_at,
-                    updated_at: content.updated_at
-                }))
+            const query = ctx.req.query();
+            const filters = {
+                page: query.page ? parseInt(query.page as string) : 1,
+                limit: query.limit ? parseInt(query.limit as string) : 20,
+                status: query.status as string,
+                category: query.category as string,
+                difficulty_level: query.difficulty_level as string,
+                price_range: query.price_range as string,
+                search_query: query.search as string,
+                instructor_id: query.instructor_id as string,
+                class_id: query.class_id as string,
+                is_featured: query.featured === "true",
+                sort_by: query.sort_by as string || "created_at",
+                sort_order: (query.sort_order as "asc" | "desc") || "desc",
             };
 
-            return ctx.json(response);
-        } catch (error) {
-            if (error instanceof Error) {
-                return ctx.json(
-                    {
-                        message: error.message,
-                    },
-                    500
-                );
+            // Filter by published status for non-admin users
+            if (!["Admin", "Super Admin", "Teacher"].includes(user_type)) {
+                filters.status = "published";
             }
+
+            const result = await CourseService.getCourses(campus_id, filters);
+
+            return ctx.json({
+                success: true,
+                data: result.data,
+                message: result.message,
+            });
+        } catch (error) {
+            console.error("Error getting courses:", error);
+            return ctx.json({
+                success: false,
+                error: error instanceof Error ? error.message : "Failed to get courses",
+            }, 500);
         }
     };
 
-    // Helper method to map content types
-    private static mapContentType(contentType: string): "lesson" | "quiz" | "assignment" | "resource" | "assessment" | "interactive" {
-        switch (contentType) {
-            case "text":
-                return "lesson";
-            case "video":
-                return "lesson";
-            case "resource":
-                return "resource";
-            default:
-                return "lesson";
-        }
-    }
-
-    // Helper method to map content format
-    private static mapContentFormat(contentType: string): "text" | "video" | "audio" | "document" | "presentation" | "interactive" {
-        switch (contentType) {
-            case "text":
-                return "text";
-            case "video":
-                return "video";
-            case "resource":
-                return "document";
-            default:
-                return "text";
-        }
-    }
-
-    // Helper method to transform content data based on type
-    private static transformContentData(contentType: string, contentData: any): any {
-        switch (contentType) {
-            case "text":
-                return {
-                    text_content: contentData.text_content,
-                    html_content: `<p>${contentData.text_content}</p>`,
-                    duration: contentData.duration || 1800
-                };
-            case "video":
-                return {
-                    video_url: contentData.video_url,
-                    duration: contentData.video_duration,
-                    thumbnail_url: contentData.thumbnail_url,
-                    file_size: contentData.file_size
-                };
-            case "resource":
-                return {
-                    document_url: contentData.resources_url,
-                    file_size: contentData.resources_size,
-                    duration: 0
-                };
-            default:
-                return contentData;
-        }
-    }
-
-    public static readonly getAllCourseContents = async (ctx: Context) => {
+    /**
+     * Get course by ID with detailed information
+     */
+    public static readonly getCourseById = async (ctx: Context) => {
         try {
-            const campus_id = ctx.get("campus_id");
-            const { course_id } = ctx.req.param();
-
-            const contents = await CourseService.getAllCourseContents(
-                campus_id,
-                course_id
-            );
-
-            return ctx.json(contents);
-        } catch (error) {
-            if (error instanceof Error) {
-                return ctx.json(
-                    {
-                        message: error.message,
-                    },
-                    500
-                );
-            }
-        }
-    };
-
-    public static readonly getCourseContentById = async (ctx: Context) => {
-        try {
-            const { content_id } = ctx.req.param();
-
-            const content = await CourseService.getCourseContentById(content_id);
-
-            return ctx.json(content);
-        } catch (error) {
-            if (error instanceof Error) {
-                return ctx.json(
-                    {
-                        message: error.message,
-                    },
-                    500
-                );
-            }
-        }
-    };
-
-    public static readonly updateCourseContent = async (ctx: Context) => {
-        try {
-            const { course_id, content_id } = ctx.req.param();
-
-            // Get simple schema data from API request
-            const requestData = await ctx.req.json();
-            
-            // Transform simple schema to complex model schema
-            const modelData: Partial<ICourseContentData> = {};
-            
-            if (requestData.title) {
-                modelData.content_title = requestData.title;
-            }
-            if (requestData.content) {
-                modelData.content_description = requestData.content;
-                modelData.content_data = {
-                    text_content: requestData.content,
-                    html_content: `<p>${requestData.content}</p>`,
-                    duration: 1800
-                };
-            }
-            if (requestData.content_type) {
-                modelData.content_type = requestData.content_type === "text" ? "lesson" : requestData.content_type;
-                modelData.content_format = requestData.content_type === "text" ? "text" : requestData.content_type;
-            }
-            if (requestData.order !== undefined) {
-                modelData.sort_order = requestData.order;
-            }
-
-            const content = await CourseService.updateCourseContent(
-                content_id,
-                modelData
-            );
-
-            // Optional: Transform response to match API format  
-            // Uncomment if you want consistent field names
-            // const apiResponse = {
-            //     id: content.id,
-            //     title: content.content_title,
-            //     content: content.content_description,
-            //     content_type: content.content_format,
-            //     order: content.sort_order,
-            //     created_at: content.created_at,
-            //     updated_at: content.updated_at
-            // };
-            // return ctx.json(apiResponse);
-
-            return ctx.json(content);
-        } catch (error) {
-            if (error instanceof Error) {
-                return ctx.json(
-                    {
-                        message: error.message,
-                    },
-                    500
-                );
-            }
-        }
-    };
-
-    public static readonly deleteCourseContent = async (ctx: Context) => {
-        try {
-            const { content_id } = ctx.req.param();
-
-            const content = await CourseService.deleteCourseContent(content_id);
-
-            return ctx.json(content);
-        } catch (error) {
-            if (error instanceof Error) {
-                return ctx.json(
-                    {
-                        message: error.message,
-                    },
-                    500
-                );
-            }
-        }
-    };
-
-    public static readonly createCourseAssignmentSubmission = async (
-        ctx: Context
-    ) => {
-        try {
-            const campus_id = ctx.get("campus_id");
-            const { course_id, assignment_id } = ctx.req.param();
-
-            const data: ICourseAssignmentSubmissionData = await ctx.req.json();
-
-            const submission =
-                await CourseService.createCourseAssignmentSubmission(
-                    campus_id,
-                    course_id,
-                    assignment_id,
-                    data
-                );
-
-            return ctx.json(submission);
-        } catch (error) {
-            if (error instanceof Error) {
-                return ctx.json(
-                    {
-                        message: error.message,
-                    },
-                    500
-                );
-            }
-        }
-    };
-
-    public static readonly getAllCourseAssignmentSubmissions = async (
-        ctx: Context
-    ) => {
-        try {
-            const campus_id = ctx.get("campus_id");
-            const { course_id, assignment_id } = ctx.req.param();
-
-            const submission =
-                await CourseService.getAllCourseAssignmentSubmissions(
-                    campus_id,
-                    course_id,
-                    assignment_id
-                );
-
-            return ctx.json(submission);
-        } catch (error) {
-            if (error instanceof Error) {
-                return ctx.json(
-                    {
-                        message: error.message,
-                    },
-                    500
-                );
-            }
-        }
-    };
-
-    public static readonly getCourseAssignmentSubmission = async (
-        ctx: Context
-    ) => {
-        try {
-            const { submission_id } = ctx.req.param();
-
-            const submission =
-                await CourseService.getCourseAssignmentSubmissionById(
-                    submission_id
-                );
-
-            return ctx.json(submission);
-        } catch (error) {
-            if (error instanceof Error) {
-                return ctx.json(
-                    {
-                        message: error.message,
-                    },
-                    500
-                );
-            }
-        }
-    };
-
-    public static readonly updateCourseAssignmentSubmission = async (
-        ctx: Context
-    ) => {
-        try {
-            const { submission_id } = ctx.req.param();
-
-            const data: ICourseAssignmentSubmissionData = await ctx.req.json();
-
-            const submission =
-                await CourseService.updateCourseAssignmentSubmission(
-                    submission_id,
-                    data
-                );
-
-            return ctx.json(submission);
-        } catch (error) {
-            if (error instanceof Error) {
-                return ctx.json(
-                    {
-                        message: error.message,
-                    },
-                    500
-                );
-            }
-        }
-    };
-
-    public static readonly deleteCourseAssignmentSubmission = async (
-        ctx: Context
-    ) => {
-        try {
-            const { submission_id } = ctx.req.param();
-
-            const submission =
-                await CourseService.deleteCourseAssignmentSubmission(
-                    submission_id
-                );
-
-            return ctx.json(submission);
-        } catch (error) {
-            if (error instanceof Error) {
-                return ctx.json(
-                    {
-                        message: error.message,
-                    },
-                    500
-                );
-            }
-        }
-    };
-
-    public static readonly enrollInCourse = async (ctx: Context) => {
-        try {
+            const course_id = ctx.req.param("id");
             const campus_id = ctx.get("campus_id");
             const user_id = ctx.get("user_id");
+            const user_type = ctx.get("user_type");
 
-            const { course_id } = ctx.req.param();
+            if (!course_id) {
+                return ctx.json({
+                    success: false,
+                    error: "Course ID is required",
+                }, 400);
+            }
 
-            const {
-                enrollmentData,
-            }: {
-                enrollmentData: Partial<ICourseEnrollmentData>;
-            } = await ctx.req.json();
-            const enrollment = await CourseService.enrollInCourse(
-                campus_id,
-                course_id,
-                user_id,
-                enrollmentData
+            const result = await CourseService.getCourseById(course_id, campus_id, user_id);
+
+            // Check if user can access this course
+            if (result.data.status !== "published" && 
+                !["Admin", "Super Admin", "Teacher"].includes(user_type) &&
+                result.data.created_by !== user_id) {
+                return ctx.json({
+                    success: false,
+                    error: "Course not found or access denied",
+                }, 404);
+            }
+
+            return ctx.json({
+                success: true,
+                data: result.data,
+                message: result.message,
+            });
+        } catch (error) {
+            console.error("Error getting course:", error);
+            return ctx.json({
+                success: false,
+                error: error instanceof Error ? error.message : "Failed to get course",
+            }, 500);
+        }
+    };
+
+    /**
+     * Update course
+     * Admin/Teacher only (creator or assigned instructor)
+     */
+    public static readonly updateCourse = async (ctx: Context) => {
+        try {
+            const course_id = ctx.req.param("id");
+            const campus_id = ctx.get("campus_id");
+            const user_id = ctx.get("user_id");
+            const user_type = ctx.get("user_type");
+            const updateData = await ctx.req.json();
+
+            if (!course_id) {
+                return ctx.json({
+                    success: false,
+                    error: "Course ID is required",
+                }, 400);
+            }
+
+            // Check permissions
+            const courseResult = await CourseService.getCourseById(course_id, campus_id);
+            const course = courseResult.data;
+
+            const canUpdate = 
+                ["Admin", "Super Admin"].includes(user_type) ||
+                course.created_by === user_id ||
+                course.instructor_ids.includes(user_id);
+
+            if (!canUpdate) {
+                return ctx.json({
+                    success: false,
+                    error: "Insufficient permissions to update this course",
+                }, 403);
+            }
+
+            const result = await CourseService.updateCourse(course_id, campus_id, user_id, updateData);
+
+            return ctx.json({
+                success: true,
+                data: result.data,
+                message: result.message,
+            });
+        } catch (error) {
+            console.error("Error updating course:", error);
+            return ctx.json({
+                success: false,
+                error: error instanceof Error ? error.message : "Failed to update course",
+            }, 500);
+        }
+    };
+
+    /**
+     * Publish course
+     * Admin/Teacher only (creator or assigned instructor)
+     */
+    public static readonly publishCourse = async (ctx: Context) => {
+        try {
+            const course_id = ctx.req.param("id");
+            const campus_id = ctx.get("campus_id");
+            const user_id = ctx.get("user_id");
+            const user_type = ctx.get("user_type");
+
+            if (!course_id) {
+                return ctx.json({
+                    success: false,
+                    error: "Course ID is required",
+                }, 400);
+            }
+
+            // Check permissions
+            const courseResult = await CourseService.getCourseById(course_id, campus_id);
+            const course = courseResult.data;
+
+            const canPublish = 
+                ["Admin", "Super Admin"].includes(user_type) ||
+                course.created_by === user_id ||
+                course.instructor_ids.includes(user_id);
+
+            if (!canPublish) {
+                return ctx.json({
+                    success: false,
+                    error: "Insufficient permissions to publish this course",
+                }, 403);
+            }
+
+            const result = await CourseService.publishCourse(course_id, campus_id, user_id);
+
+            return ctx.json({
+                success: true,
+                data: result.data,
+                message: result.message,
+            });
+        } catch (error) {
+            console.error("Error publishing course:", error);
+            return ctx.json({
+                success: false,
+                error: error instanceof Error ? error.message : "Failed to publish course",
+            }, 500);
+        }
+    };
+
+    /**
+     * Delete/Archive course
+     * Admin only or course creator
+     */
+    public static readonly deleteCourse = async (ctx: Context) => {
+        try {
+            const course_id = ctx.req.param("id");
+            const campus_id = ctx.get("campus_id");
+            const user_id = ctx.get("user_id");
+            const user_type = ctx.get("user_type");
+
+            if (!course_id) {
+                return ctx.json({
+                    success: false,
+                    error: "Course ID is required",
+                }, 400);
+            }
+
+            // Check permissions
+            const courseResult = await CourseService.getCourseById(course_id, campus_id);
+            const course = courseResult.data;
+
+            const canDelete = 
+                ["Admin", "Super Admin"].includes(user_type) ||
+                course.created_by === user_id;
+
+            if (!canDelete) {
+                return ctx.json({
+                    success: false,
+                    error: "Insufficient permissions to delete this course",
+                }, 403);
+            }
+
+            const result = await CourseService.deleteCourse(course_id, campus_id, user_id);
+
+            return ctx.json({
+                success: true,
+                message: result.message,
+            });
+        } catch (error) {
+            console.error("Error deleting course:", error);
+            return ctx.json({
+                success: false,
+                error: error instanceof Error ? error.message : "Failed to delete course",
+            }, 500);
+        }
+    };
+
+    // ==================== COURSE CONTENT MANAGEMENT ====================
+
+    /**
+     * Create course section
+     */
+    public static readonly createCourseSection = async (ctx: Context) => {
+        try {
+            const course_id = ctx.req.param("course_id");
+            const campus_id = ctx.get("campus_id");
+            const user_id = ctx.get("user_id");
+            const user_type = ctx.get("user_type");
+            const sectionData = await ctx.req.json();
+
+            if (!course_id) {
+                return ctx.json({
+                    success: false,
+                    error: "Course ID is required",
+                }, 400);
+            }
+
+            // Check permissions
+            const courseResult = await CourseService.getCourseById(course_id, campus_id);
+            const course = courseResult.data;
+
+            const canCreateSection = 
+                ["Admin", "Super Admin"].includes(user_type) ||
+                course.created_by === user_id ||
+                course.instructor_ids.includes(user_id);
+
+            if (!canCreateSection) {
+                return ctx.json({
+                    success: false,
+                    error: "Insufficient permissions to create section in this course",
+                }, 403);
+            }
+
+            const result = await CourseService.createCourseSection(course_id, campus_id, sectionData);
+
+            return ctx.json({
+                success: true,
+                data: result.data,
+                message: result.message,
+            }, 201);
+        } catch (error) {
+            console.error("Error creating course section:", error);
+            return ctx.json({
+                success: false,
+                error: error instanceof Error ? error.message : "Failed to create course section",
+            }, 500);
+        }
+    };
+
+    /**
+     * Create course lecture
+     */
+    public static readonly createCourseLecture = async (ctx: Context) => {
+        try {
+            const section_id = ctx.req.param("section_id");
+            const campus_id = ctx.get("campus_id");
+            const user_id = ctx.get("user_id");
+            const user_type = ctx.get("user_type");
+            const lectureData = await ctx.req.json();
+
+            if (!section_id) {
+                return ctx.json({
+                    success: false,
+                    error: "Section ID is required",
+                }, 400);
+            }
+
+            // TODO: Add permission check for section/course access
+
+            const result = await CourseService.createCourseLecture(section_id, campus_id, lectureData);
+
+            return ctx.json({
+                success: true,
+                data: result.data,
+                message: result.message,
+            }, 201);
+        } catch (error) {
+            console.error("Error creating course lecture:", error);
+            return ctx.json({
+                success: false,
+                error: error instanceof Error ? error.message : "Failed to create course lecture",
+            }, 500);
+        }
+    };
+
+    /**
+     * Update section order
+     */
+    public static readonly updateSectionOrder = async (ctx: Context) => {
+        try {
+            const course_id = ctx.req.param("course_id");
+            const campus_id = ctx.get("campus_id");
+            const user_id = ctx.get("user_id");
+            const user_type = ctx.get("user_type");
+            const { section_orders } = await ctx.req.json();
+
+            if (!course_id || !section_orders || !Array.isArray(section_orders)) {
+                return ctx.json({
+                    success: false,
+                    error: "Course ID and section_orders array are required",
+                }, 400);
+            }
+
+            // Check permissions
+            const courseResult = await CourseService.getCourseById(course_id, campus_id);
+            const course = courseResult.data;
+
+            const canReorder = 
+                ["Admin", "Super Admin"].includes(user_type) ||
+                course.created_by === user_id ||
+                course.instructor_ids.includes(user_id);
+
+            if (!canReorder) {
+                return ctx.json({
+                    success: false,
+                    error: "Insufficient permissions to reorder sections",
+                }, 403);
+            }
+
+            const result = await CourseService.updateSectionOrder(course_id, campus_id, section_orders);
+
+            return ctx.json({
+                success: true,
+                message: result.message,
+            });
+        } catch (error) {
+            console.error("Error updating section order:", error);
+            return ctx.json({
+                success: false,
+                error: error instanceof Error ? error.message : "Failed to update section order",
+            }, 500);
+        }
+    };
+
+    /**
+     * Update lecture order
+     */
+    public static readonly updateLectureOrder = async (ctx: Context) => {
+        try {
+            const section_id = ctx.req.param("section_id");
+            const campus_id = ctx.get("campus_id");
+            const { lecture_orders } = await ctx.req.json();
+
+            if (!section_id || !lecture_orders || !Array.isArray(lecture_orders)) {
+                return ctx.json({
+                    success: false,
+                    error: "Section ID and lecture_orders array are required",
+                }, 400);
+            }
+
+            // TODO: Add permission check
+
+            const result = await CourseService.updateLectureOrder(section_id, campus_id, lecture_orders);
+
+            return ctx.json({
+                success: true,
+                message: result.message,
+            });
+        } catch (error) {
+            console.error("Error updating lecture order:", error);
+            return ctx.json({
+                success: false,
+                error: error instanceof Error ? error.message : "Failed to update lecture order",
+            }, 500);
+        }
+    };
+
+    // ==================== STUDENT ENROLLMENT & PROGRESS ====================
+
+    /**
+     * Enroll in course
+     */
+    public static readonly enrollInCourse = async (ctx: Context) => {
+        try {
+            const course_id = ctx.req.param("course_id");
+            const user_id = ctx.get("user_id");
+            const campus_id = ctx.get("campus_id");
+            const enrollmentData = await ctx.req.json().catch(() => ({}));
+
+            if (!course_id) {
+                return ctx.json({
+                    success: false,
+                    error: "Course ID is required",
+                }, 400);
+            }
+
+            const result = await CourseService.enrollInCourse(course_id, user_id, campus_id, enrollmentData);
+
+            return ctx.json({
+                success: true,
+                data: result.data,
+                message: result.message,
+            }, 201);
+        } catch (error) {
+            console.error("Error enrolling in course:", error);
+            return ctx.json({
+                success: false,
+                error: error instanceof Error ? error.message : "Failed to enroll in course",
+            }, 500);
+        }
+    };
+
+    /**
+     * Get user's enrolled courses
+     */
+    public static readonly getUserEnrolledCourses = async (ctx: Context) => {
+        try {
+            const user_id = ctx.get("user_id");
+            const campus_id = ctx.get("campus_id");
+            
+            const query = ctx.req.query();
+            const filters = {
+                status: query.status as string,
+                progress: query.progress as string,
+                page: query.page ? parseInt(query.page as string) : 1,
+                limit: query.limit ? parseInt(query.limit as string) : 20,
+            };
+
+            const result = await CourseService.getUserEnrolledCourses(user_id, campus_id, filters);
+
+            return ctx.json({
+                success: true,
+                data: result.data,
+                message: result.message,
+            });
+        } catch (error) {
+            console.error("Error getting enrolled courses:", error);
+            return ctx.json({
+                success: false,
+                error: error instanceof Error ? error.message : "Failed to get enrolled courses",
+            }, 500);
+        }
+    };
+
+    /**
+     * Update course progress
+     */
+    public static readonly updateCourseProgress = async (ctx: Context) => {
+        try {
+            const course_id = ctx.req.param("course_id");
+            const lecture_id = ctx.req.param("lecture_id");
+            const user_id = ctx.get("user_id");
+            const campus_id = ctx.get("campus_id");
+            const progressData = await ctx.req.json();
+
+            if (!course_id || !lecture_id) {
+                return ctx.json({
+                    success: false,
+                    error: "Course ID and Lecture ID are required",
+                }, 400);
+            }
+
+            const result = await CourseService.updateCourseProgress(
+                course_id, 
+                lecture_id, 
+                user_id, 
+                campus_id, 
+                progressData
             );
 
-            return ctx.json(enrollment);
+            return ctx.json({
+                success: true,
+                data: result.data,
+                message: result.message,
+            });
         } catch (error) {
-            if (error instanceof Error) {
-                return ctx.json(
-                    {
-                        message: error.message,
-                    },
-                    500
-                );
-            }
+            console.error("Error updating course progress:", error);
+            return ctx.json({
+                success: false,
+                error: error instanceof Error ? error.message : "Failed to update course progress",
+            }, 500);
         }
     };
-    public static readonly getCourseEnrollmentById = async (ctx: Context) => {
+
+    // ==================== ANALYTICS ====================
+
+    /**
+     * Get course analytics
+     * Admin/Teacher/Instructor only
+     */
+    public static readonly getCourseAnalytics = async (ctx: Context) => {
         try {
-            const { enrollment_id } = ctx.req.param();
+            const course_id = ctx.req.param("course_id");
+            const campus_id = ctx.get("campus_id");
+            const user_id = ctx.get("user_id");
+            const user_type = ctx.get("user_type");
 
-            const enrollment =
-                await CourseService.getCourseEnrollmentById(enrollment_id);
-
-            return ctx.json(enrollment);
-        } catch (error) {
-            if (error instanceof Error) {
-                return ctx.json(
-                    {
-                        message: error.message,
-                    },
-                    500
-                );
+            if (!course_id) {
+                return ctx.json({
+                    success: false,
+                    error: "Course ID is required",
+                }, 400);
             }
+
+            // Check permissions
+            const courseResult = await CourseService.getCourseById(course_id, campus_id);
+            const course = courseResult.data;
+
+            const canViewAnalytics = 
+                ["Admin", "Super Admin"].includes(user_type) ||
+                course.created_by === user_id ||
+                course.instructor_ids.includes(user_id);
+
+            if (!canViewAnalytics) {
+                return ctx.json({
+                    success: false,
+                    error: "Insufficient permissions to view course analytics",
+                }, 403);
+            }
+
+            const result = await CourseService.getCourseAnalytics(course_id, campus_id);
+
+            return ctx.json({
+                success: true,
+                data: result.data,
+                message: result.message,
+            });
+        } catch (error) {
+            console.error("Error getting course analytics:", error);
+            return ctx.json({
+                success: false,
+                error: error instanceof Error ? error.message : "Failed to get course analytics",
+            }, 500);
         }
     };
-    public static readonly getCourseEnrollmentByCourseId = async (
-        ctx: Context
-    ) => {
+
+    // ==================== ADMIN BULK OPERATIONS ====================
+
+    /**
+     * Bulk enroll students
+     * Admin only
+     */
+    public static readonly bulkEnrollStudents = async (ctx: Context) => {
         try {
-            const { course_id } = ctx.req.param();
+            const course_id = ctx.req.param("course_id");
+            const campus_id = ctx.get("campus_id");
+            const user_id = ctx.get("user_id");
+            const user_type = ctx.get("user_type");
+            const { student_ids, enrollment_type = "admin_assigned" } = await ctx.req.json();
 
-            const enrollments =
-                await CourseService.getCourseEnrollmentByCourseId(course_id);
-
-            return ctx.json(enrollments);
-        } catch (error) {
-            if (error instanceof Error) {
-                return ctx.json(
-                    {
-                        message: error.message,
-                    },
-                    500
-                );
+            if (!["Admin", "Super Admin"].includes(user_type)) {
+                return ctx.json({
+                    success: false,
+                    error: "Only admins can perform bulk enrollment",
+                }, 403);
             }
+
+            if (!course_id || !student_ids || !Array.isArray(student_ids)) {
+                return ctx.json({
+                    success: false,
+                    error: "Course ID and student_ids array are required",
+                }, 400);
+            }
+
+            const results: Array<{student_id: string, success: boolean, data?: any}> = [];
+            const errors: Array<{student_id: string, success: boolean, error: string}> = [];
+
+            for (const student_id of student_ids) {
+                try {
+                    const result = await CourseService.enrollInCourse(course_id, student_id, campus_id, {
+                        enrollment_type,
+                        enrollment_source: "admin",
+                        meta_data: {
+                            custom_fields: {
+                                enrolled_by: user_id,
+                                bulk_enrollment: true,
+                            },
+                        },
+                    });
+                    results.push({ student_id, success: true, data: result.data });
+                } catch (error) {
+                    errors.push({ 
+                        student_id, 
+                        success: false, 
+                        error: error instanceof Error ? error.message : "Unknown error" 
+                    });
+                }
+            }
+
+            return ctx.json({
+                success: true,
+                data: {
+                    successful_enrollments: results.length,
+                    failed_enrollments: errors.length,
+                    results,
+                    errors,
+                },
+                message: `Bulk enrollment completed: ${results.length} successful, ${errors.length} failed`,
+            });
+        } catch (error) {
+            console.error("Error in bulk enrollment:", error);
+            return ctx.json({
+                success: false,
+                error: error instanceof Error ? error.message : "Failed to perform bulk enrollment",
+            }, 500);
         }
     };
-    public static readonly getCourseEnrollmentByUserId = async (
-        ctx: Context
-    ) => {
+
+    /**
+     * Get course dashboard data
+     * Admin/Teacher only
+     */
+    public static readonly getCourseDashboard = async (ctx: Context) => {
         try {
-            const { user_id } = ctx.req.param();
+            const campus_id = ctx.get("campus_id");
+            const user_type = ctx.get("user_type");
+            const user_id = ctx.get("user_id");
 
-            const enrollments =
-                await CourseService.getCourseEnrollmentByUserId(user_id);
-
-            return ctx.json(enrollments);
-        } catch (error) {
-            if (error instanceof Error) {
-                return ctx.json(
-                    {
-                        message: error.message,
-                    },
-                    500
-                );
+            if (!["Admin", "Super Admin", "Teacher"].includes(user_type)) {
+                return ctx.json({
+                    success: false,
+                    error: "Insufficient permissions to view course dashboard",
+                }, 403);
             }
-        }
-    };
-    public static readonly updateCourseEnrollment = async (ctx: Context) => {
-        try {
-            const { enrollment_id } = ctx.req.param();
 
-            const data: Partial<ICourseEnrollmentData> = await ctx.req.json();
+            // Get course statistics
+            const stats = await CourseService.getCourseStatistics(campus_id);
 
-            const enrollment = await CourseService.updateCourseEnrollment(
-                enrollment_id,
-                data
-            );
+            // Get recent courses
+            const recentCoursesResult = await CourseService.getCourses(campus_id, {
+                limit: 10,
+                sort_by: "updated_at",
+                sort_order: "desc",
+                ...(user_type === "Teacher" ? { instructor_id: user_id } : {}),
+            });
 
-            return ctx.json(enrollment);
+            return ctx.json({
+                success: true,
+                data: {
+                    statistics: stats,
+                    recent_courses: recentCoursesResult.data.courses,
+                    quick_actions: [
+                        "create_course",
+                        "manage_enrollments",
+                        "view_analytics",
+                        "export_reports",
+                    ],
+                },
+                message: "Course dashboard data retrieved successfully",
+            });
         } catch (error) {
-            if (error instanceof Error) {
-                return ctx.json(
-                    {
-                        message: error.message,
-                    },
-                    500
-                );
-            }
-        }
-    };
-    public static readonly deleteCourseEnrollment = async (ctx: Context) => {
-        try {
-            const { enrollment_id } = ctx.req.param();
-
-            const enrollment =
-                await CourseService.deleteCourseEnrollment(enrollment_id);
-
-            return ctx.json(enrollment);
-        } catch (error) {
-            if (error instanceof Error) {
-                return ctx.json(
-                    {
-                        message: error.message,
-                    },
-                    500
-                );
-            }
+            console.error("Error getting course dashboard:", error);
+            return ctx.json({
+                success: false,
+                error: error instanceof Error ? error.message : "Failed to get course dashboard",
+            }, 500);
         }
     };
 }

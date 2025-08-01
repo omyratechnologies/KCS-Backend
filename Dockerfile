@@ -1,4 +1,4 @@
-FROM oven/bun:1.2.15
+FROM oven/bun:1.2.15 AS builder
 
 # Install system dependencies required for MediaSoup
 USER root
@@ -7,12 +7,11 @@ RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
     git \
-    curl \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copy package files first for better caching
+# Copy package files
 COPY package.json bun.lockb ./
 
 # Install dependencies
@@ -24,12 +23,30 @@ COPY . .
 # Build the application
 RUN bun run build
 
-# Rebuild MediaSoup native binaries for the container environment
-RUN npm rebuild mediasoup
+# Production stage
+FROM oven/bun:1.2.15
 
-# Create a non-root user for security
-RUN groupadd -r bunuser && useradd -r -g bunuser bunuser
-RUN chown -R bunuser:bunuser /app
+USER root
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd -r bunuser && useradd -r -g bunuser bunuser
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json bun.lockb ./
+
+# Install only production dependencies
+RUN bun install --production && \
+    bun install --force mediasoup && \
+    chown -R bunuser:bunuser /app/node_modules
+
+# Copy built application and source files from builder stage
+COPY --from=builder --chown=bunuser:bunuser /app/dist ./dist
+COPY --from=builder --chown=bunuser:bunuser /app/src ./src
+COPY --from=builder --chown=bunuser:bunuser /app/tsconfig.json ./tsconfig.json
+
 USER bunuser
 
 # Expose ports for HTTP API and Socket.IO

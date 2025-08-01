@@ -3,109 +3,168 @@ import { describeRoute } from "hono-openapi";
 import { resolver, validator as zValidator } from "hono-openapi/zod";
 
 import { CourseController } from "@/controllers/course.controller";
-import {    courseAssignmentSubmissionSchema,
-    courseContentSchema,
-    courseEnrollmentSchema,
-    courseSchema,    createCourseAssignmentSubmissionRequestBodySchema,
-    createCourseAssignmentSubmissionResponseSchema,
-    createCourseContentRequestBodySchema,
-    createCourseContentResponseSchema,
-    createCourseEnrollmentRequestBodySchema,
-    createCourseEnrollmentResponseSchema,
+import { authMiddleware } from "@/middlewares/auth.middleware";
+import { roleMiddleware } from "@/middlewares/role.middleware";
+import {
     createCourseRequestBodySchema,
-    createCourseResponseSchema,
-    deleteCourseResponseSchema,    getCourseContentsResponseSchema,
-    getCourseEnrollmentsResponseSchema,
-    getCoursesResponseSchema,    updateCourseContentRequestBodySchema,
-    updateCourseContentResponseSchema,
-    updateCourseEnrollmentRequestBodySchema,
-    updateCourseEnrollmentResponseSchema,
     updateCourseRequestBodySchema,
-    updateCourseResponseSchema,
+    courseResponseSchema,
+    coursesListResponseSchema,
+    createCourseSectionRequestBodySchema,
+    updateCourseSectionRequestBodySchema,
+    courseSectionResponseSchema,
+    createCourseLectureRequestBodySchema,
+    updateCourseLectureRequestBodySchema,
+    courseLectureResponseSchema,
+    enrollInCourseRequestBodySchema,
+    courseEnrollmentResponseSchema,
+    updateProgressRequestBodySchema,
+    courseProgressResponseSchema,
+    successResponseSchema,
+    errorResponseSchema,
+    courseAnalyticsResponseSchema,
+    updateSectionOrderRequestBodySchema,
+    updateLectureOrderRequestBodySchema,
+    bulkEnrollStudentsRequestBodySchema,
 } from "@/schema/course";
 
 const app = new Hono();
 
-// Course routes
-app.post(
-    "/",
-    describeRoute({
-        tags: ["Course"],
-        operationId: "createCourse",
-        summary: "Create a new course",
-        description: "Creates a new course in the system",
-        responses: {
-            200: {
-                description: "Course created successfully",
-                content: {
-                    "application/json": {
-                        schema: resolver(createCourseResponseSchema),
-                    },
-                },
-            },
-            500: {
-                description: "Server error",
-                content: {
-                    "application/json": {
-                        schema: {
-                            type: "object",
-                            properties: {
-                                message: { type: "string" },
-                            },
-                        },
-                    },
-                },
-            },
-        },
-    }),
-    zValidator("json", createCourseRequestBodySchema),
-    CourseController.createCourse
-);
+// Apply authentication to all routes
+app.use("*", authMiddleware());
+
+// ==================== PUBLIC COURSE DISCOVERY ====================
 
 app.get(
     "/",
     describeRoute({
-        tags: ["Course"],
-        operationId: "getAllCourses",
-        summary: "Get all courses",
-        description: "Retrieves all courses for a campus",
-        responses: {
-            200: {
-                description: "List of courses",
-                content: {
-                    "application/json": {
-                        schema: resolver(getCoursesResponseSchema),
-                    },
-                },
-            },
-            500: {
-                description: "Server error",
-                content: {
-                    "application/json": {
-                        schema: {
-                            type: "object",
-                            properties: {
-                                message: { type: "string" },
-                            },
-                        },
-                    },
-                },
-            },
-        },
-    }),
-    CourseController.getAllCourses
-);
-
-app.get(
-    "/:course_id",
-    describeRoute({
-        tags: ["Course"],
-        operationId: "getCourseById",
-        summary: "Get course by ID",
-        description: "Retrieves a specific course by ID",
+        operationId: "getCourses",
+        summary: "Get courses with filtering",
+        description: "Get all courses with advanced filtering, search, and pagination. Returns published courses for students, all courses for admins/teachers.",
+        tags: ["Courses"],
         parameters: [
             {
-                name: "course_id",
+                name: "page",
+                in: "query",
+                required: false,
+                schema: { type: "number", default: 1 },
+                description: "Page number for pagination",
+            },
+            {
+                name: "limit",
+                in: "query",
+                required: false,
+                schema: { type: "number", default: 20 },
+                description: "Number of courses per page",
+            },
+            {
+                name: "status",
+                in: "query",
+                required: false,
+                schema: { 
+                    type: "string",
+                    enum: ["draft", "published", "archived", "suspended"]
+                },
+                description: "Filter by course status (Admin/Teacher only)",
+            },
+            {
+                name: "category",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+                description: "Filter by course category",
+            },
+            {
+                name: "difficulty_level",
+                in: "query",
+                required: false,
+                schema: { 
+                    type: "string",
+                    enum: ["beginner", "intermediate", "advanced"]
+                },
+                description: "Filter by difficulty level",
+            },
+            {
+                name: "price_range",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+                description: "Filter by price range (e.g., '0-50', 'free', 'paid')",
+            },
+            {
+                name: "search",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+                description: "Search in title, description, and tags",
+            },
+            {
+                name: "class_id",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+                description: "Filter by target class/grade",
+            },
+            {
+                name: "featured",
+                in: "query",
+                required: false,
+                schema: { type: "boolean" },
+                description: "Show only featured courses",
+            },
+            {
+                name: "sort_by",
+                in: "query",
+                required: false,
+                schema: { 
+                    type: "string",
+                    enum: ["created_at", "updated_at", "title", "rating", "enrollment_count", "price"]
+                },
+                description: "Sort by field",
+            },
+            {
+                name: "sort_order",
+                in: "query",
+                required: false,
+                schema: { 
+                    type: "string",
+                    enum: ["asc", "desc"]
+                },
+                description: "Sort order",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Courses retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(coursesListResponseSchema),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    CourseController.getCourses
+);
+
+app.get(
+    "/:id",
+    describeRoute({
+        operationId: "getCourseById",
+        summary: "Get course by ID",
+        description: "Get detailed course information including sections, lectures, and user progress (if enrolled).",
+        tags: ["Courses"],
+        parameters: [
+            {
+                name: "id",
                 in: "path",
                 required: true,
                 schema: { type: "string" },
@@ -114,23 +173,18 @@ app.get(
         ],
         responses: {
             200: {
-                description: "Course details",
+                description: "Course retrieved successfully",
                 content: {
                     "application/json": {
-                        schema: resolver(courseSchema),
+                        schema: resolver(courseResponseSchema),
                     },
                 },
             },
-            500: {
-                description: "Server error",
+            404: {
+                description: "Course not found",
                 content: {
                     "application/json": {
-                        schema: {
-                            type: "object",
-                            properties: {
-                                message: { type: "string" },
-                            },
-                        },
+                        schema: resolver(errorResponseSchema),
                     },
                 },
             },
@@ -139,16 +193,49 @@ app.get(
     CourseController.getCourseById
 );
 
-app.put(
-    "/:course_id",
+// ==================== ADMIN/TEACHER COURSE MANAGEMENT ====================
+
+app.post(
+    "/",
     describeRoute({
-        tags: ["Course"],
+        operationId: "createCourse",
+        summary: "Create course",
+        description: "Create a new course. Admin or authorized teacher only.",
+        tags: ["Courses"],
+        responses: {
+            201: {
+                description: "Course created successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(successResponseSchema),
+                    },
+                },
+            },
+            403: {
+                description: "Insufficient permissions",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    roleMiddleware("create_course"),
+    zValidator("json", createCourseRequestBodySchema),
+    CourseController.createCourse
+);
+
+app.put(
+    "/:id",
+    describeRoute({
         operationId: "updateCourse",
-        summary: "Update a course",
-        description: "Updates a specific course by ID",
+        summary: "Update course",
+        description: "Update course details. Admin, course creator, or assigned instructor only.",
+        tags: ["Courses"],
         parameters: [
             {
-                name: "course_id",
+                name: "id",
                 in: "path",
                 required: true,
                 schema: { type: "string" },
@@ -160,39 +247,35 @@ app.put(
                 description: "Course updated successfully",
                 content: {
                     "application/json": {
-                        schema: resolver(updateCourseResponseSchema),
+                        schema: resolver(successResponseSchema),
                     },
                 },
             },
-            500: {
-                description: "Server error",
+            403: {
+                description: "Insufficient permissions",
                 content: {
                     "application/json": {
-                        schema: {
-                            type: "object",
-                            properties: {
-                                message: { type: "string" },
-                            },
-                        },
+                        schema: resolver(errorResponseSchema),
                     },
                 },
             },
         },
     }),
+    roleMiddleware("update_course"),
     zValidator("json", updateCourseRequestBodySchema),
     CourseController.updateCourse
 );
 
-app.delete(
-    "/:course_id",
+app.post(
+    "/:id/publish",
     describeRoute({
-        tags: ["Course"],
-        operationId: "deleteCourse",
-        summary: "Delete a course",
-        description: "Deletes a specific course by ID",
+        operationId: "publishCourse",
+        summary: "Publish course",
+        description: "Publish a draft course to make it available for enrollment. Admin, course creator, or assigned instructor only.",
+        tags: ["Courses"],
         parameters: [
             {
-                name: "course_id",
+                name: "id",
                 in: "path",
                 required: true,
                 schema: { type: "string" },
@@ -201,39 +284,91 @@ app.delete(
         ],
         responses: {
             200: {
-                description: "Course deleted successfully",
+                description: "Course published successfully",
                 content: {
                     "application/json": {
-                        schema: resolver(deleteCourseResponseSchema),
+                        schema: resolver(successResponseSchema),
                     },
                 },
             },
-            500: {
-                description: "Server error",
+            400: {
+                description: "Course cannot be published (missing required content)",
                 content: {
                     "application/json": {
-                        schema: {
-                            type: "object",
-                            properties: {
-                                message: { type: "string" },
-                            },
-                        },
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+            403: {
+                description: "Insufficient permissions",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
                     },
                 },
             },
         },
     }),
+    roleMiddleware("publish_course"),
+    CourseController.publishCourse
+);
+
+app.delete(
+    "/:id",
+    describeRoute({
+        operationId: "deleteCourse",
+        summary: "Delete/Archive course",
+        description: "Archive a course (soft delete). Admin or course creator only.",
+        tags: ["Courses"],
+        parameters: [
+            {
+                name: "id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Course ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Course archived successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(successResponseSchema),
+                    },
+                },
+            },
+            400: {
+                description: "Cannot delete course with active enrollments",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+            403: {
+                description: "Insufficient permissions",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    roleMiddleware("delete_course"),
     CourseController.deleteCourse
 );
 
-// Course Content routes
+// ==================== COURSE CONTENT MANAGEMENT ====================
+
 app.post(
-    "/:course_id/content",
+    "/:course_id/sections",
     describeRoute({
-        tags: ["Course"],
-        operationId: "createCourseContent",
-        summary: "Create course content",
-        description: "Creates new content for a specific course",
+        operationId: "createCourseSection",
+        summary: "Create course section",
+        description: "Create a new section in a course. Admin, course creator, or assigned instructor only.",
+        tags: ["Courses"],
         parameters: [
             {
                 name: "course_id",
@@ -244,133 +379,76 @@ app.post(
             },
         ],
         responses: {
-            200: {
-                description: "Content created successfully",
+            201: {
+                description: "Section created successfully",
                 content: {
                     "application/json": {
-                        schema: resolver(createCourseContentResponseSchema),
+                        schema: resolver(successResponseSchema),
                     },
                 },
             },
-            500: {
-                description: "Server error",
+            403: {
+                description: "Insufficient permissions",
                 content: {
                     "application/json": {
-                        schema: {
-                            type: "object",
-                            properties: {
-                                message: { type: "string" },
-                            },
-                        },
+                        schema: resolver(errorResponseSchema),
                     },
                 },
             },
         },
     }),
-    zValidator("json", createCourseContentRequestBodySchema),
-    CourseController.createCourseContent
+    roleMiddleware("create_course_sections"),
+    zValidator("json", createCourseSectionRequestBodySchema),
+    CourseController.createCourseSection
 );
 
-app.get(
-    "/:course_id/content",
+app.post(
+    "/sections/:section_id/lectures",
     describeRoute({
-        tags: ["Course"],
-        operationId: "getAllCourseContents",
-        summary: "Get all course contents",
-        description: "Retrieves all content for a specific course",
+        operationId: "createCourseLecture",
+        summary: "Create course lecture",
+        description: "Create a new lecture in a course section. Admin, course creator, or assigned instructor only.",
+        tags: ["Courses"],
         parameters: [
             {
-                name: "course_id",
+                name: "section_id",
                 in: "path",
                 required: true,
                 schema: { type: "string" },
-                description: "Course ID",
+                description: "Section ID",
             },
         ],
         responses: {
-            200: {
-                description: "List of course contents",
+            201: {
+                description: "Lecture created successfully",
                 content: {
                     "application/json": {
-                        schema: resolver(getCourseContentsResponseSchema),
+                        schema: resolver(successResponseSchema),
                     },
                 },
             },
-            500: {
-                description: "Server error",
+            403: {
+                description: "Insufficient permissions",
                 content: {
                     "application/json": {
-                        schema: {
-                            type: "object",
-                            properties: {
-                                message: { type: "string" },
-                            },
-                        },
+                        schema: resolver(errorResponseSchema),
                     },
                 },
             },
         },
     }),
-    CourseController.getAllCourseContents
-);
-
-app.get(
-    "/:course_id/content/:content_id",
-    describeRoute({
-        tags: ["Course"],
-        operationId: "getCourseContentById",
-        summary: "Get course content by ID",
-        description: "Retrieves specific content by ID",
-        parameters: [
-            {
-                name: "course_id",
-                in: "path",
-                required: true,
-                schema: { type: "string" },
-                description: "Course ID",
-            },
-            {
-                name: "content_id",
-                in: "path",
-                required: true,
-                schema: { type: "string" },
-                description: "Content ID",
-            },
-        ],
-        responses: {
-            200: {
-                description: "Content details",
-                content: {
-                    "application/json": {
-                        schema: resolver(courseContentSchema),
-                    },
-                },
-            },
-            500: {
-                description: "Server error",
-                content: {
-                    "application/json": {
-                        schema: {
-                            type: "object",
-                            properties: {
-                                message: { type: "string" },
-                            },
-                        },
-                    },
-                },
-            },
-        },
-    }),
-    CourseController.getCourseContentById
+    roleMiddleware("create_course_lectures"),
+    zValidator("json", createCourseLectureRequestBodySchema),
+    CourseController.createCourseLecture
 );
 
 app.put(
-    "/:course_id/content/:content_id",
+    "/:course_id/sections/order",
     describeRoute({
-        tags: ["Course"],
-        operationId: "updateCourseContent",
-        summary: "Update course content",
-        description: "Updates specific content by ID",
+        operationId: "updateSectionOrder",
+        summary: "Update section order",
+        description: "Reorder sections within a course. Admin, course creator, or assigned instructor only.",
+        tags: ["Courses"],
         parameters: [
             {
                 name: "course_id",
@@ -379,105 +457,80 @@ app.put(
                 schema: { type: "string" },
                 description: "Course ID",
             },
-            {
-                name: "content_id",
-                in: "path",
-                required: true,
-                schema: { type: "string" },
-                description: "Content ID",
-            },
         ],
         responses: {
             200: {
-                description: "Content updated successfully",
+                description: "Section order updated successfully",
                 content: {
                     "application/json": {
-                        schema: resolver(updateCourseContentResponseSchema),
+                        schema: resolver(successResponseSchema),
                     },
                 },
             },
-            500: {
-                description: "Server error",
+            403: {
+                description: "Insufficient permissions",
                 content: {
                     "application/json": {
-                        schema: {
-                            type: "object",
-                            properties: {
-                                message: { type: "string" },
-                            },
-                        },
+                        schema: resolver(errorResponseSchema),
                     },
                 },
             },
         },
     }),
-    zValidator("json", updateCourseContentRequestBodySchema),
-    CourseController.updateCourseContent
+    roleMiddleware("reorder_course_content"),
+    zValidator("json", updateSectionOrderRequestBodySchema),
+    CourseController.updateSectionOrder
 );
 
-app.delete(
-    "/:course_id/content/:content_id",
+app.put(
+    "/sections/:section_id/lectures/order",
     describeRoute({
-        tags: ["Course"],
-        operationId: "deleteCourseContent",
-        summary: "Delete course content",
-        description: "Deletes specific content by ID",
+        operationId: "updateLectureOrder",
+        summary: "Update lecture order",
+        description: "Reorder lectures within a section. Admin, course creator, or assigned instructor only.",
+        tags: ["Courses"],
         parameters: [
             {
-                name: "course_id",
+                name: "section_id",
                 in: "path",
                 required: true,
                 schema: { type: "string" },
-                description: "Course ID",
-            },
-            {
-                name: "content_id",
-                in: "path",
-                required: true,
-                schema: { type: "string" },
-                description: "Content ID",
+                description: "Section ID",
             },
         ],
         responses: {
             200: {
-                description: "Content deleted successfully",
+                description: "Lecture order updated successfully",
                 content: {
                     "application/json": {
-                        schema: {
-                            type: "object",
-                            properties: {
-                                message: { type: "string" },
-                            },
-                        },
+                        schema: resolver(successResponseSchema),
                     },
                 },
             },
-            500: {
-                description: "Server error",
+            403: {
+                description: "Insufficient permissions",
                 content: {
                     "application/json": {
-                        schema: {
-                            type: "object",
-                            properties: {
-                                message: { type: "string" },
-                            },
-                        },
+                        schema: resolver(errorResponseSchema),
                     },
                 },
             },
         },
     }),
-    CourseController.deleteCourseContent
+    roleMiddleware("reorder_course_content"),
+    zValidator("json", updateLectureOrderRequestBodySchema),
+    CourseController.updateLectureOrder
 );
 
-// Course Enrollment routes
+// ==================== STUDENT ENROLLMENT & PROGRESS ====================
+
 app.post(
     "/:course_id/enroll",
     describeRoute({
-        tags: ["Course"],
         operationId: "enrollInCourse",
-        summary: "Enroll in a course",
-        description: "Enrolls a user in a specific course",
+        summary: "Enroll in course",
+        description: "Enroll the authenticated user in a course. Student only.",
+        tags: ["Courses"],
         parameters: [
             {
                 name: "course_id",
@@ -488,133 +541,94 @@ app.post(
             },
         ],
         responses: {
-            200: {
-                description: "Enrollment successful",
+            201: {
+                description: "Successfully enrolled in course",
                 content: {
                     "application/json": {
-                        schema: resolver(createCourseEnrollmentResponseSchema),
+                        schema: resolver(successResponseSchema),
                     },
                 },
             },
-            500: {
-                description: "Server error",
+            400: {
+                description: "Enrollment not allowed (course full, not published, etc.)",
                 content: {
                     "application/json": {
-                        schema: {
-                            type: "object",
-                            properties: {
-                                message: { type: "string" },
-                            },
-                        },
+                        schema: resolver(errorResponseSchema),
                     },
                 },
             },
         },
     }),
-    zValidator("json", createCourseEnrollmentRequestBodySchema),
+    roleMiddleware("enroll_in_course"),
+    zValidator("json", enrollInCourseRequestBodySchema),
     CourseController.enrollInCourse
 );
 
 app.get(
-    "/:course_id/enrollment",
+    "/my/enrolled",
     describeRoute({
-        tags: ["Course"],
-        operationId: "getCourseEnrollmentByCourseId",
-        summary: "Get course enrollments by course ID",
-        description: "Retrieves all enrollments for a specific course",
+        operationId: "getUserEnrolledCourses",
+        summary: "Get user's enrolled courses",
+        description: "Get all courses the authenticated user is enrolled in. Student only.",
+        tags: ["Courses"],
         parameters: [
             {
-                name: "course_id",
-                in: "path",
-                required: true,
-                schema: { type: "string" },
-                description: "Course ID",
+                name: "status",
+                in: "query",
+                required: false,
+                schema: { 
+                    type: "string",
+                    enum: ["active", "completed", "dropped", "suspended", "expired"]
+                },
+                description: "Filter by enrollment status",
+            },
+            {
+                name: "progress",
+                in: "query",
+                required: false,
+                schema: { 
+                    type: "string",
+                    enum: ["not_started", "in_progress", "completed"]
+                },
+                description: "Filter by progress status",
+            },
+            {
+                name: "page",
+                in: "query",
+                required: false,
+                schema: { type: "number", default: 1 },
+                description: "Page number for pagination",
+            },
+            {
+                name: "limit",
+                in: "query",
+                required: false,
+                schema: { type: "number", default: 20 },
+                description: "Number of enrollments per page",
             },
         ],
         responses: {
             200: {
-                description: "List of course enrollments",
+                description: "Enrolled courses retrieved successfully",
                 content: {
                     "application/json": {
-                        schema: resolver(getCourseEnrollmentsResponseSchema),
-                    },
-                },
-            },
-            500: {
-                description: "Server error",
-                content: {
-                    "application/json": {
-                        schema: {
-                            type: "object",
-                            properties: {
-                                message: { type: "string" },
-                            },
-                        },
+                        schema: resolver(successResponseSchema),
                     },
                 },
             },
         },
     }),
-    CourseController.getCourseEnrollmentByCourseId
-);
-
-app.get(
-    "/:course_id/enrollment/:enrollment_id",
-    describeRoute({
-        tags: ["Course"],
-        operationId: "getCourseEnrollmentById",
-        summary: "Get course enrollment by ID",
-        description: "Retrieves a specific enrollment by ID",
-        parameters: [
-            {
-                name: "course_id",
-                in: "path",
-                required: true,
-                schema: { type: "string" },
-                description: "Course ID",
-            },
-            {
-                name: "enrollment_id",
-                in: "path",
-                required: true,
-                schema: { type: "string" },
-                description: "Enrollment ID",
-            },
-        ],
-        responses: {
-            200: {
-                description: "Enrollment details",
-                content: {
-                    "application/json": {
-                        schema: resolver(courseEnrollmentSchema),
-                    },
-                },
-            },
-            500: {
-                description: "Server error",
-                content: {
-                    "application/json": {
-                        schema: {
-                            type: "object",
-                            properties: {
-                                message: { type: "string" },
-                            },
-                        },
-                    },
-                },
-            },
-        },
-    }),
-    CourseController.getCourseEnrollmentById
+    roleMiddleware("view_enrolled_courses"),
+    CourseController.getUserEnrolledCourses
 );
 
 app.put(
-    "/:course_id/enrollment/:enrollment_id",
+    "/:course_id/lectures/:lecture_id/progress",
     describeRoute({
-        tags: ["Course"],
-        operationId: "updateCourseEnrollment",
-        summary: "Update course enrollment",
-        description: "Updates a specific enrollment by ID",
+        operationId: "updateCourseProgress",
+        summary: "Update lecture progress",
+        description: "Update user's progress on a specific lecture. Student only.",
+        tags: ["Courses"],
         parameters: [
             {
                 name: "course_id",
@@ -624,138 +638,148 @@ app.put(
                 description: "Course ID",
             },
             {
-                name: "enrollment_id",
+                name: "lecture_id",
                 in: "path",
                 required: true,
                 schema: { type: "string" },
-                description: "Enrollment ID",
+                description: "Lecture ID",
             },
         ],
         responses: {
             200: {
-                description: "Enrollment updated successfully",
+                description: "Progress updated successfully",
                 content: {
                     "application/json": {
-                        schema: resolver(updateCourseEnrollmentResponseSchema),
+                        schema: resolver(successResponseSchema),
                     },
                 },
             },
-            500: {
-                description: "Server error",
+            400: {
+                description: "User not enrolled in course",
                 content: {
                     "application/json": {
-                        schema: {
-                            type: "object",
-                            properties: {
-                                message: { type: "string" },
-                            },
-                        },
+                        schema: resolver(errorResponseSchema),
                     },
                 },
             },
         },
     }),
-    zValidator("json", updateCourseEnrollmentRequestBodySchema),
-    CourseController.updateCourseEnrollment
+    roleMiddleware("track_watch_history"),
+    zValidator("json", updateProgressRequestBodySchema),
+    CourseController.updateCourseProgress
 );
 
-app.delete(
-    "/:course_id/enrollment/:enrollment_id",
-    describeRoute({
-        tags: ["Course"],
-        operationId: "deleteCourseEnrollment",
-        summary: "Delete course enrollment",
-        description: "Deletes a specific enrollment by ID",
-        parameters: [
-            {
-                name: "course_id",
-                in: "path",
-                required: true,
-                schema: { type: "string" },
-                description: "Course ID",
-            },
-            {
-                name: "enrollment_id",
-                in: "path",
-                required: true,
-                schema: { type: "string" },
-                description: "Enrollment ID",
-            },
-        ],
-        responses: {
-            200: {
-                description: "Enrollment deleted successfully",
-                content: {
-                    "application/json": {
-                        schema: {
-                            type: "object",
-                            properties: {
-                                message: { type: "string" },
-                            },
-                        },
-                    },
-                },
-            },
-            500: {
-                description: "Server error",
-                content: {
-                    "application/json": {
-                        schema: {
-                            type: "object",
-                            properties: {
-                                message: { type: "string" },
-                            },
-                        },
-                    },
-                },
-            },
-        },
-    }),
-    CourseController.deleteCourseEnrollment
-);
+// ==================== ANALYTICS & REPORTING ====================
 
-// User enrollment routes
 app.get(
-    "/enrollment/user/:user_id",
+    "/:course_id/analytics",
     describeRoute({
-        tags: ["Course"],
-        operationId: "getCourseEnrollmentByUserId",
-        summary: "Get course enrollments by user ID",
-        description: "Retrieves all enrollments for a specific user",
+        operationId: "getCourseAnalytics",
+        summary: "Get course analytics",
+        description: "Get detailed analytics for a course including enrollment, engagement, and performance metrics. Admin, course creator, or assigned instructor only.",
+        tags: ["Courses"],
         parameters: [
             {
-                name: "user_id",
+                name: "course_id",
                 in: "path",
                 required: true,
                 schema: { type: "string" },
-                description: "User ID",
+                description: "Course ID",
             },
         ],
         responses: {
             200: {
-                description: "List of user enrollments",
+                description: "Course analytics retrieved successfully",
                 content: {
                     "application/json": {
-                        schema: resolver(getCourseEnrollmentsResponseSchema),
+                        schema: resolver(courseAnalyticsResponseSchema),
                     },
                 },
             },
-            500: {
-                description: "Server error",
+            403: {
+                description: "Insufficient permissions",
                 content: {
                     "application/json": {
-                        schema: {
-                            type: "object",
-                            properties: {
-                                message: { type: "string" },
-                            },
-                        },
+                        schema: resolver(errorResponseSchema),
                     },
                 },
             },
         },
     }),
-    CourseController.getCourseEnrollmentByUserId
+    roleMiddleware("view_course_analytics"),
+    CourseController.getCourseAnalytics
+);
+
+app.get(
+    "/dashboard",
+    describeRoute({
+        operationId: "getCourseDashboard",
+        summary: "Get course dashboard",
+        description: "Get course dashboard with statistics and recent activity. Admin/Teacher only.",
+        tags: ["Courses"],
+        responses: {
+            200: {
+                description: "Course dashboard retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(successResponseSchema),
+                    },
+                },
+            },
+            403: {
+                description: "Insufficient permissions",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    roleMiddleware("manage_course_analytics"),
+    CourseController.getCourseDashboard
+);
+
+// ==================== ADMIN BULK OPERATIONS ====================
+
+app.post(
+    "/:course_id/enroll/bulk",
+    describeRoute({
+        operationId: "bulkEnrollStudents",
+        summary: "Bulk enroll students",
+        description: "Enroll multiple students in a course at once. Admin only.",
+        tags: ["Courses"],
+        parameters: [
+            {
+                name: "course_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Course ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Bulk enrollment completed",
+                content: {
+                    "application/json": {
+                        schema: resolver(successResponseSchema),
+                    },
+                },
+            },
+            403: {
+                description: "Admin access required",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    roleMiddleware("bulk_enroll_students"),
+    zValidator("json", bulkEnrollStudentsRequestBodySchema),
+    CourseController.bulkEnrollStudents
 );
 
 export default app;

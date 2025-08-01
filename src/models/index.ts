@@ -14,14 +14,11 @@ import { ClassQuizSession } from "./class_quiz_session.model";
 import { ClassQuizSubmission } from "./class_quiz_submission.model";
 import { ClassSubject } from "./class_subject.model";
 import { Course } from "./course.model";
-import { CourseAssignment } from "./course_assignment.model";
-import { CourseAssignmentSubmission } from "./course_assignment_submission.model";
-import { CourseContent } from "./course_content.model";
+import { CourseCertificate } from "./course_certificate.model";
 import { CourseEnrollment } from "./course_enrollment.model";
-import { CourseQuiz } from "./course_quiz.model";
-import { CourseQuizAttempt } from "./course_quiz_attempt.model";
-import { CourseQuizQuestion } from "./course_quiz_question.model";
-import { CourseQuizSubmission } from "./course_quiz_submission.model";
+import { CourseLecture } from "./course_lecture.model";
+import { CourseProgress } from "./course_progress.model";
+import { CourseSection } from "./course_section.model";
 import { Curriculum } from "./curriculum.model";
 import { DocumentStore } from "./document_store.model";
 import { ExamTerm } from "./exam_term.model";
@@ -64,14 +61,11 @@ export {
     ClassQuizSubmission,
     ClassSubject,
     Course,
-    CourseAssignment,
-    CourseAssignmentSubmission,
-    CourseContent,
+    CourseCertificate,
     CourseEnrollment,
-    CourseQuiz,
-    CourseQuizAttempt,
-    CourseQuizQuestion,
-    CourseQuizSubmission,
+    CourseLecture,
+    CourseProgress,
+    CourseSection,
     Curriculum,
     DocumentStore,
     ExamTerm,

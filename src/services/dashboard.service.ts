@@ -1,13 +1,12 @@
 import { Assignment } from "@/models/assignment.model";
-import { AssignmentSubmission } from "@/models/assignment_submission.model";
 import { Attendance } from "@/models/attendance.model";
 import { CampusWideNotification } from "@/models/campus_wide_notification.model";
 import { Class } from "@/models/class.model";
 import { ClassQuiz } from "@/models/class_quiz.model";
-import { ClassQuizAttempt } from "@/models/class_quiz_attempt.model";
-import { ClassQuizSubmission } from "@/models/class_quiz_submission.model";
 import { ClassSubject } from "@/models/class_subject.model";
 import { Course } from "@/models/course.model";
+import { CourseEnrollment } from "@/models/course_enrollment.model";
+import { CourseProgress } from "@/models/course_progress.model";
 import { Examination } from "@/models/examination.model";
 import { Library } from "@/models/library.model";
 import { LibraryIssue } from "@/models/library_issue.model";
@@ -38,6 +37,193 @@ import { StudyHoursAnalyticsHelper } from "./analytics/study-hours.helper";
 import { ClassService } from "./class.service";
 
 export class DashboardService {
+    /**
+     * Get student's enrolled courses with latest data
+     */
+    private static async getStudentCoursesData(user_id: string, campus_id: string) {
+        try {
+            // Get student's course enrollments
+            const enrollmentsResult = await CourseEnrollment.find({
+                user_id,
+                campus_id,
+                enrollment_status: { $in: ["active", "completed"] }
+            });
+
+            const enrollments = enrollmentsResult.rows || [];
+            
+            if (enrollments.length === 0) {
+                return {
+                    enrolled: [],
+                    inProgress: [],
+                    completed: [],
+                    totalCourses: 0,
+                    totalProgress: 0,
+                    certificates: 0
+                };
+            }
+
+            // Get course details for enrollments
+            const courseIds = enrollments.map(e => e.course_id);
+            const coursesResult = await Course.find({
+                id: { $in: courseIds },
+                campus_id,
+                is_active: true,
+                is_deleted: false
+            });
+
+            const courses = coursesResult.rows || [];
+            const courseMap = new Map(courses.map(c => [c.id, c]));
+
+            // Process enrollments with course data
+            const enrolledCourses: any[] = [];
+            const inProgressCourses: any[] = [];
+            const completedCourses: any[] = [];
+            let totalProgress = 0;
+            let certificates = 0;
+
+            for (const enrollment of enrollments) {
+                const course: any = courseMap.get(enrollment.course_id);
+                if (!course) continue;
+
+                const courseData = {
+                    id: course.id || enrollment.course_id,
+                    title: course.title || "Unknown Course",
+                    thumbnail: course.thumbnail || null,
+                    instructor_names: course.instructor_ids || [], // Could be enhanced with actual names
+                    progress_percentage: enrollment.progress_percentage,
+                    enrollment_date: enrollment.enrollment_date,
+                    last_accessed_at: enrollment.last_accessed_at,
+                    status: enrollment.enrollment_status,
+                    category: course.category || "General",
+                    difficulty_level: course.difficulty_level || "beginner",
+                    estimated_duration_hours: course.estimated_duration_hours || 0,
+                    completed_lectures: enrollment.access_details?.completed_lectures || 0,
+                    total_lectures: enrollment.access_details?.total_lectures || 0,
+                    certificate_issued: enrollment.certificate_issued,
+                    certificate_id: enrollment.certificate_id,
+                    rating: course.rating || 0
+                };
+
+                enrolledCourses.push(courseData);
+                totalProgress += enrollment.progress_percentage;
+                
+                if (enrollment.certificate_issued) {
+                    certificates++;
+                }
+
+                if (enrollment.enrollment_status === "completed") {
+                    completedCourses.push(courseData);
+                } else if (enrollment.progress_percentage > 0) {
+                    inProgressCourses.push(courseData);
+                }
+            }
+
+            return {
+                enrolled: enrolledCourses,
+                inProgress: inProgressCourses.slice(0, 5), // Latest 5 in progress
+                completed: completedCourses.slice(0, 5), // Latest 5 completed
+                totalCourses: enrollments.length,
+                totalProgress: enrollments.length > 0 ? Math.round(totalProgress / enrollments.length) : 0,
+                certificates
+            };
+        } catch (error) {
+            console.error("Error fetching student courses data:", error);
+            return {
+                enrolled: [],
+                inProgress: [],
+                completed: [],
+                totalCourses: 0,
+                totalProgress: 0,
+                certificates: 0
+            };
+        }
+    }
+
+    /**
+     * Get teacher's course management data
+     */
+    private static async getTeacherCoursesData(user_id: string, campus_id: string) {
+        try {
+            // Get courses where the user is an instructor
+            const coursesResult = await Course.find({
+                campus_id,
+                instructor_ids: { $in: [user_id] },
+                is_active: true,
+                is_deleted: false
+            });
+
+            const courses = coursesResult.rows || [];
+            
+            if (courses.length === 0) {
+                return {
+                    teaching: [],
+                    totalCourses: 0,
+                    totalEnrollments: 0,
+                    totalCompletions: 0,
+                    averageRating: 0
+                };
+            }
+
+            // Get enrollment data for these courses
+            const courseIds = courses.map(c => c.id);
+            const enrollmentsResult = await CourseEnrollment.find({
+                course_id: { $in: courseIds },
+                campus_id
+            });
+
+            const enrollments = enrollmentsResult.rows || [];
+
+            // Process course data with enrollment statistics
+            const teachingCourses = courses.map((course: any) => {
+                const courseEnrollments = enrollments.filter(e => e.course_id === course.id);
+                const completedEnrollments = courseEnrollments.filter(e => e.enrollment_status === "completed");
+                const activeEnrollments = courseEnrollments.filter(e => e.enrollment_status === "active");
+
+                return {
+                    id: course.id || "",
+                    title: course.title || "Unknown Course",
+                    thumbnail: course.thumbnail || null,
+                    status: course.status || "draft",
+                    category: course.category || "General",
+                    difficulty_level: course.difficulty_level || "beginner",
+                    total_enrollments: courseEnrollments.length,
+                    active_enrollments: activeEnrollments.length,
+                    completed_enrollments: completedEnrollments.length,
+                    completion_rate: courseEnrollments.length > 0 
+                        ? Math.round((completedEnrollments.length / courseEnrollments.length) * 100) 
+                        : 0,
+                    rating: course.rating || 0,
+                    rating_count: course.rating_count || 0,
+                    created_at: course.created_at,
+                    updated_at: course.updated_at
+                };
+            });
+
+            const totalEnrollments = enrollments.length;
+            const totalCompletions = enrollments.filter(e => e.enrollment_status === "completed").length;
+            const ratedCourses = courses.filter((c: any) => c.rating_count > 0);
+            const averageRating = ratedCourses.length > 0 
+                ? ratedCourses.reduce((sum: number, c: any) => sum + (c.rating || 0), 0) / ratedCourses.length 
+                : 0;
+
+            return {
+                teaching: teachingCourses,
+                totalCourses: courses.length,
+                totalEnrollments,
+                totalCompletions,
+                averageRating: Math.round(averageRating * 10) / 10
+            };
+        } catch (error) {
+            console.error("Error fetching teacher courses data:", error);
+            return {
+                teaching: [],
+                totalCourses: 0,
+                totalEnrollments: 0,
+                totalCompletions: 0,
+                averageRating: 0
+            };
+        }
+    }
     /**
      * Get comprehensive student dashboard data
      */
@@ -148,6 +334,9 @@ export class DashboardService {
             // Get comprehensive grades data
             const grades = await GradesAnalyticsHelper.getGradesData(user_id, campus_id);
 
+            // Get student's latest courses data
+            const coursesData = await this.getStudentCoursesData(user_id, campus_id);
+
             return {
                 profile: {
                     id: profile.id,
@@ -229,6 +418,8 @@ export class DashboardService {
                 performance,
                 hoursSpent,
                 grades,
+                // Enhanced course data without breaking existing API
+                courses: coursesData
             };
         } catch (error) {
             throw new Error(`Failed to get student dashboard: ${error}`);
@@ -469,6 +660,9 @@ export class DashboardService {
                 }
             }
 
+            // Get teacher's course management data
+            const teacherCoursesData = await this.getTeacherCoursesData(user_id, campus_id);
+
             return {
                 profile: {
                     id: profile.id,
@@ -535,6 +729,7 @@ export class DashboardService {
                     { id: "grade_assignments", title: "Grade Assignments", icon: "✏️" },
                     { id: "schedule_meeting", title: "Schedule Meeting", icon: "📅" },
                 ],
+                courses: teacherCoursesData
             };
         } catch (error) {
             throw new Error(`Failed to get teacher dashboard: ${error}`);
@@ -715,6 +910,9 @@ export class DashboardService {
                         // Get comprehensive grades data for child
                         const childGrades = await GradesAnalyticsHelper.getGradesData(child.id, campus_id);
 
+                        // Get child's course data
+                        const childCoursesData = await this.getStudentCoursesData(child.id, campus_id);
+
                         return {
                             profile: {
                                 id: child.id,
@@ -859,6 +1057,7 @@ export class DashboardService {
                             performance: childPerformance,
                             hoursSpent: childHoursSpent,
                             grades: childGrades,
+                            courses: childCoursesData
                         };
                     } catch (error) {
                         console.error(`Error fetching data for child ${child.id}:`, error);
@@ -976,6 +1175,13 @@ export class DashboardService {
             const totalClasses = classResult.rows?.length || 0;
             const activeCourses = courseResult.rows?.length || 0;
 
+            // Get additional course statistics
+            const enrollmentsResult = await CourseEnrollment.find({ campus_id });
+            const allEnrollments = enrollmentsResult.rows || [];
+            const totalEnrollments = allEnrollments.length;
+            const completedEnrollments = allEnrollments.filter(e => e.enrollment_status === "completed").length;
+            const certificatesIssued = allEnrollments.filter(e => e.certificate_issued).length;
+
             // Get today's attendance
             const today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -1008,6 +1214,9 @@ export class DashboardService {
                     totalTeachers,
                     totalClasses,
                     activeCourses,
+                    totalEnrollments,
+                    completedEnrollments,
+                    certificatesIssued,
                 },
                 attendance: {
                     today: todayAttendance,
