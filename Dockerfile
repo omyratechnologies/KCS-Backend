@@ -6,7 +6,14 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     python3 \
     python3-pip \
+    python3-dev \
     git \
+    cmake \
+    make \
+    gcc \
+    g++ \
+    libuv1-dev \
+    libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -16,6 +23,9 @@ COPY package.json bun.lock ./
 
 # Install dependencies
 RUN bun install
+
+# Build MediaSoup worker binary
+RUN cd node_modules/mediasoup && npm run worker:build
 
 # Copy source code
 COPY . .
@@ -29,6 +39,17 @@ FROM oven/bun:1.2.15
 USER root
 RUN apt-get update && apt-get install -y \
     curl \
+    build-essential \
+    python3 \
+    python3-pip \
+    python3-dev \
+    git \
+    cmake \
+    make \
+    gcc \
+    g++ \
+    libuv1-dev \
+    libssl-dev \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd -r bunuser && useradd -r -g bunuser bunuser
 
@@ -39,13 +60,13 @@ COPY package.json bun.lock ./
 
 # Install only production dependencies
 RUN bun install --production && \
-    bun install --force mediasoup && \
     chown -R bunuser:bunuser /app/node_modules
 
 # Copy built application and source files from builder stage
 COPY --from=builder --chown=bunuser:bunuser /app/dist ./dist
 COPY --from=builder --chown=bunuser:bunuser /app/src ./src
 COPY --from=builder --chown=bunuser:bunuser /app/tsconfig.json ./tsconfig.json
+COPY --from=builder --chown=bunuser:bunuser /app/node_modules/mediasoup/worker ./node_modules/mediasoup/worker
 
 USER bunuser
 
