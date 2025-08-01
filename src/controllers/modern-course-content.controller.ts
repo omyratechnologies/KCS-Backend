@@ -1,7 +1,7 @@
 import { Context } from "hono";
 import { ICourseContentData, CourseContent } from "@/models/course_content.model";
 import { ICourseSectionData, CourseSection } from "@/models/course_section.model";
-import { ICourseUserNoteData, CourseUserNote } from "@/models/course_user_notes.model";
+import { ICourseUserNotesData, CourseUserNotes } from "@/models/course_user_notes.model";
 import { ICourseDiscussionData, CourseDiscussion } from "@/models/course_discussion.model";
 import { ICourseEnrollmentData, CourseEnrollment } from "@/models/course_enrollment.model";
 import { ICourseProgressData, CourseProgress } from "@/models/course_progress.model";
@@ -148,8 +148,7 @@ export class ModernCourseContentController {
                 progress_tracking: {
                     is_completable: true,
                     completion_criteria: "view_time",
-                    auto_complete_enabled: false,
-                    ...contentData.progress_tracking
+                    auto_complete_enabled: false
                 },
                 access_settings: {
                     access_level: "free",
@@ -224,7 +223,7 @@ export class ModernCourseContentController {
             }
             
             // Get user's notes for this content
-            const userNotes = await CourseUserNote.find({
+            const userNotes = await CourseUserNotes.find({
                 campus_id,
                 course_id,
                 content_id,
@@ -300,9 +299,9 @@ export class ModernCourseContentController {
             const user_id = ctx.get("user_id");
             const { course_id, content_id } = ctx.req.param();
             
-            const noteData: Partial<ICourseUserNoteData> = await ctx.req.json();
+            const noteData: Partial<ICourseUserNotesData> = await ctx.req.json();
             
-            const note = await CourseUserNote.create({
+            const note = await CourseUserNotes.create({
                 campus_id,
                 course_id,
                 content_id,
@@ -358,12 +357,12 @@ export class ModernCourseContentController {
             if (content_id) query.content_id = content_id;
             if (note_type) query.note_type = note_type;
             
-            const notes = await CourseUserNote.find(query)
-                .sort({ created_at: -1 })
-                .limit(parseInt(limit))
-                .skip((parseInt(page) - 1) * parseInt(limit));
+            const notesResult = await CourseUserNotes.find(query);
+            const notes = notesResult
+                .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                .slice((parseInt(page) - 1) * parseInt(limit), parseInt(page) * parseInt(limit));
             
-            const totalNotes = await CourseUserNote.count(query);
+            const totalNotes = await CourseUserNotes.count(query);
             
             return ctx.json({
                 success: true,
@@ -418,8 +417,7 @@ export class ModernCourseContentController {
                     is_approved: true
                 },
                 meta_data: {
-                    last_activity_at: new Date(),
-                    ...discussionData.meta_data
+                    last_activity_at: new Date()
                 },
                 is_active: true,
                 is_deleted: false
@@ -474,19 +472,36 @@ export class ModernCourseContentController {
                 query.discussion_type = "question";
             }
             
-            const discussions = await CourseDiscussion.find(query)
-                .sort(sortCriteria)
-                .limit(parseInt(limit))
-                .skip((parseInt(page) - 1) * parseInt(limit));
+            const discussionsResult = await CourseDiscussion.find(query);
+            let sortedDiscussions = discussionsResult;
+            
+            if (sort === "popular") {
+                sortedDiscussions = discussionsResult.sort((a, b) => {
+                    if (b.upvotes_count !== a.upvotes_count) {
+                        return b.upvotes_count - a.upvotes_count;
+                    }
+                    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+                });
+            } else {
+                sortedDiscussions = discussionsResult.sort((a, b) => 
+                    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                );
+            }
+            
+            const discussions = sortedDiscussions
+                .slice((parseInt(page) - 1) * parseInt(limit), parseInt(page) * parseInt(limit));
             
             // Get replies for each discussion
             const enrichedDiscussions = await Promise.all(
                 discussions.map(async (discussion) => {
-                    const replies = await CourseDiscussion.find({
+                    const repliesResult = await CourseDiscussion.find({
                         parent_discussion_id: discussion.id,
                         is_active: true,
                         is_deleted: false
-                    }).sort({ created_at: 1 }).limit(3); // Show recent 3 replies
+                    });
+                    const replies = repliesResult
+                        .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+                        .slice(0, 3); // Show recent 3 replies
                     
                     return {
                         ...discussion,
@@ -637,12 +652,13 @@ export class ModernCourseContentController {
             });
             
             // Get detailed section progress
-            const sections = await CourseSection.find({
+            const sectionsResult = await CourseSection.find({
                 campus_id,
                 course_id,
                 is_active: true,
                 is_deleted: false
-            }).sort({ sort_order: 1 });
+            });
+            const sections = sectionsResult.sort((a, b) => a.sort_order - b.sort_order);
             
             const sectionProgress = await Promise.all(
                 sections.map(async (section) => {
