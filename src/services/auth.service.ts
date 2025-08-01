@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 
-import { onForgotPassword } from "@/libs/mailer";
+import { onForgotPassword, sendPasswordResetSuccessEmail } from "@/libs/mailer";
 import { LoginSession } from "@/models/login_session.model";
 import {
     IPasswordResetsData,
@@ -147,6 +147,29 @@ export class AuthService {
             hash,
             updated_at: new Date(),
         });
+
+        // Send password reset success email
+        try {
+            const resetData = {
+                email: user[0].email,
+                reset_date: new Date().toLocaleDateString("en-US", { 
+                    year: "numeric", 
+                    month: "long", 
+                    day: "numeric" 
+                }),
+                reset_time: new Date().toLocaleTimeString("en-US", { 
+                    hour: "2-digit", 
+                    minute: "2-digit",
+                    timeZoneName: "short"
+                }),
+                ip_address: "Unknown", // TODO: Get actual IP from request context
+            };
+            
+            await sendPasswordResetSuccessEmail(user[0].email, resetData);
+        } catch (emailError) {
+            // Log email error but don't fail the password reset
+            console.error("Failed to send password reset success email:", emailError);
+        }
 
         return {
             message: "Password reset successful",

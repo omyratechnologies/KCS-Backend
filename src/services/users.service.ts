@@ -1,9 +1,14 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable unicorn/no-array-method-this-argument */
 import crypto from "node:crypto";
 
 import { FindOptions } from "ottoman";
 
+import infoLogs, { LogTypes } from "@/libs/logger";
+import { sendWelcomeEmail } from "@/libs/mailer";
 import { IUser, User } from "@/models/user.model";
+
+import { CampusService } from "./campuses.service";
 
 export class UserService {
     // Create
@@ -48,7 +53,7 @@ export class UserService {
             .pbkdf2Sync(password, salt, 1000, 64, "sha512")
             .toString("hex");
 
-        return await User.create({
+        const newUser = await User.create({
             user_id: user_id,
             email: email,
             hash: hash,
@@ -65,6 +70,48 @@ export class UserService {
             created_at: new Date(),
             updated_at: new Date(),
         });
+
+        // Send welcome email after successful user creation
+        try {
+            // Get campus name if campus_id is provided
+            let campusName: string | undefined;
+            if (campus_id && campus_id.trim() !== "") {
+                try {
+                    const campus = await CampusService.getCampus(campus_id);
+                    campusName = campus?.name;
+                } catch {
+                    // If campus fetch fails, continue without campus name
+                    infoLogs(
+                        `Could not fetch campus info for campus_id: ${campus_id}`,
+                        LogTypes.ERROR,
+                        "USER:CREATE:CAMPUS_FETCH_FAILED"
+                    );
+                }
+            }
+
+            await sendWelcomeEmail(email, {
+                first_name,
+                last_name,
+                email,
+                user_type,
+                user_id,
+                campus_name: campusName,
+            });
+            infoLogs(
+                `Welcome email sent to new user: ${email}`,
+                LogTypes.LOGS,
+                "USER:CREATE:WELCOME_EMAIL"
+            );
+        } catch (emailError) {
+            // Log the error but don't fail user creation
+            infoLogs(
+                `Failed to send welcome email to ${email}: ${emailError}`,
+                LogTypes.ERROR,
+                "USER:CREATE:WELCOME_EMAIL_FAILED"
+            );
+        }
+
+        return newUser;
     };
 
     // Get All
