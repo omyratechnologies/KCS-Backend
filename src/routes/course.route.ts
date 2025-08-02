@@ -266,7 +266,7 @@ app.put(
     CourseController.updateCourse
 );
 
-app.post(
+app.put(
     "/:id/publish",
     describeRoute({
         operationId: "publishCourse",

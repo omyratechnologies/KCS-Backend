@@ -10,6 +10,53 @@ import { User } from "@/models/user.model";
 
 export class CourseService {
     
+    // ==================== HELPER METHODS ====================
+    
+    /**
+     * Find course by ID - using find instead of findById for better compatibility
+     */
+    private static async findCourseById(course_id: string, campus_id?: string): Promise<ICourseData | null> {
+        try {
+            const query: any = { id: course_id };
+            if (campus_id) {
+                query.campus_id = campus_id;
+            }
+            
+            const result = await Course.find(query);
+            return result.rows && result.rows.length > 0 ? result.rows[0] : null;
+        } catch (error) {
+            console.error(`Error finding course by ID ${course_id}:`, error);
+            return null;
+        }
+    }
+
+    /**
+     * Update course by ID - using find and replace for better compatibility
+     */
+    private static async updateCourseById(course_id: string, updateData: Partial<ICourseData>, campus_id?: string): Promise<ICourseData | null> {
+        try {
+            const query: any = { id: course_id };
+            if (campus_id) {
+                query.campus_id = campus_id;
+            }
+            
+            const existingResult = await Course.find(query);
+            if (!existingResult.rows || existingResult.rows.length === 0) {
+                throw new Error("Course not found for update");
+            }
+            
+            const existing = existingResult.rows[0];
+            const updated = { ...existing, ...updateData };
+            
+            // Use replaceById for Ottoman compatibility
+            const result = await Course.replaceById(course_id, updated);
+            return result;
+        } catch (error) {
+            console.error(`Error updating course by ID ${course_id}:`, error);
+            throw error;
+        }
+    }
+    
     // ==================== COURSE MANAGEMENT ====================
     
     /**
@@ -76,46 +123,60 @@ export class CourseService {
                 sort_order = "desc"
             } = filters;
 
-            // Build query conditions
-            const queryConditions: any = { campus_id };
-
-            if (status) queryConditions.status = status;
-            if (category) queryConditions.category = category;
-            if (difficulty_level) queryConditions.difficulty_level = difficulty_level;
-            if (class_id) queryConditions.class_id = class_id;
-            if (is_featured !== undefined) queryConditions.is_featured = is_featured;
-            if (instructor_id) queryConditions.instructor_ids = { $in: [instructor_id] };
-
+            // Pagination
+            const skip = (page - 1) * limit;
+            
+            // Get all courses for campus first, then apply filters in JavaScript
+            const allCoursesQuery = await Course.find({ campus_id });
+            let courses = allCoursesQuery.rows;
+            
+            // Apply filters in JavaScript for better compatibility
+            if (status) {
+                courses = courses.filter(course => course.status === status);
+            }
+            if (category) {
+                courses = courses.filter(course => course.category === category);
+            }
+            if (difficulty_level) {
+                courses = courses.filter(course => course.difficulty_level === difficulty_level);
+            }
+            if (class_id) {
+                courses = courses.filter(course => course.class_id === class_id);
+            }
+            if (is_featured !== undefined) {
+                courses = courses.filter(course => course.is_featured === is_featured);
+            }
+            if (instructor_id) {
+                courses = courses.filter(course => 
+                    course.instructor_ids && course.instructor_ids.includes(instructor_id)
+                );
+            }
+            
             // Price range filter
             if (price_range) {
                 const [min, max] = price_range.split("-").map(Number);
                 if (!isNaN(min) && !isNaN(max)) {
-                    queryConditions.price = { $gte: min, $lte: max };
+                    courses = courses.filter(course => 
+                        course.price >= min && course.price <= max
+                    );
                 } else if (price_range === "free") {
-                    queryConditions.price = 0;
+                    courses = courses.filter(course => course.price === 0);
                 } else if (price_range === "paid") {
-                    queryConditions.price = { $gt: 0 };
+                    courses = courses.filter(course => course.price > 0);
                 }
             }
-
+            
             // Search functionality
             if (search_query) {
-                queryConditions.$or = [
-                    { title: { $regex: search_query, $options: "i" } },
-                    { description: { $regex: search_query, $options: "i" } },
-                    { tags: { $in: [new RegExp(search_query, "i")] } },
-                ];
+                const searchRegex = new RegExp(search_query, "i");
+                courses = courses.filter(course => 
+                    searchRegex.test(course.title) ||
+                    searchRegex.test(course.description) ||
+                    (course.tags && course.tags.some(tag => searchRegex.test(tag)))
+                );
             }
-
-            // Pagination
-            const skip = (page - 1) * limit;
             
-            // Get courses with pagination
-            const coursesQuery = await Course.find(queryConditions);
-            const totalCourses = coursesQuery.rows.length;
-            
-            // Apply sorting and pagination (simplified for Ottoman)
-            let courses = coursesQuery.rows;
+            const totalCourses = courses.length;
             
             // Sort courses
             courses.sort((a, b) => {
@@ -194,10 +255,13 @@ export class CourseService {
      */
     static async getCourseById(course_id: string, campus_id: string, user_id?: string) {
         try {
-            const courseResult = await Course.findById(course_id);
-            if (!courseResult || courseResult.campus_id !== campus_id) {
+            // Use find with id filter instead of findById for better compatibility with different ID formats
+            const courseResults = await Course.find({ id: course_id, campus_id });
+            if (!courseResults.rows || courseResults.rows.length === 0) {
                 throw new Error("Course not found");
             }
+            
+            const courseResult = courseResults.rows[0];
 
             // Get course sections and lectures
             const sectionsResult = await CourseSection.find({ 
@@ -266,13 +330,19 @@ export class CourseService {
             // Get instructor details
             const instructorDetails = await Promise.all(
                 courseResult.instructor_ids.map(async (instructor_id) => {
-                    const userResult = await User.findById(instructor_id);
-                    return userResult ? {
-                        id: userResult.id,
-                        name: `${userResult.first_name} ${userResult.last_name}`,
-                        email: userResult.email,
-                        profile_image: userResult.meta_data?.profile_image,
-                    } : null;
+                    try {
+                        const userResults = await User.find({ id: instructor_id });
+                        const userResult = userResults.rows && userResults.rows.length > 0 ? userResults.rows[0] : null;
+                        return userResult ? {
+                            id: userResult.id,
+                            name: `${userResult.first_name} ${userResult.last_name}`,
+                            email: userResult.email,
+                            profile_image: userResult.meta_data?.profile_image,
+                        } : null;
+                    } catch (error) {
+                        console.error(`Error finding instructor ${instructor_id}:`, error);
+                        return null;
+                    }
                 })
             );
 
@@ -303,17 +373,17 @@ export class CourseService {
      */
     static async updateCourse(course_id: string, campus_id: string, user_id: string, updateData: Partial<ICourseData>) {
         try {
-            const existingCourse = await Course.findById(course_id);
-            if (!existingCourse || existingCourse.campus_id !== campus_id) {
+            const existingCourse = await this.findCourseById(course_id, campus_id);
+            if (!existingCourse) {
                 throw new Error("Course not found");
             }
 
-            const updatedCourse = await Course.updateById(course_id, {
+            const updatedCourse = await this.updateCourseById(course_id, {
                 ...updateData,
                 last_updated_by: user_id,
                 version: existingCourse.version + 1,
                 updated_at: new Date(),
-            });
+            }, campus_id);
 
             return {
                 success: true,
@@ -330,8 +400,8 @@ export class CourseService {
      */
     static async publishCourse(course_id: string, campus_id: string, user_id: string) {
         try {
-            const course = await Course.findById(course_id);
-            if (!course || course.campus_id !== campus_id) {
+            const course = await this.findCourseById(course_id, campus_id);
+            if (!course) {
                 throw new Error("Course not found");
             }
 
@@ -346,11 +416,11 @@ export class CourseService {
                 throw new Error("Course must have at least one published lecture to be published");
             }
 
-            const updatedCourse = await Course.updateById(course_id, {
+            const updatedCourse = await this.updateCourseById(course_id, {
                 status: "published",
                 last_updated_by: user_id,
                 updated_at: new Date(),
-            });
+            }, campus_id);
 
             return {
                 success: true,
@@ -367,8 +437,8 @@ export class CourseService {
      */
     static async deleteCourse(course_id: string, campus_id: string, user_id: string) {
         try {
-            const course = await Course.findById(course_id);
-            if (!course || course.campus_id !== campus_id) {
+            const course = await this.findCourseById(course_id, campus_id);
+            if (!course) {
                 throw new Error("Course not found");
             }
 
@@ -382,11 +452,11 @@ export class CourseService {
                 throw new Error("Cannot delete course with active enrollments. Archive it instead.");
             }
 
-            await Course.updateById(course_id, {
+            await this.updateCourseById(course_id, {
                 status: "archived",
                 last_updated_by: user_id,
                 updated_at: new Date(),
-            });
+            }, campus_id);
 
             return {
                 success: true,
@@ -405,8 +475,8 @@ export class CourseService {
     static async createCourseSection(course_id: string, campus_id: string, sectionData: Partial<ICourseSectionData>) {
         try {
             // Verify course exists
-            const course = await Course.findById(course_id);
-            if (!course || course.campus_id !== campus_id) {
+            const course = await this.findCourseById(course_id, campus_id);
+            if (!course) {
                 throw new Error("Course not found");
             }
 
@@ -516,8 +586,8 @@ export class CourseService {
     static async enrollInCourse(course_id: string, user_id: string, campus_id: string, enrollmentData: Partial<ICourseEnrollmentData> = {}) {
         try {
             // Check if course exists and is published
-            const course = await Course.findById(course_id);
-            if (!course || course.campus_id !== campus_id) {
+            const course = await this.findCourseById(course_id, campus_id);
+            if (!course) {
                 throw new Error("Course not found");
             }
 
@@ -588,7 +658,7 @@ export class CourseService {
             });
 
             // Update course enrollment count
-            await Course.updateById(course_id, {
+            await this.updateCourseById(course_id, {
                 enrollment_count: course.enrollment_count + 1,
                 updated_at: now,
             });
@@ -640,7 +710,7 @@ export class CourseService {
         // Get course details for each enrollment
         const enrollmentsWithCourses = await Promise.all(
             paginatedEnrollments.map(async (enrollment) => {
-                const course = await Course.findById(enrollment.course_id);
+                const course = await this.findCourseById(enrollment.course_id);
                 
                 // Get total lectures and completed count for progress calculation
                 const lecturesResult = await CourseLecture.find({ 
@@ -838,16 +908,18 @@ export class CourseService {
 
                 // If course is completed, generate certificate if enabled
                 if (progressPercentage >= 100) {
-                    const course = await Course.findById(course_id);
+                    const course = await this.findCourseById(course_id);
                     if (course && course.is_certificate_enabled) {
                         await this.generateCourseCertificate(course_id, user_id, enrollment.rows[0].id);
                     }
 
                     // Update course completion count
-                    await Course.updateById(course_id, {
-                        completion_count: course.completion_count + 1,
-                        updated_at: new Date(),
-                    });
+                    if (course) {
+                        await this.updateCourseById(course_id, {
+                            completion_count: course.completion_count + 1,
+                            updated_at: new Date(),
+                        });
+                    }
                 }
             }
         } catch (error) {
@@ -860,9 +932,13 @@ export class CourseService {
      */
     private static async generateCourseCertificate(course_id: string, user_id: string, enrollment_id: string) {
         try {
-            const course = await Course.findById(course_id);
-            const user = await User.findById(user_id);
-            const enrollment = await CourseEnrollment.findById(enrollment_id);
+            const course = await this.findCourseById(course_id);
+            // Note: User and CourseEnrollment may also need similar fixes if they have ID format issues
+            const userResult = await User.find({ id: user_id });
+            const user = userResult.rows && userResult.rows.length > 0 ? userResult.rows[0] : null;
+            
+            const enrollmentResult = await CourseEnrollment.find({ id: enrollment_id });
+            const enrollment = enrollmentResult.rows && enrollmentResult.rows.length > 0 ? enrollmentResult.rows[0] : null;
 
             if (!course || !user || !enrollment) {
                 throw new Error("Missing required data for certificate generation");
@@ -953,7 +1029,11 @@ export class CourseService {
             }
 
             const enrollment = enrollmentResult.rows[0];
-            const course = await Course.findById(course_id);
+            const course = await this.findCourseById(course_id, campus_id);
+
+            if (!course) {
+                throw new Error("Course not found");
+            }
 
             // Get sections with detailed progress
             const sectionsResult = await CourseSection.find({ 
@@ -1138,7 +1218,7 @@ export class CourseService {
             }
 
             const enrollment = enrollmentResult.rows[0];
-            const course = await Course.findById(course_id);
+            const course = await this.findCourseById(course_id);
 
             // Calculate recommended schedule based on course duration
             let recommendedDailyMinutes = scheduleData.daily_study_minutes;
@@ -1385,8 +1465,8 @@ export class CourseService {
      */
     static async getCourseAnalytics(course_id: string, campus_id: string) {
         try {
-            const course = await Course.findById(course_id);
-            if (!course || course.campus_id !== campus_id) {
+            const course = await this.findCourseById(course_id, campus_id);
+            if (!course) {
                 throw new Error("Course not found");
             }
 

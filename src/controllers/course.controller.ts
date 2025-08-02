@@ -52,7 +52,7 @@ export class CourseController {
                 search_query: query.search as string,
                 instructor_id: query.instructor_id as string,
                 class_id: query.class_id as string,
-                is_featured: query.featured === "true",
+                is_featured: query.featured ? query.featured === "true" : undefined,
                 sort_by: query.sort_by as string || "created_at",
                 sort_order: (query.sort_order as "asc" | "desc") || "desc",
             };

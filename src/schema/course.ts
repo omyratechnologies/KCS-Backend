@@ -190,22 +190,22 @@ export const createCourseLectureRequestBodySchema = z.object({
         video_duration_seconds: z.number().optional(),
         video_thumbnail: z.string().url().optional(),
         video_quality: z.array(z.object({
-            quality: z.string(),
-            url: z.string().url(),
-            file_size_mb: z.number(),
+            quality: z.string().optional(),
+            url: z.union([z.string().url(), z.literal("")]).optional(),
+            file_size_mb: z.number().optional(),
         })).optional(),
         subtitles: z.array(z.object({
-            language: z.string(),
-            url: z.string().url(),
+            language: z.string().optional(),
+            url: z.union([z.string().url(), z.literal("")]).optional(),
         })).optional(),
         
         // Resource content
         resource_files: z.array(z.object({
-            id: z.string(),
-            name: z.string(),
-            type: z.enum(["pdf", "doc", "ppt", "excel", "image", "audio", "other"]),
-            url: z.string().url(),
-            file_size_mb: z.number(),
+            id: z.string().optional(),
+            name: z.string().optional(),
+            type: z.enum(["pdf", "doc", "ppt", "excel", "image", "audio", "other"]).optional(),
+            url: z.union([z.string().url(), z.literal("")]).optional(),
+            file_size_mb: z.number().optional(),
             is_downloadable: z.boolean().default(true),
             description: z.string().optional(),
         })).optional(),
