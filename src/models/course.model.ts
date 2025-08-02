@@ -8,7 +8,7 @@ export interface ICourseData {
     title: string;
     description: string;
     short_description?: string;
-    class_id: string; // Target grade/class
+    class_id?: string; // Target grade/class
     created_by: string; // user_id of creator
     instructor_ids: string[]; // Array of instructor user_ids
     thumbnail?: string;
@@ -79,7 +79,7 @@ const CourseSchema = new Schema({
     title: { type: String, required: true },
     description: { type: String, required: true },
     short_description: { type: String },
-    class_id: { type: String, required: true },
+    class_id: { type: String },
     created_by: { type: String, required: true },
     instructor_ids: { type: [String], default: [] },
     thumbnail: { type: String },
