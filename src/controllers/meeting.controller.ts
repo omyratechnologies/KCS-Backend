@@ -170,11 +170,19 @@ export class MeetingController {
                 },
             });
         } catch (error) {
+            // Handle specific error types
+            if (error && typeof error === 'object' && 'code' in error && error.code === 'DOCUMENT_NOT_FOUND') {
+                return ctx.json({
+                    success: false,
+                    message: error instanceof Error ? error.message : 'Meeting not found',
+                }, 404);
+            }
+            
             console.error('Error fetching meeting:', error);
             return ctx.json({
                 success: false,
-                message: error instanceof Error ? error.message : 'Meeting not found',
-            }, 404);
+                message: error instanceof Error ? error.message : 'Internal server error',
+            }, 500);
         }
     };
 
@@ -222,6 +230,14 @@ export class MeetingController {
                 message: 'Meeting updated successfully',
             });
         } catch (error) {
+            // Handle specific error types
+            if (error && typeof error === 'object' && 'code' in error && error.code === 'DOCUMENT_NOT_FOUND') {
+                return ctx.json({
+                    success: false,
+                    message: error instanceof Error ? error.message : 'Meeting not found',
+                }, 404);
+            }
+            
             console.error('Error updating meeting:', error);
             return ctx.json({
                 success: false,
@@ -270,6 +286,14 @@ export class MeetingController {
                 message: 'Meeting started successfully',
             });
         } catch (error) {
+            // Handle specific error types
+            if (error && typeof error === 'object' && 'code' in error && error.code === 'DOCUMENT_NOT_FOUND') {
+                return ctx.json({
+                    success: false,
+                    message: error instanceof Error ? error.message : 'Meeting not found',
+                }, 404);
+            }
+            
             console.error('Error starting meeting:', error);
             return ctx.json({
                 success: false,
@@ -294,6 +318,14 @@ export class MeetingController {
                 message: 'Meeting ended successfully',
             });
         } catch (error) {
+            // Handle specific error types
+            if (error && typeof error === 'object' && 'code' in error && error.code === 'DOCUMENT_NOT_FOUND') {
+                return ctx.json({
+                    success: false,
+                    message: error instanceof Error ? error.message : 'Meeting not found',
+                }, 404);
+            }
+            
             console.error('Error ending meeting:', error);
             return ctx.json({
                 success: false,
@@ -331,9 +363,17 @@ export class MeetingController {
      */
     public static readonly addParticipants = async (ctx: Context) => {
         try {
-            const { meeting_id } = ctx.req.param();
+            const { id: meeting_id } = ctx.req.param(); // Fix: use 'id' instead of 'meeting_id'
             const user_id = ctx.get("user_id");
             const campus_id = ctx.get("campus_id");
+
+            // Validate meeting_id exists
+            if (!meeting_id) {
+                return ctx.json({
+                    success: false,
+                    message: 'Meeting ID is required',
+                }, 400);
+            }
 
             const {
                 participants,
@@ -432,9 +472,17 @@ export class MeetingController {
      */
     public static readonly removeParticipants = async (ctx: Context) => {
         try {
-            const { meeting_id } = ctx.req.param();
+            const { id: meeting_id } = ctx.req.param(); // Fix: use 'id' instead of 'meeting_id'
             const user_id = ctx.get("user_id");
             const campus_id = ctx.get("campus_id");
+
+            // Validate meeting_id exists
+            if (!meeting_id) {
+                return ctx.json({
+                    success: false,
+                    message: 'Meeting ID is required',
+                }, 400);
+            }
 
             const {
                 participant_ids,
@@ -529,9 +577,17 @@ export class MeetingController {
      */
     public static readonly updateParticipantRole = async (ctx: Context) => {
         try {
-            const { meeting_id, participant_id } = ctx.req.param();
+            const { id: meeting_id, participant_id } = ctx.req.param(); // Fix: use 'id' instead of 'meeting_id'
             const user_id = ctx.get("user_id");
             const campus_id = ctx.get("campus_id");
+
+            // Validate parameters exist
+            if (!meeting_id || !participant_id) {
+                return ctx.json({
+                    success: false,
+                    message: 'Meeting ID and Participant ID are required',
+                }, 400);
+            }
 
             const {
                 new_role,
@@ -632,8 +688,17 @@ export class MeetingController {
      */
     public static readonly searchUsersToAdd = async (ctx: Context) => {
         try {
-            const { meeting_id } = ctx.req.param();
+            const { id: meeting_id } = ctx.req.param(); // Fix: use 'id' instead of 'meeting_id'
             const campus_id = ctx.get("campus_id");
+
+            // Validate meeting_id exists
+            if (!meeting_id) {
+                return ctx.json({
+                    success: false,
+                    message: 'Meeting ID is required',
+                }, 400);
+            }
+
             const {
                 query,
                 exclude_current_participants = true,

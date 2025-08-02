@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";
 import { resolver, validator as zValidator } from "hono-openapi/zod";
 import { z } from "zod";
-import { compress } from "hono/compress";
+// Removed compress import due to CompressionStream compatibility issues
 
 import { MeetingController } from "@/controllers/meeting.controller";
 import { HealthController } from "@/controllers/health.controller";
@@ -23,8 +23,8 @@ import {
  */
 const app = new Hono();
 
-// Apply middleware stack
-app.use("/*", compress()); // Response compression
+// Apply middleware stack (removed compress due to CompressionStream issues)
+// app.use("/*", compress()); // Response compression - DISABLED DUE TO COMPATIBILITY
 app.use("/*", meetingSecurityMiddleware()); // Security headers
 app.use("/*", meetingRateLimit()); // Rate limiting
 app.use("/*", meetingAccessControl()); // Access control

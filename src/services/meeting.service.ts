@@ -11,9 +11,23 @@ import {
     type IMeetingChat,
     type IMeetingRecording
 } from "@/models/meeting.model";
+import { User } from "@/models/user.model";
 import { WebRTCService } from "./webrtc.service";
 import { SocketService } from "./socket.service";
 import { MeetingErrorMonitor } from "@/utils/meeting_error_monitor";
+
+/**
+ * Handle Couchbase DocumentNotFoundError consistently
+ */
+const handleDocumentNotFoundError = (error: any, context: string, additionalContext?: any): Error => {
+    if (error && typeof error === 'object' && 'name' in error && error.name === 'DocumentNotFoundError') {
+        MeetingErrorMonitor.logError(`${context}:documentNotFound`, error as Error, additionalContext);
+        const notFoundError = new Error("document not found");
+        (notFoundError as any).code = 'DOCUMENT_NOT_FOUND';
+        return notFoundError;
+    }
+    return error;
+};
 
 /**
  * 🎪 Enhanced Meeting Service for Real-time Video Conferencing
@@ -205,10 +219,9 @@ export class MeetingService {
                 }
             );
 
+            // Return empty array if no meetings found - this is valid
             if (meetings.rows.length === 0) {
-                const error = new Error("Meetings not found");
-                MeetingErrorMonitor.logError('getAllMeetings:notFound', error, { campus_id, creator_id });
-                throw error;
+                return [];
             }
 
             // Enhance with real-time participant counts
@@ -266,6 +279,12 @@ export class MeetingService {
 
             return meeting;
         } catch (error) {
+            // Handle Couchbase DocumentNotFoundError specifically
+            const handledError = handleDocumentNotFoundError(error, 'getMeetingById', { meeting_id: id });
+            if (handledError !== error) {
+                throw handledError;
+            }
+            
             MeetingErrorMonitor.logError('getMeetingById', error as Error, { meeting_id: id });
             throw error;
         }
@@ -352,6 +371,16 @@ export class MeetingService {
                 throw dbError;
             }
         } catch (error) {
+            // Handle Couchbase DocumentNotFoundError specifically
+            const handledError = handleDocumentNotFoundError(error, 'updateMeeting', { 
+                meeting_id: id, 
+                updated_by: updated_by || 'system',
+                update_fields: Object.keys(data) 
+            });
+            if (handledError !== error) {
+                throw handledError;
+            }
+            
             MeetingErrorMonitor.logError('updateMeeting', error as Error, { 
                 meeting_id: id, 
                 updated_by: updated_by || 'system',
@@ -390,16 +419,23 @@ export class MeetingService {
             }
 
             try {
-                const deletedMeeting = await Meeting.findByIdAndUpdate(
-                    id,
-                    { 
-                        meeting_status: 'deleted',
-                        deleted_by: deleted_by || 'system',
-                        deleted_at: new Date(),
-                        updated_at: new Date(),
-                    },
-                    { new: true }
-                );
+                // Find the meeting first
+                const meeting = await Meeting.findById(id);
+                if (!meeting) {
+                    const error = new Error("Meeting not found for deletion");
+                    MeetingErrorMonitor.logError('deleteMeeting:notFound', error, { meeting_id: id });
+                    throw error;
+                }
+
+                // Update the meeting to mark as deleted
+                const updateData = {
+                    is_deleted: true,
+                    meeting_status: 'cancelled', // Use cancelled as closest status 
+                    updated_at: new Date()
+                };
+
+                // Use Ottoman's updateById method
+                const deletedMeeting = await Meeting.updateById(id, updateData);
 
                 if (!deletedMeeting) {
                     const error = new Error("Meeting not deleted");
@@ -485,6 +521,12 @@ export class MeetingService {
 
             return updatedMeeting;
         } catch (error) {
+            // Handle Couchbase DocumentNotFoundError specifically
+            const handledError = handleDocumentNotFoundError(error, 'startMeeting', { meeting_id: meetingId, started_by });
+            if (handledError !== error) {
+                throw handledError;
+            }
+            
             MeetingErrorMonitor.logError('startMeeting', error as Error, { meeting_id: meetingId, started_by });
             throw error;
         }
@@ -572,6 +614,15 @@ export class MeetingService {
                 throw processError;
             }
         } catch (error) {
+            // Handle Couchbase DocumentNotFoundError specifically
+            const handledError = handleDocumentNotFoundError(error, 'endMeeting', { 
+                meeting_id: meetingId, 
+                ended_by: ended_by || 'system' 
+            });
+            if (handledError !== error) {
+                throw handledError;
+            }
+            
             MeetingErrorMonitor.logError('endMeeting', error as Error, { 
                 meeting_id: meetingId, 
                 ended_by: ended_by || 'system' 
@@ -772,11 +823,28 @@ export class MeetingService {
                         continue; // Skip if already a participant
                     }
 
+                    // Try to find user by email to get actual user_id
+                    let actualUserId = participantData.user_id;
+                    if (!actualUserId && participantData.email) {
+                        try {
+                            const userLookup = await User.find({ email: participantData.email });
+                            if (userLookup.rows.length > 0) {
+                                actualUserId = userLookup.rows[0].id;
+                            }
+                        } catch (userError) {
+                            // Continue without actual user_id - will create as guest
+                            console.log(`Could not find user with email: ${participantData.email}`);
+                        }
+                    }
+
+                    // Generate required IDs for participant
                     const participantId = uuidv4();
+                    
+                    // Create participant with proper defaults for required fields
                     const participant: IMeetingParticipant = {
                         id: participantId,
                         meeting_id: meeting_id,
-                        user_id: participantData.user_id || '',
+                        user_id: actualUserId || `guest_${participantId}`, // Use actual user_id or generate guest ID
                         participant_name: participantData.name || 'Guest',
                         participant_email: participantData.email || undefined,
                         connection_status: 'disconnected',
@@ -797,8 +865,8 @@ export class MeetingService {
                             is_moderator: ['host', 'co_host'].includes(participantData.role || 'attendee'),
                             is_host: participantData.role === 'host',
                         },
-                        peer_connection_id: '',
-                        socket_id: '',
+                        peer_connection_id: `peer_${participantId}`, // Generate valid peer connection ID
+                        socket_id: `socket_${participantId}`, // Generate valid socket ID  
                         ip_address: '',
                         user_agent: '',
                         created_at: new Date(),
@@ -809,14 +877,14 @@ export class MeetingService {
                     const participantDoc = new MeetingParticipant(participant);
                     await participantDoc.save();
 
-                    // Add to meeting's current_participants array
-                    await Meeting.findByIdAndUpdate(
-                        meeting_id,
-                        { 
-                            $push: { current_participants: participantId },
-                            $set: { updated_at: new Date() }
-                        }
-                    );
+                    // Add to meeting's current_participants array - using Ottoman updateById
+                    const currentParticipants = meeting.current_participants || [];
+                    currentParticipants.push(participantId);
+                    
+                    await Meeting.updateById(meeting_id, {
+                        current_participants: currentParticipants,
+                        updated_at: new Date()
+                    });
 
                     addedParticipants.push(participant);
                 } catch (participantError) {
