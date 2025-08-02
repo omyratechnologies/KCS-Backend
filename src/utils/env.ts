@@ -17,6 +17,14 @@ export const env = z.object({
     // AWS SES Configuration
     AWS_SES_EMAIL_FROM: z.string(),
     AWS_SES_EMAIL_FROM_NAME: z.string(),
+    // Nodemailer Configuration
+    EMAIL_PROVIDER: z.enum(["gmail", "outlook", "smtp"]).optional(),
+    EMAIL_USER: z.string().optional(),
+    EMAIL_PASS: z.string().optional(),
+    EMAIL_FROM: z.string().optional(),
+    SMTP_HOST: z.string().optional(),
+    SMTP_PORT: z.string().optional(),
+    SMTP_SECURE: z.string().optional(),
     // R2 Bucket Configuration
     R2_BUCKET: z.string(),
     R2_ENDPOINT: z.string(),
