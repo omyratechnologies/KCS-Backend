@@ -11,7 +11,7 @@ export const createCourseRequestBodySchema = z.object({
     short_description: z.string().max(500).optional().openapi({ 
         example: "Master technical analysis with live chart examples" 
     }),
-    class_id: z.string().openapi({ example: "class_123" }),
+    class_id: z.string().optional().openapi({ example: "class_123" }),
     instructor_ids: z.array(z.string()).default([]).openapi({ 
         example: ["user_123", "user_456"] 
     }),
@@ -68,7 +68,7 @@ export const courseResponseSchema = z.object({
     title: z.string(),
     description: z.string(),
     short_description: z.string().optional(),
-    class_id: z.string(),
+    class_id: z.string().optional(),
     created_by: z.string(),
     instructor_ids: z.array(z.string()),
     thumbnail: z.string().optional(),
