@@ -7,7 +7,10 @@ pipeline {
         
         // Docker registry (if using private registry)
         DOCKER_REGISTRY = 'docker.io'
-        DOCKER_REPO = 'omyratechnologies/kcs-backend'
+        DOCKER_REPO =        stage('🧪 Post-Deployment Tests') {
+            when {
+                branch 'dev'
+            }yratechnologies/kcs-backend'
         
         // Production server details
         PROD_SERVER = '13.204.105.220'
@@ -206,7 +209,7 @@ pipeline {
         
         stage('🚀 Deploy to Production') {
             when {
-                branch 'main'
+                branch 'dev'
             }
             steps {
                 script {
@@ -350,11 +353,19 @@ EOF
         }
         
         always {
-            // Archive artifacts
-            archiveArtifacts artifacts: 'dist/**/*', allowEmptyArchive: true
-            
-            // Clean workspace
-            cleanWs()
+            script {
+                try {
+                    // Archive artifacts if they exist
+                    if (fileExists('dist')) {
+                        archiveArtifacts artifacts: 'dist/**/*', allowEmptyArchive: true
+                    }
+                } catch (Exception e) {
+                    echo "Could not archive artifacts: ${e.getMessage()}"
+                }
+                
+                // Clean workspace
+                cleanWs()
+            }
         }
     }
 }
@@ -380,7 +391,7 @@ def sendTeamsNotification(Map config) {
                 "facts": [
                     ["name": "Project", "value": "KCS Backend"],
                     ["name": "Build", "value": "#${env.BUILD_NUMBER}"],
-                    ["name": "Branch", "value": "${env.BRANCH_NAME ?: 'main'}"],
+                    ["name": "Branch", "value": "${env.BRANCH_NAME ?: 'dev'}"],
                     ["name": "Status", "value": config.status]
                 ],
                 "markdown": true,
