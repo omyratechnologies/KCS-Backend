@@ -1,11 +1,11 @@
 import { Context } from "hono";
 
+import { handlePaymentError } from "@/middlewares/payment_monitoring.middleware";
 import { PaymentService } from "@/services/payment.service";
 import { PaymentAnalyticsService } from "@/services/payment_analytics.service";
-import { PaymentNotificationService } from "@/services/payment_notification.service";
 import PaymentErrorHandler from "@/services/payment_error_handler.service";
+import { PaymentNotificationService } from "@/services/payment_notification.service";
 import PaymentSecurityMonitor from "@/services/payment_security_monitor.service";
-import { handlePaymentError } from "@/middlewares/payment_monitoring.middleware";
 import { SecurePaymentCredentialService } from "@/services/secure_payment_credential.service";
 
 export class PaymentController {
@@ -277,7 +277,7 @@ export class PaymentController {
             } else {
                 const authError = PaymentErrorHandler.createError(
                     "AUTH_002",
-                    { userType: user_type, operation: 'payment_initiation' },
+                    { userType: user_type, operation: "payment_initiation" },
                     "Unauthorized user type for payment initiation"
                 );
                 const errorResponse = PaymentErrorHandler.formatErrorResponse(authError);
@@ -302,7 +302,7 @@ export class PaymentController {
             });
         } catch (error) {
             const errorHandling = PaymentErrorHandler.handleError(error, {
-                operation: 'initiate_payment',
+                operation: "initiate_payment",
                 campus_id: ctx.get("campus_id"),
                 user_id: ctx.get("user_id")
             });
@@ -327,7 +327,7 @@ export class PaymentController {
             if (!transaction_id) {
                 const validationError = PaymentErrorHandler.createError(
                     "VAL_001",
-                    { field: 'transaction_id', operation: 'payment_verification' },
+                    { field: "transaction_id", operation: "payment_verification" },
                     "Transaction ID is required for payment verification"
                 );
                 const errorResponse = PaymentErrorHandler.formatErrorResponse(validationError);
@@ -351,8 +351,8 @@ export class PaymentController {
             });
         } catch (error) {
             const errorHandling = PaymentErrorHandler.handleError(error, {
-                operation: 'verify_payment',
-                transaction_id: ctx.req.param('transaction_id')
+                operation: "verify_payment",
+                transaction_id: ctx.req.param("transaction_id")
             });
             const errorResponse = PaymentErrorHandler.formatErrorResponse(errorHandling.error);
             return ctx.json(errorResponse, errorHandling.httpStatus as any);
@@ -1424,7 +1424,7 @@ export class PaymentController {
 
             // Only admin can view security dashboard
             if (!["Admin", "Super Admin"].includes(user_type)) {
-                const error = PaymentErrorHandler.handleError('AUTH_002');
+                const error = PaymentErrorHandler.handleError("AUTH_002");
                 return ctx.json(error, 403 as any);
             }
 
@@ -1457,8 +1457,8 @@ export class PaymentController {
                 }
             });
         } catch (error) {
-            const errorResponse = PaymentErrorHandler.handleError('SYS_001', {
-                operation: 'security_dashboard',
+            const errorResponse = PaymentErrorHandler.handleError("SYS_001", {
+                operation: "security_dashboard",
                 original_error: error instanceof Error ? error.message : String(error)
             });
             return ctx.json(errorResponse, 500 as any);
@@ -1476,12 +1476,12 @@ export class PaymentController {
 
             // Only admin can view security events
             if (!["Admin", "Super Admin"].includes(user_type)) {
-                const error = PaymentErrorHandler.handleError('AUTH_002');
+                const error = PaymentErrorHandler.handleError("AUTH_002");
                 return ctx.json(error, 403 as any);
             }
 
             if (!event_id) {
-                const error = PaymentErrorHandler.handleError('VAL_001', {
+                const error = PaymentErrorHandler.handleError("VAL_001", {
                     missing_fields: { event_id: true }
                 });
                 return ctx.json(error, 400 as any);
@@ -1490,8 +1490,8 @@ export class PaymentController {
             const eventDetails = PaymentSecurityMonitor.getSecurityEventById(event_id);
             
             if (!eventDetails) {
-                const error = PaymentErrorHandler.handleError('NOT_001', {
-                    resource: 'security_event',
+                const error = PaymentErrorHandler.handleError("NOT_001", {
+                    resource: "security_event",
                     identifier: event_id
                 });
                 return ctx.json(error, 404 as any);
@@ -1499,7 +1499,7 @@ export class PaymentController {
 
             // Check if user has access to this campus's events
             if (eventDetails.campus_id && eventDetails.campus_id !== campus_id) {
-                const error = PaymentErrorHandler.handleError('AUTH_002');
+                const error = PaymentErrorHandler.handleError("AUTH_002");
                 return ctx.json(error, 403 as any);
             }
 
@@ -1508,8 +1508,8 @@ export class PaymentController {
                 data: eventDetails
             });
         } catch (error) {
-            const errorResponse = PaymentErrorHandler.handleError('SYS_001', {
-                operation: 'get_security_event_details',
+            const errorResponse = PaymentErrorHandler.handleError("SYS_001", {
+                operation: "get_security_event_details",
                 event_id: ctx.req.param().event_id,
                 original_error: error instanceof Error ? error.message : String(error)
             });

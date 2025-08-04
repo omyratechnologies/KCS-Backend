@@ -41,7 +41,7 @@ export class MeetingErrorMonitor {
         errorsByType: Record<string, number>;
         recentErrors: Record<string, Date>;
     } {
-        const totalErrors = Array.from(this.errorCounts.values()).reduce((sum, count) => sum + count, 0);
+        const totalErrors = [...this.errorCounts.values()].reduce((sum, count) => sum + count, 0);
         const errorsByType = Object.fromEntries(this.errorCounts);
         const recentErrors = Object.fromEntries(this.lastErrors);
         

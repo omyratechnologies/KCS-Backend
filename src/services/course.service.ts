@@ -1,11 +1,11 @@
 import { nanoid } from "napi-nanoid";
 
 import { Course, ICourseData } from "@/models/course.model";
-import { CourseSection, ICourseSectionData } from "@/models/course_section.model";
-import { CourseLecture, ICourseLectureData } from "@/models/course_lecture.model";
-import { CourseEnrollment, ICourseEnrollmentData } from "@/models/course_enrollment.model";
-import { CourseProgress, ICourseProgressData } from "@/models/course_progress.model";
 import { CourseCertificate, ICourseCertificateData } from "@/models/course_certificate.model";
+import { CourseEnrollment, ICourseEnrollmentData } from "@/models/course_enrollment.model";
+import { CourseLecture, ICourseLectureData } from "@/models/course_lecture.model";
+import { CourseProgress, ICourseProgressData } from "@/models/course_progress.model";
+import { CourseSection, ICourseSectionData } from "@/models/course_section.model";
 import { User } from "@/models/user.model";
 
 export class CourseService {
@@ -49,8 +49,7 @@ export class CourseService {
             const updated = { ...existing, ...updateData };
             
             // Use replaceById for Ottoman compatibility
-            const result = await Course.replaceById(course_id, updated);
-            return result;
+            return await Course.replaceById(course_id, updated);
         } catch (error) {
             console.error(`Error updating course by ID ${course_id}:`, error);
             throw error;
@@ -694,12 +693,23 @@ export class CourseService {
 
             // Filter by progress if specified
             if (progress) {
-                if (progress === "not_started") {
+                switch (progress) {
+                case "not_started": {
                     enrollments = enrollments.filter(e => e.progress_percentage === 0);
-                } else if (progress === "in_progress") {
+                
+                break;
+                }
+                case "in_progress": {
                     enrollments = enrollments.filter(e => e.progress_percentage > 0 && e.progress_percentage < 100);
-                } else if (progress === "completed") {
+                
+                break;
+                }
+                case "completed": {
                     enrollments = enrollments.filter(e => e.progress_percentage === 100);
+                
+                break;
+                }
+                // No default
                 }
             }
 
@@ -944,8 +954,8 @@ export class CourseService {
                 throw new Error("Missing required data for certificate generation");
             }
 
-            const certificateNumber = `CERT-${course.campus_id}-${course_id.substring(0, 8)}-${user_id.substring(0, 8)}-${Date.now()}`;
-            const verificationCode = nanoid().substring(0, 16).toUpperCase();
+            const certificateNumber = `CERT-${course.campus_id}-${course_id.slice(0, 8)}-${user_id.slice(0, 8)}-${Date.now()}`;
+            const verificationCode = nanoid().slice(0, 16).toUpperCase();
 
             const certificate = await CourseCertificate.create({
                 id: nanoid(),
@@ -1082,7 +1092,7 @@ export class CourseService {
                                 is_bookmarked: progress?.interaction_data?.bookmarked || false,
                                 notes_count: progress?.notes?.length || 0,
                                 // Status indicators
-                                status: isCompleted ? "completed" : watchPercentage > 0 ? "in_progress" : "not_started"
+                                status: isCompleted ? "completed" : (watchPercentage > 0 ? "in_progress" : "not_started")
                             };
                         })
                     );
@@ -1224,7 +1234,7 @@ export class CourseService {
             let recommendedDailyMinutes = scheduleData.daily_study_minutes;
             if (!recommendedDailyMinutes && scheduleData.target_completion_date && course) {
                 const daysUntilTarget = Math.ceil(
-                    (new Date(scheduleData.target_completion_date).getTime() - new Date().getTime()) / 
+                    (new Date(scheduleData.target_completion_date).getTime() - Date.now()) / 
                     (1000 * 60 * 60 * 24)
                 );
                 const totalMinutesRemaining = (course.estimated_duration_hours || 0) * 60;
@@ -1278,15 +1288,18 @@ export class CourseService {
             const startDate = new Date();
             
             switch (timeframe) {
-                case "week":
+                case "week": {
                     startDate.setDate(endDate.getDate() - 7);
                     break;
-                case "month":
+                }
+                case "month": {
                     startDate.setMonth(endDate.getMonth() - 1);
                     break;
-                case "year":
+                }
+                case "year": {
                     startDate.setFullYear(endDate.getFullYear() - 1);
                     break;
+                }
             }
 
             // Get user's progress records

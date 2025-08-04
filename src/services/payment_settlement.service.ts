@@ -1,15 +1,14 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 
 import { 
-    IPaymentSettlement,
-    IPaymentGatewayConfiguration,
     IPaymentAuditLog,
+    IPaymentGatewayConfiguration,
     IPaymentSecurityEvent,
-    PaymentSettlement,
-    PaymentGatewayConfiguration,
+    IPaymentSettlement,
     PaymentAuditLog,
-    PaymentSecurityEvent
-} from "@/models/payment_settlement.model";
+    PaymentGatewayConfiguration,
+    PaymentSecurityEvent,
+    PaymentSettlement} from "@/models/payment_settlement.model";
 import { 
     IPaymentTransaction,
     PaymentTransaction 
@@ -77,7 +76,7 @@ export class PaymentSettlementService {
             // 1. Validate gateway configuration
             const gatewayConfig = await this.getGatewayConfiguration(campus_id, gateway_provider);
             if (!gatewayConfig || gatewayConfig.status !== "active") {
-                throw PaymentErrorHandler.createError('GATEWAY_001', { 
+                throw PaymentErrorHandler.createError("GATEWAY_001", { 
                     campus_id, 
                     gateway: gateway_provider 
                 });
@@ -581,7 +580,7 @@ export class PaymentSettlementService {
                 campus_id,
                 event_type: "audit_review",
                 event_category: "security",
-                severity: securityScore < 70 ? "high" : securityScore < 85 ? "medium" : "low",
+                severity: securityScore < 70 ? "high" : (securityScore < 85 ? "medium" : "low"),
                 event_details: {
                     operation_performed: "comprehensive_security_audit",
                     operation_result: "success",
@@ -614,8 +613,8 @@ export class PaymentSettlementService {
             };
 
         } catch (error) {
-            throw PaymentErrorHandler.createError('SYS_001', {
-                operation: 'security_audit',
+            throw PaymentErrorHandler.createError("SYS_001", {
+                operation: "security_audit",
                 original_error: error instanceof Error ? error.message : String(error)
             });
         }
@@ -629,27 +628,32 @@ export class PaymentSettlementService {
         custom_days?: number[]
     ): { start: Date; end: Date } {
         const end = new Date(settlement_date);
-        let start = new Date(settlement_date);
+        const start = new Date(settlement_date);
 
         switch (schedule) {
-            case "daily":
+            case "daily": {
                 start.setDate(start.getDate() - 1);
                 break;
-            case "weekly":
+            }
+            case "weekly": {
                 start.setDate(start.getDate() - 7);
                 break;
-            case "monthly":
+            }
+            case "monthly": {
                 start.setMonth(start.getMonth() - 1);
                 break;
-            case "custom":
+            }
+            case "custom": {
                 if (custom_days && custom_days.length > 0) {
                     start.setDate(start.getDate() - Math.max(...custom_days));
                 } else {
                     start.setDate(start.getDate() - 7); // Default to weekly
                 }
                 break;
-            default:
-                start.setDate(start.getDate() - 1); // Default to daily
+            }
+            default: {
+                start.setDate(start.getDate() - 1);
+            } // Default to daily
         }
 
         return { start, end };
@@ -808,7 +812,7 @@ export class PaymentSettlementService {
             net_amount: params.calculations.net_settlement_amount
         });
         
-        return crypto.createHash('sha256').update(hashData).digest('hex');
+        return crypto.createHash("sha256").update(hashData).digest("hex");
     }
 
     private static async processGatewaySettlement(

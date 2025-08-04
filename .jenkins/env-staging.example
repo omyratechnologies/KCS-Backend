@@ -1,0 +1,114 @@
+# 🚀 Staging Environment Configuration for KCS Backend
+# Copy this file to .env.staging and update the values
+
+# Application Environment
+NODE_ENV=staging
+PORT=4500
+SOCKET_PORT=4501
+
+# Database Configuration
+COUCHBASE_CONNECTION_STRING=couchbase://staging-database:11210
+COUCHBASE_USERNAME=staging_user
+COUCHBASE_PASSWORD=your_staging_password
+COUCHBASE_BUCKET=kcs_backend_staging
+OTTOMAN_IMPLICIT_REMOVE=true
+
+# Redis Configuration (Upstash or self-hosted)
+REDIS_URI=rediss://staging-redis:6380
+REDIS_PASSWORD=your_redis_password
+
+# JWT Configuration
+JWT_SECRET=your_staging_jwt_secret_key_here_make_it_very_long
+JWT_EXPIRES_IN=7d
+JWT_REFRESH_EXPIRES_IN=30d
+
+# Email Configuration (SendGrid)
+SENDGRID_API_KEY=SG.your_sendgrid_api_key_here
+FROM_EMAIL=noreply@staging.letscatchup-kcs.com
+FROM_NAME=KCS Staging
+
+# AWS SES Configuration (Alternative to SendGrid)
+AWS_SES_REGION=us-east-1
+AWS_SES_ACCESS_KEY=your_aws_access_key
+AWS_SES_SECRET_KEY=your_aws_secret_key
+
+# AWS S3 Configuration
+S3_BUCKET_NAME=kcs-staging-assets
+S3_REGION=us-east-1
+S3_ACCESS_KEY=your_s3_access_key
+S3_SECRET_KEY=your_s3_secret_key
+
+# MediaSoup Configuration for Video Conferencing
+MEDIASOUP_WORKERS=2
+MEDIASOUP_LISTEN_IP=0.0.0.0
+MEDIASOUP_ANNOUNCED_IP=staging.letscatchup-kcs.com
+
+# API Rate Limiting
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=1000
+
+# CORS Configuration
+CORS_ORIGIN=https://staging.letscatchup-kcs.com,https://staging-admin.letscatchup-kcs.com
+
+# Logging Configuration
+LOG_LEVEL=debug
+LOG_FILE=logs/kcs-backend-staging.log
+
+# Health Check Configuration
+HEALTH_CHECK_TIMEOUT=30000
+
+# Build Information (automatically set by CI/CD)
+BUILD_NUMBER=${BUILD_NUMBER}
+BUILD_TIMESTAMP=${BUILD_TIMESTAMP}
+GIT_COMMIT=${GIT_COMMIT}
+
+# Monitoring and Alerting
+SENTRY_DSN=https://your_sentry_dsn_for_staging@sentry.io/project_id
+NEW_RELIC_LICENSE_KEY=your_new_relic_license_key
+
+# Feature Flags
+ENABLE_SWAGGER_UI=true
+ENABLE_API_DOCS=true
+ENABLE_DEBUG_LOGS=true
+ENABLE_PERFORMANCE_MONITORING=true
+
+# Security Configuration
+BCRYPT_ROUNDS=12
+SESSION_SECRET=your_session_secret_for_staging
+CSRF_SECRET=your_csrf_secret_for_staging
+
+# External API Keys
+PAYMENT_GATEWAY_API_KEY=your_staging_payment_api_key
+SMS_PROVIDER_API_KEY=your_staging_sms_api_key
+ANALYTICS_API_KEY=your_staging_analytics_api_key
+
+# Database Migration
+RUN_MIGRATIONS=true
+SEED_DATA=true
+
+# SSL Configuration
+SSL_CERT_PATH=/etc/ssl/certs/staging.crt
+SSL_KEY_PATH=/etc/ssl/private/staging.key
+
+# Backup Configuration
+BACKUP_ENABLED=true
+BACKUP_SCHEDULE=0 2 * * *
+BACKUP_S3_BUCKET=kcs-staging-backups
+
+# Cache Configuration
+CACHE_TTL=3600
+CACHE_MAX_SIZE=100mb
+
+# File Upload Limits
+MAX_FILE_SIZE=10mb
+ALLOWED_FILE_TYPES=jpg,jpeg,png,pdf,doc,docx,xls,xlsx,ppt,pptx
+
+# Webhook URLs
+TEAMS_WEBHOOK_URL=https://outlook.office.com/webhook/your_staging_teams_webhook
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/your_staging_slack_webhook
+
+# Third-party Integrations
+GOOGLE_CLIENT_ID=your_google_client_id_staging
+GOOGLE_CLIENT_SECRET=your_google_client_secret_staging
+MICROSOFT_CLIENT_ID=your_microsoft_client_id_staging
+MICROSOFT_CLIENT_SECRET=your_microsoft_client_secret_staging

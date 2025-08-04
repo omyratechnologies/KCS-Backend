@@ -1,10 +1,11 @@
-import { createServer } from 'http';
+import { createServer } from "node:http";
+
 import { app } from "@/app";
 import { Cache } from "@/libs/cache/redis";
 import { initDB } from "@/libs/db";
 import { UploadFactory } from "@/libs/s3/upload.factory";
-import { WebRTCService } from "@/services/webrtc.service";
 import { SocketService } from "@/services/socket.service";
+import { WebRTCService } from "@/services/webrtc.service";
 import { config } from "@/utils/env";
 
 // Create HTTP server for Socket.IO integration
@@ -47,7 +48,7 @@ async function initializeServices() {
         console.log("✅ Socket.IO service initialized");
         
         console.log("🎉 All services initialized successfully");
-        console.log(`🎪 Real-time video conferencing system ready to support millions of users!`);
+        console.log("🎪 Real-time video conferencing system ready to support millions of users!");
     } catch (error) {
         console.error("❌ Failed to initialize services:", error);
         process.exit(1);

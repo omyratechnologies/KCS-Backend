@@ -43,8 +43,8 @@ export class CourseController {
             
             const query = ctx.req.query();
             const filters = {
-                page: query.page ? parseInt(query.page as string) : 1,
-                limit: query.limit ? parseInt(query.limit as string) : 20,
+                page: query.page ? Number.parseInt(query.page as string) : 1,
+                limit: query.limit ? Number.parseInt(query.limit as string) : 20,
                 status: query.status as string,
                 category: query.category as string,
                 difficulty_level: query.difficulty_level as string,
@@ -487,8 +487,8 @@ export class CourseController {
             const filters = {
                 status: query.status as string,
                 progress: query.progress as string,
-                page: query.page ? parseInt(query.page as string) : 1,
-                limit: query.limit ? parseInt(query.limit as string) : 20,
+                page: query.page ? Number.parseInt(query.page as string) : 1,
+                limit: query.limit ? Number.parseInt(query.limit as string) : 20,
             };
 
             const result = await CourseService.getUserEnrolledCourses(user_id, campus_id, filters);

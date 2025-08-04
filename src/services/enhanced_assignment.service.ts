@@ -436,7 +436,7 @@ export class EnhancedAssignmentService {
                     if (unifiedAssignment) {
                         unifiedAssignments.push(unifiedAssignment);
                     }
-                } catch (error) {
+                } catch {
                     // Silently skip problematic assignments instead of logging errors
                 }
             }
@@ -453,7 +453,7 @@ export class EnhancedAssignmentService {
                     if (unifiedAssignment) {
                         unifiedAssignments.push(unifiedAssignment);
                     }
-                } catch (error) {
+                } catch {
                     // Silently skip problematic assignments instead of logging errors
                 }
             }
@@ -522,7 +522,7 @@ export class EnhancedAssignmentService {
                     if (unifiedAssignment) {
                         unifiedAssignments.push(unifiedAssignment);
                     }
-                } catch (error) {
+                } catch {
                     // Silently skip problematic course assignments instead of logging errors
                 }
             }
@@ -539,7 +539,7 @@ export class EnhancedAssignmentService {
                     if (unifiedAssignment) {
                         unifiedAssignments.push(unifiedAssignment);
                     }
-                } catch (error) {
+                } catch {
                     // Silently skip problematic enhanced course assignments instead of logging errors
                 }
             }

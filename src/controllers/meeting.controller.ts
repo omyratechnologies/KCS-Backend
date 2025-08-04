@@ -2,8 +2,8 @@ import { Context } from "hono";
 
 import { IMeetingData } from "@/models/meeting.model";
 import { MeetingService } from "@/services/meeting.service";
-import { WebRTCService } from "@/services/webrtc.service";
 import { SocketService } from "@/services/socket.service";
+import { WebRTCService } from "@/services/webrtc.service";
 import { MeetingErrorMonitor } from "@/utils/meeting_error_monitor";
 
 /**
@@ -28,7 +28,7 @@ export class MeetingController {
             if (!campus_id || !creator_id) {
                 return ctx.json({
                     success: false,
-                    message: 'Authentication required',
+                    message: "Authentication required",
                 }, 401);
             }
 
@@ -41,7 +41,7 @@ export class MeetingController {
                 meeting_start_time,
                 participants,
                 // Enhanced options
-                meeting_type = 'scheduled',
+                meeting_type = "scheduled",
                 max_participants = 100,
                 meeting_password,
                 waiting_room_enabled = false,
@@ -56,7 +56,7 @@ export class MeetingController {
                 meeting_end_time: string;
                 meeting_location: string;
                 meeting_meta_data: object;
-                meeting_type?: 'scheduled' | 'instant' | 'recurring';
+                meeting_type?: "scheduled" | "instant" | "recurring";
                 max_participants?: number;
                 meeting_password?: string;
                 waiting_room_enabled?: boolean;
@@ -76,7 +76,7 @@ export class MeetingController {
                     record_video?: boolean;
                     record_audio?: boolean;
                     record_chat?: boolean;
-                    storage_location?: 'local' | 'cloud';
+                    storage_location?: "local" | "cloud";
                     retention_days?: number;
                 };
             } = await ctx.req.json();
@@ -105,13 +105,13 @@ export class MeetingController {
             return ctx.json({
                 success: true,
                 data: meeting,
-                message: `${meeting_type === 'instant' ? 'Instant' : 'Scheduled'} meeting created successfully`,
+                message: `${meeting_type === "instant" ? "Instant" : "Scheduled"} meeting created successfully`,
             });
         } catch (error) {
-            console.error('Error creating meeting:', error);
+            console.error("Error creating meeting:", error);
             return ctx.json({
                 success: false,
-                message: error instanceof Error ? error.message : 'Failed to create meeting',
+                message: error instanceof Error ? error.message : "Failed to create meeting",
             }, 500);
         }
     };
@@ -135,10 +135,10 @@ export class MeetingController {
                 count: meetings.length,
             });
         } catch (error) {
-            console.error('Error fetching meetings:', error);
+            console.error("Error fetching meetings:", error);
             return ctx.json({
                 success: false,
-                message: error instanceof Error ? error.message : 'Failed to fetch meetings',
+                message: error instanceof Error ? error.message : "Failed to fetch meetings",
             }, 500);
         }
     };
@@ -154,11 +154,11 @@ export class MeetingController {
 
             // Add real-time statistics if meeting is live
             let liveStats: any = null;
-            if (meeting.meeting_status === 'live') {
+            if (meeting.meeting_status === "live") {
                 try {
                     liveStats = await WebRTCService.getMeetingStats(meeting_id);
                 } catch (error) {
-                    console.warn('Failed to get live stats:', error);
+                    console.warn("Failed to get live stats:", error);
                 }
             }
 
@@ -171,17 +171,17 @@ export class MeetingController {
             });
         } catch (error) {
             // Handle specific error types
-            if (error && typeof error === 'object' && 'code' in error && error.code === 'DOCUMENT_NOT_FOUND') {
+            if (error && typeof error === "object" && "code" in error && error.code === "DOCUMENT_NOT_FOUND") {
                 return ctx.json({
                     success: false,
-                    message: error instanceof Error ? error.message : 'Meeting not found',
+                    message: error instanceof Error ? error.message : "Meeting not found",
                 }, 404);
             }
             
-            console.error('Error fetching meeting:', error);
+            console.error("Error fetching meeting:", error);
             return ctx.json({
                 success: false,
-                message: error instanceof Error ? error.message : 'Internal server error',
+                message: error instanceof Error ? error.message : "Internal server error",
             }, 500);
         }
     };
@@ -201,10 +201,10 @@ export class MeetingController {
                 count: meetings.length,
             });
         } catch (error) {
-            console.error('Error fetching participant meetings:', error);
+            console.error("Error fetching participant meetings:", error);
             return ctx.json({
                 success: false,
-                message: error instanceof Error ? error.message : 'No meetings found',
+                message: error instanceof Error ? error.message : "No meetings found",
             }, 404);
         }
     };
@@ -227,21 +227,21 @@ export class MeetingController {
             return ctx.json({
                 success: true,
                 data: meeting,
-                message: 'Meeting updated successfully',
+                message: "Meeting updated successfully",
             });
         } catch (error) {
             // Handle specific error types
-            if (error && typeof error === 'object' && 'code' in error && error.code === 'DOCUMENT_NOT_FOUND') {
+            if (error && typeof error === "object" && "code" in error && error.code === "DOCUMENT_NOT_FOUND") {
                 return ctx.json({
                     success: false,
-                    message: error instanceof Error ? error.message : 'Meeting not found',
+                    message: error instanceof Error ? error.message : "Meeting not found",
                 }, 404);
             }
             
-            console.error('Error updating meeting:', error);
+            console.error("Error updating meeting:", error);
             return ctx.json({
                 success: false,
-                message: error instanceof Error ? error.message : 'Failed to update meeting',
+                message: error instanceof Error ? error.message : "Failed to update meeting",
             }, 500);
         }
     };
@@ -259,13 +259,13 @@ export class MeetingController {
             return ctx.json({
                 success: true,
                 data: meeting,
-                message: 'Meeting deleted successfully',
+                message: "Meeting deleted successfully",
             });
         } catch (error) {
-            console.error('Error deleting meeting:', error);
+            console.error("Error deleting meeting:", error);
             return ctx.json({
                 success: false,
-                message: error instanceof Error ? error.message : 'Failed to delete meeting',
+                message: error instanceof Error ? error.message : "Failed to delete meeting",
             }, 500);
         }
     };
@@ -283,21 +283,21 @@ export class MeetingController {
             return ctx.json({
                 success: true,
                 data: meeting,
-                message: 'Meeting started successfully',
+                message: "Meeting started successfully",
             });
         } catch (error) {
             // Handle specific error types
-            if (error && typeof error === 'object' && 'code' in error && error.code === 'DOCUMENT_NOT_FOUND') {
+            if (error && typeof error === "object" && "code" in error && error.code === "DOCUMENT_NOT_FOUND") {
                 return ctx.json({
                     success: false,
-                    message: error instanceof Error ? error.message : 'Meeting not found',
+                    message: error instanceof Error ? error.message : "Meeting not found",
                 }, 404);
             }
             
-            console.error('Error starting meeting:', error);
+            console.error("Error starting meeting:", error);
             return ctx.json({
                 success: false,
-                message: error instanceof Error ? error.message : 'Failed to start meeting',
+                message: error instanceof Error ? error.message : "Failed to start meeting",
             }, 500);
         }
     };
@@ -315,21 +315,21 @@ export class MeetingController {
             return ctx.json({
                 success: true,
                 data: meeting,
-                message: 'Meeting ended successfully',
+                message: "Meeting ended successfully",
             });
         } catch (error) {
             // Handle specific error types
-            if (error && typeof error === 'object' && 'code' in error && error.code === 'DOCUMENT_NOT_FOUND') {
+            if (error && typeof error === "object" && "code" in error && error.code === "DOCUMENT_NOT_FOUND") {
                 return ctx.json({
                     success: false,
-                    message: error instanceof Error ? error.message : 'Meeting not found',
+                    message: error instanceof Error ? error.message : "Meeting not found",
                 }, 404);
             }
             
-            console.error('Error ending meeting:', error);
+            console.error("Error ending meeting:", error);
             return ctx.json({
                 success: false,
-                message: error instanceof Error ? error.message : 'Failed to end meeting',
+                message: error instanceof Error ? error.message : "Failed to end meeting",
             }, 500);
         }
     };
@@ -349,10 +349,10 @@ export class MeetingController {
                 count: participants.length,
             });
         } catch (error) {
-            console.error('Error fetching participants:', error);
+            console.error("Error fetching participants:", error);
             return ctx.json({
                 success: false,
-                message: 'Failed to fetch participants',
+                message: "Failed to fetch participants",
             }, 500);
         }
     };
@@ -371,7 +371,7 @@ export class MeetingController {
             if (!meeting_id) {
                 return ctx.json({
                     success: false,
-                    message: 'Meeting ID is required',
+                    message: "Meeting ID is required",
                 }, 400);
             }
 
@@ -379,7 +379,7 @@ export class MeetingController {
                 participants,
                 send_invitation = true,
                 invitation_message,
-                participant_role = 'attendee',
+                participant_role = "attendee",
                 notify_existing_participants = true,
             }: {
                 participants: Array<{
@@ -387,11 +387,11 @@ export class MeetingController {
                     email?: string;
                     name?: string;
                     phone?: string;
-                    role?: 'host' | 'co_host' | 'presenter' | 'attendee';
+                    role?: "host" | "co_host" | "presenter" | "attendee";
                 }>;
                 send_invitation?: boolean;
                 invitation_message?: string;
-                participant_role?: 'host' | 'co_host' | 'presenter' | 'attendee';
+                participant_role?: "host" | "co_host" | "presenter" | "attendee";
                 notify_existing_participants?: boolean;
             } = await ctx.req.json();
 
@@ -401,7 +401,7 @@ export class MeetingController {
             if (meeting.campus_id !== campus_id) {
                 return ctx.json({
                     success: false,
-                    message: 'Access denied',
+                    message: "Access denied",
                 }, 403);
             }
 
@@ -415,7 +415,7 @@ export class MeetingController {
             if (!userParticipant && meeting.creator_id !== user_id) {
                 return ctx.json({
                     success: false,
-                    message: 'Only hosts and co-hosts can add participants',
+                    message: "Only hosts and co-hosts can add participants",
                 }, 403);
             }
 
@@ -431,9 +431,9 @@ export class MeetingController {
             );
 
             // Send notifications if meeting is live
-            if (meeting.meeting_status === 'live' && notify_existing_participants) {
+            if (meeting.meeting_status === "live" && notify_existing_participants) {
                 await SocketService.notifyMeetingParticipants(meeting_id, {
-                    type: 'participants_added',
+                    type: "participants_added",
                     data: {
                         new_participants: addedParticipants,
                         added_by: user_id,
@@ -459,10 +459,10 @@ export class MeetingController {
                 message: `${addedParticipants.length} participant(s) added successfully`,
             });
         } catch (error) {
-            console.error('Error adding participants:', error);
+            console.error("Error adding participants:", error);
             return ctx.json({
                 success: false,
-                message: error instanceof Error ? error.message : 'Failed to add participants',
+                message: error instanceof Error ? error.message : "Failed to add participants",
             }, 500);
         }
     };
@@ -480,7 +480,7 @@ export class MeetingController {
             if (!meeting_id) {
                 return ctx.json({
                     success: false,
-                    message: 'Meeting ID is required',
+                    message: "Meeting ID is required",
                 }, 400);
             }
 
@@ -488,7 +488,7 @@ export class MeetingController {
                 participant_ids,
                 notify_removed_participants = true,
                 notify_existing_participants = true,
-                reason = 'Removed by host',
+                reason = "Removed by host",
             }: {
                 participant_ids: string[];
                 notify_removed_participants?: boolean;
@@ -502,7 +502,7 @@ export class MeetingController {
             if (meeting.campus_id !== campus_id) {
                 return ctx.json({
                     success: false,
-                    message: 'Access denied',
+                    message: "Access denied",
                 }, 403);
             }
 
@@ -514,7 +514,7 @@ export class MeetingController {
             if (!userParticipant && meeting.creator_id !== user_id) {
                 return ctx.json({
                     success: false,
-                    message: 'Only hosts and co-hosts can remove participants',
+                    message: "Only hosts and co-hosts can remove participants",
                 }, 403);
             }
 
@@ -532,7 +532,7 @@ export class MeetingController {
             // Notify removed participants
             if (notify_removed_participants) {
                 await SocketService.notifySpecificParticipants(participant_ids, {
-                    type: 'removed_from_meeting',
+                    type: "removed_from_meeting",
                     data: {
                         meeting_id,
                         meeting_name: meeting.meeting_name,
@@ -543,9 +543,9 @@ export class MeetingController {
             }
 
             // Notify existing participants
-            if (meeting.meeting_status === 'live' && notify_existing_participants) {
+            if (meeting.meeting_status === "live" && notify_existing_participants) {
                 await SocketService.notifyMeetingParticipants(meeting_id, {
-                    type: 'participants_removed',
+                    type: "participants_removed",
                     data: {
                         removed_participants: removedParticipants,
                         removed_by: user_id,
@@ -564,10 +564,10 @@ export class MeetingController {
                 message: `${removedParticipants.length} participant(s) removed successfully`,
             });
         } catch (error) {
-            console.error('Error removing participants:', error);
+            console.error("Error removing participants:", error);
             return ctx.json({
                 success: false,
-                message: error instanceof Error ? error.message : 'Failed to remove participants',
+                message: error instanceof Error ? error.message : "Failed to remove participants",
             }, 500);
         }
     };
@@ -585,7 +585,7 @@ export class MeetingController {
             if (!meeting_id || !participant_id) {
                 return ctx.json({
                     success: false,
-                    message: 'Meeting ID and Participant ID are required',
+                    message: "Meeting ID and Participant ID are required",
                 }, 400);
             }
 
@@ -595,7 +595,7 @@ export class MeetingController {
                 notify_participant = true,
                 notify_others = true,
             }: {
-                new_role: 'host' | 'co_host' | 'presenter' | 'attendee';
+                new_role: "host" | "co_host" | "presenter" | "attendee";
                 permissions?: {
                     can_share_screen?: boolean;
                     can_unmute_others?: boolean;
@@ -613,7 +613,7 @@ export class MeetingController {
             if (meeting.campus_id !== campus_id) {
                 return ctx.json({
                     success: false,
-                    message: 'Access denied',
+                    message: "Access denied",
                 }, 403);
             }
 
@@ -625,7 +625,7 @@ export class MeetingController {
             if (!userParticipant && meeting.creator_id !== user_id) {
                 return ctx.json({
                     success: false,
-                    message: 'Only meeting hosts can change participant roles',
+                    message: "Only meeting hosts can change participant roles",
                 }, 403);
             }
 
@@ -644,7 +644,7 @@ export class MeetingController {
             // Notify the participant
             if (notify_participant) {
                 await SocketService.notifySpecificParticipants([participant_id], {
-                    type: 'role_updated',
+                    type: "role_updated",
                     data: {
                         meeting_id,
                         new_role,
@@ -656,9 +656,9 @@ export class MeetingController {
             }
 
             // Notify other participants
-            if (meeting.meeting_status === 'live' && notify_others) {
+            if (meeting.meeting_status === "live" && notify_others) {
                 await SocketService.notifyMeetingParticipants(meeting_id, {
-                    type: 'participant_role_changed',
+                    type: "participant_role_changed",
                     data: {
                         participant_id,
                         participant_name: updatedParticipant.participant_name,
@@ -675,10 +675,10 @@ export class MeetingController {
                 message: `Participant role updated to ${new_role}`,
             });
         } catch (error) {
-            console.error('Error updating participant role:', error);
+            console.error("Error updating participant role:", error);
             return ctx.json({
                 success: false,
-                message: error instanceof Error ? error.message : 'Failed to update participant role',
+                message: error instanceof Error ? error.message : "Failed to update participant role",
             }, 500);
         }
     };
@@ -695,7 +695,7 @@ export class MeetingController {
             if (!meeting_id) {
                 return ctx.json({
                     success: false,
-                    message: 'Meeting ID is required',
+                    message: "Meeting ID is required",
                 }, 400);
             }
 
@@ -703,7 +703,7 @@ export class MeetingController {
                 query,
                 exclude_current_participants = true,
                 limit = 20,
-                user_types = ['teachers', 'students', 'staff'],
+                user_types = ["teachers", "students", "staff"],
             }: {
                 query: string;
                 exclude_current_participants?: boolean;
@@ -745,10 +745,10 @@ export class MeetingController {
                 count: users.length,
             });
         } catch (error) {
-            console.error('Error searching users:', error);
+            console.error("Error searching users:", error);
             return ctx.json({
                 success: false,
-                message: 'Failed to search users',
+                message: "Failed to search users",
             }, 500);
         }
     };
@@ -759,7 +759,7 @@ export class MeetingController {
     public static readonly getMeetingChat = async (ctx: Context) => {
         try {
             const { meeting_id } = ctx.req.param();
-            const limit = Number(ctx.req.query('limit')) || 100;
+            const limit = Number(ctx.req.query("limit")) || 100;
 
             const chatHistory = await MeetingService.getMeetingChat(meeting_id, limit);
 
@@ -769,10 +769,10 @@ export class MeetingController {
                 count: chatHistory.length,
             });
         } catch (error) {
-            console.error('Error fetching chat history:', error);
+            console.error("Error fetching chat history:", error);
             return ctx.json({
                 success: false,
-                message: 'Failed to fetch chat history',
+                message: "Failed to fetch chat history",
             }, 500);
         }
     };
@@ -792,10 +792,10 @@ export class MeetingController {
                 count: recordings.length,
             });
         } catch (error) {
-            console.error('Error fetching recordings:', error);
+            console.error("Error fetching recordings:", error);
             return ctx.json({
                 success: false,
-                message: 'Failed to fetch recordings',
+                message: "Failed to fetch recordings",
             }, 500);
         }
     };
@@ -814,10 +814,10 @@ export class MeetingController {
                 data: analytics,
             });
         } catch (error) {
-            console.error('Error fetching analytics:', error);
+            console.error("Error fetching analytics:", error);
             return ctx.json({
                 success: false,
-                message: 'Failed to fetch analytics',
+                message: "Failed to fetch analytics",
             }, 500);
         }
     };
@@ -853,10 +853,10 @@ export class MeetingController {
                 },
             });
         } catch (error) {
-            console.error('Error fetching WebRTC config:', error);
+            console.error("Error fetching WebRTC config:", error);
             return ctx.json({
                 success: false,
-                message: 'Failed to get WebRTC configuration',
+                message: "Failed to get WebRTC configuration",
             }, 500);
         }
     };
@@ -875,10 +875,10 @@ export class MeetingController {
                 data: stats,
             });
         } catch (error) {
-            console.error('Error fetching live stats:', error);
+            console.error("Error fetching live stats:", error);
             return ctx.json({
                 success: false,
-                message: 'Failed to fetch live statistics',
+                message: "Failed to fetch live statistics",
             }, 500);
         }
     };
@@ -895,7 +895,7 @@ export class MeetingController {
             if (!["Admin", "Super Admin"].includes(user_type)) {
                 return ctx.json({
                     success: false,
-                    message: 'Access denied',
+                    message: "Access denied",
                 }, 403);
             }
 
@@ -908,10 +908,10 @@ export class MeetingController {
                 data: stats,
             });
         } catch (error) {
-            console.error('Error fetching system stats:', error);
+            console.error("Error fetching system stats:", error);
             return ctx.json({
                 success: false,
-                message: 'Failed to fetch system statistics',
+                message: "Failed to fetch system statistics",
             }, 500);
         }
     };
@@ -924,8 +924,8 @@ export class MeetingController {
             const webrtcHealth = WebRTCService.getHealthStatus();
             const socketStats = SocketService.getStats();
 
-            const overallStatus = webrtcHealth.status === 'healthy' && socketStats.connectedUsers >= 0
-                ? 'healthy'
+            const overallStatus = webrtcHealth.status === "healthy" && socketStats.connectedUsers >= 0
+                ? "healthy"
                 : webrtcHealth.status;
 
             return ctx.json({
@@ -938,11 +938,11 @@ export class MeetingController {
                 },
             });
         } catch (error) {
-            console.error('Error in health check:', error);
+            console.error("Error in health check:", error);
             return ctx.json({
                 success: false,
-                status: 'unhealthy',
-                message: 'Health check failed',
+                status: "unhealthy",
+                message: "Health check failed",
             }, 500);
         }
     };
@@ -963,7 +963,7 @@ export class MeetingController {
             if (meeting.campus_id !== campus_id) {
                 return ctx.json({
                     success: false,
-                    message: 'Access denied',
+                    message: "Access denied",
                 }, 403);
             }
 
@@ -971,15 +971,15 @@ export class MeetingController {
             if (meeting.meeting_password && meeting.meeting_password !== meeting_password) {
                 return ctx.json({
                     success: false,
-                    message: 'Invalid meeting password',
+                    message: "Invalid meeting password",
                 }, 401);
             }
 
             // Check if meeting is active
-            if (meeting.meeting_status === 'ended' || meeting.meeting_status === 'cancelled') {
+            if (meeting.meeting_status === "ended" || meeting.meeting_status === "cancelled") {
                 return ctx.json({
                     success: false,
-                    message: 'Meeting has ended',
+                    message: "Meeting has ended",
                 }, 410);
             }
 
@@ -1001,10 +1001,10 @@ export class MeetingController {
                 },
             });
         } catch (error) {
-            console.error('Error joining meeting:', error);
+            console.error("Error joining meeting:", error);
             return ctx.json({
                 success: false,
-                message: 'Failed to join meeting',
+                message: "Failed to join meeting",
             }, 500);
         }
     };

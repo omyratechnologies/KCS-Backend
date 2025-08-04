@@ -7,6 +7,27 @@ yarn-error.log*
 lerna-debug.log*
 .pnpm-debug.log*
 
+# Deployment sensitive files
+deployment/terraform/terraform.tfvars.local
+deployment/terraform/*.tfplan
+deployment/terraform/.terraform/
+deployment/ansible/vault.yml
+.env.local
+
+# Terraform sensitive files
+terraform/terraform.tfvars.dev
+terraform/terraform.tfvars.uat
+terraform/terraform.tfvars.prod
+terraform/*.tfplan
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+
+# SSH Keys
+*.pem
+*.key
+
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 

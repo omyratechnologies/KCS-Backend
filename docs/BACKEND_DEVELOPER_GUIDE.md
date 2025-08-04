@@ -210,7 +210,7 @@ JWT_SECRET=your_super_secret_jwt_key
 # AWS Configuration
 AWS_ACCESS_KEY_ID=your_aws_access_key
 AWS_ACCESS_SECRET_KEY=your_aws_secret_key
-AWS_REGION=us-east-1
+AWS_REGION=ap-south-1
 
 # AWS SES Configuration
 AWS_SES_EMAIL_FROM=noreply@yourdomain.com

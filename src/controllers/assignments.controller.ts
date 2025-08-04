@@ -1,10 +1,10 @@
-import { Assignment } from "@/models/assignment.model";
-import { AssignmentSubmission } from "@/models/assignment_submission.model";
 // import { AssignmentService } from "@/services/assignment.service";
 // import { EnhancedAssignmentService } from "@/services/enhanced_assignment.service";
 // import { userStore } from "@/store/user.store";
 import { Context } from "hono";
 
+import { Assignment } from "@/models/assignment.model";
+import { AssignmentSubmission } from "@/models/assignment_submission.model";
 import { ClassService } from "@/services/class.service";
 // import { EnhancedAssignmentService } from "@/services/enhanced_assignment.service"; // Disabled until course assignment models exist
 import { UserService } from "@/services/users.service";
@@ -245,20 +245,25 @@ export class AssignmentController {
                 let periodStartDate: Date;
                 
                 switch (period) {
-                    case 'week':
+                    case "week": {
                         periodStartDate = new Date(currentDate.getTime() - 7 * 24 * 60 * 60 * 1000);
                         break;
-                    case 'month':
+                    }
+                    case "month": {
                         periodStartDate = new Date(currentDate.getTime() - 30 * 24 * 60 * 60 * 1000);
                         break;
-                    case 'quarter':
+                    }
+                    case "quarter": {
                         periodStartDate = new Date(currentDate.getTime() - 90 * 24 * 60 * 60 * 1000);
                         break;
-                    case 'year':
+                    }
+                    case "year": {
                         periodStartDate = new Date(currentDate.getTime() - 365 * 24 * 60 * 60 * 1000);
                         break;
-                    default:
-                        periodStartDate = new Date(currentDate.getTime() - 30 * 24 * 60 * 60 * 1000); // Default to month
+                    }
+                    default: {
+                        periodStartDate = new Date(currentDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+                    } // Default to month
                 }
                 
                 filteredAssignments = filteredAssignments.filter(assignment => 
@@ -300,7 +305,7 @@ export class AssignmentController {
 
             // Generate analytics by subject and time trends
             const subjectAnalytics = await Promise.all(
-                Array.from(new Set(filteredAssignments.map(a => a.subject_id))).map(async (subjectId) => {
+                [...new Set(filteredAssignments.map(a => a.subject_id))].map(async (subjectId) => {
                     const subjectAssignments = filteredAssignments.filter(a => a.subject_id === subjectId);
                     let subjectSubmissions = 0;
                     
@@ -331,7 +336,7 @@ export class AssignmentController {
                     },
                     by_subject: subjectAnalytics,
                     trends: {
-                        period_applied: period || 'month',
+                        period_applied: period || "month",
                         assignments_created: filteredAssignments.length,
                     }
                 },

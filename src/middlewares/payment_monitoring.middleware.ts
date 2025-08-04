@@ -1,5 +1,6 @@
-import { Context, Next } from "hono";
 import crypto from "node:crypto";
+
+import { Context, Next } from "hono";
 
 import PaymentErrorHandler from "@/services/payment_error_handler.service";
 import PaymentSecurityMonitor from "@/services/payment_security_monitor.service";
@@ -16,20 +17,30 @@ interface RequestContext {
     method: string;
 }
 
-const getErrorSeverity = (errorCode: string): 'low' | 'medium' | 'high' | 'critical' => {
-    const prefix = errorCode.split('_')[0];
+const getErrorSeverity = (errorCode: string): "low" | "medium" | "high" | "critical" => {
+    const prefix = errorCode.split("_")[0];
     
     switch (prefix) {
-        case 'AUTH': return 'high';
-        case 'CRED': return 'critical';
-        case 'RATE': return 'medium';
-        case 'SYS': return 'high';
-        case 'GATEWAY': return 'medium';
-        case 'TRANS': return 'low';
-        case 'VAL': return 'low';
-        case 'BIZ': return 'low';
-        case 'DATA': return 'high';
-        default: return 'medium';
+        case "AUTH": { return "high";
+        }
+        case "CRED": { return "critical";
+        }
+        case "RATE": { return "medium";
+        }
+        case "SYS": { return "high";
+        }
+        case "GATEWAY": { return "medium";
+        }
+        case "TRANS": { return "low";
+        }
+        case "VAL": { return "low";
+        }
+        case "BIZ": { return "low";
+        }
+        case "DATA": { return "high";
+        }
+        default: { return "medium";
+        }
     }
 };
 
@@ -66,7 +77,7 @@ export const paymentMonitoringMiddleware = () => {
             const executionTime = Date.now() - requestContext.start_time;
             
             PaymentSecurityMonitor.logAuditEvent({
-                event_type: `${requestContext.method.toLowerCase()}_${requestContext.endpoint.split('/').pop() || 'unknown'}`,
+                event_type: `${requestContext.method.toLowerCase()}_${requestContext.endpoint.split("/").pop() || "unknown"}`,
                 user_id: requestContext.user_id,
                 campus_id: requestContext.campus_id,
                 details: {
@@ -100,7 +111,7 @@ export const paymentMonitoringMiddleware = () => {
             // Log error if needed
             if (shouldLog) {
                 PaymentSecurityMonitor.logSecurityEvent({
-                    event_type: 'suspicious_activity',
+                    event_type: "suspicious_activity",
                     user_id: requestContext.user_id,
                     user_type: requestContext.user_type,
                     campus_id: requestContext.campus_id,
@@ -121,7 +132,7 @@ export const paymentMonitoringMiddleware = () => {
 
             // Log audit event
             PaymentSecurityMonitor.logAuditEvent({
-                event_type: `${requestContext.method.toLowerCase()}_${requestContext.endpoint.split('/').pop() || 'unknown'}`,
+                event_type: `${requestContext.method.toLowerCase()}_${requestContext.endpoint.split("/").pop() || "unknown"}`,
                 user_id: requestContext.user_id,
                 campus_id: requestContext.campus_id,
                 details: {
@@ -149,7 +160,7 @@ export const paymentMonitoringMiddleware = () => {
             // Return standardized error response
             const errorResponse = PaymentErrorHandler.formatErrorResponse(
                 paymentError,
-                process.env.NODE_ENV === 'development' // Include details only in development
+                process.env.NODE_ENV === "development" // Include details only in development
             );
 
             return ctx.json(errorResponse, httpStatus as any);
@@ -174,9 +185,9 @@ export const handlePaymentError = (
     const { error: paymentError, httpStatus } = PaymentErrorHandler.handleError(error, context);
     
     // Log security event for critical errors
-    if (['CRED', 'AUTH', 'SYS'].some(prefix => paymentError.code.startsWith(prefix))) {
+    if (["CRED", "AUTH", "SYS"].some(prefix => paymentError.code.startsWith(prefix))) {
         PaymentSecurityMonitor.logSecurityEvent({
-            event_type: 'suspicious_activity',
+            event_type: "suspicious_activity",
             user_id: context.user_id,
             campus_id: context.campus_id,
             details: {
@@ -185,7 +196,7 @@ export const handlePaymentError = (
                 error_code: paymentError.code,
                 request_id: context.request_id
             },
-            severity: paymentError.code.startsWith('CRED') ? 'critical' : 'high',
+            severity: paymentError.code.startsWith("CRED") ? "critical" : "high",
             success: false,
             error_message: paymentError.message
         });
@@ -194,7 +205,7 @@ export const handlePaymentError = (
     return {
         error: PaymentErrorHandler.formatErrorResponse(
             paymentError,
-            process.env.NODE_ENV === 'development'
+            process.env.NODE_ENV === "development"
         ),
         httpStatus
     };

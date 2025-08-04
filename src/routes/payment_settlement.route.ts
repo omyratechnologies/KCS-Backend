@@ -4,8 +4,8 @@ import { resolver, validator as zValidator } from "hono-openapi/zod";
 import z from "zod";
 
 import { PaymentSettlementController } from "@/controllers/payment_settlement.controller";
-import { roleMiddleware } from "@/middlewares/role.middleware";
 import { paymentMonitoringMiddleware } from "@/middlewares/payment_monitoring.middleware";
+import { roleMiddleware } from "@/middlewares/role.middleware";
 
 // ========================= SCHEMA DEFINITIONS =========================
 

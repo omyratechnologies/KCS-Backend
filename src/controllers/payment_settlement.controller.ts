@@ -1,9 +1,10 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
+
 import { Context } from "hono";
 
-import { PaymentSettlementService } from "@/services/payment_settlement.service";
 import PaymentErrorHandler from "@/services/payment_error_handler.service";
 import PaymentSecurityMonitor from "@/services/payment_security_monitor.service";
+import { PaymentSettlementService } from "@/services/payment_settlement.service";
 
 /**
  * Enhanced Payment Settlement Controller
@@ -25,8 +26,8 @@ export class PaymentSettlementController {
 
             // Only Super Admin can trigger manual settlements
             if (user_type !== "Super Admin") {
-                const error = PaymentErrorHandler.createError('AUTH_002', {
-                    required_role: 'Super Admin',
+                const error = PaymentErrorHandler.createError("AUTH_002", {
+                    required_role: "Super Admin",
                     current_role: user_type
                 });
                 return ctx.json(PaymentErrorHandler.formatErrorResponse(error), 403);
@@ -35,7 +36,7 @@ export class PaymentSettlementController {
             const { gateway_provider, settlement_date } = await ctx.req.json();
 
             if (!gateway_provider) {
-                const error = PaymentErrorHandler.createError('VAL_001', {
+                const error = PaymentErrorHandler.createError("VAL_001", {
                     missing_fields: { gateway_provider: true }
                 });
                 return ctx.json(PaymentErrorHandler.formatErrorResponse(error), 400);
@@ -63,8 +64,8 @@ export class PaymentSettlementController {
 
         } catch (error) {
             const errorHandling = PaymentErrorHandler.handleError(error, {
-                controller: 'PaymentSettlementController',
-                method: 'triggerManualSettlement',
+                controller: "PaymentSettlementController",
+                method: "triggerManualSettlement",
                 user_id: ctx.get("user_id"),
                 campus_id: ctx.get("campus_id")
             });
@@ -86,7 +87,7 @@ export class PaymentSettlementController {
 
             // Only Admin and Super Admin can view settlement history
             if (!["Admin", "Super Admin"].includes(user_type)) {
-                const error = PaymentErrorHandler.createError('AUTH_002');
+                const error = PaymentErrorHandler.createError("AUTH_002");
                 return ctx.json(PaymentErrorHandler.formatErrorResponse(error), 403);
             }
 
@@ -103,8 +104,8 @@ export class PaymentSettlementController {
             const settlements = {
                 settlements: [],
                 pagination: {
-                    page: parseInt(String(page)),
-                    limit: parseInt(String(limit)),
+                    page: Number.parseInt(String(page)),
+                    limit: Number.parseInt(String(limit)),
                     total: 0,
                     pages: 0
                 },
@@ -123,8 +124,8 @@ export class PaymentSettlementController {
 
         } catch (error) {
             const errorHandling = PaymentErrorHandler.handleError(error, {
-                controller: 'PaymentSettlementController',
-                method: 'getSettlementHistory'
+                controller: "PaymentSettlementController",
+                method: "getSettlementHistory"
             });
             
             return ctx.json(
@@ -145,7 +146,7 @@ export class PaymentSettlementController {
 
             // Only Admin and Super Admin can view settlement details
             if (!["Admin", "Super Admin"].includes(user_type)) {
-                const error = PaymentErrorHandler.createError('AUTH_002');
+                const error = PaymentErrorHandler.createError("AUTH_002");
                 return ctx.json(PaymentErrorHandler.formatErrorResponse(error), 403);
             }
 
@@ -164,8 +165,8 @@ export class PaymentSettlementController {
 
         } catch (error) {
             const errorHandling = PaymentErrorHandler.handleError(error, {
-                controller: 'PaymentSettlementController',
-                method: 'getSettlementDetails'
+                controller: "PaymentSettlementController",
+                method: "getSettlementDetails"
             });
             
             return ctx.json(
@@ -185,14 +186,14 @@ export class PaymentSettlementController {
         try {
             const { gateway } = ctx.req.param();
             const webhook_data = await ctx.req.json();
-            const signature = ctx.req.header('x-webhook-signature') || 
-                            ctx.req.header('x-razorpay-signature') || 
-                            ctx.req.header('x-payu-signature') || 
-                            ctx.req.header('x-cashfree-signature') || '';
+            const signature = ctx.req.header("x-webhook-signature") || 
+                            ctx.req.header("x-razorpay-signature") || 
+                            ctx.req.header("x-payu-signature") || 
+                            ctx.req.header("x-cashfree-signature") || "";
 
             const request_context = {
-                ip_address: ctx.env.ip || ctx.req.header('x-forwarded-for') || 'unknown',
-                user_agent: ctx.req.header('user-agent') || 'unknown',
+                ip_address: ctx.env.ip || ctx.req.header("x-forwarded-for") || "unknown",
+                user_agent: ctx.req.header("user-agent") || "unknown",
                 request_id: crypto.randomUUID()
             };
 
@@ -221,7 +222,7 @@ export class PaymentSettlementController {
         } catch (error) {
             // For webhook errors, we should still return 200 to prevent retries
             // but log the error internally
-            console.error('Webhook processing error:', error);
+            console.error("Webhook processing error:", error);
             
             return ctx.json({
                 success: false,
@@ -243,8 +244,8 @@ export class PaymentSettlementController {
 
             // Only Super Admin can perform security audits
             if (user_type !== "Super Admin") {
-                const error = PaymentErrorHandler.createError('AUTH_002', {
-                    required_role: 'Super Admin',
+                const error = PaymentErrorHandler.createError("AUTH_002", {
+                    required_role: "Super Admin",
                     current_role: user_type
                 });
                 return ctx.json(PaymentErrorHandler.formatErrorResponse(error), 403);
@@ -268,8 +269,8 @@ export class PaymentSettlementController {
 
         } catch (error) {
             const errorHandling = PaymentErrorHandler.handleError(error, {
-                controller: 'PaymentSettlementController',
-                method: 'performSecurityAudit'
+                controller: "PaymentSettlementController",
+                method: "performSecurityAudit"
             });
             
             return ctx.json(
@@ -289,7 +290,7 @@ export class PaymentSettlementController {
 
             // Only Admin and Super Admin can view security events
             if (!["Admin", "Super Admin"].includes(user_type)) {
-                const error = PaymentErrorHandler.createError('AUTH_002');
+                const error = PaymentErrorHandler.createError("AUTH_002");
                 return ctx.json(PaymentErrorHandler.formatErrorResponse(error), 403);
             }
 
@@ -307,8 +308,8 @@ export class PaymentSettlementController {
             const securityEvents = {
                 events: [],
                 pagination: {
-                    page: parseInt(String(page)),
-                    limit: parseInt(String(limit)),
+                    page: Number.parseInt(String(page)),
+                    limit: Number.parseInt(String(limit)),
                     total: 0,
                     pages: 0
                 },
@@ -329,8 +330,8 @@ export class PaymentSettlementController {
 
         } catch (error) {
             const errorHandling = PaymentErrorHandler.handleError(error, {
-                controller: 'PaymentSettlementController',
-                method: 'getSecurityEvents'
+                controller: "PaymentSettlementController",
+                method: "getSecurityEvents"
             });
             
             return ctx.json(
@@ -350,7 +351,7 @@ export class PaymentSettlementController {
 
             // Only Admin and Super Admin can view audit logs
             if (!["Admin", "Super Admin"].includes(user_type)) {
-                const error = PaymentErrorHandler.createError('AUTH_002');
+                const error = PaymentErrorHandler.createError("AUTH_002");
                 return ctx.json(PaymentErrorHandler.formatErrorResponse(error), 403);
             }
 
@@ -378,8 +379,8 @@ export class PaymentSettlementController {
             const auditLogs = {
                 logs: [],
                 pagination: {
-                    page: parseInt(String(page)),
-                    limit: parseInt(String(limit)),
+                    page: Number.parseInt(String(page)),
+                    limit: Number.parseInt(String(limit)),
                     total: 0,
                     pages: 0
                 },
@@ -400,8 +401,8 @@ export class PaymentSettlementController {
 
         } catch (error) {
             const errorHandling = PaymentErrorHandler.handleError(error, {
-                controller: 'PaymentSettlementController',
-                method: 'getAuditLogs'
+                controller: "PaymentSettlementController",
+                method: "getAuditLogs"
             });
             
             return ctx.json(
@@ -424,14 +425,14 @@ export class PaymentSettlementController {
 
             // Only Admin and Super Admin can configure gateways
             if (!["Admin", "Super Admin"].includes(user_type)) {
-                const error = PaymentErrorHandler.createError('AUTH_002');
+                const error = PaymentErrorHandler.createError("AUTH_002");
                 return ctx.json(PaymentErrorHandler.formatErrorResponse(error), 403);
             }
 
             const { gateway_provider, configuration } = await ctx.req.json();
 
             if (!gateway_provider || !configuration) {
-                const error = PaymentErrorHandler.createError('VAL_001', {
+                const error = PaymentErrorHandler.createError("VAL_001", {
                     missing_fields: { 
                         gateway_provider: !gateway_provider,
                         configuration: !configuration
@@ -463,8 +464,8 @@ export class PaymentSettlementController {
 
         } catch (error) {
             const errorHandling = PaymentErrorHandler.handleError(error, {
-                controller: 'PaymentSettlementController',
-                method: 'configureGateway'
+                controller: "PaymentSettlementController",
+                method: "configureGateway"
             });
             
             return ctx.json(
@@ -484,7 +485,7 @@ export class PaymentSettlementController {
 
             // Only Admin and Super Admin can view gateway configurations
             if (!["Admin", "Super Admin"].includes(user_type)) {
-                const error = PaymentErrorHandler.createError('AUTH_002');
+                const error = PaymentErrorHandler.createError("AUTH_002");
                 return ctx.json(PaymentErrorHandler.formatErrorResponse(error), 403);
             }
 
@@ -507,8 +508,8 @@ export class PaymentSettlementController {
 
         } catch (error) {
             const errorHandling = PaymentErrorHandler.handleError(error, {
-                controller: 'PaymentSettlementController',
-                method: 'getGatewayConfigurations'
+                controller: "PaymentSettlementController",
+                method: "getGatewayConfigurations"
             });
             
             return ctx.json(
@@ -530,8 +531,8 @@ export class PaymentSettlementController {
 
             // Only Super Admin can generate compliance reports
             if (user_type !== "Super Admin") {
-                const error = PaymentErrorHandler.createError('AUTH_002', {
-                    required_role: 'Super Admin',
+                const error = PaymentErrorHandler.createError("AUTH_002", {
+                    required_role: "Super Admin",
                     current_role: user_type
                 });
                 return ctx.json(PaymentErrorHandler.formatErrorResponse(error), 403);
@@ -559,8 +560,8 @@ export class PaymentSettlementController {
 
         } catch (error) {
             const errorHandling = PaymentErrorHandler.handleError(error, {
-                controller: 'PaymentSettlementController',
-                method: 'generateComplianceReport'
+                controller: "PaymentSettlementController",
+                method: "generateComplianceReport"
             });
             
             return ctx.json(

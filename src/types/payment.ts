@@ -1,38 +1,38 @@
 export enum SettlementStatus {
-  INITIATED = 'initiated',
-  PENDING = 'pending',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-  REFUNDED = 'refunded'
+  INITIATED = "initiated",
+  PENDING = "pending",
+  COMPLETED = "completed",
+  FAILED = "failed",
+  REFUNDED = "refunded"
 }
 
 export enum GatewayProvider {
-  RAZORPAY = 'razorpay',
-  PAYU = 'payu',
-  CASHFREE = 'cashfree'
+  RAZORPAY = "razorpay",
+  PAYU = "payu",
+  CASHFREE = "cashfree"
 }
 
 export enum PaymentSecurityEventType {
-  SUSPICIOUS_TRANSACTION = 'suspicious_transaction',
-  DUPLICATE_PAYMENT = 'duplicate_payment',
-  FAILED_ENCRYPTION = 'failed_encryption',
-  MULTIPLE_FAILED_ATTEMPTS = 'multiple_failed_attempts',
-  GATEWAY_TIMEOUT = 'gateway_timeout',
-  API_KEY_EXPOSED = 'api_key_exposed',
-  SETTLEMENT_DISCREPANCY = 'settlement_discrepancy',
-  WEBHOOK_VERIFICATION_FAILED = 'webhook_verification_failed'
+  SUSPICIOUS_TRANSACTION = "suspicious_transaction",
+  DUPLICATE_PAYMENT = "duplicate_payment",
+  FAILED_ENCRYPTION = "failed_encryption",
+  MULTIPLE_FAILED_ATTEMPTS = "multiple_failed_attempts",
+  GATEWAY_TIMEOUT = "gateway_timeout",
+  API_KEY_EXPOSED = "api_key_exposed",
+  SETTLEMENT_DISCREPANCY = "settlement_discrepancy",
+  WEBHOOK_VERIFICATION_FAILED = "webhook_verification_failed"
 }
 
 export enum PaymentGatewayMode {
-  TEST = 'test',
-  LIVE = 'live'
+  TEST = "test",
+  LIVE = "live"
 }
 
 export enum SecurityEventSeverity {
-  LOW = 'low',
-  MEDIUM = 'medium',
-  HIGH = 'high',
-  CRITICAL = 'critical'
+  LOW = "low",
+  MEDIUM = "medium",
+  HIGH = "high",
+  CRITICAL = "critical"
 }
 
 export interface SettlementRequestPayload {

@@ -28,7 +28,7 @@ export const meetingRateLimit = () => {
         } else if (userRequests.count >= RATE_LIMIT) {
             return ctx.json({
                 success: false,
-                message: 'Rate limit exceeded. Too many requests.',
+                message: "Rate limit exceeded. Too many requests.",
                 retryAfter: Math.ceil((userRequests.resetTime - now) / 1000),
             }, 429);
         } else {
@@ -67,7 +67,7 @@ export const strictMeetingRateLimit = () => {
         } else if (userRequests.count >= RATE_LIMIT) {
             return ctx.json({
                 success: false,
-                message: 'Rate limit exceeded for resource-intensive operations.',
+                message: "Rate limit exceeded for resource-intensive operations.",
                 retryAfter: Math.ceil((userRequests.resetTime - now) / 1000),
             }, 429);
         } else {

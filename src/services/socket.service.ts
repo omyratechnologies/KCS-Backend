@@ -1,17 +1,18 @@
-import { Server as HTTPServer } from "http";
-import { Server as SocketIOServer, Socket } from "socket.io";
+import { Server as HTTPServer } from "node:http";
+
 import { verify } from "hono/jwt";
+import { Server as SocketIOServer, Socket } from "socket.io";
 import { v4 as uuidv4 } from "uuid";
 
-import { WebRTCService } from "./webrtc.service";
 import { 
+    type IMeetingParticipant, 
     Meeting, 
-    MeetingParticipant, 
     MeetingChat,
-    type IMeetingParticipant 
-} from "@/models/meeting.model";
-import { UserService } from "./users.service";
+    MeetingParticipant} from "@/models/meeting.model";
 import { config } from "@/utils/env";
+
+import { UserService } from "./users.service";
+import { WebRTCService } from "./webrtc.service";
 
 /**
  * 🔄 Socket.IO Service for Real-time Meeting Communication
@@ -41,23 +42,23 @@ export class SocketService {
                 methods: ["GET", "POST"],
                 credentials: false, // Note: credentials must be false when origin is "*"
             },
-            transports: ['websocket', 'polling'],
-            pingTimeout: 60000,
-            pingInterval: 25000,
+            transports: ["websocket", "polling"],
+            pingTimeout: 60_000,
+            pingInterval: 25_000,
         });
         
         // Authentication middleware
         this.io.use(async (socket, next) => {
             try {
-                const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.replace('Bearer ', '');
+                const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.replace("Bearer ", "");
                 
                 if (!token) {
-                    return next(new Error('Authentication token missing'));
+                    return next(new Error("Authentication token missing"));
                 }
                 
                 const tokenData = await verify(token, config.JWT_SECRET, "HS512");
                 if (tokenData instanceof Error) {
-                    return next(new Error('Invalid token'));
+                    return next(new Error("Invalid token"));
                 }
                 
                 const { user_id, user_type, campus_id } = tokenData.payload as any;
@@ -65,7 +66,7 @@ export class SocketService {
                 // Get user data
                 const user = await UserService.getUser(user_id);
                 if (!user) {
-                    return next(new Error('User not found'));
+                    return next(new Error("User not found"));
                 }
                 
                 // Attach user data to socket
@@ -78,14 +79,14 @@ export class SocketService {
                 };
                 
                 next();
-            } catch (error) {
-                next(new Error('Authentication failed'));
+            } catch {
+                next(new Error("Authentication failed"));
             }
         });
         
-        this.io.on('connection', this.handleConnection.bind(this));
+        this.io.on("connection", this.handleConnection.bind(this));
         
-        console.log('🔌 Socket.IO server initialized for real-time meeting communication');
+        console.log("🔌 Socket.IO server initialized for real-time meeting communication");
     }
     
     /**
@@ -108,7 +109,7 @@ export class SocketService {
         this.registerPresenceEvents(socket);
         
         // Handle disconnection
-        socket.on('disconnect', () => this.handleDisconnection(socket));
+        socket.on("disconnect", () => this.handleDisconnection(socket));
     }
     
     /**
@@ -118,38 +119,38 @@ export class SocketService {
         const { userId, userName, campusId } = socket.data;
         
         // Join meeting room
-        socket.on('join-meeting', async (data: { meetingId: string; meeting_password?: string }) => {
+        socket.on("join-meeting", async (data: { meetingId: string; meeting_password?: string }) => {
             try {
                 const { meetingId, meeting_password } = data;
                 
                 // Verify meeting exists and user has access
                 const meeting = await Meeting.findById(meetingId);
                 if (!meeting) {
-                    socket.emit('error', { message: 'Meeting not found' });
+                    socket.emit("error", { message: "Meeting not found" });
                     return;
                 }
                 
                 if (meeting.campus_id !== campusId) {
-                    socket.emit('error', { message: 'Access denied' });
+                    socket.emit("error", { message: "Access denied" });
                     return;
                 }
                 
                 // Check password if required
                 if (meeting.meeting_password && meeting.meeting_password !== meeting_password) {
-                    socket.emit('error', { message: 'Invalid meeting password' });
+                    socket.emit("error", { message: "Invalid meeting password" });
                     return;
                 }
                 
                 // Check if meeting is active
-                if (meeting.meeting_status === 'ended' || meeting.meeting_status === 'cancelled') {
-                    socket.emit('error', { message: 'Meeting has ended' });
+                if (meeting.meeting_status === "ended" || meeting.meeting_status === "cancelled") {
+                    socket.emit("error", { message: "Meeting has ended" });
                     return;
                 }
                 
                 // Check participant limit
                 const currentParticipants = this.meetingParticipants.get(meetingId)?.size || 0;
                 if (currentParticipants >= meeting.max_participants) {
-                    socket.emit('error', { message: 'Meeting is full' });
+                    socket.emit("error", { message: "Meeting is full" });
                     return;
                 }
                 
@@ -168,12 +169,12 @@ export class SocketService {
                     user_id: userId,
                     participant_name: userName,
                     participant_email: socket.data.userEmail,
-                    connection_status: 'connected',
+                    connection_status: "connected",
                     joined_at: new Date(),
                     peer_connection_id: uuidv4(),
                     socket_id: socket.id,
                     ip_address: socket.handshake.address,
-                    user_agent: socket.handshake.headers['user-agent'] || '',
+                    user_agent: socket.handshake.headers["user-agent"] || "",
                     permissions: {
                         can_share_screen: true,
                         can_use_chat: true,
@@ -186,9 +187,9 @@ export class SocketService {
                 const participant = await MeetingParticipant.create(participantData);
                 
                 // Update meeting status to live if not already
-                if (meeting.meeting_status === 'scheduled') {
+                if (meeting.meeting_status === "scheduled") {
                     await Meeting.updateById(meetingId, {
-                        meeting_status: 'live',
+                        meeting_status: "live",
                         updated_at: new Date(),
                     });
                 }
@@ -199,7 +200,7 @@ export class SocketService {
                 }
                 
                 // Notify existing participants
-                socket.to(meetingId).emit('participant-joined', {
+                socket.to(meetingId).emit("participant-joined", {
                     participantId: participant.id,
                     userName,
                     userId,
@@ -209,7 +210,7 @@ export class SocketService {
                 // Send meeting info to new participant
                 const existingParticipants = await this.getMeetingParticipants(meetingId);
                 
-                socket.emit('meeting-joined', {
+                socket.emit("meeting-joined", {
                     meeting,
                     participantId: participant.id,
                     participants: existingParticipants,
@@ -219,60 +220,60 @@ export class SocketService {
                 console.log(`✅ ${userName} joined meeting ${meetingId}`);
                 
             } catch (error) {
-                console.error('Error joining meeting:', error);
-                socket.emit('error', { message: 'Failed to join meeting' });
+                console.error("Error joining meeting:", error);
+                socket.emit("error", { message: "Failed to join meeting" });
             }
         });
         
         // Leave meeting
-        socket.on('leave-meeting', async (data: { meetingId: string }) => {
+        socket.on("leave-meeting", async (data: { meetingId: string }) => {
             await this.handleLeaveMeeting(socket, data.meetingId);
         });
         
         // Start/stop recording
-        socket.on('toggle-recording', async (data: { meetingId: string; start: boolean }) => {
+        socket.on("toggle-recording", async (data: { meetingId: string; start: boolean }) => {
             try {
                 const { meetingId, start } = data;
                 
                 // Verify user is host/moderator
                 const participant = await this.getParticipantBySocket(socket.id);
                 if (!participant?.permissions.is_host && !participant?.permissions.is_moderator) {
-                    socket.emit('error', { message: 'Only hosts can control recording' });
+                    socket.emit("error", { message: "Only hosts can control recording" });
                     return;
                 }
                 
                 // Update meeting recording status
                 await Meeting.updateById(meetingId, {
-                    'recording_config.auto_record': start,
+                    "recording_config.auto_record": start,
                     updated_at: new Date(),
                 });
                 
                 // Notify all participants
-                this.io.to(meetingId).emit('recording-status-changed', { recording: start });
+                this.io.to(meetingId).emit("recording-status-changed", { recording: start });
                 
-                console.log(`🎥 Recording ${start ? 'started' : 'stopped'} for meeting ${meetingId}`);
+                console.log(`🎥 Recording ${start ? "started" : "stopped"} for meeting ${meetingId}`);
                 
             } catch (error) {
-                console.error('Error toggling recording:', error);
-                socket.emit('error', { message: 'Failed to toggle recording' });
+                console.error("Error toggling recording:", error);
+                socket.emit("error", { message: "Failed to toggle recording" });
             }
         });
         
         // Mute/unmute participant
-        socket.on('mute-participant', async (data: { meetingId: string; participantId: string; mute: boolean }) => {
+        socket.on("mute-participant", async (data: { meetingId: string; participantId: string; mute: boolean }) => {
             try {
                 const { meetingId, participantId, mute } = data;
                 
                 // Verify user is host/moderator
                 const requester = await this.getParticipantBySocket(socket.id);
                 if (!requester?.permissions.is_host && !requester?.permissions.is_moderator) {
-                    socket.emit('error', { message: 'Only hosts can mute participants' });
+                    socket.emit("error", { message: "Only hosts can mute participants" });
                     return;
                 }
                 
                 // Update participant media status
                 await MeetingParticipant.updateById(participantId, {
-                    'media_status.is_muted_by_host': mute,
+                    "media_status.is_muted_by_host": mute,
                     updated_at: new Date(),
                 });
                 
@@ -281,16 +282,16 @@ export class SocketService {
                 if (targetParticipant) {
                     const targetSocketId = this.userSockets.get(targetParticipant.user_id);
                     if (targetSocketId) {
-                        this.io.to(targetSocketId).emit('muted-by-host', { muted: mute });
+                        this.io.to(targetSocketId).emit("muted-by-host", { muted: mute });
                     }
                 }
                 
                 // Notify all participants
-                this.io.to(meetingId).emit('participant-muted', { participantId, muted: mute });
+                this.io.to(meetingId).emit("participant-muted", { participantId, muted: mute });
                 
             } catch (error) {
-                console.error('Error muting participant:', error);
-                socket.emit('error', { message: 'Failed to mute participant' });
+                console.error("Error muting participant:", error);
+                socket.emit("error", { message: "Failed to mute participant" });
             }
         });
     }
@@ -302,19 +303,19 @@ export class SocketService {
         const { userId, userName } = socket.data;
         
         // Send chat message
-        socket.on('send-message', async (data: {
+        socket.on("send-message", async (data: {
             meetingId: string;
             message: string;
-            recipientType: 'all' | 'private' | 'host';
+            recipientType: "all" | "private" | "host";
             recipientId?: string;
         }) => {
             try {
                 const { meetingId, message, recipientType, recipientId } = data;
                 
                 // Verify user is in the meeting
-                const rooms = Array.from(socket.rooms);
+                const rooms = [...socket.rooms];
                 if (!rooms.includes(meetingId)) {
-                    socket.emit('error', { message: 'Not in meeting' });
+                    socket.emit("error", { message: "Not in meeting" });
                     return;
                 }
                 
@@ -324,50 +325,50 @@ export class SocketService {
                     sender_id: userId,
                     sender_name: userName,
                     message,
-                    message_type: 'text',
+                    message_type: "text",
                     recipient_type: recipientType,
                     recipient_id: recipientId,
                     timestamp: new Date(),
                 });
                 
                 // Send to appropriate recipients
-                if (recipientType === 'all') {
-                    this.io.to(meetingId).emit('new-message', chatMessage);
-                } else if (recipientType === 'private' && recipientId) {
+                if (recipientType === "all") {
+                    this.io.to(meetingId).emit("new-message", chatMessage);
+                } else if (recipientType === "private" && recipientId) {
                     const recipientSocketId = this.userSockets.get(recipientId);
                     if (recipientSocketId) {
-                        this.io.to(recipientSocketId).emit('new-message', chatMessage);
-                        socket.emit('new-message', chatMessage); // Send to sender too
+                        this.io.to(recipientSocketId).emit("new-message", chatMessage);
+                        socket.emit("new-message", chatMessage); // Send to sender too
                     }
-                } else if (recipientType === 'host') {
+                } else if (recipientType === "host") {
                     // Send to all hosts/moderators
                     const participants = await this.getMeetingParticipants(meetingId);
-                    participants.forEach(participant => {
+                    for (const participant of participants) {
                         if (participant.permissions.is_host || participant.permissions.is_moderator) {
                             const socketId = this.userSockets.get(participant.user_id);
                             if (socketId) {
-                                this.io.to(socketId).emit('new-message', chatMessage);
+                                this.io.to(socketId).emit("new-message", chatMessage);
                             }
                         }
-                    });
+                    }
                 }
                 
                 // Update meeting analytics
                 await Meeting.updateById(meetingId, {
-                    'analytics.chat_messages_count': { $inc: 1 },
+                    "analytics.chat_messages_count": { $inc: 1 },
                     updated_at: new Date(),
                 });
                 
             } catch (error) {
-                console.error('Error sending chat message:', error);
-                socket.emit('error', { message: 'Failed to send message' });
+                console.error("Error sending chat message:", error);
+                socket.emit("error", { message: "Failed to send message" });
             }
         });
         
         // Typing indicator
-        socket.on('typing', (data: { meetingId: string; typing: boolean }) => {
+        socket.on("typing", (data: { meetingId: string; typing: boolean }) => {
             const { meetingId, typing } = data;
-            socket.to(meetingId).emit('user-typing', {
+            socket.to(meetingId).emit("user-typing", {
                 userId: socket.data.userId,
                 userName: socket.data.userName,
                 typing,
@@ -380,9 +381,9 @@ export class SocketService {
      */
     private static registerWebRTCEvents(socket: Socket): void {
         // Create WebRTC transport
-        socket.on('create-transport', async (data: {
+        socket.on("create-transport", async (data: {
             meetingId: string;
-            direction: 'send' | 'recv';
+            direction: "send" | "recv";
         }) => {
             try {
                 const { meetingId, direction } = data;
@@ -394,35 +395,35 @@ export class SocketService {
                     direction
                 );
                 
-                socket.emit('transport-created', {
+                socket.emit("transport-created", {
                     direction,
                     params,
                 });
                 
             } catch (error) {
-                console.error('Error creating transport:', error);
-                socket.emit('error', { message: 'Failed to create transport' });
+                console.error("Error creating transport:", error);
+                socket.emit("error", { message: "Failed to create transport" });
             }
         });
         
         // Connect transport
-        socket.on('connect-transport', async (data: {
+        socket.on("connect-transport", async (data: {
             transportId: string;
             dtlsParameters: any;
         }) => {
             try {
                 await WebRTCService.connectTransport(data.transportId, data.dtlsParameters);
-                socket.emit('transport-connected', { transportId: data.transportId });
+                socket.emit("transport-connected", { transportId: data.transportId });
             } catch (error) {
-                console.error('Error connecting transport:', error);
-                socket.emit('error', { message: 'Failed to connect transport' });
+                console.error("Error connecting transport:", error);
+                socket.emit("error", { message: "Failed to connect transport" });
             }
         });
         
         // Start producing media
-        socket.on('produce', async (data: {
+        socket.on("produce", async (data: {
             meetingId: string;
-            kind: 'audio' | 'video';
+            kind: "audio" | "video";
             rtpParameters: any;
         }) => {
             try {
@@ -436,26 +437,26 @@ export class SocketService {
                     kind
                 );
                 
-                socket.emit('produced', { kind, producerId: id });
+                socket.emit("produced", { kind, producerId: id });
                 
                 // Notify other participants
-                socket.to(meetingId).emit('new-producer', {
+                socket.to(meetingId).emit("new-producer", {
                     participantId,
                     producerId: id,
                     kind,
                 });
                 
             } catch (error) {
-                console.error('Error producing media:', error);
-                socket.emit('error', { message: 'Failed to produce media' });
+                console.error("Error producing media:", error);
+                socket.emit("error", { message: "Failed to produce media" });
             }
         });
         
         // Start consuming media
-        socket.on('consume', async (data: {
+        socket.on("consume", async (data: {
             meetingId: string;
             producerParticipantId: string;
-            kind: 'audio' | 'video';
+            kind: "audio" | "video";
             rtpCapabilities: any;
         }) => {
             try {
@@ -470,34 +471,34 @@ export class SocketService {
                     kind
                 );
                 
-                socket.emit('consumed', {
+                socket.emit("consumed", {
                     ...consumerData,
                     kind,
                     producerParticipantId,
                 });
                 
             } catch (error) {
-                console.error('Error consuming media:', error);
-                socket.emit('error', { message: 'Failed to consume media' });
+                console.error("Error consuming media:", error);
+                socket.emit("error", { message: "Failed to consume media" });
             }
         });
         
         // Resume/pause consumer
-        socket.on('resume-consumer', async (data: { consumerId: string }) => {
+        socket.on("resume-consumer", async (data: { consumerId: string }) => {
             try {
                 await WebRTCService.resumeConsumer(data.consumerId);
-                socket.emit('consumer-resumed', { consumerId: data.consumerId });
+                socket.emit("consumer-resumed", { consumerId: data.consumerId });
             } catch (error) {
-                console.error('Error resuming consumer:', error);
+                console.error("Error resuming consumer:", error);
             }
         });
         
-        socket.on('pause-consumer', async (data: { consumerId: string }) => {
+        socket.on("pause-consumer", async (data: { consumerId: string }) => {
             try {
                 await WebRTCService.pauseConsumer(data.consumerId);
-                socket.emit('consumer-paused', { consumerId: data.consumerId });
+                socket.emit("consumer-paused", { consumerId: data.consumerId });
             } catch (error) {
-                console.error('Error pausing consumer:', error);
+                console.error("Error pausing consumer:", error);
             }
         });
     }
@@ -509,10 +510,10 @@ export class SocketService {
         const { userId, userName } = socket.data;
         
         // Hand raise/lower
-        socket.on('raise-hand', async (data: { meetingId: string; raised: boolean }) => {
+        socket.on("raise-hand", async (data: { meetingId: string; raised: boolean }) => {
             const { meetingId, raised } = data;
             
-            socket.to(meetingId).emit('hand-raised', {
+            socket.to(meetingId).emit("hand-raised", {
                 participantId: userId,
                 userName,
                 raised,
@@ -521,10 +522,10 @@ export class SocketService {
         });
         
         // Reactions (👍, 👏, ❤️, etc.)
-        socket.on('send-reaction', async (data: { meetingId: string; reaction: string }) => {
+        socket.on("send-reaction", async (data: { meetingId: string; reaction: string }) => {
             const { meetingId, reaction } = data;
             
-            this.io.to(meetingId).emit('participant-reaction', {
+            this.io.to(meetingId).emit("participant-reaction", {
                 participantId: userId,
                 userName,
                 reaction,
@@ -533,7 +534,7 @@ export class SocketService {
         });
         
         // Media status updates
-        socket.on('media-status-update', async (data: {
+        socket.on("media-status-update", async (data: {
             meetingId: string;
             video: boolean;
             audio: boolean;
@@ -546,15 +547,15 @@ export class SocketService {
                 const participant = await this.getParticipantBySocket(socket.id);
                 if (participant) {
                     await MeetingParticipant.updateById(participant.id, {
-                        'media_status.video_enabled': video,
-                        'media_status.audio_enabled': audio,
-                        'media_status.screen_sharing': screenSharing,
+                        "media_status.video_enabled": video,
+                        "media_status.audio_enabled": audio,
+                        "media_status.screen_sharing": screenSharing,
                         updated_at: new Date(),
                     });
                 }
                 
                 // Notify other participants
-                socket.to(meetingId).emit('participant-media-updated', {
+                socket.to(meetingId).emit("participant-media-updated", {
                     participantId: userId,
                     video,
                     audio,
@@ -562,7 +563,7 @@ export class SocketService {
                 });
                 
             } catch (error) {
-                console.error('Error updating media status:', error);
+                console.error("Error updating media status:", error);
             }
         });
     }
@@ -581,7 +582,7 @@ export class SocketService {
         this.socketUsers.delete(socket.id);
         
         // Handle leaving all meetings
-        const rooms = Array.from(socket.rooms);
+        const rooms = [...socket.rooms];
         for (const room of rooms) {
             if (room !== socket.id) { // Skip socket's own room
                 await this.handleLeaveMeeting(socket, room);
@@ -606,7 +607,7 @@ export class SocketService {
             await WebRTCService.handleParticipantDisconnect(meetingId, userId);
             
             // Notify other participants
-            socket.to(meetingId).emit('participant-left', {
+            socket.to(meetingId).emit("participant-left", {
                 participantId: userId,
                 userName,
             });
@@ -621,7 +622,7 @@ export class SocketService {
             console.log(`👋 ${userName} left meeting ${meetingId}`);
             
         } catch (error) {
-            console.error('Error leaving meeting:', error);
+            console.error("Error leaving meeting:", error);
         }
     }
     
@@ -642,7 +643,7 @@ export class SocketService {
     private static async getMeetingParticipants(meetingId: string): Promise<any[]> {
         const participants = await MeetingParticipant.find({ 
             meeting_id: meetingId,
-            connection_status: 'connected'
+            connection_status: "connected"
         });
         return participants.rows || [];
     }
@@ -681,15 +682,15 @@ export class SocketService {
         try {
             const participantSockets = this.meetingParticipants.get(meetingId);
             if (participantSockets) {
-                participantSockets.forEach(socketId => {
+                for (const socketId of participantSockets) {
                     const socket = this.activeSockets.get(socketId);
                     if (socket && (!notification.exclude || !notification.exclude.includes(socket.data.userId))) {
-                        socket.emit('meeting_notification', notification);
+                        socket.emit("meeting_notification", notification);
                     }
-                });
+                }
             }
         } catch (error) {
-            console.error('Error notifying meeting participants:', error);
+            console.error("Error notifying meeting participants:", error);
         }
     }
 
@@ -704,17 +705,17 @@ export class SocketService {
         }
     ): Promise<void> {
         try {
-            participantIds.forEach(userId => {
+            for (const userId of participantIds) {
                 const socketId = this.userSockets.get(userId);
                 if (socketId) {
                     const socket = this.activeSockets.get(socketId);
                     if (socket) {
-                        socket.emit('participant_notification', notification);
+                        socket.emit("participant_notification", notification);
                     }
                 }
-            });
+            }
         } catch (error) {
-            console.error('Error notifying specific participants:', error);
+            console.error("Error notifying specific participants:", error);
         }
     }
     

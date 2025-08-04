@@ -1,0 +1,115 @@
+version: '3.8'
+
+services:
+  # KCS Backend Application
+  kcs-backend:
+    image: omyratechnologies/kcs-backend:latest
+    container_name: kcs-backend-staging
+    restart: unless-stopped
+    ports:
+      - "4500:4500"
+      - "4501:4501"
+    environment:
+      - NODE_ENV=staging
+    env_file:
+      - .env.staging
+    volumes:
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
+    depends_on:
+      - redis
+    networks:
+      - kcs-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4500/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: kcs-redis-staging
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    networks:
+      - kcs-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: kcs-nginx-staging
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/staging.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/ssl/certs:ro
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - kcs-backend
+    networks:
+      - kcs-network
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # Log Management (Optional)
+  logrotate:
+    image: blacklabelops/logrotate
+    container_name: kcs-logrotate-staging
+    restart: unless-stopped
+    volumes:
+      - ./logs:/var/log/docker
+    environment:
+      - LOGS_DIRECTORIES=/var/log/docker
+      - LOGROTATE_INTERVAL=daily
+      - LOGROTATE_COPIES=7
+      - LOGROTATE_SIZE=100M
+    networks:
+      - kcs-network
+
+  # Monitoring (Optional)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: kcs-prometheus-staging
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    networks:
+      - kcs-network
+
+volumes:
+  redis_data:
+    driver: local
+  prometheus_data:
+    driver: local
+
+networks:
+  kcs-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

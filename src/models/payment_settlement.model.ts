@@ -610,12 +610,11 @@ const PaymentSecurityEvent = ottoman.model<IPaymentSecurityEvent>(
 );
 
 export { 
-    type IPaymentSettlement,
-    type IPaymentGatewayConfiguration,
     type IPaymentAuditLog,
+    type IPaymentGatewayConfiguration,
     type IPaymentSecurityEvent,
-    PaymentSettlement,
-    PaymentGatewayConfiguration,
+    type IPaymentSettlement,
     PaymentAuditLog,
-    PaymentSecurityEvent
-};
+    PaymentGatewayConfiguration,
+    PaymentSecurityEvent,
+    PaymentSettlement};

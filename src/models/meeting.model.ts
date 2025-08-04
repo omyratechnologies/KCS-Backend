@@ -17,8 +17,8 @@ interface IMeetingData {
     
     // Real-time meeting features
     meeting_room_id: string;
-    meeting_type: 'scheduled' | 'instant' | 'recurring';
-    meeting_status: 'scheduled' | 'live' | 'ended' | 'cancelled';
+    meeting_type: "scheduled" | "instant" | "recurring";
+    meeting_status: "scheduled" | "live" | "ended" | "cancelled";
     max_participants: number;
     current_participants: string[];
     
@@ -46,7 +46,7 @@ interface IMeetingData {
         record_video: boolean;
         record_audio: boolean;
         record_chat: boolean;
-        storage_location: 'local' | 'cloud';
+        storage_location: "local" | "cloud";
         retention_days: number;
     };
     
@@ -60,7 +60,7 @@ interface IMeetingData {
         media_constraints: {
             video: {
                 enabled: boolean;
-                quality: 'low' | 'medium' | 'high' | 'hd';
+                quality: "low" | "medium" | "high" | "hd";
                 frameRate: number;
             };
             audio: {
@@ -104,8 +104,8 @@ interface IMeetingParticipant {
     participant_email?: string;
     
     // Connection Status
-    connection_status: 'connecting' | 'connected' | 'reconnecting' | 'disconnected';
-    connection_quality: 'poor' | 'fair' | 'good' | 'excellent';
+    connection_status: "connecting" | "connected" | "reconnecting" | "disconnected";
+    connection_quality: "poor" | "fair" | "good" | "excellent";
     joined_at: Date;
     left_at?: Date;
     
@@ -144,8 +144,8 @@ interface IMeetingChat {
     sender_id: string;
     sender_name: string;
     message: string;
-    message_type: 'text' | 'file' | 'poll' | 'announcement';
-    recipient_type: 'all' | 'private' | 'host';
+    message_type: "text" | "file" | "poll" | "announcement";
+    recipient_type: "all" | "private" | "host";
     recipient_id?: string;
     timestamp: Date;
     edited_at?: Date;
@@ -156,7 +156,7 @@ interface IMeetingChat {
 interface IMeetingRecording {
     id: string;
     meeting_id: string;
-    recording_type: 'video' | 'audio' | 'screen' | 'chat';
+    recording_type: "video" | "audio" | "screen" | "chat";
     file_path: string;
     file_size_bytes: number;
     duration_seconds: number;
@@ -184,8 +184,8 @@ const MeetingSchema = new Schema({
     
     // Real-time meeting features
     meeting_room_id: { type: String, required: true },
-    meeting_type: { type: String, enum: ['scheduled', 'instant', 'recurring'], default: 'scheduled' },
-    meeting_status: { type: String, enum: ['scheduled', 'live', 'ended', 'cancelled'], default: 'scheduled' },
+    meeting_type: { type: String, enum: ["scheduled", "instant", "recurring"], default: "scheduled" },
+    meeting_status: { type: String, enum: ["scheduled", "live", "ended", "cancelled"], default: "scheduled" },
     max_participants: { type: Number, default: 100 },
     current_participants: { type: [String], default: [] },
     
@@ -218,7 +218,7 @@ const MeetingSchema = new Schema({
             record_video: true,
             record_audio: true,
             record_chat: false,
-            storage_location: 'cloud',
+            storage_location: "cloud",
             retention_days: 30
         }
     },
@@ -228,13 +228,13 @@ const MeetingSchema = new Schema({
         type: Object,
         default: {
             ice_servers: [
-                { urls: ['stun:stun.l.google.com:19302'] },
-                { urls: ['stun:stun1.l.google.com:19302'] }
+                { urls: ["stun:stun.l.google.com:19302"] },
+                { urls: ["stun:stun1.l.google.com:19302"] }
             ],
             media_constraints: {
                 video: {
                     enabled: true,
-                    quality: 'medium',
+                    quality: "medium",
                     frameRate: 30
                 },
                 audio: {
@@ -277,13 +277,13 @@ const MeetingParticipantSchema = new Schema({
     // Connection Status
     connection_status: { 
         type: String, 
-        enum: ['connecting', 'connected', 'reconnecting', 'disconnected'],
-        default: 'connecting'
+        enum: ["connecting", "connected", "reconnecting", "disconnected"],
+        default: "connecting"
     },
     connection_quality: {
         type: String,
-        enum: ['poor', 'fair', 'good', 'excellent'],
-        default: 'good'
+        enum: ["poor", "fair", "good", "excellent"],
+        default: "good"
     },
     joined_at: { type: Date, default: () => new Date() },
     left_at: { type: Date },
@@ -329,13 +329,13 @@ const MeetingChatSchema = new Schema({
     message: { type: String, required: true },
     message_type: { 
         type: String, 
-        enum: ['text', 'file', 'poll', 'announcement'],
-        default: 'text'
+        enum: ["text", "file", "poll", "announcement"],
+        default: "text"
     },
     recipient_type: {
         type: String,
-        enum: ['all', 'private', 'host'],
-        default: 'all'
+        enum: ["all", "private", "host"],
+        default: "all"
     },
     recipient_id: { type: String },
     timestamp: { type: Date, default: () => new Date() },
@@ -347,7 +347,7 @@ const MeetingRecordingSchema = new Schema({
     meeting_id: { type: String, required: true },
     recording_type: {
         type: String,
-        enum: ['video', 'audio', 'screen', 'chat'],
+        enum: ["video", "audio", "screen", "chat"],
         required: true
     },
     file_path: { type: String, required: true },
@@ -385,12 +385,12 @@ const MeetingChat = ottoman.model<IMeetingChat>("meeting_chat", MeetingChatSchem
 const MeetingRecording = ottoman.model<IMeetingRecording>("meeting_recording", MeetingRecordingSchema);
 
 export { 
+    type IMeetingChat,
     type IMeetingData, 
     type IMeetingParticipant,
-    type IMeetingChat,
     type IMeetingRecording,
     Meeting,
-    MeetingParticipant,
     MeetingChat,
+    MeetingParticipant,
     MeetingRecording
 };

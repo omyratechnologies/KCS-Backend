@@ -1,9 +1,9 @@
 import crypto from "node:crypto";
 
 export interface SecurityEvent {
-    event_type: 'payment_initiated' | 'payment_verified' | 'credential_access' | 'credential_modified' | 
-               'gateway_test' | 'encryption_validation' | 'authentication_failure' | 'authorization_failure' |
-               'suspicious_activity' | 'rate_limit_exceeded' | 'data_breach_attempt' | 'bank_details_operation';
+    event_type: "payment_initiated" | "payment_verified" | "credential_access" | "credential_modified" | 
+               "gateway_test" | "encryption_validation" | "authentication_failure" | "authorization_failure" |
+               "suspicious_activity" | "rate_limit_exceeded" | "data_breach_attempt" | "bank_details_operation";
     timestamp: Date;
     user_id?: string;
     user_type?: string;
@@ -12,7 +12,7 @@ export interface SecurityEvent {
     user_agent?: string;
     request_id: string;
     details: Record<string, any>;
-    severity: 'low' | 'medium' | 'high' | 'critical';
+    severity: "low" | "medium" | "high" | "critical";
     success: boolean;
     error_message?: string;
     stack_trace?: string;
@@ -39,12 +39,12 @@ export interface PaymentAuditLog {
 export class PaymentSecurityMonitor {
     private static auditLogs: PaymentAuditLog[] = [];
     private static securityEvents: SecurityEvent[] = [];
-    private static maxLogSize = 10000; // Keep last 10k logs in memory
+    private static maxLogSize = 10_000; // Keep last 10k logs in memory
     
     /**
      * Log payment security event
      */
-    static logSecurityEvent(event: Omit<SecurityEvent, 'timestamp' | 'request_id'>): void {
+    static logSecurityEvent(event: Omit<SecurityEvent, "timestamp" | "request_id">): void {
         const securityEvent: SecurityEvent = {
             ...event,
             timestamp: new Date(),
@@ -70,7 +70,7 @@ export class PaymentSecurityMonitor {
         });
         
         // Alert on critical events
-        if (securityEvent.severity === 'critical') {
+        if (securityEvent.severity === "critical") {
             this.triggerSecurityAlert(securityEvent);
         }
     }
@@ -78,7 +78,7 @@ export class PaymentSecurityMonitor {
     /**
      * Log payment audit event
      */
-    static logAuditEvent(event: Omit<PaymentAuditLog, 'log_id' | 'timestamp'>): void {
+    static logAuditEvent(event: Omit<PaymentAuditLog, "log_id" | "timestamp">): void {
         const auditLog: PaymentAuditLog = {
             ...event,
             log_id: crypto.randomUUID(),
@@ -107,7 +107,7 @@ export class PaymentSecurityMonitor {
     /**
      * Get recent security events
      */
-    static getSecurityEvents(limit: number = 100, severity?: SecurityEvent['severity']): SecurityEvent[] {
+    static getSecurityEvents(limit: number = 100, severity?: SecurityEvent["severity"]): SecurityEvent[] {
         let events = this.securityEvents;
         
         if (severity) {
@@ -158,15 +158,15 @@ export class PaymentSecurityMonitor {
         
         return {
             total_events: events.length,
-            critical_events: events.filter(e => e.severity === 'critical').length,
+            critical_events: events.filter(e => e.severity === "critical").length,
             failed_authentications: events.filter(e => 
-                e.event_type === 'authentication_failure' || e.event_type === 'authorization_failure'
+                e.event_type === "authentication_failure" || e.event_type === "authorization_failure"
             ).length,
             successful_payments: logs.filter(l => 
-                l.event_type === 'payment_verified' && l.success
+                l.event_type === "payment_verified" && l.success
             ).length,
             failed_payments: logs.filter(l => 
-                l.event_type === 'payment_verified' && !l.success
+                l.event_type === "payment_verified" && !l.success
             ).length,
             last_24h_events: events.filter(e => 
                 e.timestamp > last24h
@@ -214,19 +214,24 @@ export class PaymentSecurityMonitor {
         console.info(`[PAYMENT_MONITOR] Cleared logs older than ${olderThanDays} days`);
     }
     
-    private static getLogLevel(severity: SecurityEvent['severity']): 'info' | 'warn' | 'error' {
+    private static getLogLevel(severity: SecurityEvent["severity"]): "info" | "warn" | "error" {
         switch (severity) {
-            case 'low': return 'info';
-            case 'medium': return 'info';
-            case 'high': return 'warn';
-            case 'critical': return 'error';
-            default: return 'info';
+            case "low": { return "info";
+            }
+            case "medium": { return "info";
+            }
+            case "high": { return "warn";
+            }
+            case "critical": { return "error";
+            }
+            default: { return "info";
+            }
         }
     }
     
     private static triggerSecurityAlert(event: SecurityEvent): void {
         // In production, this would integrate with alerting systems
-        console.error('🚨 CRITICAL SECURITY EVENT DETECTED 🚨', {
+        console.error("🚨 CRITICAL SECURITY EVENT DETECTED 🚨", {
             event_type: event.event_type,
             user_id: event.user_id,
             campus_id: event.campus_id,

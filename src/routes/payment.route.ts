@@ -3,8 +3,8 @@ import { describeRoute } from "hono-openapi";
 import { resolver, validator as zValidator } from "hono-openapi/zod";
 
 import { PaymentController } from "@/controllers/payment.controller";
-import { roleMiddleware } from "@/middlewares/role.middleware";
 import { paymentMonitoringMiddleware } from "@/middlewares/payment_monitoring.middleware";
+import { roleMiddleware } from "@/middlewares/role.middleware";
 import {
     availableGatewaysResponseSchema,
     createBankDetailsRequestSchema,

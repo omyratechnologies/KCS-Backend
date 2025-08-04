@@ -2,12 +2,12 @@ import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";
 import { resolver, validator as zValidator } from "hono-openapi/zod";
 import { z } from "zod";
-// Removed compress import due to CompressionStream compatibility issues
 
-import { MeetingController } from "@/controllers/meeting.controller";
 import { HealthController } from "@/controllers/health.controller";
+// Removed compress import due to CompressionStream compatibility issues
+import { MeetingController } from "@/controllers/meeting.controller";
+import { meetingAccessControl,meetingSecurityMiddleware } from "@/middlewares/meeting_security.middleware";
 import { meetingRateLimit, strictMeetingRateLimit } from "@/middlewares/rate_limiting.middleware";
-import { meetingSecurityMiddleware, meetingAccessControl } from "@/middlewares/meeting_security.middleware";
 import {
     createMeetingRequestBodySchema,
     createMeetingResponseSchema,
@@ -31,8 +31,8 @@ app.use("/*", meetingAccessControl()); // Access control
 
 // Enhanced meeting creation schema with strict validation
 const enhancedCreateMeetingSchema = createMeetingRequestBodySchema.extend({
-    meeting_type: z.enum(['scheduled', 'instant', 'recurring']).optional(),
-    max_participants: z.number().min(2).max(10000).optional(),
+    meeting_type: z.enum(["scheduled", "instant", "recurring"]).optional(),
+    max_participants: z.number().min(2).max(10_000).optional(),
     meeting_password: z.string().min(6).max(50).optional().transform(val => val?.trim()),
     waiting_room_enabled: z.boolean().optional(),
     require_host_approval: z.boolean().optional(),
@@ -51,7 +51,7 @@ const enhancedCreateMeetingSchema = createMeetingRequestBodySchema.extend({
         record_video: z.boolean().optional(),
         record_audio: z.boolean().optional(),
         record_chat: z.boolean().optional(),
-        storage_location: z.enum(['local', 'cloud']).optional(),
+        storage_location: z.enum(["local", "cloud"]).optional(),
         retention_days: z.number().min(1).max(365).optional(),
     }).optional(),
 }).refine(data => {
@@ -78,11 +78,11 @@ const participantManagementSchema = z.object({
         email: z.string().email().optional(),
         name: z.string().min(1).max(100).optional().transform(val => val?.trim()),
         phone: z.string().optional(),
-        role: z.enum(['host', 'co_host', 'presenter', 'attendee']).optional(),
+        role: z.enum(["host", "co_host", "presenter", "attendee"]).optional(),
     })).min(1, "At least one participant is required"),
     send_invitation: z.boolean().optional(),
     invitation_message: z.string().max(500).optional().transform(val => val?.trim()),
-    participant_role: z.enum(['host', 'co_host', 'presenter', 'attendee']).optional(),
+    participant_role: z.enum(["host", "co_host", "presenter", "attendee"]).optional(),
     notify_existing_participants: z.boolean().optional(),
 }).refine(data => {
     // Ensure each participant has either user_id or email
@@ -478,11 +478,11 @@ app.post(
             email: z.string().email().optional(),
             name: z.string().optional(),
             phone: z.string().optional(),
-            role: z.enum(['host', 'co_host', 'presenter', 'attendee']).optional(),
+            role: z.enum(["host", "co_host", "presenter", "attendee"]).optional(),
         })),
         send_invitation: z.boolean().optional(),
         invitation_message: z.string().optional(),
-        participant_role: z.enum(['host', 'co_host', 'presenter', 'attendee']).optional(),
+        participant_role: z.enum(["host", "co_host", "presenter", "attendee"]).optional(),
         notify_existing_participants: z.boolean().optional(),
     })),
     MeetingController.addParticipants
@@ -552,7 +552,7 @@ app.patch(
         },
     }),
     zValidator("json", z.object({
-        new_role: z.enum(['host', 'co_host', 'presenter', 'attendee']),
+        new_role: z.enum(["host", "co_host", "presenter", "attendee"]),
         permissions: z.object({
             can_share_screen: z.boolean().optional(),
             can_unmute_others: z.boolean().optional(),
