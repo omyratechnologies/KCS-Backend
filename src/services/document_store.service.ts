@@ -26,7 +26,7 @@ export class DocumentStoreService {
             updated_at: new Date(),
         });
 
-        if (!documentStore) throw new Error("Document not created");
+        if (!documentStore) {throw new Error("Document not created");}
 
         return documentStore;
     };
@@ -55,7 +55,7 @@ export class DocumentStoreService {
     public static readonly getDocumentStoreById = async (id: string) => {
         const document = await DocumentStore.findById(id);
 
-        if (!document) throw new Error("Document not found");
+        if (!document) {throw new Error("Document not found");}
 
         return document;
     };
@@ -67,7 +67,7 @@ export class DocumentStoreService {
     ) => {
         const document = await DocumentStore.updateById(id, data);
 
-        if (!document) throw new Error("Document not updated");
+        if (!document) {throw new Error("Document not updated");}
 
         return document;
     };
@@ -78,7 +78,7 @@ export class DocumentStoreService {
             is_deleted: true,
         });
 
-        if (!document) throw new Error("Document not deleted");
+        if (!document) {throw new Error("Document not deleted");}
 
         return document;
     };
@@ -98,7 +98,7 @@ export class DocumentStoreService {
             }
         );
 
-        if (documents.rows.length === 0) throw new Error("Documents not found");
+        if (documents.rows.length === 0) {throw new Error("Documents not found");}
 
         return documents.rows;
     };
@@ -118,7 +118,7 @@ export class DocumentStoreService {
             }
         );
 
-        if (documents.rows.length === 0) throw new Error("Documents not found");
+        if (documents.rows.length === 0) {throw new Error("Documents not found");}
 
         return documents.rows;
     };

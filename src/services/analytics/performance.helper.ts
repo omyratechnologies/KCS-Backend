@@ -322,7 +322,7 @@ export class PerformanceAnalyticsHelper {
         userScore: number
     ): Promise<ClassRankData> {
         try {
-            if (classIds.length === 0) return { rank: 0, totalStudents: 0 };
+            if (classIds.length === 0) {return { rank: 0, totalStudents: 0 };}
 
             // Get all students in the same classes
             const classResults = await Class.find({
@@ -368,7 +368,7 @@ export class PerformanceAnalyticsHelper {
     private static calculateSubjectTrend(
         scores: number[]
     ): "improving" | "declining" | "stable" | "insufficient_data" {
-        if (scores.length < 3) return "insufficient_data";
+        if (scores.length < 3) {return "insufficient_data";}
 
         const recentScores = scores.slice(-3); // Last 3 scores
         const earlyScores = scores.slice(0, 3); // First 3 scores
@@ -382,8 +382,8 @@ export class PerformanceAnalyticsHelper {
 
         const difference = recentAvg - earlyAvg;
 
-        if (difference > 5) return "improving";
-        if (difference < -5) return "declining";
+        if (difference > 5) {return "improving";}
+        if (difference < -5) {return "declining";}
         return "stable";
     }
 
@@ -391,10 +391,10 @@ export class PerformanceAnalyticsHelper {
      * Convert score to grade points (4.0 scale)
      */
     private static convertGradeToPoints(score: number): number {
-        if (score >= 90) return 4;
-        if (score >= 80) return 3;
-        if (score >= 70) return 2;
-        if (score >= 60) return 1;
+        if (score >= 90) {return 4;}
+        if (score >= 80) {return 3;}
+        if (score >= 70) {return 2;}
+        if (score >= 60) {return 1;}
         return 0;
     }
 
@@ -402,10 +402,10 @@ export class PerformanceAnalyticsHelper {
      * Convert grade points to letter grade
      */
     private static convertPointsToGrade(points: number): string {
-        if (points >= 3.5) return "A";
-        if (points >= 2.5) return "B";
-        if (points >= 1.5) return "C";
-        if (points >= 0.5) return "D";
+        if (points >= 3.5) {return "A";}
+        if (points >= 2.5) {return "B";}
+        if (points >= 1.5) {return "C";}
+        if (points >= 0.5) {return "D";}
         return "F";
     }
 

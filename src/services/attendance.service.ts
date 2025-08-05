@@ -1021,7 +1021,7 @@ export class AttendanceService {
             // Convert to array and sort by year-month descending
             const monthlyPerformance = [...monthlyAttendance.values()].sort(
                 (a, b) => {
-                    if (a.year !== b.year) return b.year - a.year;
+                    if (a.year !== b.year) {return b.year - a.year;}
                     const monthOrder = [
                         "January",
                         "February",

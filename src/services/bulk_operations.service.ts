@@ -593,7 +593,7 @@ export class BulkOperationsService {
             const { Fee } = await import("@/models/fee.model");
 
             const fee = await Fee.findById(fee_id);
-            if (!fee) return;
+            if (!fee) {return;}
 
             const eligibility = await DiscountService.checkDiscountEligibility(
                 campus_id,

@@ -1,0 +1,134 @@
+version: "3.8"
+
+services:
+    nginx-dev:
+        image: nginx:alpine
+        container_name: kcs-nginx-dev
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+            - ./nginx/dev.conf:/etc/nginx/conf.d/default.conf
+            - ./logs:/var/log/nginx
+        depends_on:
+            - api-dev
+            - redis-dev
+        restart: unless-stopped
+        networks:
+            - kcs-dev-network
+
+    api-dev:
+        build:
+            context: .
+            dockerfile: Dockerfile.dev
+            args:
+                - NODE_ENV=development
+        container_name: kcs-api-dev
+        ports:
+            - "4500:4500" # HTTP API
+            - "4501:4501" # Socket.IO WebSocket
+            - "40000-40100:40000-40100/udp" # MediaSoup RTC ports
+            - "40000-40100:40000-40100/tcp" # MediaSoup RTC ports
+            - "9229:9229" # Node.js debugging port
+        env_file:
+            - .env.development
+        environment:
+            - NODE_ENV=development
+            - REDIS_URL=redis://redis-dev:6379
+            - MEDIASOUP_LISTEN_IP=0.0.0.0
+            - MEDIASOUP_ANNOUNCED_IP=${MEDIASOUP_ANNOUNCED_IP:-127.0.0.1}
+            - SOCKET_IO_PORT=4501
+            - HOT_RELOAD=true
+            - DEBUG_MODE=true
+            - LOG_LEVEL=debug
+        depends_on:
+            redis-dev:
+                condition: service_healthy
+        restart: unless-stopped
+        networks:
+            - kcs-dev-network
+        volumes:
+            # Hot reload - mount source code
+            - ./src:/app/src:ro
+            - ./package.json:/app/package.json:ro
+            - ./tsconfig.json:/app/tsconfig.json:ro
+            - ./logs:/app/logs
+            - ./uploads:/app/uploads
+            - ./recordings:/app/recordings
+            # Node modules cache
+            - dev_node_modules:/app/node_modules
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:4500/api/health"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 40s
+        command: ["bun", "run", "dev"]
+
+    redis-dev:
+        image: redis:7-alpine
+        container_name: kcs-redis-dev
+        ports:
+            - "6379:6379"
+        command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+        volumes:
+            - redis-dev-data:/data
+            - ./redis/redis-dev.conf:/usr/local/etc/redis/redis.conf
+        restart: unless-stopped
+        networks:
+            - kcs-dev-network
+        healthcheck:
+            test: ["CMD", "redis-cli", "ping"]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+
+    # Development Database (Optional - for local development)
+    couchbase-dev:
+        image: couchbase:community-7.2.0
+        container_name: kcs-couchbase-dev
+        ports:
+            - "8091-8096:8091-8096"
+            - "11210:11210"
+        environment:
+            - COUCHBASE_ADMINISTRATOR_USERNAME=kcs_admin
+            - COUCHBASE_ADMINISTRATOR_PASSWORD=dev_password
+        volumes:
+            - couchbase-dev-data:/opt/couchbase/var
+        restart: unless-stopped
+        networks:
+            - kcs-dev-network
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:8091/pools"]
+            interval: 30s
+            timeout: 10s
+            retries: 5
+
+    # Development Tools Container
+    dev-tools:
+        image: node:20-alpine
+        container_name: kcs-dev-tools
+        working_dir: /app
+        volumes:
+            - .:/app
+            - dev_node_modules:/app/node_modules
+        networks:
+            - kcs-dev-network
+        profiles:
+            - tools
+        command: ["tail", "-f", "/dev/null"]
+
+volumes:
+    redis-dev-data:
+        driver: local
+    couchbase-dev-data:
+        driver: local
+    dev_node_modules:
+        driver: local
+
+networks:
+    kcs-dev-network:
+        driver: bridge
+        ipam:
+            config:
+                - subnet: 172.20.0.0/16

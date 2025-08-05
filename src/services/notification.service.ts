@@ -55,7 +55,7 @@ export class NotificationService {
         );
 
         if (data.rows.length === 0)
-            throw new Error("Campus wide notifications not found");
+            {throw new Error("Campus wide notifications not found");}
 
         return data.rows;
     };
@@ -67,7 +67,7 @@ export class NotificationService {
         const notification = await CampusWideNotification.findById(id);
 
         if (!notification)
-            throw new Error("Campus wide notification not found");
+            {throw new Error("Campus wide notification not found");}
 
         return notification;
     };
@@ -80,7 +80,7 @@ export class NotificationService {
         const notification = await CampusWideNotification.findById(id);
 
         if (!notification)
-            throw new Error("Campus wide notification not found");
+            {throw new Error("Campus wide notification not found");}
 
         return await CampusWideNotification.updateById(id, data);
     };
@@ -92,7 +92,7 @@ export class NotificationService {
         const notification = await CampusWideNotification.findById(id);
 
         if (!notification)
-            throw new Error("Campus wide notification not found");
+            {throw new Error("Campus wide notification not found");}
 
         return await CampusWideNotification.updateById(id, {
             is_deleted: true,
@@ -133,7 +133,7 @@ export class NotificationService {
         );
 
         if (data.rows.length === 0)
-            throw new Error("Class notifications not found");
+            {throw new Error("Class notifications not found");}
 
         return data.rows;
     };
@@ -142,7 +142,7 @@ export class NotificationService {
     public static readonly getClassNotificationById = async (id: string) => {
         const notification = await ClassNotification.findById(id);
 
-        if (!notification) throw new Error("Class notification not found");
+        if (!notification) {throw new Error("Class notification not found");}
 
         return notification;
     };
@@ -154,7 +154,7 @@ export class NotificationService {
     ) => {
         const notification = await ClassNotification.findById(id);
 
-        if (!notification) throw new Error("Class notification not found");
+        if (!notification) {throw new Error("Class notification not found");}
 
         return await ClassNotification.updateById(id, data);
     };
@@ -163,7 +163,7 @@ export class NotificationService {
     public static readonly deleteClassNotification = async (id: string) => {
         const notification = await ClassNotification.findById(id);
 
-        if (!notification) throw new Error("Class notification not found");
+        if (!notification) {throw new Error("Class notification not found");}
 
         return await ClassNotification.updateById(id, { is_deleted: true });
     };
@@ -202,7 +202,7 @@ export class NotificationService {
         );
 
         if (data.rows.length === 0)
-            throw new Error("Parent notifications not found");
+            {throw new Error("Parent notifications not found");}
 
         return data.rows;
     };
@@ -211,7 +211,7 @@ export class NotificationService {
     public static readonly getParentNotificationById = async (id: string) => {
         const notification = await ParentNotification.findById(id);
 
-        if (!notification) throw new Error("Parent notification not found");
+        if (!notification) {throw new Error("Parent notification not found");}
 
         return notification;
     };
@@ -223,7 +223,7 @@ export class NotificationService {
     ) => {
         const notification = await ParentNotification.findById(id);
 
-        if (!notification) throw new Error("Parent notification not found");
+        if (!notification) {throw new Error("Parent notification not found");}
 
         return await ParentNotification.updateById(id, data);
     };
@@ -232,7 +232,7 @@ export class NotificationService {
     public static readonly deleteParentNotification = async (id: string) => {
         const notification = await ParentNotification.findById(id);
 
-        if (!notification) throw new Error("Parent notification not found");
+        if (!notification) {throw new Error("Parent notification not found");}
 
         return await ParentNotification.updateById(id, { is_deleted: true });
     };
@@ -274,7 +274,7 @@ export class NotificationService {
         );
 
         if (data.rows.length === 0)
-            throw new Error("Student notifications not found");
+            {throw new Error("Student notifications not found");}
 
         return data.rows;
     };
@@ -283,7 +283,7 @@ export class NotificationService {
     public static readonly getStudentNotificationById = async (id: string) => {
         const notification = await StudentNotification.findById(id);
 
-        if (!notification) throw new Error("Student notification not found");
+        if (!notification) {throw new Error("Student notification not found");}
 
         return notification;
     };
@@ -295,7 +295,7 @@ export class NotificationService {
     ) => {
         const notification = await StudentNotification.findById(id);
 
-        if (!notification) throw new Error("Student notification not found");
+        if (!notification) {throw new Error("Student notification not found");}
 
         return await StudentNotification.updateById(id, data);
     };
@@ -304,7 +304,7 @@ export class NotificationService {
     public static readonly deleteStudentNotification = async (id: string) => {
         const notification = await StudentNotification.findById(id);
 
-        if (!notification) throw new Error("Student notification not found");
+        if (!notification) {throw new Error("Student notification not found");}
 
         return await StudentNotification.updateById(id, { is_deleted: true });
     };
@@ -346,7 +346,7 @@ export class NotificationService {
         );
 
         if (data.rows.length === 0)
-            throw new Error("Teacher notifications not found");
+            {throw new Error("Teacher notifications not found");}
 
         return data.rows;
     };
@@ -355,7 +355,7 @@ export class NotificationService {
     public static readonly getTeacherNotificationById = async (id: string) => {
         const notification = await TeacherNotification.findById(id);
 
-        if (!notification) throw new Error("Teacher notification not found");
+        if (!notification) {throw new Error("Teacher notification not found");}
 
         return notification;
     };
@@ -367,7 +367,7 @@ export class NotificationService {
     ) => {
         const notification = await TeacherNotification.findById(id);
 
-        if (!notification) throw new Error("Teacher notification not found");
+        if (!notification) {throw new Error("Teacher notification not found");}
 
         return await TeacherNotification.updateById(id, data);
     };
@@ -376,7 +376,7 @@ export class NotificationService {
     public static readonly deleteTeacherNotification = async (id: string) => {
         const notification = await TeacherNotification.findById(id);
 
-        if (!notification) throw new Error("Teacher notification not found");
+        if (!notification) {throw new Error("Teacher notification not found");}
 
         return await TeacherNotification.updateById(id, { is_deleted: true });
     };

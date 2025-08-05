@@ -838,7 +838,7 @@ export class CourseService {
 
             // Build query conditions
             const queryConditions: any = { user_id, campus_id };
-            if (status) queryConditions.enrollment_status = status;
+            if (status) {queryConditions.enrollment_status = status;}
 
             const enrollmentsResult =
                 await CourseEnrollment.find(queryConditions);
@@ -1448,14 +1448,14 @@ export class CourseService {
         watchedMinutes: number,
         totalMinutes: number
     ) {
-        if (totalMinutes === 0) return "N/A";
+        if (totalMinutes === 0) {return "N/A";}
 
         const remainingMinutes = Math.max(0, totalMinutes - watchedMinutes);
         const hours = Math.floor(remainingMinutes / 60);
         const minutes = remainingMinutes % 60;
 
-        if (hours === 0) return `${minutes}min`;
-        if (minutes === 0) return `${hours}hr`;
+        if (hours === 0) {return `${minutes}min`;}
+        if (minutes === 0) {return `${hours}hr`;}
         return `${hours}hr ${minutes}min`;
     }
 
@@ -1824,57 +1824,57 @@ export class CourseService {
         // Time-based achievements
         const totalHours = totalWatchTime / 3600;
         if (totalHours >= 1)
-            achievements.push({
+            {achievements.push({
                 type: "time",
                 title: "First Hour",
                 description: "Completed 1 hour of learning",
-            });
+            });}
         if (totalHours >= 10)
-            achievements.push({
+            {achievements.push({
                 type: "time",
                 title: "Dedicated Learner",
                 description: "Completed 10 hours of learning",
-            });
+            });}
         if (totalHours >= 50)
-            achievements.push({
+            {achievements.push({
                 type: "time",
                 title: "Learning Machine",
                 description: "Completed 50 hours of learning",
-            });
+            });}
 
         // Course completion achievements
         const completedCourses = enrollments.filter(
             (e) => e.enrollment_status === "completed"
         ).length;
         if (completedCourses >= 1)
-            achievements.push({
+            {achievements.push({
                 type: "completion",
                 title: "Course Finisher",
                 description: "Completed your first course",
-            });
+            });}
         if (completedCourses >= 5)
-            achievements.push({
+            {achievements.push({
                 type: "completion",
                 title: "Multi-Course Master",
                 description: "Completed 5 courses",
-            });
+            });}
 
         // Lecture completion achievements
         const completedLectures = progressRecords.filter(
             (p) => p.progress_status === "completed"
         ).length;
         if (completedLectures >= 10)
-            achievements.push({
+            {achievements.push({
                 type: "progress",
                 title: "Lecture Lover",
                 description: "Completed 10 lectures",
-            });
+            });}
         if (completedLectures >= 50)
-            achievements.push({
+            {achievements.push({
                 type: "progress",
                 title: "Content Consumer",
                 description: "Completed 50 lectures",
-            });
+            });}
 
         return achievements;
     }

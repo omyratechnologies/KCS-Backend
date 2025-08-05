@@ -10,7 +10,7 @@ export const authMiddleware = (): MiddlewareHandler => {
         let token =
             ctx.req.header("Authorization") ?? ctx.req.query("access_token");
 
-        if (!token) return ctx.json({ error: "No token provided" }, 401);
+        if (!token) {return ctx.json({ error: "No token provided" }, 401);}
 
         token = token.replace("Bearer ", "");
 

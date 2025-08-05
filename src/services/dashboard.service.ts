@@ -87,7 +87,7 @@ export class DashboardService {
 
             for (const enrollment of enrollments) {
                 const course: any = courseMap.get(enrollment.course_id);
-                if (!course) continue;
+                if (!course) {continue;}
 
                 const courseData = {
                     id: course.id || enrollment.course_id,

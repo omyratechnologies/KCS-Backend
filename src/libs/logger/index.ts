@@ -48,8 +48,8 @@ const infoLogs = (msg: any, logType: LogTypes, generated_by: string) => {
     ) {
         msg = `[${generated_by}] ` + msg;
     }
-    if (logType === LogTypes.LOGS) return Logs(msg);
-    if (logType === LogTypes.ERROR) return ErrorLogs(msg);
+    if (logType === LogTypes.LOGS) {return Logs(msg);}
+    if (logType === LogTypes.ERROR) {return ErrorLogs(msg);}
     return customLogHandler(msg);
 };
 

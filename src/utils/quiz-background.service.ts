@@ -114,7 +114,7 @@ export class QuizTimeUtils {
      * Check if a session is expired
      */
     public static isSessionExpired(expiresAt: Date | null): boolean {
-        if (!expiresAt) return false;
+        if (!expiresAt) {return false;}
         return new Date() > new Date(expiresAt);
     }
 
@@ -122,7 +122,7 @@ export class QuizTimeUtils {
      * Calculate remaining time in seconds
      */
     public static getRemainingTimeSeconds(expiresAt: Date | null): number {
-        if (!expiresAt) return -1; // No time limit
+        if (!expiresAt) {return -1;} // No time limit
 
         const now = new Date();
         const expires = new Date(expiresAt);
@@ -148,7 +148,7 @@ export class QuizTimeUtils {
      * Format time remaining for display
      */
     public static formatTimeRemaining(seconds: number): string {
-        if (seconds < 0) return "No time limit";
+        if (seconds < 0) {return "No time limit";}
 
         const hours = Math.floor(seconds / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);

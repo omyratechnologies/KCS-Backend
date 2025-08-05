@@ -270,9 +270,9 @@ export const PaymentGatewayService = {
     getAvailableGateways(config: PaymentGatewayConfig): string[] {
         const gateways: string[] = [];
 
-        if (config.razorpay?.enabled) gateways.push("razorpay");
-        if (config.payu?.enabled) gateways.push("payu");
-        if (config.cashfree?.enabled) gateways.push("cashfree");
+        if (config.razorpay?.enabled) {gateways.push("razorpay");}
+        if (config.payu?.enabled) {gateways.push("payu");}
+        if (config.cashfree?.enabled) {gateways.push("cashfree");}
 
         return gateways;
     },

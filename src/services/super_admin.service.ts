@@ -1282,10 +1282,10 @@ export class SuperAdminService {
             // Calculate performance score
             let performanceScore = 100;
 
-            if (realTimeMetrics.error_rate_percent > 5) performanceScore -= 20;
+            if (realTimeMetrics.error_rate_percent > 5) {performanceScore -= 20;}
             if (realTimeMetrics.avg_response_time_ms > 2000)
-                performanceScore -= 15;
-            if (successRate24h < 95) performanceScore -= 25;
+                {performanceScore -= 15;}
+            if (successRate24h < 95) {performanceScore -= 25;}
 
             // Determine current status
             let currentStatus: "healthy" | "degraded" | "critical";
@@ -1430,13 +1430,13 @@ export class SuperAdminService {
             const complianceScore = complianceResult.compliance_score;
 
             const issues: string[] = [];
-            if (collectionRate < 80) issues.push("Low collection rate");
+            if (collectionRate < 80) {issues.push("Low collection rate");}
             if (paymentSuccessRate < 95)
-                issues.push("Low payment success rate");
+                {issues.push("Low payment success rate");}
             if (overdueFees > totalFeesGenerated * 0.1)
-                issues.push("High overdue fees");
+                {issues.push("High overdue fees");}
             if (!Object.values(gatewayStatus).some(Boolean))
-                issues.push("No payment gateways configured");
+                {issues.push("No payment gateways configured");}
 
             return {
                 campus_id,
@@ -1619,7 +1619,7 @@ export class SuperAdminService {
                 ];
                 // Keep highest impact level
                 if (action.estimated_impact === "high")
-                    existing.estimated_impact = "high";
+                    {existing.estimated_impact = "high";}
                 else if (
                     action.estimated_impact === "medium" &&
                     existing.estimated_impact === "low"
@@ -1627,7 +1627,7 @@ export class SuperAdminService {
                     existing.estimated_impact = "medium";
                 }
                 // Keep most restrictive approval requirement
-                if (action.requires_approval) existing.requires_approval = true;
+                if (action.requires_approval) {existing.requires_approval = true;}
             } else {
                 consolidatedMap.set(action.action, { ...action });
             }

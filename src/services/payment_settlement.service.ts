@@ -807,7 +807,7 @@ export class PaymentSettlementService {
     }
 
     private static maskAccountNumber(accountNumber: string): string {
-        if (accountNumber.length <= 4) return accountNumber;
+        if (accountNumber.length <= 4) {return accountNumber;}
         const visibleDigits = 4;
         const maskedDigits = accountNumber.length - visibleDigits;
         return "*".repeat(maskedDigits) + accountNumber.slice(-visibleDigits);

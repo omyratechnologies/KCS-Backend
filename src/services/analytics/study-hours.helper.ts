@@ -284,7 +284,7 @@ export class StudyHoursAnalyticsHelper {
         hoursSpent: number,
         averageScore: number
     ): number {
-        if (hoursSpent === 0) return 0;
+        if (hoursSpent === 0) {return 0;}
 
         // Productivity = (Score / 100) / (Hours / optimal_hours)
         // Optimal hours per week for a student might be 20-25

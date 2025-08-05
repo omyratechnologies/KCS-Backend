@@ -1065,9 +1065,9 @@ export class PaymentController {
 
             const filters: any = {};
             if (is_active !== undefined)
-                filters.is_active = is_active === "true";
-            if (discount_type) filters.discount_type = discount_type;
-            if (academic_year) filters.academic_year = academic_year;
+                {filters.is_active = is_active === "true";}
+            if (discount_type) {filters.discount_type = discount_type;}
+            if (academic_year) {filters.academic_year = academic_year;}
 
             const { DiscountService } = await import(
                 "@/services/discount.service"

@@ -365,7 +365,7 @@ export class MeetingService {
             }
         );
 
-        if (meetings.rows.length === 0) throw new Error("Meetings not found");
+        if (meetings.rows.length === 0) {throw new Error("Meetings not found");}
 
         return meetings.rows;
     };
@@ -850,7 +850,7 @@ export class MeetingService {
         engagementMetrics: any;
     }> => {
         const meeting = await Meeting.findById(meetingId);
-        if (!meeting) throw new Error("Meeting not found");
+        if (!meeting) {throw new Error("Meeting not found");}
 
         const participants = await MeetingParticipant.find({
             meeting_id: meetingId,

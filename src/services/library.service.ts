@@ -30,7 +30,7 @@ export class LibraryService {
             updated_at: new Date(),
         });
 
-        if (!library) throw new Error("Library not created");
+        if (!library) {throw new Error("Library not created");}
 
         return library;
     };
@@ -48,7 +48,7 @@ export class LibraryService {
             }
         );
 
-        if (!libraries) throw new Error("Libraries not found");
+        if (!libraries) {throw new Error("Libraries not found");}
 
         return libraries.rows;
     };
@@ -57,7 +57,7 @@ export class LibraryService {
     public static readonly getLibraryById = async (id: string) => {
         const library = await Library.findById(id);
 
-        if (!library) throw new Error("Library not found");
+        if (!library) {throw new Error("Library not found");}
 
         return library;
     };
@@ -69,7 +69,7 @@ export class LibraryService {
     ) => {
         const library = await Library.findByIdAndUpdate(id, data);
 
-        if (!library) throw new Error("Library not updated");
+        if (!library) {throw new Error("Library not updated");}
 
         return library;
     };
@@ -80,7 +80,7 @@ export class LibraryService {
             is_deleted: true,
         });
 
-        if (!library) throw new Error("Library not deleted");
+        if (!library) {throw new Error("Library not deleted");}
 
         return library;
     };
@@ -108,7 +108,7 @@ export class LibraryService {
             updated_at: new Date(),
         });
 
-        if (!libraryIssue) throw new Error("Library issue not created");
+        if (!libraryIssue) {throw new Error("Library issue not created");}
 
         return libraryIssue;
     };
@@ -124,7 +124,7 @@ export class LibraryService {
             }
         );
 
-        if (!libraryIssues) throw new Error("Library issues not found");
+        if (!libraryIssues) {throw new Error("Library issues not found");}
 
         return libraryIssues.rows;
     };
@@ -133,7 +133,7 @@ export class LibraryService {
     public static readonly getLibraryIssueById = async (id: string) => {
         const libraryIssue = await LibraryIssue.findById(id);
 
-        if (!libraryIssue) throw new Error("Library issue not found");
+        if (!libraryIssue) {throw new Error("Library issue not found");}
 
         return libraryIssue;
     };
@@ -145,7 +145,7 @@ export class LibraryService {
     ) => {
         const libraryIssue = await LibraryIssue.findByIdAndUpdate(id, data);
 
-        if (!libraryIssue) throw new Error("Library issue not updated");
+        if (!libraryIssue) {throw new Error("Library issue not updated");}
 
         return libraryIssue;
     };
@@ -156,7 +156,7 @@ export class LibraryService {
             is_deleted: true,
         });
 
-        if (!libraryIssue) throw new Error("Library issue not deleted");
+        if (!libraryIssue) {throw new Error("Library issue not deleted");}
 
         return libraryIssue;
     };
@@ -174,7 +174,7 @@ export class LibraryService {
             }
         );
 
-        if (!libraryIssues) throw new Error("Library issues not found");
+        if (!libraryIssues) {throw new Error("Library issues not found");}
 
         return libraryIssues.rows;
     };
@@ -192,7 +192,7 @@ export class LibraryService {
             }
         );
 
-        if (!libraryIssues) throw new Error("Library issues not found");
+        if (!libraryIssues) {throw new Error("Library issues not found");}
 
         return libraryIssues.rows;
     };

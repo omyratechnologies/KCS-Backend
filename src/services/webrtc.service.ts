@@ -489,7 +489,7 @@ export class WebRTCService {
      */
     public static async closeMeetingRoom(meetingId: string): Promise<void> {
         const router = this.routers.get(meetingId);
-        if (!router) return;
+        if (!router) {return;}
 
         // Close all transports in this room
         for (const [transportId, transport] of this.transports.entries()) {
@@ -624,7 +624,7 @@ export class WebRTCService {
     ): Promise<void> {
         try {
             const meeting = await Meeting.findById(meetingId);
-            if (!meeting) return;
+            if (!meeting) {return;}
 
             const analytics = meeting.analytics || {
                 total_duration_minutes: 0,

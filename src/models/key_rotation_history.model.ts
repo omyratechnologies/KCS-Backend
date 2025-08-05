@@ -80,7 +80,7 @@ export class KeyRotationHistoryService {
         });
 
         const rotations = lastRotation.rows || [];
-        if (rotations.length === 0) return null;
+        if (rotations.length === 0) {return null;}
 
         const sortedRotations = rotations.sort(
             (a, b) =>

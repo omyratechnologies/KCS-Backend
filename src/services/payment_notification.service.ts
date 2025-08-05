@@ -53,7 +53,7 @@ export class PaymentNotificationService {
                 campus_id,
                 "payment_due"
             );
-            if (!template || !template.is_active) return;
+            if (!template || !template.is_active) {return;}
 
             const notificationData: PaymentNotificationData = {
                 student_name: `${studentData.first_name} ${studentData.last_name}`,
@@ -90,7 +90,7 @@ export class PaymentNotificationService {
                 campus_id,
                 "payment_overdue"
             );
-            if (!template || !template.is_active) return;
+            if (!template || !template.is_active) {return;}
 
             const notificationData: PaymentNotificationData = {
                 student_name: `${studentData.first_name} ${studentData.last_name}`,
@@ -130,7 +130,7 @@ export class PaymentNotificationService {
                 campus_id,
                 "payment_success"
             );
-            if (!template || !template.is_active) return;
+            if (!template || !template.is_active) {return;}
 
             const notificationData: PaymentNotificationData = {
                 student_name: `${studentData.first_name} ${studentData.last_name}`,

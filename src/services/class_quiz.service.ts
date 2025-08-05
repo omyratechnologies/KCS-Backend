@@ -22,19 +22,19 @@ import { IUser, User } from "@/models/user.model";
 
 // Utility function to format time in seconds to a readable format
 const formatTime = (seconds: number): string => {
-    if (seconds === 0) return "0 seconds";
+    if (seconds === 0) {return "0 seconds";}
 
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const remainingSeconds = seconds % 60;
 
     const parts: string[] = [];
-    if (hours > 0) parts.push(`${hours} hour${hours > 1 ? "s" : ""}`);
-    if (minutes > 0) parts.push(`${minutes} minute${minutes > 1 ? "s" : ""}`);
+    if (hours > 0) {parts.push(`${hours} hour${hours > 1 ? "s" : ""}`);}
+    if (minutes > 0) {parts.push(`${minutes} minute${minutes > 1 ? "s" : ""}`);}
     if (remainingSeconds > 0)
-        parts.push(
+        {parts.push(
             `${remainingSeconds} second${remainingSeconds > 1 ? "s" : ""}`
-        );
+        );}
 
     return parts.join(", ");
 };
@@ -1317,8 +1317,8 @@ export class ClassQuizService {
             is_deleted: false,
         };
 
-        if (class_id) filter.class_id = class_id;
-        if (quiz_id) filter.quiz_id = quiz_id;
+        if (class_id) {filter.class_id = class_id;}
+        if (quiz_id) {filter.quiz_id = quiz_id;}
 
         const result = await ClassQuizSession.find(filter, {
             sort: { last_activity_at: "DESC" },
@@ -1383,7 +1383,7 @@ export class ClassQuizService {
             is_deleted: false,
         };
 
-        if (quiz_id) filter.quiz_id = quiz_id;
+        if (quiz_id) {filter.quiz_id = quiz_id;}
 
         const result = await ClassQuizSession.find(filter, {
             sort: { created_at: "DESC" },

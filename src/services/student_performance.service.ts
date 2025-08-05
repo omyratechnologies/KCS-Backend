@@ -272,23 +272,23 @@ export class StudentPerformanceService {
 
     // Helper method to calculate grade
     private static calculateGrade = (percentage: number): string => {
-        if (percentage >= 90) return "A+";
-        if (percentage >= 80) return "A";
-        if (percentage >= 70) return "B+";
-        if (percentage >= 60) return "B";
-        if (percentage >= 50) return "C";
-        if (percentage >= 40) return "D";
+        if (percentage >= 90) {return "A+";}
+        if (percentage >= 80) {return "A";}
+        if (percentage >= 70) {return "B+";}
+        if (percentage >= 60) {return "B";}
+        if (percentage >= 50) {return "C";}
+        if (percentage >= 40) {return "D";}
         return "F";
     };
 
     // Helper method to calculate GPA
     private static calculateGPA = (percentage: number): number => {
-        if (percentage >= 90) return 4;
-        if (percentage >= 80) return 3.5;
-        if (percentage >= 70) return 3;
-        if (percentage >= 60) return 2.5;
-        if (percentage >= 50) return 2;
-        if (percentage >= 40) return 1.5;
+        if (percentage >= 90) {return 4;}
+        if (percentage >= 80) {return 3.5;}
+        if (percentage >= 70) {return 3;}
+        if (percentage >= 60) {return 2.5;}
+        if (percentage >= 50) {return 2;}
+        if (percentage >= 40) {return 1.5;}
         return 0;
     };
 

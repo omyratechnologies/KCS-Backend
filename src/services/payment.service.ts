@@ -273,8 +273,8 @@ export class PaymentService {
     ): Promise<IFeeTemplate[]> {
         try {
             const query: any = { campus_id, is_active: true };
-            if (class_id) query.class_id = class_id;
-            if (academic_year) query.academic_year = academic_year;
+            if (class_id) {query.class_id = class_id;}
+            if (academic_year) {query.academic_year = academic_year;}
 
             const templates = await FeeTemplate.find(query);
             return templates.rows || [];
@@ -916,21 +916,21 @@ export class PaymentService {
     }> {
         try {
             const query: any = { campus_id };
-            if (student_id) query.user_id = student_id;
+            if (student_id) {query.user_id = student_id;}
 
             const fees = await Fee.find(query);
 
             const transactionQuery: any = { campus_id };
-            if (student_id) transactionQuery.student_id = student_id;
-            if (parent_id) transactionQuery.parent_id = parent_id;
-            if (status) transactionQuery.status = status;
+            if (student_id) {transactionQuery.student_id = student_id;}
+            if (parent_id) {transactionQuery.parent_id = parent_id;}
+            if (status) {transactionQuery.status = status;}
 
             const transactions =
                 await PaymentTransaction.find(transactionQuery);
 
             const invoiceQuery: any = { campus_id };
-            if (student_id) invoiceQuery.student_id = student_id;
-            if (parent_id) invoiceQuery.parent_id = parent_id;
+            if (student_id) {invoiceQuery.student_id = student_id;}
+            if (parent_id) {invoiceQuery.parent_id = parent_id;}
 
             const invoices = await PaymentInvoice.find(invoiceQuery);
 

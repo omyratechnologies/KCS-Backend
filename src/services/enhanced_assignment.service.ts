@@ -405,9 +405,9 @@ export class EnhancedAssignmentService {
                     // Sort by submission date descending
                     const aDate = a.submission?.submission_date;
                     const bDate = b.submission?.submission_date;
-                    if (!aDate && !bDate) return 0;
-                    if (!aDate) return 1;
-                    if (!bDate) return -1;
+                    if (!aDate && !bDate) {return 0;}
+                    if (!aDate) {return 1;}
+                    if (!bDate) {return -1;}
                     return (
                         new Date(bDate).getTime() - new Date(aDate).getTime()
                     );
@@ -1039,16 +1039,16 @@ export class EnhancedAssignmentService {
         // Days until due weight (more urgent = higher score)
         const daysUntilDue = this.calculateDaysUntilDue(dueDate);
         if (daysUntilDue <= 0)
-            score += 1000; // Overdue
+            {score += 1000;} // Overdue
         else if (daysUntilDue <= 1)
-            score += 500; // Due today/tomorrow
+            {score += 500;} // Due today/tomorrow
         else if (daysUntilDue <= 3)
-            score += 200; // Due soon
-        else if (daysUntilDue <= 7) score += 100; // Due this week
+            {score += 200;} // Due soon
+        else if (daysUntilDue <= 7) {score += 100;} // Due this week
 
         // Status weight
-        if (status === "overdue") score += 2000;
-        else if (status === "due_soon") score += 800;
+        if (status === "overdue") {score += 2000;}
+        else if (status === "due_soon") {score += 800;}
 
         return score;
     }
@@ -1235,8 +1235,8 @@ export class EnhancedAssignmentService {
             if (recentGrades.length >= 2) {
                 const latestGrade = recentGrades[0].submission!.grade!;
                 const previousGrade = recentGrades[1].submission!.grade!;
-                if (latestGrade > previousGrade + 5) trend = "improving";
-                else if (latestGrade < previousGrade - 5) trend = "declining";
+                if (latestGrade > previousGrade + 5) {trend = "improving";}
+                else if (latestGrade < previousGrade - 5) {trend = "declining";}
             }
 
             return {
@@ -1257,11 +1257,11 @@ export class EnhancedAssignmentService {
         const daysUntilDue = assignment.days_until_due;
         const priority = assignment.priority;
 
-        if (daysUntilDue <= 0) return "critical";
-        if (daysUntilDue <= 1 && priority === "high") return "critical";
-        if (daysUntilDue <= 1) return "high";
-        if (daysUntilDue <= 3 && priority === "high") return "high";
-        if (daysUntilDue <= 3) return "medium";
+        if (daysUntilDue <= 0) {return "critical";}
+        if (daysUntilDue <= 1 && priority === "high") {return "critical";}
+        if (daysUntilDue <= 1) {return "high";}
+        if (daysUntilDue <= 3 && priority === "high") {return "high";}
+        if (daysUntilDue <= 3) {return "medium";}
         return "low";
     }
 }

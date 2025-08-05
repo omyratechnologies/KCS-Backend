@@ -752,7 +752,7 @@ export class SocketService {
         socketId: string
     ): Promise<any> {
         const userId = this.socketUsers.get(socketId);
-        if (!userId) return null;
+        if (!userId) {return null;}
 
         const participants = await MeetingParticipant.find({ user_id: userId });
         return participants.rows?.[0] || null;

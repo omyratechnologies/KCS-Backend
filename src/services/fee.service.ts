@@ -27,7 +27,7 @@ export class FeeService {
             updated_at: new Date(),
         });
 
-        if (!fee) throw new Error("Fee not created");
+        if (!fee) {throw new Error("Fee not created");}
 
         return fee;
     };
@@ -45,7 +45,7 @@ export class FeeService {
             }
         );
 
-        if (fee.rows.length === 0) throw new Error("Fee not found");
+        if (fee.rows.length === 0) {throw new Error("Fee not found");}
 
         return fee.rows;
     };
@@ -57,7 +57,7 @@ export class FeeService {
     ) => {
         const fee = await Fee.updateById(id, data);
 
-        if (!fee) throw new Error("Fee not updated");
+        if (!fee) {throw new Error("Fee not updated");}
 
         return fee;
     };

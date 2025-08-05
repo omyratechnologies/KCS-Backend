@@ -47,7 +47,7 @@ export class MessageService {
             }
         );
 
-        if (messages.rows.length === 0) throw new Error("Messages not found");
+        if (messages.rows.length === 0) {throw new Error("Messages not found");}
 
         return messages.rows;
     }
@@ -102,7 +102,7 @@ export class MessageService {
             }
         );
 
-        if (groups.rows.length === 0) throw new Error("Groups not found");
+        if (groups.rows.length === 0) {throw new Error("Groups not found");}
 
         return groups.rows;
     }
@@ -111,7 +111,7 @@ export class MessageService {
     public static async getGroupById(id: string) {
         const group = await MessageGroup.findById(id);
 
-        if (!group) throw new Error("Group not found");
+        if (!group) {throw new Error("Group not found");}
 
         return group;
     }
@@ -156,7 +156,7 @@ export class MessageService {
             }
         );
 
-        if (messages.rows.length === 0) throw new Error("Messages not found");
+        if (messages.rows.length === 0) {throw new Error("Messages not found");}
 
         return messages.rows;
     }

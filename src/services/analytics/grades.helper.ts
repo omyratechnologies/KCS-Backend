@@ -69,7 +69,7 @@ export class GradesAnalyticsHelper {
         records: any[],
         campus_id: string
     ): Promise<CurrentTermGrade[]> {
-        if (records.length === 0) return [];
+        if (records.length === 0) {return [];}
 
         // Get the most recent record
         const latestRecord = records.sort(
@@ -82,11 +82,11 @@ export class GradesAnalyticsHelper {
             !latestRecord.record_data ||
             !Array.isArray(latestRecord.record_data)
         )
-            return [];
+            {return [];}
 
         // Get the latest term from the record
         const currentTerm = latestRecord.record_data.at(-1);
-        if (!currentTerm.marks || !Array.isArray(currentTerm.marks)) return [];
+        if (!currentTerm.marks || !Array.isArray(currentTerm.marks)) {return [];}
 
         // Get subject names
         const subjectIds = currentTerm.marks.map(
@@ -313,7 +313,7 @@ export class GradesAnalyticsHelper {
     private static calculateSubjectTrend(
         grades: SubjectGradeEntry[]
     ): "improving" | "declining" | "stable" | "insufficient_data" {
-        if (grades.length < 3) return "insufficient_data";
+        if (grades.length < 3) {return "insufficient_data";}
 
         const recentGrades = grades.slice(-3); // Last 3 grades
         const earlyGrades = grades.slice(0, 3); // First 3 grades
@@ -327,8 +327,8 @@ export class GradesAnalyticsHelper {
 
         const difference = recentAvg - earlyAvg;
 
-        if (difference > 5) return "improving";
-        if (difference < -5) return "declining";
+        if (difference > 5) {return "improving";}
+        if (difference < -5) {return "declining";}
         return "stable";
     }
 
@@ -418,16 +418,16 @@ export class GradesAnalyticsHelper {
      * Calculate grade letter from percentage
      */
     static calculateGradeLetter(percentage: number): string {
-        if (percentage >= 90) return "A+";
-        if (percentage >= 85) return "A";
-        if (percentage >= 80) return "A-";
-        if (percentage >= 75) return "B+";
-        if (percentage >= 70) return "B";
-        if (percentage >= 65) return "B-";
-        if (percentage >= 60) return "C+";
-        if (percentage >= 55) return "C";
-        if (percentage >= 50) return "C-";
-        if (percentage >= 45) return "D";
+        if (percentage >= 90) {return "A+";}
+        if (percentage >= 85) {return "A";}
+        if (percentage >= 80) {return "A-";}
+        if (percentage >= 75) {return "B+";}
+        if (percentage >= 70) {return "B";}
+        if (percentage >= 65) {return "B-";}
+        if (percentage >= 60) {return "C+";}
+        if (percentage >= 55) {return "C";}
+        if (percentage >= 50) {return "C-";}
+        if (percentage >= 45) {return "D";}
         return "F";
     }
 
@@ -437,7 +437,7 @@ export class GradesAnalyticsHelper {
     static calculateGPA(
         grades: { percentage: number; creditHours?: number }[]
     ): number {
-        if (grades.length === 0) return 0;
+        if (grades.length === 0) {return 0;}
 
         const totalCredits = grades.reduce(
             (sum, grade) => sum + (grade.creditHours || 1),
@@ -455,15 +455,15 @@ export class GradesAnalyticsHelper {
      * Convert percentage to grade points (4.0 scale)
      */
     private static percentageToGradePoints(percentage: number): number {
-        if (percentage >= 90) return 4;
-        if (percentage >= 85) return 3.7;
-        if (percentage >= 80) return 3.3;
-        if (percentage >= 75) return 3;
-        if (percentage >= 70) return 2.7;
-        if (percentage >= 65) return 2.3;
-        if (percentage >= 60) return 2;
-        if (percentage >= 55) return 1.7;
-        if (percentage >= 50) return 1;
+        if (percentage >= 90) {return 4;}
+        if (percentage >= 85) {return 3.7;}
+        if (percentage >= 80) {return 3.3;}
+        if (percentage >= 75) {return 3;}
+        if (percentage >= 70) {return 2.7;}
+        if (percentage >= 65) {return 2.3;}
+        if (percentage >= 60) {return 2;}
+        if (percentage >= 55) {return 1.7;}
+        if (percentage >= 50) {return 1;}
         return 0;
     }
 }
