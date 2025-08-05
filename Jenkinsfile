@@ -144,36 +144,6 @@ pipeline {
                 '''
             }
         }
-                    if command -v bun &> /dev/null; then
-                        echo "✅ Bun found: $(bun --version)"
-                    else
-                        echo "❌ Bun not found - will be installed"
-                    fi
-                    
-                    echo "=== Project Structure ==="
-                    ls -la
-                    
-                    echo "=== Package Configuration ==="
-                    if [ -f "package.json" ]; then
-                        echo "✅ package.json found"
-                        if command -v jq &> /dev/null; then
-                            cat package.json | jq '.name, .version, .scripts.test, .scripts["test:ci"]'
-                        else
-                            echo "📦 Package info (no jq available):"
-                            grep -A 3 '"name"\\|"version"\\|"test"' package.json || echo "Basic grep completed"
-                        fi
-                    else
-                        echo "❌ package.json not found!"
-                        exit 1
-                    fi
-                    
-                    echo "=== Lock Files ==="
-                    ls -la *.lock* bun.lockb 2>/dev/null || echo "No lock files found"
-                    
-                    echo "✅ Environment validation completed"
-                '''
-            }
-        }
         
         stage('📦 Install Dependencies') {
             steps {
