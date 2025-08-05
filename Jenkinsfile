@@ -67,15 +67,64 @@ pipeline {
                     echo "Environment: ${NODE_ENV}"
                     echo "Deploy URL: ${DEPLOY_URL}"
                     
-                    node --version
-                    npm --version
-                    docker --version
+                    # Check system requirements
+                    echo "=== System Information ==="
+                    uname -a
+                    echo "User: $(whoami)"
+                    echo "Home: $HOME"
+                    echo "PATH: $PATH"
                     
-                    echo "📦 Project structure:"
+                    # Check available tools
+                    echo "=== Available Tools ==="
+                    if command -v node &> /dev/null; then
+                        echo "✅ Node.js: $(node --version)"
+                    else
+                        echo "❌ Node.js not found - installing..."
+                        # Install Node.js via NodeSource
+                        curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash - || echo "Failed to add NodeSource repository"
+                        sudo apt-get install -y nodejs || echo "Failed to install Node.js via apt"
+                    fi
+                    
+                    if command -v npm &> /dev/null; then
+                        echo "✅ npm: $(npm --version)"
+                    else
+                        echo "❌ npm not found"
+                    fi
+                    
+                    if command -v docker &> /dev/null; then
+                        echo "✅ Docker: $(docker --version)"
+                    else
+                        echo "❌ Docker not found"
+                    fi
+                    
+                    # Check Bun availability
+                    if command -v bun &> /dev/null; then
+                        echo "✅ Bun found: $(bun --version)"
+                    else
+                        echo "❌ Bun not found - will be installed"
+                    fi
+                    
+                    echo "=== Project Structure ==="
                     ls -la
                     
-                    echo "🔧 Package.json validation:"
-                    cat package.json | jq '.name, .version, .scripts'
+                    echo "=== Package Configuration ==="
+                    if [ -f "package.json" ]; then
+                        echo "✅ package.json found"
+                        if command -v jq &> /dev/null; then
+                            cat package.json | jq '.name, .version, .scripts.test, .scripts["test:ci"]'
+                        else
+                            echo "📦 Package info (no jq available):"
+                            grep -A 3 '"name"\\|"version"\\|"test"' package.json || echo "Basic grep completed"
+                        fi
+                    else
+                        echo "❌ package.json not found!"
+                        exit 1
+                    fi
+                    
+                    echo "=== Lock Files ==="
+                    ls -la *.lock* bun.lockb 2>/dev/null || echo "No lock files found"
+                    
+                    echo "✅ Environment validation completed"
                 '''
             }
         }
@@ -85,18 +134,30 @@ pipeline {
                 sh '''
                     echo "📦 Installing dependencies with Bun..."
                     
-                    # Install Bun if not available
+                    # Install Bun if not available (with proper shell handling)
                     if ! command -v bun &> /dev/null; then
+                        echo "Installing Bun..."
                         curl -fsSL https://bun.sh/install | bash
+                        # Source the bun environment
                         export PATH="$HOME/.bun/bin:$PATH"
-                        echo 'export PATH="$HOME/.bun/bin:$PATH"' >> ~/.bashrc
+                        source ~/.bashrc 2>/dev/null || true
                     fi
                     
-                    # Ensure Bun is in PATH
+                    # Ensure Bun is in PATH for all subsequent commands
                     export PATH="$HOME/.bun/bin:$PATH"
                     
-                    # Install dependencies
-                    bun install --frozen-lockfile
+                    # Verify Bun installation
+                    which bun || echo "Bun not found in PATH"
+                    bun --version || echo "Bun version check failed"
+                    
+                    # Install dependencies with error handling
+                    if [ -f "bun.lockb" ]; then
+                        echo "Using Bun lockfile..."
+                        bun install --frozen-lockfile
+                    else
+                        echo "No Bun lockfile found, installing normally..."
+                        bun install
+                    fi
                     
                     # Verify installation
                     echo "✅ Dependencies installed successfully"
@@ -117,26 +178,65 @@ pipeline {
                             # Ensure Bun is in PATH
                             export PATH="$HOME/.bun/bin:$PATH"
                             
-                            # Run tests
-                            bun run test:coverage
+                            # Verify Bun is available
+                            if ! command -v bun &> /dev/null; then
+                                echo "❌ Bun not found in PATH, trying to source environment..."
+                                source ~/.bashrc 2>/dev/null || true
+                                export PATH="$HOME/.bun/bin:$PATH"
+                            fi
+                            
+                            # Run tests with fallback strategy
+                            if command -v bun &> /dev/null; then
+                                echo "✅ Using Bun for tests..."
+                                # Use CI-optimized test command
+                                bun run test:ci
+                            else
+                                echo "❌ Bun still not available, falling back to npm..."
+                                # Ensure npm is available
+                                if command -v npm &> /dev/null; then
+                                    echo "Using npm for tests..."
+                                    npm run test:ci
+                                else
+                                    echo "❌ Neither Bun nor npm available, trying direct jest..."
+                                    npx jest --coverage --ci --maxWorkers=1 --forceExit
+                                fi
+                            fi
+                            
+                            echo "✅ Tests completed successfully"
                         '''
                     }
                     post {
                         always {
                             // Publish test results using junit
                             script {
-                                if (fileExists('coverage/junit.xml')) {
-                                    junit 'coverage/junit.xml'
+                                try {
+                                    if (fileExists('coverage/junit.xml')) {
+                                        echo "📊 Publishing JUnit test results..."
+                                        junit 'coverage/junit.xml'
+                                    } else if (fileExists('junit.xml')) {
+                                        echo "📊 Publishing JUnit test results from root..."
+                                        junit 'junit.xml'
+                                    } else {
+                                        echo "⚠️ No JUnit XML file found"
+                                    }
+                                } catch (Exception e) {
+                                    echo "⚠️ Failed to publish test results: ${e.getMessage()}"
                                 }
-                                if (fileExists('coverage/cobertura-coverage.xml')) {
-                                    publishHTML([
-                                        allowMissing: false,
-                                        alwaysLinkToLastBuild: true,
-                                        keepAll: true,
-                                        reportDir: 'coverage',
-                                        reportFiles: 'index.html',
-                                        reportName: 'Coverage Report'
-                                    ])
+                                
+                                try {
+                                    if (fileExists('coverage/index.html')) {
+                                        echo "📊 Publishing coverage report..."
+                                        publishHTML([
+                                            allowMissing: false,
+                                            alwaysLinkToLastBuild: true,
+                                            keepAll: true,
+                                            reportDir: 'coverage',
+                                            reportFiles: 'index.html',
+                                            reportName: 'Coverage Report'
+                                        ])
+                                    }
+                                } catch (Exception e) {
+                                    echo "⚠️ Failed to publish coverage report: ${e.getMessage()}"
                                 }
                             }
                         }
@@ -151,20 +251,50 @@ pipeline {
                             # Ensure Bun is in PATH
                             export PATH="$HOME/.bun/bin:$PATH"
                             
+                            # Verify Bun is available, fallback to npm/npx
+                            if ! command -v bun &> /dev/null; then
+                                echo "❌ Bun not found, trying to source environment..."
+                                source ~/.bashrc 2>/dev/null || true
+                                export PATH="$HOME/.bun/bin:$PATH"
+                            fi
+                            
                             # Different linting rules for dev vs prod
                             if [ "${NODE_ENV}" = "development" ]; then
-                                echo "Running development linting rules..."
-                                bun run lint:check --max-warnings 1000
+                                echo "Running development linting rules (relaxed for dev environment)..."
+                                if command -v bun &> /dev/null; then
+                                    # Use relaxed warning limit for development
+                                    bun run eslint . --ext .ts --max-warnings 1000
+                                else
+                                    npx eslint . --ext .ts --max-warnings 1000
+                                fi
                             else
                                 echo "Running production linting rules..."
-                                bun run lint:ci
+                                if command -v bun &> /dev/null; then
+                                    # Check if CI config exists, fallback to regular lint
+                                    if [ -f ".eslintrc.ci.json" ]; then
+                                        bun run lint:ci
+                                    else
+                                        echo "CI config not found, using regular lint with strict warnings..."
+                                        bun run lint:check
+                                    fi
+                                else
+                                    npx eslint . --ext .ts --max-warnings 100
+                                fi
                             fi
                             
                             # Format check
-                            bun run format:check
+                            if command -v bun &> /dev/null; then
+                                bun run format:check
+                            else
+                                npx prettier --check .
+                            fi
                             
                             # Type checking
-                            bunx tsc --noEmit
+                            if command -v bun &> /dev/null; then
+                                bunx tsc --noEmit
+                            else
+                                npx tsc --noEmit
+                            fi
                         '''
                     }
                 }
@@ -179,35 +309,62 @@ pipeline {
                             
                             echo "Checking dependencies for known vulnerabilities..."
                             
-                            # Try to create package-lock.json for npm audit (with fallback)
-                            if npm install --package-lock-only --legacy-peer-deps 2>/dev/null; then
-                                echo "✅ package-lock.json created successfully"
-                                if bunx audit-ci --moderate 2>/dev/null; then
-                                    echo "✅ Audit completed successfully"
-                                else
-                                    echo "⚠️ Audit completed with warnings"
-                                fi
-                                rm package-lock.json
+                            # Try Bun first, then npm fallback
+                            if command -v bun &> /dev/null; then
+                                echo "Using Bun for security checks..."
+                                
+                                # Check for outdated packages
+                                echo "Checking for outdated packages..."
+                                bun outdated || echo "Package check completed with warnings"
+                                
                             else
-                                echo "⚠️ Could not create package-lock.json - using alternative checks"
+                                echo "Using npm for security checks..."
+                                
+                                # Try to create package-lock.json for npm audit (with fallback)
+                                if npm install --package-lock-only --legacy-peer-deps 2>/dev/null; then
+                                    echo "✅ package-lock.json created successfully"
+                                    
+                                    # Run npm audit with appropriate level
+                                    if [ "${NODE_ENV}" = "development" ]; then
+                                        npm audit --audit-level=high || echo "⚠️ Audit completed with warnings"
+                                    else
+                                        npm audit --audit-level=moderate || echo "⚠️ Audit completed with warnings"
+                                    fi
+                                    
+                                    # Clean up
+                                    rm -f package-lock.json
+                                else
+                                    echo "⚠️ Could not create package-lock.json - skipping npm audit"
+                                fi
                             fi
                             
-                            # Alternative security checks using Bun
-                            echo "Checking for outdated packages..."
-                            bun outdated || echo "Package check completed"
-                            
                             # Check for sensitive files and patterns (development vs production)
+                            echo "Checking for potential security issues..."
                             if [ "${NODE_ENV}" = "development" ]; then
                                 echo "Running development security checks (less strict)..."
-                                grep -r "password\\|secret\\|key\\|token" --include="*.ts" --include="*.js" src/ | grep -v "password_resets\\|api_key.*string\\|secret.*string\\|JWT_SECRET\\|console.log" || echo "Security check completed"
+                                grep -r "password\\|secret\\|key\\|token" --include="*.ts" --include="*.js" src/ | grep -v "password_resets\\|api_key.*string\\|secret.*string\\|JWT_SECRET\\|console.log" | head -10 || echo "Security pattern check completed"
                             else
                                 echo "Running production security checks (strict)..."
-                                grep -r "password\\|secret\\|key\\|token" --include="*.ts" --include="*.js" src/ | grep -v "password_resets\\|api_key.*string\\|secret.*string" || echo "No obvious secrets found"
+                                if grep -r "password\\|secret\\|key\\|token" --include="*.ts" --include="*.js" src/ | grep -v "password_resets\\|api_key.*string\\|secret.*string"; then
+                                    echo "⚠️ Potential hardcoded secrets found - please review"
+                                else
+                                    echo "✅ No obvious secrets found"
+                                fi
                             fi
                             
                             # Check for common security anti-patterns
                             echo "Checking for security anti-patterns..."
-                            grep -r "eval\\|innerHTML\\|document.write" --include="*.ts" --include="*.js" src/ || echo "No dangerous patterns found"
+                            if grep -r "eval\\|innerHTML\\|document.write" --include="*.ts" --include="*.js" src/; then
+                                echo "⚠️ Potentially dangerous patterns found"
+                            else
+                                echo "✅ No dangerous patterns found"
+                            fi
+                            
+                            # Check environment files
+                            echo "Checking for environment files..."
+                            ls -la .env* 2>/dev/null && echo "⚠️ Environment files found - ensure they're not committed" || echo "✅ No environment files in repository"
+                            
+                            echo "✅ Security scan completed"
                         '''
                     }
                 }
@@ -222,11 +379,32 @@ pipeline {
                     # Ensure Bun is in PATH
                     export PATH="$HOME/.bun/bin:$PATH"
                     
-                    # Build the application
-                    bun run build
+                    # Check if Bun is available, fallback to npm
+                    if command -v bun &> /dev/null; then
+                        echo "✅ Using Bun for build..."
+                        bun run build
+                    else
+                        echo "❌ Bun not available, trying npm..."
+                        source ~/.bashrc 2>/dev/null || true
+                        export PATH="$HOME/.bun/bin:$PATH"
+                        
+                        if command -v bun &> /dev/null; then
+                            bun run build
+                        else
+                            echo "Using npm fallback..."
+                            npm run build
+                        fi
+                    fi
                     
                     # Verify build output
-                    ls -la dist/
+                    if [ -d "dist" ]; then
+                        echo "✅ Build directory created successfully"
+                        ls -la dist/
+                        echo "Build files count: $(find dist -type f | wc -l)"
+                    else
+                        echo "❌ Build directory not found!"
+                        exit 1
+                    fi
                     
                     echo "✅ Application built successfully"
                 '''

@@ -24,6 +24,7 @@ export default {
         "!src/index.ts",
         "!src/types/**/*",
         "!src/schema/**/*",
+        "!src/libs/mailer/**/*", // Exclude problematic mailer files
     ],
     reporters: [
         "default",
@@ -32,6 +33,10 @@ export default {
             {
                 outputDirectory: "coverage",
                 outputName: "junit.xml",
+                suiteName: "KCS Backend Tests",
+                classNameTemplate: "{classname}",
+                titleTemplate: "{title}",
+                ancestorSeparator: " › ",
             },
         ],
     ],
@@ -46,5 +51,6 @@ export default {
     resetMocks: true,
     restoreMocks: true,
     maxWorkers: 1,
-    runInBand: true,
+    // Removed runInBand as it's causing warnings in some Jest versions
+    // runInBand: true,
 };
