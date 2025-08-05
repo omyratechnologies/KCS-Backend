@@ -75,10 +75,10 @@ const CourseProgressSchema = new Schema({
     user_id: { type: String, required: true },
     lecture_id: { type: String, required: true },
     campus_id: { type: String, required: true },
-    progress_status: { 
-        type: String, 
+    progress_status: {
+        type: String,
         enum: ["not_started", "in_progress", "completed", "skipped"],
-        default: "not_started"
+        default: "not_started",
     },
     watch_time_seconds: { type: Number, default: 0 },
     total_duration_seconds: { type: Number, default: 0 },
@@ -87,8 +87,8 @@ const CourseProgressSchema = new Schema({
     last_accessed_at: { type: Date, default: () => new Date() },
     completed_at: { type: Date },
     resume_position_seconds: { type: Number, default: 0 },
-    interaction_data: { 
-        type: Object, 
+    interaction_data: {
+        type: Object,
         default: {
             play_count: 0,
             pause_count: 0,
@@ -98,17 +98,17 @@ const CourseProgressSchema = new Schema({
             fullscreen_toggles: 0,
             notes_taken: 0,
             bookmarked: false,
-            liked: false
-        }
+            liked: false,
+        },
     },
     quiz_data: { type: Object },
     assignment_data: { type: Object },
     notes: { type: [Object], default: [] },
-    device_info: { 
-        type: Object, 
+    device_info: {
+        type: Object,
         default: {
-            device_type: "web"
-        }
+            device_type: "web",
+        },
     },
     meta_data: { type: Object, default: {} },
     created_at: { type: Date, default: () => new Date() },
@@ -120,10 +120,17 @@ CourseProgressSchema.index.findByCourseId = { by: "course_id" };
 CourseProgressSchema.index.findByUserId = { by: "user_id" };
 CourseProgressSchema.index.findByLectureId = { by: "lecture_id" };
 CourseProgressSchema.index.findByCampusId = { by: "campus_id" };
-CourseProgressSchema.index.findByUserAndCourse = { by: ["user_id", "course_id"] };
-CourseProgressSchema.index.findByUserAndLecture = { by: ["user_id", "lecture_id"] };
+CourseProgressSchema.index.findByUserAndCourse = {
+    by: ["user_id", "course_id"],
+};
+CourseProgressSchema.index.findByUserAndLecture = {
+    by: ["user_id", "lecture_id"],
+};
 CourseProgressSchema.index.findByStatus = { by: "progress_status" };
 
-const CourseProgress = ottoman.model<ICourseProgressData>("course_progress", CourseProgressSchema);
+const CourseProgress = ottoman.model<ICourseProgressData>(
+    "course_progress",
+    CourseProgressSchema
+);
 
 export { CourseProgress };

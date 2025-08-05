@@ -7,7 +7,12 @@ export interface PaymentNotificationTemplate {
     campus_id: string;
     name: string;
     type: "email" | "sms" | "both";
-    trigger: "payment_due" | "payment_overdue" | "payment_success" | "payment_failed" | "fee_generated";
+    trigger:
+        | "payment_due"
+        | "payment_overdue"
+        | "payment_success"
+        | "payment_failed"
+        | "fee_generated";
     subject?: string;
     content: string;
     variables: string[]; // Available template variables
@@ -44,7 +49,10 @@ export class PaymentNotificationService {
         schoolData: any
     ): Promise<void> {
         try {
-            const template = await this.getNotificationTemplate(campus_id, "payment_due");
+            const template = await this.getNotificationTemplate(
+                campus_id,
+                "payment_due"
+            );
             if (!template || !template.is_active) return;
 
             const notificationData: PaymentNotificationData = {
@@ -56,7 +64,7 @@ export class PaymentNotificationService {
                 school_name: schoolData.name,
                 fee_amount: fee.due_amount,
                 due_date: fee.items[0]?.due_date?.toDateString() || "N/A",
-                payment_url: `${process.env.FRONTEND_URL}/payment/${fee.id}`
+                payment_url: `${process.env.FRONTEND_URL}/payment/${fee.id}`,
             };
 
             await this.sendNotification(template, notificationData);
@@ -78,7 +86,10 @@ export class PaymentNotificationService {
         schoolData: any
     ): Promise<void> {
         try {
-            const template = await this.getNotificationTemplate(campus_id, "payment_overdue");
+            const template = await this.getNotificationTemplate(
+                campus_id,
+                "payment_overdue"
+            );
             if (!template || !template.is_active) return;
 
             const notificationData: PaymentNotificationData = {
@@ -91,13 +102,16 @@ export class PaymentNotificationService {
                 fee_amount: fee.due_amount,
                 due_date: fee.items[0]?.due_date?.toDateString() || "N/A",
                 late_fee_amount: fee.late_fee_amount,
-                payment_url: `${process.env.FRONTEND_URL}/payment/${fee.id}`
+                payment_url: `${process.env.FRONTEND_URL}/payment/${fee.id}`,
             };
 
             await this.sendNotification(template, notificationData);
             await this.updateReminderCount(fee.id, template.type);
         } catch (error) {
-            console.error("Failed to send payment overdue notification:", error);
+            console.error(
+                "Failed to send payment overdue notification:",
+                error
+            );
         }
     }
 
@@ -112,7 +126,10 @@ export class PaymentNotificationService {
         schoolData: any
     ): Promise<void> {
         try {
-            const template = await this.getNotificationTemplate(campus_id, "payment_success");
+            const template = await this.getNotificationTemplate(
+                campus_id,
+                "payment_success"
+            );
             if (!template || !template.is_active) return;
 
             const notificationData: PaymentNotificationData = {
@@ -125,12 +142,15 @@ export class PaymentNotificationService {
                 fee_amount: transaction.amount,
                 due_date: new Date().toDateString(),
                 transaction_id: transaction.id,
-                invoice_url: `${process.env.FRONTEND_URL}/invoice/${invoice.id}`
+                invoice_url: `${process.env.FRONTEND_URL}/invoice/${invoice.id}`,
             };
 
             await this.sendNotification(template, notificationData);
         } catch (error) {
-            console.error("Failed to send payment success confirmation:", error);
+            console.error(
+                "Failed to send payment success confirmation:",
+                error
+            );
         }
     }
 
@@ -145,31 +165,36 @@ export class PaymentNotificationService {
         try {
             const { Fee } = await import("@/models/fee.model");
             const { UserService } = await import("@/services/users.service");
-            
+
             // Get all overdue fees
             const overdueFees = await Fee.find({
                 campus_id,
                 payment_status: "overdue",
-                is_paid: false
+                is_paid: false,
             });
 
             const results = {
                 sent: 0,
                 failed: 0,
-                details: [] as any[]
+                details: [] as any[],
             };
 
             for (const fee of overdueFees.rows || []) {
                 try {
                     const studentData = await UserService.getUser(fee.user_id);
                     const schoolData = await this.getSchoolDetails(campus_id);
-                    
-                    await this.sendPaymentOverdueNotification(campus_id, fee, studentData, schoolData);
+
+                    await this.sendPaymentOverdueNotification(
+                        campus_id,
+                        fee,
+                        studentData,
+                        schoolData
+                    );
                     results.sent++;
                     results.details.push({
                         fee_id: fee.id,
                         student_id: fee.user_id,
-                        status: "sent"
+                        status: "sent",
                     });
                 } catch (error) {
                     results.failed++;
@@ -177,7 +202,10 @@ export class PaymentNotificationService {
                         fee_id: fee.id,
                         student_id: fee.user_id,
                         status: "failed",
-                        error: error instanceof Error ? error.message : "Unknown error"
+                        error:
+                            error instanceof Error
+                                ? error.message
+                                : "Unknown error",
                     });
                 }
             }
@@ -197,7 +225,9 @@ export class PaymentNotificationService {
     ): Promise<PaymentNotificationTemplate | null> {
         try {
             // For now, return default templates - you can implement database storage later
-            const defaultTemplates: { [key: string]: PaymentNotificationTemplate } = {
+            const defaultTemplates: {
+                [key: string]: PaymentNotificationTemplate;
+            } = {
                 payment_due: {
                     id: "payment_due_default",
                     campus_id,
@@ -215,10 +245,16 @@ Payment Link: {{payment_url}}
 
 Thank you,
 {{school_name}}`,
-                    variables: ["student_name", "school_name", "fee_amount", "due_date", "payment_url"],
+                    variables: [
+                        "student_name",
+                        "school_name",
+                        "fee_amount",
+                        "due_date",
+                        "payment_url",
+                    ],
                     is_active: true,
                     created_at: new Date(),
-                    updated_at: new Date()
+                    updated_at: new Date(),
                 },
                 payment_overdue: {
                     id: "payment_overdue_default",
@@ -238,10 +274,17 @@ Please make the payment immediately to avoid further charges.
 Payment Link: {{payment_url}}
 
 {{school_name}}`,
-                    variables: ["student_name", "school_name", "fee_amount", "due_date", "late_fee_amount", "payment_url"],
+                    variables: [
+                        "student_name",
+                        "school_name",
+                        "fee_amount",
+                        "due_date",
+                        "late_fee_amount",
+                        "payment_url",
+                    ],
                     is_active: true,
                     created_at: new Date(),
-                    updated_at: new Date()
+                    updated_at: new Date(),
                 },
                 payment_success: {
                     id: "payment_success_default",
@@ -261,11 +304,17 @@ Download your invoice: {{invoice_url}}
 Thank you for your payment!
 
 {{school_name}}`,
-                    variables: ["student_name", "school_name", "fee_amount", "transaction_id", "invoice_url"],
+                    variables: [
+                        "student_name",
+                        "school_name",
+                        "fee_amount",
+                        "transaction_id",
+                        "invoice_url",
+                    ],
                     is_active: true,
                     created_at: new Date(),
-                    updated_at: new Date()
-                }
+                    updated_at: new Date(),
+                },
             };
 
             return defaultTemplates[trigger] || null;
@@ -283,21 +332,31 @@ Thank you for your payment!
         data: PaymentNotificationData
     ): Promise<void> {
         const content = this.replaceTemplateVariables(template.content, data);
-        const subject = template.subject ? this.replaceTemplateVariables(template.subject, data) : undefined;
+        const subject = template.subject
+            ? this.replaceTemplateVariables(template.subject, data)
+            : undefined;
 
         if (template.type === "email" || template.type === "both") {
-            await this.sendEmail(data.student_email, subject || "Payment Notification", content);
-            
+            await this.sendEmail(
+                data.student_email,
+                subject || "Payment Notification",
+                content
+            );
+
             // Also send to parent if available
             if (data.parent_email) {
-                await this.sendEmail(data.parent_email, subject || "Payment Notification", content);
+                await this.sendEmail(
+                    data.parent_email,
+                    subject || "Payment Notification",
+                    content
+                );
             }
         }
 
         if (template.type === "sms" || template.type === "both") {
             const smsContent = this.truncateForSMS(content);
             await this.sendSMS(data.student_phone, smsContent);
-            
+
             // Also send to parent if available
             if (data.parent_phone) {
                 await this.sendSMS(data.parent_phone, smsContent);
@@ -308,18 +367,30 @@ Thank you for your payment!
     /**
      * Replace template variables with actual data
      */
-    private static replaceTemplateVariables(template: string, data: PaymentNotificationData): string {
+    private static replaceTemplateVariables(
+        template: string,
+        data: PaymentNotificationData
+    ): string {
         let content = template;
-        
+
         // Replace all available variables
         content = content.replaceAll("{{student_name}}", data.student_name);
         content = content.replaceAll("{{school_name}}", data.school_name);
-        content = content.replaceAll("{{fee_amount}}", data.fee_amount.toString());
+        content = content.replaceAll(
+            "{{fee_amount}}",
+            data.fee_amount.toString()
+        );
         content = content.replaceAll("{{due_date}}", data.due_date);
         content = content.replaceAll("{{payment_url}}", data.payment_url || "");
         content = content.replaceAll("{{invoice_url}}", data.invoice_url || "");
-        content = content.replaceAll("{{transaction_id}}", data.transaction_id || "");
-        content = content.replaceAll("{{late_fee_amount}}", (data.late_fee_amount || 0).toString());
+        content = content.replaceAll(
+            "{{transaction_id}}",
+            data.transaction_id || ""
+        );
+        content = content.replaceAll(
+            "{{late_fee_amount}}",
+            (data.late_fee_amount || 0).toString()
+        );
 
         return content;
     }
@@ -330,11 +401,11 @@ Thank you for your payment!
     private static truncateForSMS(content: string): string {
         // Remove extra whitespace and line breaks
         const cleaned = content.replaceAll(/\s+/g, " ").trim();
-        
+
         if (cleaned.length <= 160) {
             return cleaned;
         }
-        
+
         // Truncate and add ellipsis
         return cleaned.slice(0, 157) + "...";
     }
@@ -342,16 +413,20 @@ Thank you for your payment!
     /**
      * Send email notification
      */
-    private static async sendEmail(to: string, subject: string, content: string): Promise<void> {
+    private static async sendEmail(
+        to: string,
+        subject: string,
+        content: string
+    ): Promise<void> {
         try {
             // Integration with your email service (e.g., SendGrid, AWS SES, etc.)
             console.log(`📧 Sending email to ${to}: ${subject}`);
-            
+
             // Example integration points:
             // - SendGrid: await sgMail.send({ to, subject, html: content });
             // - AWS SES: await ses.sendEmail({ Destination: { ToAddresses: [to] }, Message: { Subject: { Data: subject }, Body: { Html: { Data: content } } } }).promise();
             // - Nodemailer: await transporter.sendMail({ to, subject, html: content });
-            
+
             // For now, we'll log the email (replace with actual implementation)
             console.log("✅ Email sent successfully");
         } catch (error) {
@@ -367,12 +442,12 @@ Thank you for your payment!
         try {
             // Integration with your SMS service (e.g., Twilio, AWS SNS, etc.)
             console.log(`📱 Sending SMS to ${to}: ${content}`);
-            
+
             // Example integration points:
             // - Twilio: await client.messages.create({ to, from: process.env.SMS_FROM, body: content });
             // - AWS SNS: await sns.publish({ PhoneNumber: to, Message: content }).promise();
             // - TextLocal: await textlocal.sendSms([to], content);
-            
+
             // For now, we'll log the SMS (replace with actual implementation)
             console.log("✅ SMS sent successfully");
         } catch (error) {
@@ -384,27 +459,34 @@ Thank you for your payment!
     /**
      * Update reminder count in fee record
      */
-    private static async updateReminderCount(fee_id: string, type: "email" | "sms" | "both"): Promise<void> {
+    private static async updateReminderCount(
+        fee_id: string,
+        type: "email" | "sms" | "both"
+    ): Promise<void> {
         try {
             const { Fee } = await import("@/models/fee.model");
             const fee = await Fee.findById(fee_id);
-            
+
             if (fee) {
-                const reminderSent = fee.reminder_sent || { email_count: 0, sms_count: 0 };
-                
+                const reminderSent = fee.reminder_sent || {
+                    email_count: 0,
+                    sms_count: 0,
+                };
+
                 if (type === "email" || type === "both") {
-                    reminderSent.email_count = (reminderSent.email_count || 0) + 1;
+                    reminderSent.email_count =
+                        (reminderSent.email_count || 0) + 1;
                 }
-                
+
                 if (type === "sms" || type === "both") {
                     reminderSent.sms_count = (reminderSent.sms_count || 0) + 1;
                 }
-                
+
                 reminderSent.last_sent_at = new Date();
-                
+
                 await Fee.updateById(fee_id, {
                     reminder_sent: reminderSent,
-                    updated_at: new Date()
+                    updated_at: new Date(),
                 });
             }
         } catch (error) {
@@ -431,32 +513,38 @@ Thank you for your payment!
         try {
             const { Fee } = await import("@/models/fee.model");
             const { UserService } = await import("@/services/users.service");
-            
+
             const today = new Date();
-            const threeDaysFromNow = new Date(today.getTime() + (3 * 24 * 60 * 60 * 1000));
+            const threeDaysFromNow = new Date(
+                today.getTime() + 3 * 24 * 60 * 60 * 1000
+            );
 
             // Get fees due in next 3 days
             const feesDueSoon = await Fee.find({
                 campus_id,
                 payment_status: "unpaid",
-                is_paid: false
+                is_paid: false,
             });
 
             const schoolData = await this.getSchoolDetails(campus_id);
 
             for (const fee of feesDueSoon.rows || []) {
                 // Check if any item is due in next 3 days
-                const hasDueSoon = fee.items.some(item => {
+                const hasDueSoon = fee.items.some((item) => {
                     const dueDate = new Date(item.due_date);
                     return dueDate >= today && dueDate <= threeDaysFromNow;
                 });
 
                 if (hasDueSoon) {
                     const studentData = await UserService.getUser(fee.user_id);
-                    await this.sendPaymentDueReminder(campus_id, fee, studentData, schoolData);
+                    await this.sendPaymentDueReminder(
+                        campus_id,
+                        fee,
+                        studentData,
+                        schoolData
+                    );
                 }
             }
-
         } catch (error) {
             console.error("Failed to schedule payment reminders:", error);
         }

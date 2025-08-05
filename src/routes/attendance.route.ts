@@ -104,7 +104,8 @@ app.post(
         tags: ["Attendance"],
         operationId: "markClassAttendance",
         summary: "Mark class attendance",
-        description: "Records attendance for multiple students in a specific class",
+        description:
+            "Records attendance for multiple students in a specific class",
         responses: {
             200: {
                 description: "Class attendance marked successfully",
@@ -178,8 +179,7 @@ app.get(
         tags: ["Attendance"],
         operationId: "getAttendanceByClassId",
         summary: "Get all attendance records for a class",
-        description:
-            "Retrieves all attendance records for a specific class",
+        description: "Retrieves all attendance records for a specific class",
         parameters: [
             {
                 name: "class_id",
@@ -198,7 +198,8 @@ app.get(
                     type: "string",
                     format: "date-time",
                 },
-                description: "Optional: Filter by specific date (ISO 8601 format)",
+                description:
+                    "Optional: Filter by specific date (ISO 8601 format)",
             },
         ],
         responses: {
@@ -339,7 +340,9 @@ app.get(
                 description: "Attendance statistics retrieved successfully",
                 content: {
                     "application/json": {
-                        schema: resolver(getAttendanceStatsByTeacherIdResponseSchema),
+                        schema: resolver(
+                            getAttendanceStatsByTeacherIdResponseSchema
+                        ),
                     },
                 },
             },
@@ -381,7 +384,8 @@ app.get(
         tags: ["Attendance"],
         operationId: "getClassesByTeacherId",
         summary: "Debug: Get all classes for a teacher",
-        description: "Debug endpoint to check what classes are assigned to a teacher",
+        description:
+            "Debug endpoint to check what classes are assigned to a teacher",
         responses: {
             200: {
                 description: "Classes retrieved successfully",
@@ -392,14 +396,14 @@ app.get(
                             properties: {
                                 total_classes_in_campus: { type: "number" },
                                 teacher_classes_count: { type: "number" },
-                                teacher_classes: { 
+                                teacher_classes: {
                                     type: "array",
-                                    items: { type: "object" }
+                                    items: { type: "object" },
                                 },
                                 searched_teacher_id: { type: "string" },
-                                campus_id: { type: "string" }
-                            }
-                        }
+                                campus_id: { type: "string" },
+                            },
+                        },
                     },
                 },
             },
@@ -415,13 +419,16 @@ app.get(
         tags: ["Attendance"],
         operationId: "getClassAttendanceReport",
         summary: "Get comprehensive attendance report for a class",
-        description: "Generate detailed attendance analytics for a specific class including student-wise breakdown, summary statistics, and attendance trends. Supports optional date range filtering.",
+        description:
+            "Generate detailed attendance analytics for a specific class including student-wise breakdown, summary statistics, and attendance trends. Supports optional date range filtering.",
         responses: {
             200: {
                 description: "Attendance report generated successfully",
                 content: {
                     "application/json": {
-                        schema: resolver(getClassAttendanceReportResponseSchema),
+                        schema: resolver(
+                            getClassAttendanceReportResponseSchema
+                        ),
                     },
                 },
             },
@@ -464,7 +471,8 @@ app.get(
         tags: ["Attendance"],
         operationId: "getStudentAttendanceView",
         summary: "Get comprehensive attendance view for a student",
-        description: "Generate detailed attendance view for a specific student including profile information, summary statistics, and detailed attendance history. Supports optional date range filtering.",
+        description:
+            "Generate detailed attendance view for a specific student including profile information, summary statistics, and detailed attendance history. Supports optional date range filtering.",
         parameters: [
             {
                 name: "student_id",
@@ -493,7 +501,9 @@ app.get(
                 description: "Student attendance view generated successfully",
                 content: {
                     "application/json": {
-                        schema: resolver(getStudentAttendanceViewResponseSchema),
+                        schema: resolver(
+                            getStudentAttendanceViewResponseSchema
+                        ),
                     },
                 },
             },

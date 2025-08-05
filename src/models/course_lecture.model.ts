@@ -10,7 +10,13 @@ export interface ICourseLectureData {
     title: string;
     description?: string;
     lecture_order: number;
-    lecture_type: "video" | "resource" | "quiz" | "assignment" | "text" | "live_session";
+    lecture_type:
+        | "video"
+        | "resource"
+        | "quiz"
+        | "assignment"
+        | "text"
+        | "live_session";
     content_data: {
         // For videos
         video_url?: string;
@@ -108,23 +114,33 @@ const CourseLectureSchema = new Schema({
     title: { type: String, required: true },
     description: { type: String },
     lecture_order: { type: Number, required: true },
-    lecture_type: { 
-        type: String, 
-        enum: ["video", "resource", "quiz", "assignment", "text", "live_session"],
-        required: true 
+    lecture_type: {
+        type: String,
+        enum: [
+            "video",
+            "resource",
+            "quiz",
+            "assignment",
+            "text",
+            "live_session",
+        ],
+        required: true,
     },
     content_data: { type: Object, required: true },
     is_preview: { type: Boolean, default: false },
     is_mandatory: { type: Boolean, default: true },
     estimated_duration_minutes: { type: Number, default: 0 },
     is_published: { type: Boolean, default: true },
-    completion_criteria: { type: Object, default: {
-        auto_complete_video: true,
-        manual_mark_complete: false,
-        quiz_required: false,
-        assignment_required: false,
-        minimum_watch_percentage: 80
-    }},
+    completion_criteria: {
+        type: Object,
+        default: {
+            auto_complete_video: true,
+            manual_mark_complete: false,
+            quiz_required: false,
+            assignment_required: false,
+            minimum_watch_percentage: 80,
+        },
+    },
     meta_data: { type: Object, default: {} },
     created_at: { type: Date, default: () => new Date() },
     updated_at: { type: Date, default: () => new Date() },
@@ -136,6 +152,9 @@ CourseLectureSchema.index.findByCampusId = { by: "campus_id" };
 CourseLectureSchema.index.findByOrder = { by: "lecture_order" };
 CourseLectureSchema.index.findByType = { by: "lecture_type" };
 
-const CourseLecture = ottoman.model<ICourseLectureData>("course_lectures", CourseLectureSchema);
+const CourseLecture = ottoman.model<ICourseLectureData>(
+    "course_lectures",
+    CourseLectureSchema
+);
 
 export { CourseLecture };

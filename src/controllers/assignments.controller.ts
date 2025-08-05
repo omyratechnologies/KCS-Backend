@@ -13,9 +13,8 @@ import { UserService } from "@/services/users.service";
 const classService = new ClassService();
 
 export class AssignmentController {
-    
     // ======================= ADMIN ROUTES =======================
-    
+
     public static readonly createAssignment = async (ctx: Context) => {
         try {
             const campus_id = ctx.get("campus_id");
@@ -24,101 +23,131 @@ export class AssignmentController {
 
             // Validate that class_id is provided
             if (!data.class_id) {
-                return ctx.json({ 
-                    success: false, 
-                    error: "class_id is required" 
-                }, 400);
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "class_id is required",
+                    },
+                    400
+                );
             }
 
-            const result = await classService.createAssignment(campus_id, data.class_id, {
-                ...data,
-                user_id,
-            });
+            const result = await classService.createAssignment(
+                campus_id,
+                data.class_id,
+                {
+                    ...data,
+                    user_id,
+                }
+            );
 
-            return ctx.json({
-                success: true,
-                message: "Assignment created successfully",
-                data: result,
-            }, 201);
+            return ctx.json(
+                {
+                    success: true,
+                    message: "Assignment created successfully",
+                    data: result,
+                },
+                201
+            );
         } catch (error) {
             console.error("Error creating assignment:", error);
-            return ctx.json({ 
-                success: false, 
-                error: error instanceof Error ? error.message : "Failed to create assignment" 
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    error:
+                        error instanceof Error
+                            ? error.message
+                            : "Failed to create assignment",
+                },
+                500
+            );
         }
     };
 
-    public static readonly getAdminAssignmentOverview = async (ctx: Context) => {
+    public static readonly getAdminAssignmentOverview = async (
+        ctx: Context
+    ) => {
         try {
             const campus_id = ctx.get("campus_id");
-            const { 
-                status, 
-                class_id, 
-                subject_id, 
-                teacher_id, 
-                from_date, 
-                to_date, 
-                page, 
-                limit 
+            const {
+                status,
+                class_id,
+                subject_id,
+                teacher_id,
+                from_date,
+                to_date,
+                page,
+                limit,
             } = ctx.req.query();
 
             // Get all assignments for the campus
-            const allAssignments = await classService.getAllAssignmentsFromAllClasses(campus_id);
-            
+            const allAssignments =
+                await classService.getAllAssignmentsFromAllClasses(campus_id);
+
             // Use only class assignments
             let combinedAssignments = [...allAssignments];
 
             // Apply filters
             if (class_id) {
-                combinedAssignments = combinedAssignments.filter(assignment => assignment.class_id === class_id);
-            }
-            
-            if (subject_id) {
-                combinedAssignments = combinedAssignments.filter(assignment => assignment.subject_id === subject_id);
-            }
-            
-            if (teacher_id) {
-                combinedAssignments = combinedAssignments.filter(assignment => assignment.user_id === teacher_id);
-            }
-            
-            if (from_date) {
-                const fromDate = new Date(from_date);
-                combinedAssignments = combinedAssignments.filter(assignment => 
-                    new Date(assignment.due_date) >= fromDate
+                combinedAssignments = combinedAssignments.filter(
+                    (assignment) => assignment.class_id === class_id
                 );
             }
-            
+
+            if (subject_id) {
+                combinedAssignments = combinedAssignments.filter(
+                    (assignment) => assignment.subject_id === subject_id
+                );
+            }
+
+            if (teacher_id) {
+                combinedAssignments = combinedAssignments.filter(
+                    (assignment) => assignment.user_id === teacher_id
+                );
+            }
+
+            if (from_date) {
+                const fromDate = new Date(from_date);
+                combinedAssignments = combinedAssignments.filter(
+                    (assignment) => new Date(assignment.due_date) >= fromDate
+                );
+            }
+
             if (to_date) {
                 const toDate = new Date(to_date);
-                combinedAssignments = combinedAssignments.filter(assignment => 
-                    new Date(assignment.due_date) <= toDate
+                combinedAssignments = combinedAssignments.filter(
+                    (assignment) => new Date(assignment.due_date) <= toDate
                 );
             }
 
             // Calculate summary statistics
             const currentDate = new Date();
-            
-            const activeAssignments = combinedAssignments.filter(assignment => 
-                new Date(assignment.due_date) >= currentDate
+
+            const activeAssignments = combinedAssignments.filter(
+                (assignment) => new Date(assignment.due_date) >= currentDate
             );
-            
-            const overdueAssignments = combinedAssignments.filter(assignment => 
-                new Date(assignment.due_date) < currentDate
+
+            const overdueAssignments = combinedAssignments.filter(
+                (assignment) => new Date(assignment.due_date) < currentDate
             );
 
             // Get submission data for statistics
             let totalSubmissions = 0;
             let pendingGrading = 0;
-            
+
             try {
                 // Get submissions for all assignments (this might need optimization for large datasets)
                 for (const assignment of combinedAssignments) {
-                    const submissions = await classService.getAssignmentSubmissionByAssignmentId(assignment.id);
+                    const submissions =
+                        await classService.getAssignmentSubmissionByAssignmentId(
+                            assignment.id
+                        );
                     totalSubmissions += submissions.length;
-                    
+
                     // Count ungraded submissions
-                    const ungradedSubmissions = submissions.filter(sub => sub.grade === undefined || sub.grade === null);
+                    const ungradedSubmissions = submissions.filter(
+                        (sub) => sub.grade === undefined || sub.grade === null
+                    );
                     pendingGrading += ungradedSubmissions.length;
                 }
             } catch (error) {
@@ -129,41 +158,71 @@ export class AssignmentController {
             const pageNum = Number.parseInt(page) || 1;
             const limitNum = Number.parseInt(limit) || 20;
             const offset = (pageNum - 1) * limitNum;
-            const paginatedAssignments = combinedAssignments.slice(offset, offset + limitNum);
+            const paginatedAssignments = combinedAssignments.slice(
+                offset,
+                offset + limitNum
+            );
 
             // Enrich assignments with additional data
             const enrichedAssignments = await Promise.all(
                 paginatedAssignments.map(async (assignment) => {
                     try {
                         // Get submission count for this assignment
-                        const submissions = await classService.getAssignmentSubmissionByAssignmentId(assignment.id);
-                        
+                        const submissions =
+                            await classService.getAssignmentSubmissionByAssignmentId(
+                                assignment.id
+                            );
+
                         return {
                             ...assignment,
                             submission_count: submissions.length,
-                            graded_count: submissions.filter(sub => sub.grade !== undefined && sub.grade !== null).length,
-                            pending_count: submissions.filter(sub => sub.grade === undefined || sub.grade === null).length,
-                            days_until_due: Math.ceil((new Date(assignment.due_date).getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)),
-                            is_overdue: new Date(assignment.due_date) < currentDate,
+                            graded_count: submissions.filter(
+                                (sub) =>
+                                    sub.grade !== undefined &&
+                                    sub.grade !== null
+                            ).length,
+                            pending_count: submissions.filter(
+                                (sub) =>
+                                    sub.grade === undefined ||
+                                    sub.grade === null
+                            ).length,
+                            days_until_due: Math.ceil(
+                                (new Date(assignment.due_date).getTime() -
+                                    currentDate.getTime()) /
+                                    (1000 * 60 * 60 * 24)
+                            ),
+                            is_overdue:
+                                new Date(assignment.due_date) < currentDate,
                         };
                     } catch (error) {
-                        console.log(`Error enriching assignment ${assignment.id}:`, error);
+                        console.log(
+                            `Error enriching assignment ${assignment.id}:`,
+                            error
+                        );
                         return {
                             ...assignment,
                             submission_count: 0,
                             graded_count: 0,
                             pending_count: 0,
-                            days_until_due: Math.ceil((new Date(assignment.due_date).getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)),
-                            is_overdue: new Date(assignment.due_date) < currentDate,
+                            days_until_due: Math.ceil(
+                                (new Date(assignment.due_date).getTime() -
+                                    currentDate.getTime()) /
+                                    (1000 * 60 * 60 * 24)
+                            ),
+                            is_overdue:
+                                new Date(assignment.due_date) < currentDate,
                         };
                     }
                 })
             );
 
             // Calculate completion rate
-            const averageCompletionRate = combinedAssignments.length > 0 
-                ? Math.round((totalSubmissions / combinedAssignments.length) * 100) / 100 
-                : 0;
+            const averageCompletionRate =
+                combinedAssignments.length > 0
+                    ? Math.round(
+                          (totalSubmissions / combinedAssignments.length) * 100
+                      ) / 100
+                    : 0;
 
             return ctx.json({
                 success: true,
@@ -172,7 +231,9 @@ export class AssignmentController {
                     page: pageNum,
                     limit: limitNum,
                     total: combinedAssignments.length,
-                    total_pages: Math.ceil(combinedAssignments.length / limitNum),
+                    total_pages: Math.ceil(
+                        combinedAssignments.length / limitNum
+                    ),
                 },
                 summary_stats: {
                     total_assignments: combinedAssignments.length,
@@ -188,22 +249,30 @@ export class AssignmentController {
                     subject_id,
                     teacher_id,
                     from_date,
-                    to_date
-                }
+                    to_date,
+                },
             });
         } catch (error) {
             console.error("Error fetching admin assignment overview:", error);
-            return ctx.json({ 
-                success: false, 
-                error: error instanceof Error ? error.message : "Failed to fetch assignment overview" 
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    error:
+                        error instanceof Error
+                            ? error.message
+                            : "Failed to fetch assignment overview",
+                },
+                500
+            );
         }
     };
 
-    public static readonly performBulkAssignmentOperations = async (ctx: Context) => {
+    public static readonly performBulkAssignmentOperations = async (
+        ctx: Context
+    ) => {
         try {
             const data = await ctx.req.json();
-            
+
             // Placeholder for bulk operations
             return ctx.json({
                 success: true,
@@ -212,11 +281,17 @@ export class AssignmentController {
                 failed_count: 0,
             });
         } catch (error) {
-            console.error("Error performing bulk assignment operations:", error);
-            return ctx.json({ 
-                success: false, 
-                error: "Failed to perform bulk operations" 
-            }, 500);
+            console.error(
+                "Error performing bulk assignment operations:",
+                error
+            );
+            return ctx.json(
+                {
+                    success: false,
+                    error: "Failed to perform bulk operations",
+                },
+                500
+            );
         }
     };
 
@@ -226,101 +301,139 @@ export class AssignmentController {
             const { period, class_id, subject_id } = ctx.req.query();
 
             // Get all assignments for the campus
-            const allAssignments = await classService.getAllAssignmentsFromAllClasses(campus_id);
-            
+            const allAssignments =
+                await classService.getAllAssignmentsFromAllClasses(campus_id);
+
             // Apply filters
             let filteredAssignments = allAssignments;
-            
+
             if (class_id) {
-                filteredAssignments = filteredAssignments.filter(assignment => assignment.class_id === class_id);
+                filteredAssignments = filteredAssignments.filter(
+                    (assignment) => assignment.class_id === class_id
+                );
             }
-            
+
             if (subject_id) {
-                filteredAssignments = filteredAssignments.filter(assignment => assignment.subject_id === subject_id);
+                filteredAssignments = filteredAssignments.filter(
+                    (assignment) => assignment.subject_id === subject_id
+                );
             }
 
             // Apply period filter
             if (period) {
                 const currentDate = new Date();
                 let periodStartDate: Date;
-                
+
                 switch (period) {
                     case "week": {
-                        periodStartDate = new Date(currentDate.getTime() - 7 * 24 * 60 * 60 * 1000);
+                        periodStartDate = new Date(
+                            currentDate.getTime() - 7 * 24 * 60 * 60 * 1000
+                        );
                         break;
                     }
                     case "month": {
-                        periodStartDate = new Date(currentDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+                        periodStartDate = new Date(
+                            currentDate.getTime() - 30 * 24 * 60 * 60 * 1000
+                        );
                         break;
                     }
                     case "quarter": {
-                        periodStartDate = new Date(currentDate.getTime() - 90 * 24 * 60 * 60 * 1000);
+                        periodStartDate = new Date(
+                            currentDate.getTime() - 90 * 24 * 60 * 60 * 1000
+                        );
                         break;
                     }
                     case "year": {
-                        periodStartDate = new Date(currentDate.getTime() - 365 * 24 * 60 * 60 * 1000);
+                        periodStartDate = new Date(
+                            currentDate.getTime() - 365 * 24 * 60 * 60 * 1000
+                        );
                         break;
                     }
                     default: {
-                        periodStartDate = new Date(currentDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+                        periodStartDate = new Date(
+                            currentDate.getTime() - 30 * 24 * 60 * 60 * 1000
+                        );
                     } // Default to month
                 }
-                
-                filteredAssignments = filteredAssignments.filter(assignment => 
-                    new Date(assignment.created_at) >= periodStartDate
+
+                filteredAssignments = filteredAssignments.filter(
+                    (assignment) =>
+                        new Date(assignment.created_at) >= periodStartDate
                 );
             }
 
             // Calculate analytics
             const currentDate = new Date();
-            
-            const activeAssignments = filteredAssignments.filter(assignment => 
-                new Date(assignment.due_date) >= currentDate
+
+            const activeAssignments = filteredAssignments.filter(
+                (assignment) => new Date(assignment.due_date) >= currentDate
             );
-            
-            const overdueAssignments = filteredAssignments.filter(assignment => 
-                new Date(assignment.due_date) < currentDate
+
+            const overdueAssignments = filteredAssignments.filter(
+                (assignment) => new Date(assignment.due_date) < currentDate
             );
 
             // Get submission statistics
             let totalSubmissions = 0;
             let pendingGrading = 0;
-            
+
             try {
                 for (const assignment of filteredAssignments) {
-                    const submissions = await classService.getAssignmentSubmissionByAssignmentId(assignment.id);
+                    const submissions =
+                        await classService.getAssignmentSubmissionByAssignmentId(
+                            assignment.id
+                        );
                     totalSubmissions += submissions.length;
-                    
-                    const ungradedSubmissions = submissions.filter(sub => sub.grade === undefined || sub.grade === null);
+
+                    const ungradedSubmissions = submissions.filter(
+                        (sub) => sub.grade === undefined || sub.grade === null
+                    );
                     pendingGrading += ungradedSubmissions.length;
                 }
             } catch (error) {
-                console.log("Error fetching submission statistics for analytics:", error);
+                console.log(
+                    "Error fetching submission statistics for analytics:",
+                    error
+                );
             }
 
             // Calculate completion rate
-            const averageCompletionRate = filteredAssignments.length > 0 
-                ? Math.round((totalSubmissions / filteredAssignments.length) * 100) / 100 
-                : 0;
+            const averageCompletionRate =
+                filteredAssignments.length > 0
+                    ? Math.round(
+                          (totalSubmissions / filteredAssignments.length) * 100
+                      ) / 100
+                    : 0;
 
             // Generate analytics by subject and time trends
             const subjectAnalytics = await Promise.all(
-                [...new Set(filteredAssignments.map(a => a.subject_id))].map(async (subjectId) => {
-                    const subjectAssignments = filteredAssignments.filter(a => a.subject_id === subjectId);
-                    let subjectSubmissions = 0;
-                    
-                    for (const assignment of subjectAssignments) {
-                        const submissions = await classService.getAssignmentSubmissionByAssignmentId(assignment.id);
-                        subjectSubmissions += submissions.length;
+                [...new Set(filteredAssignments.map((a) => a.subject_id))].map(
+                    async (subjectId) => {
+                        const subjectAssignments = filteredAssignments.filter(
+                            (a) => a.subject_id === subjectId
+                        );
+                        let subjectSubmissions = 0;
+
+                        for (const assignment of subjectAssignments) {
+                            const submissions =
+                                await classService.getAssignmentSubmissionByAssignmentId(
+                                    assignment.id
+                                );
+                            subjectSubmissions += submissions.length;
+                        }
+
+                        return {
+                            subject_id: subjectId,
+                            total_assignments: subjectAssignments.length,
+                            total_submissions: subjectSubmissions,
+                            completion_rate:
+                                subjectAssignments.length > 0
+                                    ? subjectSubmissions /
+                                      subjectAssignments.length
+                                    : 0,
+                        };
                     }
-                    
-                    return {
-                        subject_id: subjectId,
-                        total_assignments: subjectAssignments.length,
-                        total_submissions: subjectSubmissions,
-                        completion_rate: subjectAssignments.length > 0 ? (subjectSubmissions / subjectAssignments.length) : 0
-                    };
-                })
+                )
             );
 
             return ctx.json({
@@ -338,20 +451,26 @@ export class AssignmentController {
                     trends: {
                         period_applied: period || "month",
                         assignments_created: filteredAssignments.length,
-                    }
+                    },
                 },
                 filters_applied: {
                     period,
                     class_id,
-                    subject_id
-                }
+                    subject_id,
+                },
             });
         } catch (error) {
             console.error("Error fetching assignment analytics:", error);
-            return ctx.json({ 
-                success: false, 
-                error: error instanceof Error ? error.message : "Failed to fetch assignment analytics" 
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    error:
+                        error instanceof Error
+                            ? error.message
+                            : "Failed to fetch assignment analytics",
+                },
+                500
+            );
         }
     };
 
@@ -362,22 +481,28 @@ export class AssignmentController {
             const user_id = ctx.get("user_id");
             const { status, class_id, page, limit } = ctx.req.query();
 
-            const assignments = await classService.getAllAssignmentByUserId(user_id);
+            const assignments =
+                await classService.getAllAssignmentByUserId(user_id);
 
             // Apply filters if provided
             let filteredAssignments = assignments;
             if (class_id) {
-                filteredAssignments = filteredAssignments.filter(a => a.class_id === class_id);
+                filteredAssignments = filteredAssignments.filter(
+                    (a) => a.class_id === class_id
+                );
             }
 
             // Apply pagination
             const pageNum = Number.parseInt(page) || 1;
             const limitNum = Number.parseInt(limit) || 20;
             const offset = (pageNum - 1) * limitNum;
-            const paginatedAssignments = filteredAssignments.slice(offset, offset + limitNum);
+            const paginatedAssignments = filteredAssignments.slice(
+                offset,
+                offset + limitNum
+            );
 
             return ctx.json({
-                assignments: paginatedAssignments.map(assignment => ({
+                assignments: paginatedAssignments.map((assignment) => ({
                     ...assignment,
                     submission_stats: {
                         total_students: 0, // Would be calculated from class enrollment
@@ -391,7 +516,9 @@ export class AssignmentController {
                     page: pageNum,
                     limit: limitNum,
                     total: filteredAssignments.length,
-                    total_pages: Math.ceil(filteredAssignments.length / limitNum),
+                    total_pages: Math.ceil(
+                        filteredAssignments.length / limitNum
+                    ),
                 },
                 dashboard_stats: {
                     total_assignments: assignments.length,
@@ -402,10 +529,13 @@ export class AssignmentController {
             });
         } catch (error) {
             console.error("Error fetching teacher assignments:", error);
-            return ctx.json({ 
-                success: false, 
-                error: "Failed to fetch teacher assignments" 
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    error: "Failed to fetch teacher assignments",
+                },
+                500
+            );
         }
     };
 
@@ -416,20 +546,27 @@ export class AssignmentController {
 
             const [assignment, submissions] = await Promise.all([
                 classService.getAssignmentById(assignment_id),
-                classService.getAssignmentSubmissionByAssignmentId(assignment_id)
+                classService.getAssignmentSubmissionByAssignmentId(
+                    assignment_id
+                ),
             ]);
 
             if (!assignment) {
-                return ctx.json({ 
-                    success: false, 
-                    error: "Assignment not found" 
-                }, 404);
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Assignment not found",
+                    },
+                    404
+                );
             }
 
             // Filter submissions if student_id is provided
             let filteredSubmissions = submissions;
             if (student_id) {
-                filteredSubmissions = submissions.filter(s => s.user_id === student_id);
+                filteredSubmissions = submissions.filter(
+                    (s) => s.user_id === student_id
+                );
             }
 
             // Calculate stats
@@ -437,13 +574,21 @@ export class AssignmentController {
                 total_students: 0, // Would need to get from class enrollment
                 submitted: filteredSubmissions.length,
                 pending: 0, // Would be calculated
-                graded: filteredSubmissions.filter(s => s.grade !== null && s.grade !== undefined).length,
-                average_grade: filteredSubmissions.length > 0 
-                    ? filteredSubmissions
-                        .filter(s => s.grade !== null && s.grade !== undefined)
-                        .reduce((sum, s) => sum + (s.grade || 0), 0) / 
-                      filteredSubmissions.filter(s => s.grade !== null && s.grade !== undefined).length
-                    : 0,
+                graded: filteredSubmissions.filter(
+                    (s) => s.grade !== null && s.grade !== undefined
+                ).length,
+                average_grade:
+                    filteredSubmissions.length > 0
+                        ? filteredSubmissions
+                              .filter(
+                                  (s) =>
+                                      s.grade !== null && s.grade !== undefined
+                              )
+                              .reduce((sum, s) => sum + (s.grade || 0), 0) /
+                          filteredSubmissions.filter(
+                              (s) => s.grade !== null && s.grade !== undefined
+                          ).length
+                        : 0,
             };
 
             return ctx.json({
@@ -453,10 +598,13 @@ export class AssignmentController {
             });
         } catch (error) {
             console.error("Error fetching assignment submissions:", error);
-            return ctx.json({ 
-                success: false, 
-                error: "Failed to fetch assignment submissions" 
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    error: "Failed to fetch assignment submissions",
+                },
+                500
+            );
         }
     };
 
@@ -478,21 +626,27 @@ export class AssignmentController {
             });
         } catch (error) {
             console.error("Error grading submission:", error);
-            return ctx.json({ 
-                success: false, 
-                error: "Failed to grade submission" 
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    error: "Failed to grade submission",
+                },
+                500
+            );
         }
     };
 
-    public static readonly getTeacherAssignmentDashboard = async (ctx: Context) => {
+    public static readonly getTeacherAssignmentDashboard = async (
+        ctx: Context
+    ) => {
         try {
             const user_id = ctx.get("user_id");
 
-            const assignments = await classService.getAllAssignmentByUserId(user_id);
+            const assignments =
+                await classService.getAllAssignmentByUserId(user_id);
 
             return ctx.json({
-                assignments: assignments.map(assignment => ({
+                assignments: assignments.map((assignment) => ({
                     ...assignment,
                     submission_stats: {
                         total_students: 0,
@@ -516,11 +670,17 @@ export class AssignmentController {
                 },
             });
         } catch (error) {
-            console.error("Error fetching teacher assignment dashboard:", error);
-            return ctx.json({ 
-                success: false, 
-                error: "Failed to fetch teacher dashboard" 
-            }, 500);
+            console.error(
+                "Error fetching teacher assignment dashboard:",
+                error
+            );
+            return ctx.json(
+                {
+                    success: false,
+                    error: "Failed to fetch teacher dashboard",
+                },
+                500
+            );
         }
     };
 
@@ -530,21 +690,23 @@ export class AssignmentController {
         try {
             const user_id = ctx.get("user_id");
             const campus_id = ctx.get("campus_id");
-            const { 
-                status, 
-                class_id, 
-                subject_id, 
-                due_in_days, 
-                sort_by, 
-                sort_order, 
-                page, 
-                limit 
+            const {
+                status,
+                class_id,
+                subject_id,
+                due_in_days,
+                sort_by,
+                sort_order,
+                page,
+                limit,
             } = ctx.req.query();
 
             const filters = {
                 status: status as any,
                 subject_id,
-                due_in_days: due_in_days ? Number.parseInt(due_in_days) : undefined,
+                due_in_days: due_in_days
+                    ? Number.parseInt(due_in_days)
+                    : undefined,
                 assignment_type: undefined,
                 sort_by: sort_by as any,
                 sort_order: sort_order as "asc" | "desc",
@@ -559,20 +721,25 @@ export class AssignmentController {
                 total_count: 0,
                 page: filters.page || 1,
                 limit: filters.limit || 20,
-                message: "Enhanced assignment service temporarily disabled"
+                message: "Enhanced assignment service temporarily disabled",
             };
 
             return ctx.json(result);
         } catch (error) {
             console.error("Error fetching student assignments:", error);
-            return ctx.json({ 
-                success: false, 
-                error: "Failed to fetch student assignments" 
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    error: "Failed to fetch student assignments",
+                },
+                500
+            );
         }
     };
 
-    public static readonly getStudentAssignmentDetails = async (ctx: Context) => {
+    public static readonly getStudentAssignmentDetails = async (
+        ctx: Context
+    ) => {
         try {
             const user_id = ctx.get("user_id");
             const { assignment_id } = ctx.req.param();
@@ -582,29 +749,47 @@ export class AssignmentController {
             let submission: any = null;
 
             try {
-                assignment = await classService.getAssignmentById(assignment_id);
+                assignment =
+                    await classService.getAssignmentById(assignment_id);
                 if (assignment) {
-                    const submissions = await classService.getAssignmentSubmissionByAssignmentId(assignment_id);
-                    submission = submissions.find(s => s.user_id === user_id) || null;
+                    const submissions =
+                        await classService.getAssignmentSubmissionByAssignmentId(
+                            assignment_id
+                        );
+                    submission =
+                        submissions.find((s) => s.user_id === user_id) || null;
                 }
             } catch (error) {
-                console.error("Error fetching class assignment:", assignment_id, error);
+                console.error(
+                    "Error fetching class assignment:",
+                    assignment_id,
+                    error
+                );
             }
 
             if (!assignment) {
-                return ctx.json({ 
-                    success: false, 
-                    error: "Assignment not found" 
-                }, 404);
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Assignment not found",
+                    },
+                    404
+                );
             }
 
             const currentDate = new Date();
             const dueDate = new Date(assignment.due_date);
-            const daysUntilDue = Math.ceil((dueDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
+            const daysUntilDue = Math.ceil(
+                (dueDate.getTime() - currentDate.getTime()) /
+                    (1000 * 60 * 60 * 24)
+            );
 
             let status = "pending";
             if (submission) {
-                status = submission.grade !== null && submission.grade !== undefined ? "graded" : "submitted";
+                status =
+                    submission.grade !== null && submission.grade !== undefined
+                        ? "graded"
+                        : "submitted";
             } else if (dueDate < currentDate) {
                 status = "overdue";
             }
@@ -638,10 +823,13 @@ export class AssignmentController {
             });
         } catch (error) {
             console.error("Error fetching student assignment details:", error);
-            return ctx.json({ 
-                success: false, 
-                error: "Failed to fetch assignment details" 
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    error: "Failed to fetch assignment details",
+                },
+                500
+            );
         }
     };
 
@@ -652,23 +840,35 @@ export class AssignmentController {
             const data = await ctx.req.json();
 
             // Check if assignment exists
-            const assignment = await classService.getAssignmentById(assignment_id);
+            const assignment =
+                await classService.getAssignmentById(assignment_id);
             if (!assignment) {
-                return ctx.json({ 
-                    success: false, 
-                    error: "Assignment not found" 
-                }, 404);
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Assignment not found",
+                    },
+                    404
+                );
             }
 
             // Check if already submitted
-            const existingSubmissions = await classService.getAssignmentSubmissionByAssignmentId(assignment_id);
-            const existingSubmission = existingSubmissions.find(s => s.user_id === user_id);
-            
+            const existingSubmissions =
+                await classService.getAssignmentSubmissionByAssignmentId(
+                    assignment_id
+                );
+            const existingSubmission = existingSubmissions.find(
+                (s) => s.user_id === user_id
+            );
+
             if (existingSubmission) {
-                return ctx.json({ 
-                    success: false, 
-                    error: "Assignment already submitted" 
-                }, 400);
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Assignment already submitted",
+                    },
+                    400
+                );
             }
 
             // Check if overdue and late submission not allowed
@@ -676,11 +876,15 @@ export class AssignmentController {
             const dueDate = new Date(assignment.due_date);
             const isLate = currentDate > dueDate;
 
-            if (isLate && !assignment.is_graded) { // Assuming is_graded means late submission allowed
-                return ctx.json({ 
-                    success: false, 
-                    error: "Assignment is overdue and late submissions are not allowed" 
-                }, 400);
+            if (isLate && !assignment.is_graded) {
+                // Assuming is_graded means late submission allowed
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Assignment is overdue and late submissions are not allowed",
+                    },
+                    400
+                );
             }
 
             const submissionData = {
@@ -695,24 +899,35 @@ export class AssignmentController {
                 },
             };
 
-            const result = await classService.createAssignmentSubmission(assignment_id, submissionData);
+            const result = await classService.createAssignmentSubmission(
+                assignment_id,
+                submissionData
+            );
 
-            return ctx.json({
-                success: true,
-                message: "Assignment submitted successfully",
-                data: result,
-                is_late: isLate,
-            }, 201);
+            return ctx.json(
+                {
+                    success: true,
+                    message: "Assignment submitted successfully",
+                    data: result,
+                    is_late: isLate,
+                },
+                201
+            );
         } catch (error) {
             console.error("Error submitting assignment:", error);
-            return ctx.json({ 
-                success: false, 
-                error: "Failed to submit assignment" 
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    error: "Failed to submit assignment",
+                },
+                500
+            );
         }
     };
 
-    public static readonly getStudentAssignmentDashboard = async (ctx: Context) => {
+    public static readonly getStudentAssignmentDashboard = async (
+        ctx: Context
+    ) => {
         try {
             const user_id = ctx.get("user_id");
             const campus_id = ctx.get("campus_id");
@@ -730,23 +945,31 @@ export class AssignmentController {
                     performance_metrics: {
                         average_score: 0,
                         completion_rate: 0,
-                        on_time_submission_rate: 0
-                    }
+                        on_time_submission_rate: 0,
+                    },
                 },
-                message: "Enhanced assignment service temporarily disabled"
+                message: "Enhanced assignment service temporarily disabled",
             };
 
             return ctx.json(dashboard);
         } catch (error) {
-            console.error("Error fetching student assignment dashboard:", error);
-            return ctx.json({ 
-                success: false, 
-                error: "Failed to fetch student dashboard" 
-            }, 500);
+            console.error(
+                "Error fetching student assignment dashboard:",
+                error
+            );
+            return ctx.json(
+                {
+                    success: false,
+                    error: "Failed to fetch student dashboard",
+                },
+                500
+            );
         }
     };
 
-    public static readonly getStudentAssignmentPerformance = async (ctx: Context) => {
+    public static readonly getStudentAssignmentPerformance = async (
+        ctx: Context
+    ) => {
         try {
             const user_id = ctx.get("user_id");
             const campus_id = ctx.get("campus_id");
@@ -763,17 +986,25 @@ export class AssignmentController {
                 ],
             });
         } catch (error) {
-            console.error("Error fetching student assignment performance:", error);
-            return ctx.json({ 
-                success: false, 
-                error: "Failed to fetch assignment performance" 
-            }, 500);
+            console.error(
+                "Error fetching student assignment performance:",
+                error
+            );
+            return ctx.json(
+                {
+                    success: false,
+                    error: "Failed to fetch assignment performance",
+                },
+                500
+            );
         }
     };
 
     // ======================= PARENT ROUTES =======================
 
-    public static readonly getParentStudentAssignments = async (ctx: Context) => {
+    public static readonly getParentStudentAssignments = async (
+        ctx: Context
+    ) => {
         try {
             const { student_id } = ctx.req.param();
             const campus_id = ctx.get("campus_id");
@@ -784,10 +1015,13 @@ export class AssignmentController {
 
             const student = await UserService.getUser(student_id);
             if (!student) {
-                return ctx.json({ 
-                    success: false, 
-                    error: "Student not found" 
-                }, 404);
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Student not found",
+                    },
+                    404
+                );
             }
 
             // Temporarily return stub response until enhanced assignment service is fixed
@@ -796,7 +1030,7 @@ export class AssignmentController {
                 total_assignments: 0,
                 completed_count: 0,
                 pending_count: 0,
-                overdue_count: 0
+                overdue_count: 0,
             };
 
             return ctx.json({
@@ -819,14 +1053,19 @@ export class AssignmentController {
             });
         } catch (error) {
             console.error("Error fetching parent student assignments:", error);
-            return ctx.json({ 
-                success: false, 
-                error: "Failed to fetch student assignments" 
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    error: "Failed to fetch student assignments",
+                },
+                500
+            );
         }
     };
 
-    public static readonly getParentStudentPerformance = async (ctx: Context) => {
+    public static readonly getParentStudentPerformance = async (
+        ctx: Context
+    ) => {
         try {
             const { student_id } = ctx.req.param();
             const { period } = ctx.req.query();
@@ -851,10 +1090,13 @@ export class AssignmentController {
             });
         } catch (error) {
             console.error("Error fetching parent student performance:", error);
-            return ctx.json({ 
-                success: false, 
-                error: "Failed to fetch student performance" 
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    error: "Failed to fetch student performance",
+                },
+                500
+            );
         }
     };
 
@@ -866,13 +1108,17 @@ export class AssignmentController {
             const user_type = ctx.get("user_type");
 
             // Only get class assignments
-            const assignment: any = await classService.getAssignmentById(assignment_id);
-            
+            const assignment: any =
+                await classService.getAssignmentById(assignment_id);
+
             if (!assignment) {
-                return ctx.json({ 
-                    success: false, 
-                    error: "Assignment not found" 
-                }, 404);
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Assignment not found",
+                    },
+                    404
+                );
             }
 
             // Normalize assignment structure for response (class assignments only)
@@ -897,10 +1143,13 @@ export class AssignmentController {
             return ctx.json(normalizedAssignment);
         } catch (error) {
             console.error("Error fetching assignment by ID:", error);
-            return ctx.json({ 
-                success: false, 
-                error: "Failed to fetch assignment" 
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    error: "Failed to fetch assignment",
+                },
+                500
+            );
         }
     };
 
@@ -910,27 +1159,36 @@ export class AssignmentController {
             const data = await ctx.req.json();
 
             // Only update class assignments
-            const result: any = await classService.updateAssignment(assignment_id, data);
+            const result: any = await classService.updateAssignment(
+                assignment_id,
+                data
+            );
 
             if (!result) {
-                return ctx.json({ 
-                    success: false, 
-                    error: "Assignment not found or update failed" 
-                }, 404);
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Assignment not found or update failed",
+                    },
+                    404
+                );
             }
 
             return ctx.json({
                 success: true,
                 message: "Assignment updated successfully",
                 data: result,
-                assignment_type: "class"
+                assignment_type: "class",
             });
         } catch (error) {
             console.error("Error updating assignment:", error);
-            return ctx.json({ 
-                success: false, 
-                error: "Failed to update assignment" 
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    error: "Failed to update assignment",
+                },
+                500
+            );
         }
     };
 
@@ -942,23 +1200,29 @@ export class AssignmentController {
             const success = await classService.deleteAssignment(assignment_id);
 
             if (!success) {
-                return ctx.json({ 
-                    success: false, 
-                    error: "Assignment not found or delete failed" 
-                }, 404);
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Assignment not found or delete failed",
+                    },
+                    404
+                );
             }
 
             return ctx.json({
                 success: true,
                 message: "Assignment deleted successfully",
-                assignment_type: "class"
+                assignment_type: "class",
             });
         } catch (error) {
             console.error("Error deleting assignment:", error);
-            return ctx.json({ 
-                success: false, 
-                error: "Failed to delete assignment" 
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    error: "Failed to delete assignment",
+                },
+                500
+            );
         }
     };
 }

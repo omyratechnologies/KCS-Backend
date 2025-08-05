@@ -8,13 +8,18 @@ interface IPaymentSettlement {
     id: string;
     campus_id: string;
     settlement_batch_id: string;
-    
+
     // Settlement Details
     settlement_date: Date;
     settlement_period_start: Date;
     settlement_period_end: Date;
-    settlement_status: "pending" | "processing" | "completed" | "failed" | "cancelled";
-    
+    settlement_status:
+        | "pending"
+        | "processing"
+        | "completed"
+        | "failed"
+        | "cancelled";
+
     // Financial Information
     total_transaction_amount: number;
     total_gateway_fees: number;
@@ -22,12 +27,12 @@ interface IPaymentSettlement {
     total_taxes: number;
     net_settlement_amount: number;
     currency: string;
-    
+
     // Gateway Information
     gateway_provider: "razorpay" | "payu" | "cashfree";
     gateway_settlement_id?: string;
     gateway_settlement_reference?: string;
-    
+
     // School Bank Details (for settlement)
     school_bank_details: {
         bank_name: string;
@@ -37,7 +42,7 @@ interface IPaymentSettlement {
         branch_name: string;
         account_type: "savings" | "current";
     };
-    
+
     // Transaction Summary
     transaction_summary: {
         total_transactions: number;
@@ -46,7 +51,7 @@ interface IPaymentSettlement {
         refunded_transactions: number;
         transaction_ids: string[]; // References to payment_transactions
     };
-    
+
     // Settlement Processing
     processing_details: {
         initiated_by: string; // System or manual
@@ -60,7 +65,7 @@ interface IPaymentSettlement {
             gateway_error?: any;
         };
     };
-    
+
     // Compliance & Audit
     compliance_details: {
         settlement_report_url?: string;
@@ -72,7 +77,7 @@ interface IPaymentSettlement {
         regulatory_reference?: string;
         audit_trail_id: string;
     };
-    
+
     // Security & Monitoring
     security_metadata: {
         settlement_hash: string; // For integrity verification
@@ -81,7 +86,7 @@ interface IPaymentSettlement {
         user_agent?: string;
         security_flags: string[];
     };
-    
+
     // Notification Status
     notification_status: {
         school_notified: boolean;
@@ -90,7 +95,7 @@ interface IPaymentSettlement {
         sms_notification_status: "pending" | "sent" | "failed";
         webhook_notification_status: "pending" | "sent" | "failed" | "retry";
     };
-    
+
     meta_data: object;
     created_at: Date;
     updated_at: Date;
@@ -99,15 +104,15 @@ interface IPaymentSettlement {
 interface IPaymentGatewayConfiguration {
     id: string;
     campus_id: string;
-    
+
     // Gateway Provider Details
     gateway_provider: "razorpay" | "payu" | "cashfree";
     gateway_mode: "test" | "live";
-    
+
     // Configuration Status
     status: "active" | "inactive" | "suspended" | "under_review";
     is_primary: boolean; // Primary gateway for the school
-    
+
     // Configuration Metadata
     configuration_details: {
         configured_at: Date;
@@ -116,7 +121,7 @@ interface IPaymentGatewayConfiguration {
         last_updated_by: string;
         configuration_version: string;
     };
-    
+
     // Gateway Specific Settings
     gateway_settings: {
         auto_settlement_enabled: boolean;
@@ -133,7 +138,7 @@ interface IPaymentGatewayConfiguration {
             cancel_url: string;
         };
     };
-    
+
     // Fee Structure
     fee_structure: {
         transaction_fee_percentage: number;
@@ -145,7 +150,7 @@ interface IPaymentGatewayConfiguration {
         currency: string;
         fee_bearer: "school" | "student" | "split"; // Who pays the fees
     };
-    
+
     // Security Settings
     security_configuration: {
         encryption_enabled: boolean;
@@ -158,7 +163,7 @@ interface IPaymentGatewayConfiguration {
         daily_transaction_limit: number;
         monthly_transaction_limit: number;
     };
-    
+
     // Testing & Validation
     testing_details: {
         last_test_date?: Date;
@@ -168,7 +173,7 @@ interface IPaymentGatewayConfiguration {
         health_check_status: "healthy" | "degraded" | "unhealthy";
         last_health_check: Date;
     };
-    
+
     // Compliance & Legal
     compliance_settings: {
         pci_dss_compliant: boolean;
@@ -178,7 +183,7 @@ interface IPaymentGatewayConfiguration {
         data_retention_period_days: number;
         audit_log_retention_days: number;
     };
-    
+
     meta_data: object;
     created_at: Date;
     updated_at: Date;
@@ -187,17 +192,32 @@ interface IPaymentGatewayConfiguration {
 interface IPaymentAuditLog {
     id: string;
     campus_id: string;
-    
+
     // Event Information
-    event_type: "payment_initiated" | "payment_completed" | "payment_failed" | 
-                "settlement_initiated" | "settlement_completed" | "settlement_failed" |
-                "gateway_configured" | "credentials_updated" | "webhook_received" |
-                "refund_initiated" | "refund_completed" | "security_event" | 
-                "compliance_check" | "audit_review";
-    
-    event_category: "payment" | "settlement" | "security" | "compliance" | "configuration";
+    event_type:
+        | "payment_initiated"
+        | "payment_completed"
+        | "payment_failed"
+        | "settlement_initiated"
+        | "settlement_completed"
+        | "settlement_failed"
+        | "gateway_configured"
+        | "credentials_updated"
+        | "webhook_received"
+        | "refund_initiated"
+        | "refund_completed"
+        | "security_event"
+        | "compliance_check"
+        | "audit_review";
+
+    event_category:
+        | "payment"
+        | "settlement"
+        | "security"
+        | "compliance"
+        | "configuration";
     severity: "low" | "medium" | "high" | "critical";
-    
+
     // Event Details
     event_details: {
         transaction_id?: string;
@@ -213,7 +233,7 @@ interface IPaymentAuditLog {
         operation_result: "success" | "failure" | "partial" | "pending";
         execution_time_ms: number;
     };
-    
+
     // Security Context
     security_context: {
         ip_address: string;
@@ -228,7 +248,7 @@ interface IPaymentAuditLog {
         risk_score?: number;
         fraud_indicators: string[];
     };
-    
+
     // System Context
     system_context: {
         api_endpoint: string;
@@ -241,7 +261,7 @@ interface IPaymentAuditLog {
         system_version: string;
         environment: "development" | "staging" | "production";
     };
-    
+
     // Data Changes (for configuration changes)
     data_changes?: {
         before_value?: any;
@@ -249,28 +269,36 @@ interface IPaymentAuditLog {
         changed_fields: string[];
         change_reason?: string;
     };
-    
+
     // Compliance & Legal
     compliance_tags: string[];
     retention_period_days: number;
     is_sensitive_data: boolean;
     data_classification: "public" | "internal" | "confidential" | "restricted";
-    
+
     created_at: Date;
 }
 
 interface IPaymentSecurityEvent {
     id: string;
     campus_id: string;
-    
+
     // Security Event Details
-    event_type: "suspicious_activity" | "credential_breach" | "unauthorized_access" |
-                "fraud_attempt" | "data_leak" | "system_intrusion" | "compliance_violation" |
-                "encryption_failure" | "webhook_tampering" | "api_abuse";
-    
+    event_type:
+        | "suspicious_activity"
+        | "credential_breach"
+        | "unauthorized_access"
+        | "fraud_attempt"
+        | "data_leak"
+        | "system_intrusion"
+        | "compliance_violation"
+        | "encryption_failure"
+        | "webhook_tampering"
+        | "api_abuse";
+
     severity: "low" | "medium" | "high" | "critical";
     status: "detected" | "investigating" | "resolved" | "false_positive";
-    
+
     // Threat Information
     threat_details: {
         threat_actor?: string;
@@ -281,7 +309,7 @@ interface IPaymentSecurityEvent {
         data_compromised: boolean;
         systems_affected: string[];
     };
-    
+
     // Detection Information
     detection_details: {
         detected_at: Date;
@@ -290,7 +318,7 @@ interface IPaymentSecurityEvent {
         confidence_score: number;
         false_positive_probability: number;
     };
-    
+
     // Response Information
     response_details: {
         response_initiated_at?: Date;
@@ -300,7 +328,7 @@ interface IPaymentSecurityEvent {
         recovery_actions: string[];
         lessons_learned?: string;
     };
-    
+
     // Notification Information
     notification_details: {
         internal_team_notified: boolean;
@@ -309,7 +337,7 @@ interface IPaymentSecurityEvent {
         notification_sent_at?: Date;
         escalation_level: number;
     };
-    
+
     meta_data: object;
     created_at: Date;
     updated_at: Date;
@@ -320,59 +348,59 @@ interface IPaymentSecurityEvent {
 const PaymentSettlementSchema = new Schema({
     campus_id: { type: String, required: true },
     settlement_batch_id: { type: String, required: true },
-    
+
     settlement_date: { type: Date, required: true },
     settlement_period_start: { type: Date, required: true },
     settlement_period_end: { type: Date, required: true },
-    settlement_status: { 
-        type: String, 
+    settlement_status: {
+        type: String,
         required: true,
         enum: ["pending", "processing", "completed", "failed", "cancelled"],
-        default: "pending"
+        default: "pending",
     },
-    
+
     total_transaction_amount: { type: Number, required: true },
     total_gateway_fees: { type: Number, required: true },
     total_platform_fees: { type: Number, required: true },
     total_taxes: { type: Number, required: true },
     net_settlement_amount: { type: Number, required: true },
     currency: { type: String, required: true, default: "INR" },
-    
-    gateway_provider: { 
-        type: String, 
+
+    gateway_provider: {
+        type: String,
         required: true,
-        enum: ["razorpay", "payu", "cashfree"]
+        enum: ["razorpay", "payu", "cashfree"],
     },
     gateway_settlement_id: { type: String, required: false },
     gateway_settlement_reference: { type: String, required: false },
-    
+
     school_bank_details: {
         type: Object,
-        required: true
+        required: true,
     },
-    
+
     transaction_summary: {
         type: Object,
-        required: true
+        required: true,
     },
-    
+
     processing_details: {
         type: Object,
-        required: true
+        required: true,
     },
-    
+
     compliance_details: {
         type: Object,
         required: true,
-        default: {}
+        default: {},
     },
-    
+
     security_metadata: {
         type: Object,
         required: true,
-        default: {}
+        default: {},
     },
-    
+
     notification_status: {
         type: Object,
         required: true,
@@ -380,56 +408,56 @@ const PaymentSettlementSchema = new Schema({
             school_notified: false,
             email_notification_status: "pending",
             sms_notification_status: "pending",
-            webhook_notification_status: "pending"
-        }
+            webhook_notification_status: "pending",
+        },
     },
-    
+
     meta_data: { type: Object, required: true, default: {} },
     created_at: { type: Date, default: () => new Date() },
-    updated_at: { type: Date, default: () => new Date() }
+    updated_at: { type: Date, default: () => new Date() },
 });
 
 const PaymentGatewayConfigurationSchema = new Schema({
     campus_id: { type: String, required: true },
-    gateway_provider: { 
-        type: String, 
+    gateway_provider: {
+        type: String,
         required: true,
-        enum: ["razorpay", "payu", "cashfree"]
+        enum: ["razorpay", "payu", "cashfree"],
     },
-    gateway_mode: { 
-        type: String, 
+    gateway_mode: {
+        type: String,
         required: true,
         enum: ["test", "live"],
-        default: "test"
+        default: "test",
     },
-    status: { 
-        type: String, 
+    status: {
+        type: String,
         required: true,
         enum: ["active", "inactive", "suspended", "under_review"],
-        default: "inactive"
+        default: "inactive",
     },
     is_primary: { type: Boolean, required: true, default: false },
-    
+
     configuration_details: {
         type: Object,
-        required: true
+        required: true,
     },
-    
+
     gateway_settings: {
         type: Object,
-        required: true
+        required: true,
     },
-    
+
     fee_structure: {
         type: Object,
-        required: true
+        required: true,
     },
-    
+
     security_configuration: {
         type: Object,
-        required: true
+        required: true,
     },
-    
+
     testing_details: {
         type: Object,
         required: true,
@@ -437,111 +465,137 @@ const PaymentGatewayConfigurationSchema = new Schema({
             last_test_status: "not_tested",
             connectivity_status: "disconnected",
             health_check_status: "unhealthy",
-            last_health_check: new Date()
-        }
+            last_health_check: new Date(),
+        },
     },
-    
+
     compliance_settings: {
         type: Object,
-        required: true
+        required: true,
     },
-    
+
     meta_data: { type: Object, required: true, default: {} },
     created_at: { type: Date, default: () => new Date() },
-    updated_at: { type: Date, default: () => new Date() }
+    updated_at: { type: Date, default: () => new Date() },
 });
 
 const PaymentAuditLogSchema = new Schema({
     campus_id: { type: String, required: true },
-    event_type: { 
-        type: String, 
+    event_type: {
+        type: String,
         required: true,
-        enum: ["payment_initiated", "payment_completed", "payment_failed", 
-               "settlement_initiated", "settlement_completed", "settlement_failed",
-               "gateway_configured", "credentials_updated", "webhook_received",
-               "refund_initiated", "refund_completed", "security_event", 
-               "compliance_check", "audit_review"]
+        enum: [
+            "payment_initiated",
+            "payment_completed",
+            "payment_failed",
+            "settlement_initiated",
+            "settlement_completed",
+            "settlement_failed",
+            "gateway_configured",
+            "credentials_updated",
+            "webhook_received",
+            "refund_initiated",
+            "refund_completed",
+            "security_event",
+            "compliance_check",
+            "audit_review",
+        ],
     },
-    event_category: { 
-        type: String, 
+    event_category: {
+        type: String,
         required: true,
-        enum: ["payment", "settlement", "security", "compliance", "configuration"]
+        enum: [
+            "payment",
+            "settlement",
+            "security",
+            "compliance",
+            "configuration",
+        ],
     },
-    severity: { 
-        type: String, 
+    severity: {
+        type: String,
         required: true,
-        enum: ["low", "medium", "high", "critical"]
+        enum: ["low", "medium", "high", "critical"],
     },
-    
+
     event_details: {
         type: Object,
-        required: true
+        required: true,
     },
-    
+
     security_context: {
         type: Object,
-        required: true
+        required: true,
     },
-    
+
     system_context: {
         type: Object,
-        required: true
+        required: true,
     },
-    
+
     data_changes: {
         type: Object,
-        required: false
+        required: false,
     },
-    
+
     compliance_tags: { type: [String], required: true, default: [] },
     retention_period_days: { type: Number, required: true, default: 2555 }, // 7 years
     is_sensitive_data: { type: Boolean, required: true, default: false },
-    data_classification: { 
-        type: String, 
+    data_classification: {
+        type: String,
         required: true,
         enum: ["public", "internal", "confidential", "restricted"],
-        default: "internal"
+        default: "internal",
     },
-    
-    created_at: { type: Date, default: () => new Date() }
+
+    created_at: { type: Date, default: () => new Date() },
 });
 
 const PaymentSecurityEventSchema = new Schema({
     campus_id: { type: String, required: true },
-    event_type: { 
-        type: String, 
+    event_type: {
+        type: String,
         required: true,
-        enum: ["suspicious_activity", "credential_breach", "unauthorized_access",
-               "fraud_attempt", "data_leak", "system_intrusion", "compliance_violation",
-               "encryption_failure", "webhook_tampering", "api_abuse"]
+        enum: [
+            "suspicious_activity",
+            "credential_breach",
+            "unauthorized_access",
+            "fraud_attempt",
+            "data_leak",
+            "system_intrusion",
+            "compliance_violation",
+            "encryption_failure",
+            "webhook_tampering",
+            "api_abuse",
+        ],
     },
-    severity: { 
-        type: String, 
+    severity: {
+        type: String,
         required: true,
-        enum: ["low", "medium", "high", "critical"]
+        enum: ["low", "medium", "high", "critical"],
     },
-    status: { 
-        type: String, 
+    status: {
+        type: String,
         required: true,
         enum: ["detected", "investigating", "resolved", "false_positive"],
-        default: "detected"
+        default: "detected",
     },
-    
+
     threat_details: {
         type: Object,
-        required: true
+        required: true,
     },
-    
+
     detection_details: {
         type: Object,
-        required: true
+        required: true,
     },
-    
+
     response_details: {
         type: Object,
-        required: false
+        required: false,
     },
-    
+
     notification_details: {
         type: Object,
         required: true,
@@ -549,13 +603,13 @@ const PaymentSecurityEventSchema = new Schema({
             internal_team_notified: false,
             school_notified: false,
             regulatory_reported: false,
-            escalation_level: 0
-        }
+            escalation_level: 0,
+        },
     },
-    
+
     meta_data: { type: Object, required: true, default: {} },
     created_at: { type: Date, default: () => new Date() },
-    updated_at: { type: Date, default: () => new Date() }
+    updated_at: { type: Date, default: () => new Date() },
 });
 
 // ========================= INDEXES =========================
@@ -569,7 +623,9 @@ PaymentSettlementSchema.index.findByBatchId = { by: "settlement_batch_id" };
 
 // Gateway Configuration Indexes
 PaymentGatewayConfigurationSchema.index.findByCampusId = { by: "campus_id" };
-PaymentGatewayConfigurationSchema.index.findByGateway = { by: "gateway_provider" };
+PaymentGatewayConfigurationSchema.index.findByGateway = {
+    by: "gateway_provider",
+};
 PaymentGatewayConfigurationSchema.index.findByStatus = { by: "status" };
 PaymentGatewayConfigurationSchema.index.findByPrimary = { by: "is_primary" };
 
@@ -609,7 +665,7 @@ const PaymentSecurityEvent = ottoman.model<IPaymentSecurityEvent>(
     PaymentSecurityEventSchema
 );
 
-export { 
+export {
     type IPaymentAuditLog,
     type IPaymentGatewayConfiguration,
     type IPaymentSecurityEvent,
@@ -617,4 +673,5 @@ export {
     PaymentAuditLog,
     PaymentGatewayConfiguration,
     PaymentSecurityEvent,
-    PaymentSettlement};
+    PaymentSettlement,
+};

@@ -14,6 +14,7 @@ import dashboardRoute from "@/routes/dashboard.route";
 import documentStoreoute from "@/routes/document_store.route";
 import examRoute from "@/routes/exam.route";
 import feeRoute from "@/routes/fee.route";
+import healthRoute from "@/routes/health.route";
 import libraryRoute from "@/routes/library.route";
 import meetingRoute from "@/routes/meeting.route";
 import messagesRoute from "@/routes/message.route";
@@ -34,9 +35,12 @@ import usersRoute from "@/routes/users.route";
 
 const app = new Hono();
 
+// Routes that don't require authentication
 app.route("/tmp", tmpRoute);
 app.route("/auth", authRoute);
+app.route("/health", healthRoute); // Health endpoints accessible without authentication
 
+// Apply authentication middleware to all routes below this point
 app.use(authMiddleware());
 
 app.route("/android-apk", androidApkRoute);

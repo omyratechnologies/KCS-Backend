@@ -1,18 +1,43 @@
 import { pino } from "pino";
 
+import { config } from "@/utils/env";
+
 export enum LogTypes {
     LOGS = "logs",
     ERROR = "error",
     CUSTOMOBJ = "customObj",
 }
 
-const init = () => pino({
-    base: null // disables pid, hostname, and other default fields
+// Create a single logger instance with optimized configuration
+const logger = pino({
+    level: config.NODE_ENV === "production" ? "info" : "debug",
+    base: {
+        pid: false,
+        hostname: false,
+    },
+    timestamp: pino.stdTimeFunctions.isoTime,
+    formatters: {
+        level: (label) => {
+            return { level: label };
+        },
+    },
+    transport:
+        config.NODE_ENV === "production"
+            ? undefined
+            : {
+                  target: "pino-pretty",
+                  options: {
+                      colorize: true,
+                      ignore: "pid,hostname",
+                      translateTime: "SYS:standard",
+                  },
+              },
 });
-const Logs = (msg: string) => init().info(msg);
-const ErrorLogs = (msg: string) => init().error(msg);
+
+const Logs = (msg: string) => logger.info(msg);
+const ErrorLogs = (msg: string) => logger.error(msg);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const customLogHandler = (obj: any) => init().child(obj);
+const customLogHandler = (obj: any) => logger.child(obj);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const infoLogs = (msg: any, logType: LogTypes, generated_by: string) => {
@@ -29,3 +54,4 @@ const infoLogs = (msg: any, logType: LogTypes, generated_by: string) => {
 };
 
 export default infoLogs;
+export { logger };

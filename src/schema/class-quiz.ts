@@ -9,11 +9,9 @@ export const classQuizSchema = z
         campus_id: z.string().openapi({ example: "campus123" }),
         class_id: z.string().openapi({ example: "class123" }),
         quiz_name: z.string().openapi({ example: "Midterm Math Quiz" }),
-        quiz_description: z
-            .string()
-            .openapi({
-                example: "A comprehensive quiz covering algebra and geometry",
-            }),
+        quiz_description: z.string().openapi({
+            example: "A comprehensive quiz covering algebra and geometry",
+        }),
         quiz_meta_data: z.record(z.string(), z.any()).openapi({
             example: {
                 duration_minutes: 60,
@@ -35,11 +33,9 @@ export const quizQuestionSchema = z
         campus_id: z.string().openapi({ example: "campus123" }),
         class_id: z.string().openapi({ example: "class123" }),
         quiz_id: z.string().openapi({ example: "quiz123" }),
-        question_text: z
-            .string()
-            .openapi({
-                example: "What is the formula for the area of a circle?",
-            }),
+        question_text: z.string().openapi({
+            example: "What is the formula for the area of a circle?",
+        }),
         question_type: z.string().openapi({ example: "multiple_choice" }),
         options: z.array(z.string()).openapi({
             example: ["πr", "2πr", "πr²", "2πr²"],
@@ -93,12 +89,9 @@ export const quizSubmissionSchema = z
             .string()
             .openapi({ example: "2023-05-15T11:00:00Z" }),
         score: z.number().openapi({ example: 85 }),
-        feedback: z
-            .string()
-            .openapi({
-                example:
-                    "Good work! Review chapter 5 for questions you missed.",
-            }),
+        feedback: z.string().openapi({
+            example: "Good work! Review chapter 5 for questions you missed.",
+        }),
         meta_data: z.record(z.string(), z.any()).openapi({
             example: {
                 time_taken_minutes: 45,
@@ -116,11 +109,9 @@ export const quizSubmissionSchema = z
 export const createClassQuizRequestBodySchema = z
     .object({
         quiz_name: z.string().openapi({ example: "Midterm Math Quiz" }),
-        quiz_description: z
-            .string()
-            .openapi({
-                example: "A comprehensive quiz covering algebra and geometry",
-            }),
+        quiz_description: z.string().openapi({
+            example: "A comprehensive quiz covering algebra and geometry",
+        }),
         quiz_meta_data: z.record(z.string(), z.any()).openapi({
             example: {
                 duration_minutes: 60,
@@ -141,12 +132,10 @@ export const createQuizQuestionsRequestBodySchema = z
         questionBank: z
             .array(
                 z.object({
-                    question_text: z
-                        .string()
-                        .openapi({
-                            example:
-                                "What is the formula for the area of a circle?",
-                        }),
+                    question_text: z.string().openapi({
+                        example:
+                            "What is the formula for the area of a circle?",
+                    }),
                     question_type: z
                         .string()
                         .openapi({ example: "multiple_choice" }),
@@ -192,11 +181,9 @@ export const createQuizQuestionsResponseSchema = z.string().openapi({
 // Update Quiz Question Request
 export const updateQuizQuestionRequestBodySchema = z
     .object({
-        question_text: z
-            .string()
-            .openapi({
-                example: "What is the formula for the area of a circle?",
-            }),
+        question_text: z.string().openapi({
+            example: "What is the formula for the area of a circle?",
+        }),
         question_type: z.string().openapi({ example: "multiple_choice" }),
         options: z.array(z.string()).openapi({
             example: ["πr", "2πr", "πr²", "2πr²"],

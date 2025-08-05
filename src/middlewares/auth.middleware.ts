@@ -35,8 +35,7 @@ export const authMiddleware = (): MiddlewareHandler => {
             }
 
             ctx.set("campus_id", user.campus_id);
-        }
-        else if(ctx.req.query("campus_id")) {
+        } else if (ctx.req.query("campus_id")) {
             ctx.set("campus_id", ctx.req.query("campus_id"));
         }
 

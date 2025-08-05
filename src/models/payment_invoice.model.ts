@@ -69,30 +69,30 @@ const PaymentInvoiceSchema = new Schema({
     due_date: { type: Date, required: true },
     amount_details: {
         type: Object,
-        required: true
+        required: true,
     },
     payment_details: {
         type: Object,
         required: true,
-        default: { amount_paid: 0 }
+        default: { amount_paid: 0 },
     },
     student_details: {
         type: Object,
-        required: true
+        required: true,
     },
     school_details: {
         type: Object,
-        required: true
+        required: true,
     },
     fee_breakdown: {
         type: [Object],
-        required: true
+        required: true,
     },
     status: {
         type: String,
         required: true,
         enum: ["generated", "sent", "paid", "overdue"],
-        default: "generated"
+        default: "generated",
     },
     invoice_url: { type: String, required: false },
     sent_notifications: {
@@ -101,8 +101,8 @@ const PaymentInvoiceSchema = new Schema({
         default: {
             email_sent: false,
             sms_sent: false,
-            whatsapp_sent: false
-        }
+            whatsapp_sent: false,
+        },
     },
     meta_data: { type: Object, required: true, default: {} },
     created_at: { type: Date, default: () => new Date() },
@@ -124,4 +124,4 @@ const PaymentInvoice = ottoman.model<IPaymentInvoice>(
     PaymentInvoiceSchema
 );
 
-export { type IPaymentInvoice,PaymentInvoice };
+export { type IPaymentInvoice, PaymentInvoice };

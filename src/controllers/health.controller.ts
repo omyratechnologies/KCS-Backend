@@ -11,31 +11,35 @@ export class HealthController {
         try {
             // Try a simple database operation
             await User.find({ is_deleted: false }, { limit: 1 });
-            
+
             return c.json({
                 success: true,
                 message: "Database connection healthy",
                 timestamp: new Date().toISOString(),
-                service: "Ottoman/Couchbase"
+                service: "Ottoman/Couchbase",
             });
         } catch (error) {
             console.error("Database health check failed:", error);
-            
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            
-            return c.json({
-                success: false,
-                message: "Database connection failed",
-                error: errorMessage,
-                timestamp: new Date().toISOString(),
-                service: "Ottoman/Couchbase",
-                suggestions: [
-                    "Check if database service is running",
-                    "Verify environment variables (OTTOMAN_*)",
-                    "Ensure initDB() was called during application startup",
-                    "Check network connectivity to database"
-                ]
-            }, 500);
+
+            const errorMessage =
+                error instanceof Error ? error.message : String(error);
+
+            return c.json(
+                {
+                    success: false,
+                    message: "Database connection failed",
+                    error: errorMessage,
+                    timestamp: new Date().toISOString(),
+                    service: "Ottoman/Couchbase",
+                    suggestions: [
+                        "Check if database service is running",
+                        "Verify environment variables (OTTOMAN_*)",
+                        "Ensure initDB() was called during application startup",
+                        "Check network connectivity to database",
+                    ],
+                },
+                500
+            );
         }
     };
 
@@ -51,8 +55,8 @@ export class HealthController {
             uptime: process.uptime(),
             memory: process.memoryUsage(),
             checks: {
-                database: { status: "unknown", message: "" }
-            }
+                database: { status: "unknown", message: "" },
+            },
         };
 
         // Check database
@@ -60,13 +64,13 @@ export class HealthController {
             await User.find({ is_deleted: false }, { limit: 1 });
             healthChecks.checks.database = {
                 status: "healthy",
-                message: "Database connection successful"
+                message: "Database connection successful",
             };
         } catch (error) {
             healthChecks.status = "unhealthy";
             healthChecks.checks.database = {
-                status: "unhealthy", 
-                message: error instanceof Error ? error.message : String(error)
+                status: "unhealthy",
+                message: error instanceof Error ? error.message : String(error),
             };
         }
 
@@ -80,10 +84,12 @@ export class HealthController {
     public static readonly checkWebRTC = async (c: Context) => {
         try {
             const status = WebRTCService.getStatus();
-            
+
             return c.json({
                 success: true,
-                message: status.available ? "WebRTC service healthy" : "WebRTC in compatibility mode",
+                message: status.available
+                    ? "WebRTC service healthy"
+                    : "WebRTC in compatibility mode",
                 timestamp: new Date().toISOString(),
                 service: "MediaSoup WebRTC",
                 status: {
@@ -91,21 +97,27 @@ export class HealthController {
                     workers: status.workers,
                     activeRouters: status.routers,
                     activeRooms: status.activeRooms,
-                    mode: status.available ? "Full WebRTC" : "Participant Management Only"
-                }
+                    mode: status.available
+                        ? "Full WebRTC"
+                        : "Participant Management Only",
+                },
             });
         } catch (error) {
             console.error("WebRTC health check failed:", error);
-            
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            
-            return c.json({
-                success: false,
-                message: "WebRTC service check failed",
-                error: errorMessage,
-                timestamp: new Date().toISOString(),
-                service: "MediaSoup WebRTC"
-            }, 503);
+
+            const errorMessage =
+                error instanceof Error ? error.message : String(error);
+
+            return c.json(
+                {
+                    success: false,
+                    message: "WebRTC service check failed",
+                    error: errorMessage,
+                    timestamp: new Date().toISOString(),
+                    service: "MediaSoup WebRTC",
+                },
+                503
+            );
         }
     };
 }

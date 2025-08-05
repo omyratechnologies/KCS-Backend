@@ -18,21 +18,24 @@ import {
     ClassQuizSubmission,
     IClassQuizSubmission,
 } from "@/models/class_quiz_submission.model";
-import { IUser,User } from "@/models/user.model";
+import { IUser, User } from "@/models/user.model";
 
 // Utility function to format time in seconds to a readable format
 const formatTime = (seconds: number): string => {
     if (seconds === 0) return "0 seconds";
-    
+
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const remainingSeconds = seconds % 60;
-    
+
     const parts: string[] = [];
     if (hours > 0) parts.push(`${hours} hour${hours > 1 ? "s" : ""}`);
     if (minutes > 0) parts.push(`${minutes} minute${minutes > 1 ? "s" : ""}`);
-    if (remainingSeconds > 0) parts.push(`${remainingSeconds} second${remainingSeconds > 1 ? "s" : ""}`);
-    
+    if (remainingSeconds > 0)
+        parts.push(
+            `${remainingSeconds} second${remainingSeconds > 1 ? "s" : ""}`
+        );
+
     return parts.join(", ");
 };
 
@@ -68,7 +71,7 @@ interface QuizResult {
 
 export class ClassQuizService {
     // ======================= QUIZ MANAGEMENT =======================
-    
+
     public static readonly createClassQuiz = async (
         campus_id: string,
         created_by: string,
@@ -104,7 +107,9 @@ export class ClassQuizService {
         });
     };
 
-    public static readonly getAllQuizzesFromAllClasses = async (campus_id: string) => {
+    public static readonly getAllQuizzesFromAllClasses = async (
+        campus_id: string
+    ) => {
         const quizzes = await ClassQuiz.find(
             {
                 campus_id,
@@ -166,7 +171,7 @@ export class ClassQuizService {
             quizzes.map(async (quiz) => {
                 // Get class information
                 const classData = await Class.findById(quiz.class_id);
-                
+
                 // Get quiz questions count
                 const questionsResult = await ClassQuizQuestion.find({
                     quiz_id: quiz.id,
@@ -184,14 +189,21 @@ export class ClassQuizService {
                 // Determine quiz status
                 const quizSettings = quiz.quiz_meta_data as QuizSettings;
                 let status = "Draft";
-                
+
                 if (questionsCount > 0) {
                     // Check if quiz is published based on availability settings
-                    if (quizSettings.available_from && quizSettings.available_until) {
+                    if (
+                        quizSettings.available_from &&
+                        quizSettings.available_until
+                    ) {
                         const now = new Date();
-                        const availableFrom = new Date(quizSettings.available_from);
-                        const availableUntil = new Date(quizSettings.available_until);
-                        
+                        const availableFrom = new Date(
+                            quizSettings.available_from
+                        );
+                        const availableUntil = new Date(
+                            quizSettings.available_until
+                        );
+
                         if (now > availableUntil) {
                             status = "Completed";
                         } else if (now >= availableFrom) {
@@ -201,20 +213,21 @@ export class ClassQuizService {
                         }
                     } else {
                         // No time restrictions, consider it published if it has questions
-                        status = submissionsCount > 0 ? "Published" : "Published";
+                        status =
+                            submissionsCount > 0 ? "Published" : "Published";
                     }
                 }
 
                 // Format due date
                 let dueDate: Date | null = null;
                 let dueDateDisplay = "Not scheduled";
-                
+
                 if (quizSettings.available_until) {
                     dueDate = new Date(quizSettings.available_until);
                     dueDateDisplay = dueDate.toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",
-                        year: "numeric"
+                        year: "numeric",
                     });
                 }
 
@@ -249,20 +262,31 @@ export class ClassQuizService {
                         title: quiz.quiz_name,
                         subtitle: classData?.name || "Unknown Class",
                         status_label: status,
-                        status_color: status === "Published" ? "success" : 
-                                     (status === "Completed" ? "neutral" : "warning"),
+                        status_color:
+                            status === "Published"
+                                ? "success"
+                                : (status === "Completed"
+                                  ? "neutral"
+                                  : "warning"),
                         date_label: status === "Completed" ? "Ended" : "Due",
-                        date_value: status === "Completed" ? completionDate : dueDate,
-                        date_display: status === "Completed" ? 
-                            (completionDate ? completionDate.toLocaleDateString("en-US", {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric"
-                            }) : "Recently ended") : 
-                            dueDateDisplay,
+                        date_value:
+                            status === "Completed" ? completionDate : dueDate,
+                        date_display:
+                            status === "Completed"
+                                ? (completionDate
+                                    ? completionDate.toLocaleDateString(
+                                          "en-US",
+                                          {
+                                              month: "short",
+                                              day: "numeric",
+                                              year: "numeric",
+                                          }
+                                      )
+                                    : "Recently ended")
+                                : dueDateDisplay,
                         participants_count: submissionsCount,
-                        questions_count: questionsCount
-                    }
+                        questions_count: questionsCount,
+                    },
                 };
             })
         );
@@ -316,7 +340,7 @@ export class ClassQuizService {
 
         if (questions.rows && questions.rows.length > 0) {
             await Promise.all(
-                questions.rows.map(question => 
+                questions.rows.map((question) =>
                     ClassQuizQuestion.updateById(question.id, {
                         is_deleted: true,
                         updated_at: new Date(),
@@ -433,26 +457,36 @@ export class ClassQuizService {
         const quizSettings = quiz.quiz_meta_data as QuizSettings;
 
         // Check availability window
-        if (quizSettings.available_from && new Date() < new Date(quizSettings.available_from)) {
+        if (
+            quizSettings.available_from &&
+            new Date() < new Date(quizSettings.available_from)
+        ) {
             throw new Error("Quiz is not yet available");
         }
 
-        if (quizSettings.available_until && new Date() > new Date(quizSettings.available_until)) {
+        if (
+            quizSettings.available_until &&
+            new Date() > new Date(quizSettings.available_until)
+        ) {
             throw new Error("Quiz is no longer available");
         }
 
         // Check if user already has completed the quiz
-        const existingSubmission = await this.getClassQuizSubmissionByQuizIdAndStudentId(
-            quiz_id,
-            user_id
-        );
+        const existingSubmission =
+            await this.getClassQuizSubmissionByQuizIdAndStudentId(
+                quiz_id,
+                user_id
+            );
 
         if (existingSubmission && quizSettings.max_attempts === 1) {
             throw new Error("Quiz already completed");
         }
 
         // Check if user has an active session
-        const existingSession = await this.getActiveQuizSession(quiz_id, user_id);
+        const existingSession = await this.getActiveQuizSession(
+            quiz_id,
+            user_id
+        );
         if (existingSession) {
             // Resume existing session
             return await this.getQuizSessionResponse(existingSession);
@@ -478,7 +512,9 @@ export class ClassQuizService {
         const sessionToken = this.generateSessionToken();
         const now = new Date();
         const expiresAt = quizSettings.time_limit_minutes
-            ? new Date(now.getTime() + quizSettings.time_limit_minutes * 60 * 1000)
+            ? new Date(
+                  now.getTime() + quizSettings.time_limit_minutes * 60 * 1000
+              )
             : null;
 
         const session = await ClassQuizSession.create({
@@ -500,7 +536,7 @@ export class ClassQuizService {
             total_questions: questions.length,
             current_question_index: 0,
             meta_data: {
-                question_order: orderedQuestions.map(q => q.id),
+                question_order: orderedQuestions.map((q) => q.id),
                 quiz_settings: quizSettings,
             },
             is_active: true,
@@ -539,10 +575,18 @@ export class ClassQuizService {
         const session = sessionResult.rows[0];
 
         // Check if session is expired and auto-submit if needed
-        if (session.expires_at && new Date() > new Date(session.expires_at) && session.status === "in_progress") {
-            console.log(`Session ${session.id} has expired during answer submission, auto-submitting...`);
+        if (
+            session.expires_at &&
+            new Date() > new Date(session.expires_at) &&
+            session.status === "in_progress"
+        ) {
+            console.log(
+                `Session ${session.id} has expired during answer submission, auto-submitting...`
+            );
             await this.handleQuizTimeout(session.id);
-            throw new Error("Quiz session has expired and has been auto-submitted. Your previous answers have been saved.");
+            throw new Error(
+                "Quiz session has expired and has been auto-submitted. Your previous answers have been saved."
+            );
         }
 
         if (session.status === "completed") {
@@ -601,7 +645,10 @@ export class ClassQuizService {
         session_token: string,
         user_id: string
     ): Promise<QuizSessionResponse> => {
-        const session = await this.validateAndGetSession(session_token, user_id);
+        const session = await this.validateAndGetSession(
+            session_token,
+            user_id
+        );
 
         if (session.status === "completed") {
             throw new Error("Quiz already completed");
@@ -641,7 +688,10 @@ export class ClassQuizService {
         session_token: string,
         user_id: string
     ): Promise<QuizSessionResponse> => {
-        const session = await this.validateAndGetSession(session_token, user_id);
+        const session = await this.validateAndGetSession(
+            session_token,
+            user_id
+        );
 
         if (session.status === "completed") {
             throw new Error("Quiz already completed");
@@ -673,7 +723,10 @@ export class ClassQuizService {
         session_token: string,
         user_id: string
     ): Promise<QuizResult> => {
-        const session = await this.validateAndGetSession(session_token, user_id);
+        const session = await this.validateAndGetSession(
+            session_token,
+            user_id
+        );
 
         if (session.status === "completed") {
             throw new Error("Quiz already completed");
@@ -681,7 +734,11 @@ export class ClassQuizService {
 
         const completedAt = new Date();
         const timeTakenSeconds = session.started_at
-            ? Math.floor((completedAt.getTime() - new Date(session.started_at).getTime()) / 1000)
+            ? Math.floor(
+                  (completedAt.getTime() -
+                      new Date(session.started_at).getTime()) /
+                      1000
+              )
             : 0;
 
         // Calculate score
@@ -697,7 +754,10 @@ export class ClassQuizService {
         });
 
         const attemptMap = new Map(
-            attempts.rows?.map(attempt => [attempt.question_id, attempt.attempt_data]) || []
+            attempts.rows?.map((attempt) => [
+                attempt.question_id,
+                attempt.attempt_data,
+            ]) || []
         );
 
         let correctAnswers = 0;
@@ -709,7 +769,10 @@ export class ClassQuizService {
         }
 
         const score = correctAnswers;
-        const percentage = questions.length > 0 ? (correctAnswers / questions.length) * 100 : 0;
+        const percentage =
+            questions.length > 0
+                ? (correctAnswers / questions.length) * 100
+                : 0;
 
         // Create submission record
         const submission = await ClassQuizSubmission.create({
@@ -805,13 +868,18 @@ export class ClassQuizService {
         });
 
         const attemptMap = new Map(
-            attempts.rows?.map(attempt => [attempt.question_id, attempt as IClassQuizAttempt]) || []
+            attempts.rows?.map((attempt) => [
+                attempt.question_id,
+                attempt as IClassQuizAttempt,
+            ]) || []
         );
 
         // Build detailed results
-        const questionResults = questions.map(question => {
+        const questionResults = questions.map((question) => {
             const userAttempt = attemptMap.get(question.id);
-            const userAnswer = userAttempt ? (userAttempt as IClassQuizAttempt).attempt_data : null;
+            const userAnswer = userAttempt
+                ? (userAttempt as IClassQuizAttempt).attempt_data
+                : null;
             const isCorrect = userAnswer === question.correct_answer;
 
             return {
@@ -827,14 +895,22 @@ export class ClassQuizService {
             };
         });
 
-        const correctAnswers = questionResults.filter(q => q.is_correct).length;
+        const correctAnswers = questionResults.filter(
+            (q) => q.is_correct
+        ).length;
         const totalQuestions = questions.length;
-        const percentage = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
+        const percentage =
+            totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
 
         // Calculate time taken
-        const timeTakenSeconds = session.started_at && session.completed_at
-            ? Math.floor((new Date(session.completed_at).getTime() - new Date(session.started_at).getTime()) / 1000)
-            : 0;
+        const timeTakenSeconds =
+            session.started_at && session.completed_at
+                ? Math.floor(
+                      (new Date(session.completed_at).getTime() -
+                          new Date(session.started_at).getTime()) /
+                          1000
+                  )
+                : 0;
 
         return {
             session: {
@@ -929,14 +1005,19 @@ export class ClassQuizService {
         // Get current question
         const questionOrder = (session.meta_data as any).question_order || [];
         const currentQuestionId = questionOrder[session.current_question_index];
-        const currentQuestion = questions.find(q => q.id === currentQuestionId);
+        const currentQuestion = questions.find(
+            (q) => q.id === currentQuestionId
+        );
 
         // Calculate remaining time
         let timeRemainingSeconds: number | undefined;
         if (session.expires_at) {
             const now = new Date();
             const expiresAt = new Date(session.expires_at);
-            timeRemainingSeconds = Math.max(0, Math.floor((expiresAt.getTime() - now.getTime()) / 1000));
+            timeRemainingSeconds = Math.max(
+                0,
+                Math.floor((expiresAt.getTime() - now.getTime()) / 1000)
+            );
         }
 
         // Calculate navigation flags
@@ -1033,24 +1114,21 @@ export class ClassQuizService {
         return data.rows || [];
     };
 
-    public static readonly getClassQuizAttemptByCampusIdAndClassIdAndQuizId = async (
-        campus_id: string,
-        class_id: string,
-        quiz_id: string
-    ) => {
-        const data = await ClassQuizAttempt.find(
-            {
-                campus_id,
-                class_id,
-                quiz_id,
-            },
-            {
-                sort: { updated_at: "DESC" },
-            }
-        );
+    public static readonly getClassQuizAttemptByCampusIdAndClassIdAndQuizId =
+        async (campus_id: string, class_id: string, quiz_id: string) => {
+            const data = await ClassQuizAttempt.find(
+                {
+                    campus_id,
+                    class_id,
+                    quiz_id,
+                },
+                {
+                    sort: { updated_at: "DESC" },
+                }
+            );
 
-        return data.rows || [];
-    };
+            return data.rows || [];
+        };
 
     public static readonly createClassQuizAttempt = async (
         campus_id: string,
@@ -1095,14 +1173,17 @@ export class ClassQuizService {
             quiz_id
         );
 
-        const quiz_attempts = await this.getClassQuizAttemptByCampusIdAndClassIdAndQuizId(
-            campus_id,
-            class_id,
-            quiz_id
-        );
+        const quiz_attempts =
+            await this.getClassQuizAttemptByCampusIdAndClassIdAndQuizId(
+                campus_id,
+                class_id,
+                quiz_id
+            );
 
         const quiz_attempts_map = new Map<string, string>();
-        for (const attempt of quiz_attempts.filter(a => a.user_id === user_id)) {
+        for (const attempt of quiz_attempts.filter(
+            (a) => a.user_id === user_id
+        )) {
             quiz_attempts_map.set(attempt.question_id, attempt.attempt_data);
         }
 
@@ -1168,7 +1249,11 @@ export class ClassQuizService {
         class_id: string,
         quiz_id: string
     ) => {
-        return await this.getClassQuizQuestionsByQuizId(campus_id, class_id, quiz_id);
+        return await this.getClassQuizQuestionsByQuizId(
+            campus_id,
+            class_id,
+            quiz_id
+        );
     };
 
     public static readonly getClassQuizQuestionById = async (id: string) => {
@@ -1190,7 +1275,7 @@ export class ClassQuizService {
         });
 
         const submissionData = submissions.rows || [];
-        
+
         if (submissionData.length === 0) {
             return {
                 total_attempts: 0,
@@ -1201,9 +1286,10 @@ export class ClassQuizService {
             };
         }
 
-        const scores = submissionData.map(s => s.score);
+        const scores = submissionData.map((s) => s.score);
         const totalAttempts = submissionData.length;
-        const averageScore = scores.reduce((sum, score) => sum + score, 0) / totalAttempts;
+        const averageScore =
+            scores.reduce((sum, score) => sum + score, 0) / totalAttempts;
         const highestScore = Math.max(...scores);
         const lowestScore = Math.min(...scores);
 
@@ -1245,7 +1331,10 @@ export class ClassQuizService {
         session_token: string,
         user_id: string
     ) => {
-        const session = await this.validateAndGetSession(session_token, user_id);
+        const session = await this.validateAndGetSession(
+            session_token,
+            user_id
+        );
 
         await ClassQuizSession.updateById(session.id, {
             status: "abandoned",
@@ -1260,14 +1349,18 @@ export class ClassQuizService {
         user_id: string,
         additional_minutes: number
     ) => {
-        const session = await this.validateAndGetSession(session_token, user_id);
+        const session = await this.validateAndGetSession(
+            session_token,
+            user_id
+        );
 
         if (!session.expires_at) {
             throw new Error("This quiz does not have a time limit");
         }
 
         const newExpiresAt = new Date(
-            new Date(session.expires_at).getTime() + additional_minutes * 60 * 1000
+            new Date(session.expires_at).getTime() +
+                additional_minutes * 60 * 1000
         );
 
         await ClassQuizSession.updateById(session.id, {
@@ -1275,7 +1368,7 @@ export class ClassQuizService {
             updated_at: new Date(),
         });
 
-        return { 
+        return {
             message: "Quiz session extended successfully",
             new_expires_at: newExpiresAt,
         };
@@ -1313,11 +1406,17 @@ export class ClassQuizService {
             throw new Error("Session is not in progress");
         }
 
-        console.log(`Auto-submitting quiz due to timeout for session: ${session_id}`);
+        console.log(
+            `Auto-submitting quiz due to timeout for session: ${session_id}`
+        );
 
         const completedAt = new Date();
         const timeTakenSeconds = session.started_at
-            ? Math.floor((completedAt.getTime() - new Date(session.started_at).getTime()) / 1000)
+            ? Math.floor(
+                  (completedAt.getTime() -
+                      new Date(session.started_at).getTime()) /
+                      1000
+              )
             : 0;
 
         // Calculate score based on current attempts
@@ -1333,7 +1432,10 @@ export class ClassQuizService {
         });
 
         const attemptMap = new Map(
-            attempts.rows?.map(attempt => [attempt.question_id, attempt.attempt_data]) || []
+            attempts.rows?.map((attempt) => [
+                attempt.question_id,
+                attempt.attempt_data,
+            ]) || []
         );
 
         let correctAnswers = 0;
@@ -1345,7 +1447,10 @@ export class ClassQuizService {
         }
 
         const score = correctAnswers;
-        const percentage = questions.length > 0 ? (correctAnswers / questions.length) * 100 : 0;
+        const percentage =
+            questions.length > 0
+                ? (correctAnswers / questions.length) * 100
+                : 0;
 
         // Create submission record with timeout flag
         const submission = await ClassQuizSubmission.create({
@@ -1396,18 +1501,22 @@ export class ClassQuizService {
 
     public static readonly checkAndHandleExpiredSessions = async () => {
         const now = new Date();
-        
+
         // Find all expired sessions that haven't been processed
         const expiredSessions = await ClassQuizSession.find({
             status: "in_progress",
             is_deleted: false,
         });
 
-        const sessionsToProcess = expiredSessions.rows?.filter(session => 
-            session.expires_at && new Date(session.expires_at) <= now
-        ) || [];
+        const sessionsToProcess =
+            expiredSessions.rows?.filter(
+                (session) =>
+                    session.expires_at && new Date(session.expires_at) <= now
+            ) || [];
 
-        console.log(`Found ${sessionsToProcess.length} expired sessions to process`);
+        console.log(
+            `Found ${sessionsToProcess.length} expired sessions to process`
+        );
 
         const results: Array<{
             session_id: string;
@@ -1415,7 +1524,7 @@ export class ClassQuizService {
             quiz_id: string;
             result: QuizResult;
         }> = [];
-        
+
         for (const session of sessionsToProcess) {
             try {
                 const result = await this.handleQuizTimeout(session.id);
@@ -1425,9 +1534,14 @@ export class ClassQuizService {
                     quiz_id: session.quiz_id,
                     result,
                 });
-                console.log(`Auto-submitted quiz for user ${session.user_id} in session ${session.id}`);
+                console.log(
+                    `Auto-submitted quiz for user ${session.user_id} in session ${session.id}`
+                );
             } catch (error) {
-                console.error(`Error auto-submitting session ${session.id}:`, error);
+                console.error(
+                    `Error auto-submitting session ${session.id}:`,
+                    error
+                );
             }
         }
 
@@ -1451,10 +1565,18 @@ export class ClassQuizService {
         const session = sessionResult.rows[0];
 
         // Check if session is expired and auto-submit if needed
-        if (session.expires_at && new Date() > new Date(session.expires_at) && session.status === "in_progress") {
-            console.log(`Session ${session.id} has expired, auto-submitting...`);
+        if (
+            session.expires_at &&
+            new Date() > new Date(session.expires_at) &&
+            session.status === "in_progress"
+        ) {
+            console.log(
+                `Session ${session.id} has expired, auto-submitting...`
+            );
             await this.handleQuizTimeout(session.id);
-            throw new Error("Quiz session has expired and has been auto-submitted");
+            throw new Error(
+                "Quiz session has expired and has been auto-submitted"
+            );
         }
 
         if (session.status === "completed") {
@@ -1480,7 +1602,7 @@ export class ClassQuizService {
     ) => {
         // Get all quizzes for the class
         const quizzes = await this.getClassQuizByClassID(campus_id, class_id);
-        
+
         if (quizzes.length === 0) {
             return [];
         }
@@ -1493,7 +1615,10 @@ export class ClassQuizService {
         });
 
         const submissionMap = new Map(
-            submissions.rows?.map(sub => [sub.quiz_id, sub as IClassQuizSubmission]) || []
+            submissions.rows?.map((sub) => [
+                sub.quiz_id,
+                sub as IClassQuizSubmission,
+            ]) || []
         );
 
         // Get all active sessions for this student
@@ -1505,15 +1630,22 @@ export class ClassQuizService {
         });
 
         const activeSessionMap = new Map(
-            activeSessions.rows?.map(session => [session.quiz_id, session as IClassQuizSession]) || []
+            activeSessions.rows?.map((session) => [
+                session.quiz_id,
+                session as IClassQuizSession,
+            ]) || []
         );
 
         // Enhance each quiz with student status
         return await Promise.all(
             quizzes.map(async (quiz) => {
-                const submission = submissionMap.get(quiz.id) as IClassQuizSubmission | undefined;
-                const activeSession = activeSessionMap.get(quiz.id) as IClassQuizSession | undefined;
-                
+                const submission = submissionMap.get(quiz.id) as
+                    | IClassQuizSubmission
+                    | undefined;
+                const activeSession = activeSessionMap.get(quiz.id) as
+                    | IClassQuizSession
+                    | undefined;
+
                 let status = "not_attempted";
                 let attempt_data: any = null;
                 let session_data: any = null;
@@ -1530,8 +1662,12 @@ export class ClassQuizService {
                 } else if (activeSession) {
                     // Check if session is expired
                     const now = new Date();
-                    status = activeSession.expires_at && new Date(activeSession.expires_at) <= now ? "expired" : "in_progress";
-                    
+                    status =
+                        activeSession.expires_at &&
+                        new Date(activeSession.expires_at) <= now
+                            ? "expired"
+                            : "in_progress";
+
                     session_data = {
                         session_id: activeSession.id,
                         session_token: activeSession.session_token,
@@ -1539,24 +1675,44 @@ export class ClassQuizService {
                         expires_at: activeSession.expires_at,
                         answers_count: activeSession.answers_count,
                         total_questions: activeSession.total_questions,
-                        time_remaining_seconds: activeSession.expires_at ? 
-                            Math.max(0, Math.floor((new Date(activeSession.expires_at).getTime() - now.getTime()) / 1000)) : null,
+                        time_remaining_seconds: activeSession.expires_at
+                            ? Math.max(
+                                  0,
+                                  Math.floor(
+                                      (new Date(
+                                          activeSession.expires_at
+                                      ).getTime() -
+                                          now.getTime()) /
+                                          1000
+                                  )
+                              )
+                            : null,
                     };
                 }
 
                 // Check availability
                 const quizSettings = quiz.quiz_meta_data as QuizSettings;
                 let availability_status = "available";
-                
-                if (quizSettings.available_from && new Date() < new Date(quizSettings.available_from)) {
+
+                if (
+                    quizSettings.available_from &&
+                    new Date() < new Date(quizSettings.available_from)
+                ) {
                     availability_status = "not_yet_available";
-                } else if (quizSettings.available_until && new Date() > new Date(quizSettings.available_until)) {
+                } else if (
+                    quizSettings.available_until &&
+                    new Date() > new Date(quizSettings.available_until)
+                ) {
                     availability_status = "expired";
                 }
 
                 // Check if student can attempt based on max_attempts
                 let can_attempt = true;
-                if (submission && quizSettings.max_attempts && quizSettings.max_attempts <= 1) {
+                if (
+                    submission &&
+                    quizSettings.max_attempts &&
+                    quizSettings.max_attempts <= 1
+                ) {
                     can_attempt = false;
                 }
 
@@ -1570,7 +1726,7 @@ export class ClassQuizService {
                         session_data,
                         max_attempts: quizSettings.max_attempts || 1,
                         attempts_made: submission ? 1 : 0,
-                    }
+                    },
                 };
             })
         );
@@ -1606,9 +1762,11 @@ export class ClassQuizService {
         const results = await Promise.all(
             submissions.rows.map(async (submission) => {
                 const submissionData = submission as IClassQuizSubmission;
-                
+
                 // Get quiz details
-                const quiz = await this.getClassQuizById(submissionData.quiz_id);
+                const quiz = await this.getClassQuizById(
+                    submissionData.quiz_id
+                );
                 if (!quiz) {
                     return null;
                 }
@@ -1627,13 +1785,18 @@ export class ClassQuizService {
                 });
 
                 const attemptMap = new Map(
-                    attempts.rows?.map(attempt => [attempt.question_id, attempt as IClassQuizAttempt]) || []
+                    attempts.rows?.map((attempt) => [
+                        attempt.question_id,
+                        attempt as IClassQuizAttempt,
+                    ]) || []
                 );
 
                 // Calculate detailed results
-                const questionResults = questions.map(question => {
+                const questionResults = questions.map((question) => {
                     const userAttempt = attemptMap.get(question.id);
-                    const userAnswer = userAttempt ? (userAttempt as IClassQuizAttempt).attempt_data : null;
+                    const userAnswer = userAttempt
+                        ? (userAttempt as IClassQuizAttempt).attempt_data
+                        : null;
                     const isCorrect = userAnswer === question.correct_answer;
 
                     return {
@@ -1648,9 +1811,14 @@ export class ClassQuizService {
                     };
                 });
 
-                const correctAnswers = questionResults.filter(q => q.is_correct).length;
+                const correctAnswers = questionResults.filter(
+                    (q) => q.is_correct
+                ).length;
                 const totalQuestions = questions.length;
-                const percentage = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
+                const percentage =
+                    totalQuestions > 0
+                        ? (correctAnswers / totalQuestions) * 100
+                        : 0;
 
                 // Get session information if available
                 const session = await ClassQuizSession.find({
@@ -1659,12 +1827,21 @@ export class ClassQuizService {
                     is_deleted: false,
                 });
 
-                const sessionData = session.rows && session.rows.length > 0 ? session.rows[0] as IClassQuizSession : null;
-                
+                const sessionData =
+                    session.rows && session.rows.length > 0
+                        ? (session.rows[0] as IClassQuizSession)
+                        : null;
+
                 let timeTakenSeconds = 0;
-                if (sessionData && sessionData.started_at && sessionData.completed_at) {
+                if (
+                    sessionData &&
+                    sessionData.started_at &&
+                    sessionData.completed_at
+                ) {
                     timeTakenSeconds = Math.floor(
-                        (new Date(sessionData.completed_at).getTime() - new Date(sessionData.started_at).getTime()) / 1000
+                        (new Date(sessionData.completed_at).getTime() -
+                            new Date(sessionData.started_at).getTime()) /
+                            1000
                     );
                 }
 
@@ -1689,21 +1866,24 @@ export class ClassQuizService {
                         incorrect_answers: totalQuestions - correctAnswers,
                         percentage: Math.round(percentage * 100) / 100,
                         time_taken_seconds: timeTakenSeconds,
-                        auto_submitted: sessionData?.status === "expired" || false,
+                        auto_submitted:
+                            sessionData?.status === "expired" || false,
                     },
                     question_details: questionResults,
-                    session_info: sessionData ? {
-                        session_id: sessionData.id,
-                        status: sessionData.status,
-                        started_at: sessionData.started_at,
-                        completed_at: sessionData.completed_at,
-                    } : null,
+                    session_info: sessionData
+                        ? {
+                              session_id: sessionData.id,
+                              status: sessionData.status,
+                              started_at: sessionData.started_at,
+                              completed_at: sessionData.completed_at,
+                          }
+                        : null,
                 };
             })
         );
 
         // Filter out null results and return
-        return results.filter(result => result !== null);
+        return results.filter((result) => result !== null);
     };
 
     public static readonly getQuizResultsSummaryByStudentId = async (
@@ -1711,8 +1891,12 @@ export class ClassQuizService {
         student_id: string,
         class_id?: string
     ) => {
-        const results = await this.getAllQuizResultsByStudentId(campus_id, student_id, class_id);
-        
+        const results = await this.getAllQuizResultsByStudentId(
+            campus_id,
+            student_id,
+            class_id
+        );
+
         if (results.length === 0) {
             return {
                 student_id,
@@ -1732,13 +1916,28 @@ export class ClassQuizService {
 
         // Calculate summary statistics
         const totalQuizzesAttempted = results.length;
-        const totalScore = results.reduce((sum, result) => sum + result.submission.score, 0);
-        const totalPercentage = results.reduce((sum, result) => sum + result.results.percentage, 0);
-        const totalCorrectAnswers = results.reduce((sum, result) => sum + result.results.correct_answers, 0);
-        const totalQuestionsAttempted = results.reduce((sum, result) => sum + result.results.total_questions, 0);
-        const totalTimeSpent = results.reduce((sum, result) => sum + result.results.time_taken_seconds, 0);
-        
-        const scores = results.map(result => result.submission.score);
+        const totalScore = results.reduce(
+            (sum, result) => sum + result.submission.score,
+            0
+        );
+        const totalPercentage = results.reduce(
+            (sum, result) => sum + result.results.percentage,
+            0
+        );
+        const totalCorrectAnswers = results.reduce(
+            (sum, result) => sum + result.results.correct_answers,
+            0
+        );
+        const totalQuestionsAttempted = results.reduce(
+            (sum, result) => sum + result.results.total_questions,
+            0
+        );
+        const totalTimeSpent = results.reduce(
+            (sum, result) => sum + result.results.time_taken_seconds,
+            0
+        );
+
+        const scores = results.map((result) => result.submission.score);
         const averageScore = totalScore / totalQuizzesAttempted;
         const averagePercentage = totalPercentage / totalQuizzesAttempted;
         const highestScore = Math.max(...scores);
@@ -1756,7 +1955,7 @@ export class ClassQuizService {
             highest_score: highestScore,
             lowest_score: lowestScore,
             total_time_spent_seconds: totalTimeSpent,
-            quiz_results: results.map(result => ({
+            quiz_results: results.map((result) => ({
                 quiz_id: result.quiz.id,
                 quiz_name: result.quiz.quiz_name,
                 submission_date: result.submission.submission_date,
@@ -1804,12 +2003,16 @@ export class ClassQuizService {
             user_id: student_id,
         });
         const attemptMap = new Map(
-            attempts.rows?.map(attempt => [attempt.question_id, attempt as IClassQuizAttempt]) || []
+            attempts.rows?.map((attempt) => [
+                attempt.question_id,
+                attempt as IClassQuizAttempt,
+            ]) || []
         );
         // Calculate detailed results
-        const questionResults = questions.map(question => {
+        const questionResults = questions.map((question) => {
             const userAttempt = attemptMap.get(question.id);
-            const userAnswer = userAttempt ? (userAttempt as IClassQuizAttempt).attempt_data
+            const userAnswer = userAttempt
+                ? (userAttempt as IClassQuizAttempt).attempt_data
                 : null;
             const isCorrect = userAnswer === question.correct_answer;
             return {
@@ -1825,11 +2028,14 @@ export class ClassQuizService {
         });
 
         // Calculate marks summary
-        const correctAnswers = questionResults.filter(q => q.is_correct).length;
+        const correctAnswers = questionResults.filter(
+            (q) => q.is_correct
+        ).length;
         const totalQuestions = questions.length;
         const studentMarks = submissionData.score; // Student's total marks
         const totalMarks = totalQuestions; // Total possible marks (assuming 1 mark per question)
-        const percentage = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
+        const percentage =
+            totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
 
         // Get session information for time taken
         const session = await ClassQuizSession.find({
@@ -1838,12 +2044,17 @@ export class ClassQuizService {
             is_deleted: false,
         });
 
-        const sessionData = session.rows && session.rows.length > 0 ? session.rows[0] as IClassQuizSession : null;
-        
+        const sessionData =
+            session.rows && session.rows.length > 0
+                ? (session.rows[0] as IClassQuizSession)
+                : null;
+
         let timeTakenSeconds = 0;
         if (sessionData && sessionData.started_at && sessionData.completed_at) {
             timeTakenSeconds = Math.floor(
-                (new Date(sessionData.completed_at).getTime() - new Date(sessionData.started_at).getTime()) / 1000
+                (new Date(sessionData.completed_at).getTime() -
+                    new Date(sessionData.started_at).getTime()) /
+                    1000
             );
         }
 
@@ -1889,7 +2100,7 @@ export class ClassQuizService {
             const quiz = await ClassQuiz.findOne({
                 id: quiz_id,
                 campus_id,
-                is_deleted: false
+                is_deleted: false,
             });
 
             if (!quiz) {
@@ -1900,7 +2111,7 @@ export class ClassQuizService {
             const classData = await Class.findOne({
                 id: quiz.class_id,
                 campus_id,
-                is_deleted: false
+                is_deleted: false,
             });
 
             if (!classData) {
@@ -1915,23 +2126,27 @@ export class ClassQuizService {
             });
 
             const submissionData = submissions.rows || [];
-            
+
             // Get quiz sessions for completion time data
             const sessions = await ClassQuizSession.find({
                 campus_id,
                 quiz_id,
                 status: "completed",
-                is_deleted: false
+                is_deleted: false,
             });
 
             const sessionData = sessions.rows || [];
 
             // Calculate basic statistics
-            const totalStudents = classData.student_count || classData.student_ids?.length || 0;
+            const totalStudents =
+                classData.student_count || classData.student_ids?.length || 0;
             const attemptedStudents = submissionData.length;
-            const scores = submissionData.map(s => s.score);
-            const averageScore = scores.length > 0 ? 
-                scores.reduce((sum, score) => sum + score, 0) / scores.length : 0;
+            const scores = submissionData.map((s) => s.score);
+            const averageScore =
+                scores.length > 0
+                    ? scores.reduce((sum, score) => sum + score, 0) /
+                      scores.length
+                    : 0;
 
             // Get detailed student results with user information
             const studentResults = await Promise.all(
@@ -1940,29 +2155,41 @@ export class ClassQuizService {
                     const user = await User.findOne({
                         id: submission.user_id,
                         campus_id,
-                        is_deleted: false
+                        is_deleted: false,
                     });
 
                     // Get session information for completion time
-                    const session = sessionData.find(s => s.user_id === submission.user_id);
-                    
+                    const session = sessionData.find(
+                        (s) => s.user_id === submission.user_id
+                    );
+
                     let completionTimeSeconds = 0;
                     if (session && session.started_at && session.completed_at) {
-                        const startTime = new Date(session.started_at).getTime();
-                        const endTime = new Date(session.completed_at).getTime();
-                        completionTimeSeconds = Math.floor((endTime - startTime) / 1000);
+                        const startTime = new Date(
+                            session.started_at
+                        ).getTime();
+                        const endTime = new Date(
+                            session.completed_at
+                        ).getTime();
+                        completionTimeSeconds = Math.floor(
+                            (endTime - startTime) / 1000
+                        );
                     }
 
                     return {
                         student_id: submission.user_id,
-                        student_name: user ? `${user.first_name} ${user.last_name}` : "Unknown Student",
+                        student_name: user
+                            ? `${user.first_name} ${user.last_name}`
+                            : "Unknown Student",
                         student_email: user?.email || "Unknown",
                         score: submission.score,
                         submission_date: submission.submission_date,
                         completion_time_seconds: completionTimeSeconds,
-                        completion_time_formatted: formatTime(completionTimeSeconds),
+                        completion_time_formatted: formatTime(
+                            completionTimeSeconds
+                        ),
                         feedback: submission.feedback || "",
-                        meta_data: submission.meta_data || {}
+                        meta_data: submission.meta_data || {},
                     };
                 })
             );
@@ -1985,44 +2212,80 @@ export class ClassQuizService {
                     quiz_description: quiz.quiz_description,
                     class_id: quiz.class_id,
                     class_name: classData.name,
-                    created_at: quiz.created_at
+                    created_at: quiz.created_at,
                 },
                 statistics: {
                     total_students: totalStudents,
                     attempted_students: attemptedStudents,
-                    completion_percentage: totalStudents > 0 ? 
-                        Math.round((attemptedStudents / totalStudents) * 100) : 0,
+                    completion_percentage:
+                        totalStudents > 0
+                            ? Math.round(
+                                  (attemptedStudents / totalStudents) * 100
+                              )
+                            : 0,
                     average_score: Math.round(averageScore * 100) / 100,
                     highest_score: scores.length > 0 ? Math.max(...scores) : 0,
                     lowest_score: scores.length > 0 ? Math.min(...scores) : 0,
-                    average_completion_time_seconds: sessionData.length > 0 ? 
-                        Math.round(sessionData.reduce((sum, session) => {
-                            if (session.started_at && session.completed_at) {
-                                const startTime = new Date(session.started_at).getTime();
-                                const endTime = new Date(session.completed_at).getTime();
-                                return sum + (endTime - startTime) / 1000;
-                            }
-                            return sum;
-                        }, 0) / sessionData.length) : 0
+                    average_completion_time_seconds:
+                        sessionData.length > 0
+                            ? Math.round(
+                                  sessionData.reduce((sum, session) => {
+                                      if (
+                                          session.started_at &&
+                                          session.completed_at
+                                      ) {
+                                          const startTime = new Date(
+                                              session.started_at
+                                          ).getTime();
+                                          const endTime = new Date(
+                                              session.completed_at
+                                          ).getTime();
+                                          return (
+                                              sum + (endTime - startTime) / 1000
+                                          );
+                                      }
+                                      return sum;
+                                  }, 0) / sessionData.length
+                              )
+                            : 0,
                 },
                 top_three_students: topThreeStudents,
                 all_student_results: sortedResults,
                 summary: {
                     total_attempts: attemptedStudents,
-                    success_rate: attemptedStudents > 0 ? 
-                        Math.round((sortedResults.filter(r => r.score >= 60).length / attemptedStudents) * 100) : 0,
+                    success_rate:
+                        attemptedStudents > 0
+                            ? Math.round(
+                                  (sortedResults.filter((r) => r.score >= 60)
+                                      .length /
+                                      attemptedStudents) *
+                                      100
+                              )
+                            : 0,
                     average_time_formatted: formatTime(
-                        sessionData.length > 0 ? 
-                            Math.round(sessionData.reduce((sum, session) => {
-                                if (session.started_at && session.completed_at) {
-                                    const startTime = new Date(session.started_at).getTime();
-                                    const endTime = new Date(session.completed_at).getTime();
-                                    return sum + (endTime - startTime) / 1000;
-                                }
-                                return sum;
-                            }, 0) / sessionData.length) : 0
-                    )
-                }
+                        sessionData.length > 0
+                            ? Math.round(
+                                  sessionData.reduce((sum, session) => {
+                                      if (
+                                          session.started_at &&
+                                          session.completed_at
+                                      ) {
+                                          const startTime = new Date(
+                                              session.started_at
+                                          ).getTime();
+                                          const endTime = new Date(
+                                              session.completed_at
+                                          ).getTime();
+                                          return (
+                                              sum + (endTime - startTime) / 1000
+                                          );
+                                      }
+                                      return sum;
+                                  }, 0) / sessionData.length
+                              )
+                            : 0
+                    ),
+                },
             };
         } catch (error) {
             console.error("Error getting detailed quiz statistics:", error);

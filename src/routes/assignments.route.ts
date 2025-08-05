@@ -1,21 +1,21 @@
 /**
  * 🎯 UNIFIED ASSIGNMENT API
- * 
+ *
  * This file contains the complete, unified assignment API that replaces all legacy
  * assignment endpoints from class.route.ts and course.route.ts.
- * 
+ *
  * ✅ FEATURES:
  * - Role-based access control (Admin, Teacher, Student, Parent)
  * - Unified view across classes and courses
  * - Comprehensive assignment management
  * - Analytics and reporting
  * - Mobile-optimized responses
- * 
+ *
  * ✅ MIGRATION STATUS: COMPLETE
  * - Legacy class assignment endpoints: REMOVED
  * - Legacy course assignment endpoints: REMOVED
  * - All functionality consolidated here
- * 
+ *
  * 🔗 API Documentation: /docs
  * 🧪 Test Collection: docs/Assignment_API.postman_collection.json
  */
@@ -64,7 +64,8 @@ app.post(
     describeRoute({
         operationId: "createAssignment",
         summary: "Create a new assignment",
-        description: "Create a new assignment for a class or course. Admin/Teacher only.",
+        description:
+            "Create a new assignment for a class or course. Admin/Teacher only.",
         tags: ["Assignments - Admin/Teacher"],
         responses: {
             201: {
@@ -103,16 +104,17 @@ app.get(
     describeRoute({
         operationId: "getAdminAssignmentOverview",
         summary: "Get admin assignment overview",
-        description: "Get comprehensive overview of all assignments across campus. Admin only.",
+        description:
+            "Get comprehensive overview of all assignments across campus. Admin only.",
         tags: ["Assignments - Admin"],
         parameters: [
             {
                 name: "status",
                 in: "query",
                 required: false,
-                schema: { 
+                schema: {
                     type: "string",
-                    enum: ["active", "archived", "overdue", "all"]
+                    enum: ["active", "archived", "overdue", "all"],
                 },
                 description: "Filter by assignment status",
             },
@@ -186,7 +188,8 @@ app.post(
     describeRoute({
         operationId: "performBulkAssignmentOperations",
         summary: "Perform bulk operations on assignments",
-        description: "Perform bulk operations like archive, delete, extend due dates. Admin only.",
+        description:
+            "Perform bulk operations like archive, delete, extend due dates. Admin only.",
         tags: ["Assignments - Admin"],
         responses: {
             200: {
@@ -209,16 +212,17 @@ app.get(
     describeRoute({
         operationId: "getAssignmentAnalytics",
         summary: "Get assignment analytics",
-        description: "Get detailed analytics about assignments, submissions, grades. Admin only.",
+        description:
+            "Get detailed analytics about assignments, submissions, grades. Admin only.",
         tags: ["Assignments - Admin"],
         parameters: [
             {
                 name: "period",
                 in: "query",
                 required: false,
-                schema: { 
+                schema: {
                     type: "string",
-                    enum: ["week", "month", "quarter", "year"]
+                    enum: ["week", "month", "quarter", "year"],
                 },
                 description: "Analytics period",
             },
@@ -267,9 +271,9 @@ app.get(
                 name: "status",
                 in: "query",
                 required: false,
-                schema: { 
+                schema: {
                     type: "string",
-                    enum: ["active", "archived", "overdue", "all"]
+                    enum: ["active", "archived", "overdue", "all"],
                 },
                 description: "Filter by assignment status",
             },
@@ -315,7 +319,8 @@ app.get(
     describeRoute({
         operationId: "getAssignmentSubmissions",
         summary: "Get assignment submissions",
-        description: "Get all submissions for a specific assignment. Teacher only for their assignments.",
+        description:
+            "Get all submissions for a specific assignment. Teacher only for their assignments.",
         tags: ["Assignments - Teacher"],
         parameters: [
             {
@@ -329,9 +334,9 @@ app.get(
                 name: "status",
                 in: "query",
                 required: false,
-                schema: { 
+                schema: {
                     type: "string",
-                    enum: ["submitted", "graded", "overdue", "pending", "all"]
+                    enum: ["submitted", "graded", "overdue", "pending", "all"],
                 },
                 description: "Filter by submission status",
             },
@@ -352,12 +357,12 @@ app.get(
                             type: "object",
                             properties: {
                                 assignment: {
-                                    $ref: "#/components/schemas/Assignment"
+                                    $ref: "#/components/schemas/Assignment",
                                 },
                                 submissions: {
                                     type: "array",
                                     items: {
-                                        $ref: "#/components/schemas/AssignmentSubmissionDetails"
+                                        $ref: "#/components/schemas/AssignmentSubmissionDetails",
                                     },
                                 },
                                 stats: {
@@ -418,7 +423,8 @@ app.get(
     describeRoute({
         operationId: "getTeacherAssignmentDashboard",
         summary: "Get teacher assignment dashboard",
-        description: "Get teacher's assignment dashboard with stats and recent activity.",
+        description:
+            "Get teacher's assignment dashboard with stats and recent activity.",
         tags: ["Assignments - Teacher"],
         responses: {
             200: {
@@ -443,16 +449,24 @@ app.get(
     describeRoute({
         operationId: "getStudentAssignments",
         summary: "Get student's assignments",
-        description: "Get all assignments for the current student across all classes.",
+        description:
+            "Get all assignments for the current student across all classes.",
         tags: ["Assignments - Student"],
         parameters: [
             {
                 name: "status",
                 in: "query",
                 required: false,
-                schema: { 
+                schema: {
                     type: "string",
-                    enum: ["pending", "submitted", "graded", "overdue", "due_soon", "all"]
+                    enum: [
+                        "pending",
+                        "submitted",
+                        "graded",
+                        "overdue",
+                        "due_soon",
+                        "all",
+                    ],
                 },
                 description: "Filter by assignment status",
             },
@@ -481,9 +495,9 @@ app.get(
                 name: "sort_by",
                 in: "query",
                 required: false,
-                schema: { 
+                schema: {
                     type: "string",
-                    enum: ["due_date", "created_date", "subject", "priority"]
+                    enum: ["due_date", "created_date", "subject", "priority"],
                 },
                 description: "Sort assignments by",
             },
@@ -522,7 +536,8 @@ app.get(
     describeRoute({
         operationId: "getStudentAssignmentDashboard",
         summary: "Get student assignment dashboard",
-        description: "Get student's assignment dashboard with upcoming deadlines and performance.",
+        description:
+            "Get student's assignment dashboard with upcoming deadlines and performance.",
         tags: ["Assignments - Student"],
         responses: {
             200: {
@@ -538,12 +553,12 @@ app.get(
                                         type: "object",
                                         properties: {
                                             assignment: {
-                                                $ref: "#/components/schemas/Assignment"
+                                                $ref: "#/components/schemas/Assignment",
                                             },
                                             days_until_due: { type: "number" },
-                                            priority: { 
+                                            priority: {
                                                 type: "string",
-                                                enum: ["high", "medium", "low"]
+                                                enum: ["high", "medium", "low"],
                                             },
                                         },
                                     },
@@ -551,7 +566,7 @@ app.get(
                                 overdue_assignments: {
                                     type: "array",
                                     items: {
-                                        $ref: "#/components/schemas/Assignment"
+                                        $ref: "#/components/schemas/Assignment",
                                     },
                                 },
                                 recent_grades: {
@@ -560,11 +575,14 @@ app.get(
                                         type: "object",
                                         properties: {
                                             assignment: {
-                                                $ref: "#/components/schemas/Assignment"
+                                                $ref: "#/components/schemas/Assignment",
                                             },
                                             grade: { type: "number" },
                                             feedback: { type: "string" },
-                                            graded_date: { type: "string", format: "date-time" },
+                                            graded_date: {
+                                                type: "string",
+                                                format: "date-time",
+                                            },
                                         },
                                     },
                                 },
@@ -595,16 +613,17 @@ app.get(
     describeRoute({
         operationId: "getStudentAssignmentPerformance",
         summary: "Get student assignment performance",
-        description: "Get detailed performance analytics for the student's assignments.",
+        description:
+            "Get detailed performance analytics for the student's assignments.",
         tags: ["Assignments - Student"],
         parameters: [
             {
                 name: "period",
                 in: "query",
                 required: false,
-                schema: { 
+                schema: {
                     type: "string",
-                    enum: ["week", "month", "quarter", "year", "all"]
+                    enum: ["week", "month", "quarter", "year", "all"],
                 },
                 description: "Performance analysis period",
             },
@@ -644,7 +663,9 @@ app.get(
                                             subject_name: { type: "string" },
                                             average_grade: { type: "number" },
                                             completion_rate: { type: "number" },
-                                            total_assignments: { type: "number" },
+                                            total_assignments: {
+                                                type: "number",
+                                            },
                                         },
                                     },
                                 },
@@ -668,7 +689,8 @@ app.get(
     describeRoute({
         operationId: "getStudentAssignmentDetails",
         summary: "Get assignment details for student",
-        description: "Get detailed view of a specific assignment for the student.",
+        description:
+            "Get detailed view of a specific assignment for the student.",
         tags: ["Assignments - Student"],
         parameters: [
             {
@@ -688,10 +710,10 @@ app.get(
                             type: "object",
                             properties: {
                                 assignment: {
-                                    $ref: "#/components/schemas/Assignment"
+                                    $ref: "#/components/schemas/Assignment",
                                 },
                                 submission: {
-                                    $ref: "#/components/schemas/AssignmentSubmission"
+                                    $ref: "#/components/schemas/AssignmentSubmission",
                                 },
                                 class_info: {
                                     type: "object",
@@ -702,9 +724,14 @@ app.get(
                                         teacher_name: { type: "string" },
                                     },
                                 },
-                                status: { 
+                                status: {
                                     type: "string",
-                                    enum: ["pending", "submitted", "graded", "overdue"]
+                                    enum: [
+                                        "pending",
+                                        "submitted",
+                                        "graded",
+                                        "overdue",
+                                    ],
                                 },
                                 days_until_due: { type: "number" },
                                 can_resubmit: { type: "boolean" },
@@ -745,7 +772,8 @@ app.post(
                 },
             },
             400: {
-                description: "Bad request - assignment already submitted or overdue",
+                description:
+                    "Bad request - assignment already submitted or overdue",
                 content: {
                     "application/json": {
                         schema: resolver(errorResponseSchema),
@@ -767,7 +795,8 @@ app.get(
     describeRoute({
         operationId: "getParentStudentAssignments",
         summary: "Get student assignments for parent",
-        description: "Get assignment overview for a specific student. Parent only for their children.",
+        description:
+            "Get assignment overview for a specific student. Parent only for their children.",
         tags: ["Assignments - Parent"],
         parameters: [
             {
@@ -781,9 +810,9 @@ app.get(
                 name: "status",
                 in: "query",
                 required: false,
-                schema: { 
+                schema: {
                     type: "string",
-                    enum: ["pending", "submitted", "graded", "overdue", "all"]
+                    enum: ["pending", "submitted", "graded", "overdue", "all"],
                 },
                 description: "Filter by assignment status",
             },
@@ -791,9 +820,9 @@ app.get(
                 name: "period",
                 in: "query",
                 required: false,
-                schema: { 
+                schema: {
                     type: "string",
-                    enum: ["week", "month", "quarter", "all"]
+                    enum: ["week", "month", "quarter", "all"],
                 },
                 description: "Time period for assignments",
             },
@@ -803,7 +832,9 @@ app.get(
                 description: "Student assignments for parent view",
                 content: {
                     "application/json": {
-                        schema: resolver(parentStudentAssignmentViewResponseSchema),
+                        schema: resolver(
+                            parentStudentAssignmentViewResponseSchema
+                        ),
                     },
                 },
             },
@@ -818,7 +849,8 @@ app.get(
     describeRoute({
         operationId: "getParentStudentPerformance",
         summary: "Get student assignment performance for parent",
-        description: "Get assignment performance overview for a specific student. Parent only.",
+        description:
+            "Get assignment performance overview for a specific student. Parent only.",
         tags: ["Assignments - Parent"],
         parameters: [
             {
@@ -832,9 +864,9 @@ app.get(
                 name: "period",
                 in: "query",
                 required: false,
-                schema: { 
+                schema: {
                     type: "string",
-                    enum: ["month", "quarter", "year"]
+                    enum: ["month", "quarter", "year"],
                 },
                 description: "Performance analysis period",
             },
@@ -872,11 +904,14 @@ app.get(
                                         type: "object",
                                         properties: {
                                             assignment: {
-                                                $ref: "#/components/schemas/Assignment"
+                                                $ref: "#/components/schemas/Assignment",
                                             },
                                             status: { type: "string" },
                                             grade: { type: "number" },
-                                            submitted_date: { type: "string", format: "date-time" },
+                                            submitted_date: {
+                                                type: "string",
+                                                format: "date-time",
+                                            },
                                         },
                                     },
                                 },
@@ -885,9 +920,14 @@ app.get(
                                     items: {
                                         type: "object",
                                         properties: {
-                                            type: { 
+                                            type: {
                                                 type: "string",
-                                                enum: ["overdue", "due_soon", "low_grade", "improvement"]
+                                                enum: [
+                                                    "overdue",
+                                                    "due_soon",
+                                                    "low_grade",
+                                                    "improvement",
+                                                ],
                                             },
                                             message: { type: "string" },
                                             assignment_id: { type: "string" },
@@ -913,7 +953,8 @@ app.get(
     describeRoute({
         operationId: "getAssignmentById",
         summary: "Get assignment by ID",
-        description: "Get assignment details by ID. Access level depends on user role.",
+        description:
+            "Get assignment details by ID. Access level depends on user role.",
         tags: ["Assignments - Shared"],
         parameters: [
             {
@@ -952,7 +993,8 @@ app.put(
     describeRoute({
         operationId: "updateAssignment",
         summary: "Update assignment",
-        description: "Update assignment details. Teacher/Admin only for their assignments.",
+        description:
+            "Update assignment details. Teacher/Admin only for their assignments.",
         tags: ["Assignments - Shared"],
         parameters: [
             {
@@ -984,7 +1026,8 @@ app.delete(
     describeRoute({
         operationId: "deleteAssignment",
         summary: "Delete assignment",
-        description: "Delete an assignment. Teacher/Admin only for their assignments.",
+        description:
+            "Delete an assignment. Teacher/Admin only for their assignments.",
         tags: ["Assignments - Shared"],
         parameters: [
             {

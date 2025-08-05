@@ -20,14 +20,15 @@ import { TeacherNotification } from "@/models/teacher_notification.model";
 import { Timetable } from "@/models/time_table.model";
 import { User } from "@/models/user.model";
 // Import types
-import { 
+import {
     AdminDashboardData,
     GradesData,
     ParentDashboardData,
     PerformanceMetrics,
     StudentDashboardData,
     StudyHoursData,
-    TeacherDashboardData} from "@/types";
+    TeacherDashboardData,
+} from "@/types";
 
 import { GradesAnalyticsHelper } from "./analytics/grades.helper";
 // Import helper classes
@@ -40,17 +41,20 @@ export class DashboardService {
     /**
      * Get student's enrolled courses with latest data
      */
-    private static async getStudentCoursesData(user_id: string, campus_id: string) {
+    private static async getStudentCoursesData(
+        user_id: string,
+        campus_id: string
+    ) {
         try {
             // Get student's course enrollments
             const enrollmentsResult = await CourseEnrollment.find({
                 user_id,
                 campus_id,
-                enrollment_status: { $in: ["active", "completed"] }
+                enrollment_status: { $in: ["active", "completed"] },
             });
 
             const enrollments = enrollmentsResult.rows || [];
-            
+
             if (enrollments.length === 0) {
                 return {
                     enrolled: [],
@@ -58,21 +62,21 @@ export class DashboardService {
                     completed: [],
                     totalCourses: 0,
                     totalProgress: 0,
-                    certificates: 0
+                    certificates: 0,
                 };
             }
 
             // Get course details for enrollments
-            const courseIds = enrollments.map(e => e.course_id);
+            const courseIds = enrollments.map((e) => e.course_id);
             const coursesResult = await Course.find({
                 id: { $in: courseIds },
                 campus_id,
                 is_active: true,
-                is_deleted: false
+                is_deleted: false,
             });
 
             const courses = coursesResult.rows || [];
-            const courseMap = new Map(courses.map(c => [c.id, c]));
+            const courseMap = new Map(courses.map((c) => [c.id, c]));
 
             // Process enrollments with course data
             const enrolledCourses: any[] = [];
@@ -96,17 +100,20 @@ export class DashboardService {
                     status: enrollment.enrollment_status,
                     category: course.category || "General",
                     difficulty_level: course.difficulty_level || "beginner",
-                    estimated_duration_hours: course.estimated_duration_hours || 0,
-                    completed_lectures: enrollment.access_details?.completed_lectures || 0,
-                    total_lectures: enrollment.access_details?.total_lectures || 0,
+                    estimated_duration_hours:
+                        course.estimated_duration_hours || 0,
+                    completed_lectures:
+                        enrollment.access_details?.completed_lectures || 0,
+                    total_lectures:
+                        enrollment.access_details?.total_lectures || 0,
                     certificate_issued: enrollment.certificate_issued,
                     certificate_id: enrollment.certificate_id,
-                    rating: course.rating || 0
+                    rating: course.rating || 0,
                 };
 
                 enrolledCourses.push(courseData);
                 totalProgress += enrollment.progress_percentage;
-                
+
                 if (enrollment.certificate_issued) {
                     certificates++;
                 }
@@ -123,8 +130,11 @@ export class DashboardService {
                 inProgress: inProgressCourses.slice(0, 5), // Latest 5 in progress
                 completed: completedCourses.slice(0, 5), // Latest 5 completed
                 totalCourses: enrollments.length,
-                totalProgress: enrollments.length > 0 ? Math.round(totalProgress / enrollments.length) : 0,
-                certificates
+                totalProgress:
+                    enrollments.length > 0
+                        ? Math.round(totalProgress / enrollments.length)
+                        : 0,
+                certificates,
             };
         } catch (error) {
             console.error("Error fetching student courses data:", error);
@@ -134,7 +144,7 @@ export class DashboardService {
                 completed: [],
                 totalCourses: 0,
                 totalProgress: 0,
-                certificates: 0
+                certificates: 0,
             };
         }
     }
@@ -142,42 +152,51 @@ export class DashboardService {
     /**
      * Get teacher's course management data
      */
-    private static async getTeacherCoursesData(user_id: string, campus_id: string) {
+    private static async getTeacherCoursesData(
+        user_id: string,
+        campus_id: string
+    ) {
         try {
             // Get courses where the user is an instructor
             const coursesResult = await Course.find({
                 campus_id,
                 instructor_ids: { $in: [user_id] },
                 is_active: true,
-                is_deleted: false
+                is_deleted: false,
             });
 
             const courses = coursesResult.rows || [];
-            
+
             if (courses.length === 0) {
                 return {
                     teaching: [],
                     totalCourses: 0,
                     totalEnrollments: 0,
                     totalCompletions: 0,
-                    averageRating: 0
+                    averageRating: 0,
                 };
             }
 
             // Get enrollment data for these courses
-            const courseIds = courses.map(c => c.id);
+            const courseIds = courses.map((c) => c.id);
             const enrollmentsResult = await CourseEnrollment.find({
                 course_id: { $in: courseIds },
-                campus_id
+                campus_id,
             });
 
             const enrollments = enrollmentsResult.rows || [];
 
             // Process course data with enrollment statistics
             const teachingCourses = courses.map((course: any) => {
-                const courseEnrollments = enrollments.filter(e => e.course_id === course.id);
-                const completedEnrollments = courseEnrollments.filter(e => e.enrollment_status === "completed");
-                const activeEnrollments = courseEnrollments.filter(e => e.enrollment_status === "active");
+                const courseEnrollments = enrollments.filter(
+                    (e) => e.course_id === course.id
+                );
+                const completedEnrollments = courseEnrollments.filter(
+                    (e) => e.enrollment_status === "completed"
+                );
+                const activeEnrollments = courseEnrollments.filter(
+                    (e) => e.enrollment_status === "active"
+                );
 
                 return {
                     id: course.id || "",
@@ -189,29 +208,40 @@ export class DashboardService {
                     total_enrollments: courseEnrollments.length,
                     active_enrollments: activeEnrollments.length,
                     completed_enrollments: completedEnrollments.length,
-                    completion_rate: courseEnrollments.length > 0 
-                        ? Math.round((completedEnrollments.length / courseEnrollments.length) * 100) 
-                        : 0,
+                    completion_rate:
+                        courseEnrollments.length > 0
+                            ? Math.round(
+                                  (completedEnrollments.length /
+                                      courseEnrollments.length) *
+                                      100
+                              )
+                            : 0,
                     rating: course.rating || 0,
                     rating_count: course.rating_count || 0,
                     created_at: course.created_at,
-                    updated_at: course.updated_at
+                    updated_at: course.updated_at,
                 };
             });
 
             const totalEnrollments = enrollments.length;
-            const totalCompletions = enrollments.filter(e => e.enrollment_status === "completed").length;
+            const totalCompletions = enrollments.filter(
+                (e) => e.enrollment_status === "completed"
+            ).length;
             const ratedCourses = courses.filter((c: any) => c.rating_count > 0);
-            const averageRating = ratedCourses.length > 0 
-                ? ratedCourses.reduce((sum: number, c: any) => sum + (c.rating || 0), 0) / ratedCourses.length 
-                : 0;
+            const averageRating =
+                ratedCourses.length > 0
+                    ? ratedCourses.reduce(
+                          (sum: number, c: any) => sum + (c.rating || 0),
+                          0
+                      ) / ratedCourses.length
+                    : 0;
 
             return {
                 teaching: teachingCourses,
                 totalCourses: courses.length,
                 totalEnrollments,
                 totalCompletions,
-                averageRating: Math.round(averageRating * 10) / 10
+                averageRating: Math.round(averageRating * 10) / 10,
             };
         } catch (error) {
             console.error("Error fetching teacher courses data:", error);
@@ -220,7 +250,7 @@ export class DashboardService {
                 totalCourses: 0,
                 totalEnrollments: 0,
                 totalCompletions: 0,
-                averageRating: 0
+                averageRating: 0,
             };
         }
     }
@@ -240,7 +270,7 @@ export class DashboardService {
                 is_active: true,
                 is_deleted: false,
             });
-            
+
             const profile = userResult.rows?.[0];
             if (!profile) {
                 throw new Error("Student not found");
@@ -290,9 +320,12 @@ export class DashboardService {
             });
 
             const attendanceRecords = attendanceResult.rows || [];
-            const presentDays = attendanceRecords.filter((a) => a.status === "Present").length;
+            const presentDays = attendanceRecords.filter(
+                (a) => a.status === "Present"
+            ).length;
             const totalDays = attendanceRecords.length;
-            const attendancePercentage = totalDays > 0 ? (presentDays / totalDays) * 100 : 0;
+            const attendancePercentage =
+                totalDays > 0 ? (presentDays / totalDays) * 100 : 0;
 
             // Get notifications
             const notificationResult = await StudentNotification.find({
@@ -303,7 +336,9 @@ export class DashboardService {
             });
 
             const notifications = notificationResult.rows || [];
-            const unreadNotifications = notifications.filter((n) => !n.is_seen).length;
+            const unreadNotifications = notifications.filter(
+                (n) => !n.is_seen
+            ).length;
 
             // Get library books issued to student
             const libraryResult = await LibraryIssue.find({
@@ -326,16 +361,31 @@ export class DashboardService {
             const studentRecords = recordResult.rows || [];
 
             // Get performance metrics
-            const performance = await PerformanceAnalyticsHelper.calculateStudentPerformance(user_id, campus_id, classIds);
+            const performance =
+                await PerformanceAnalyticsHelper.calculateStudentPerformance(
+                    user_id,
+                    campus_id,
+                    classIds
+                );
 
             // Get study hours data
-            const hoursSpent = await StudyHoursAnalyticsHelper.calculateStudyHours(user_id, campus_id);
+            const hoursSpent =
+                await StudyHoursAnalyticsHelper.calculateStudyHours(
+                    user_id,
+                    campus_id
+                );
 
             // Get comprehensive grades data
-            const grades = await GradesAnalyticsHelper.getGradesData(user_id, campus_id);
+            const grades = await GradesAnalyticsHelper.getGradesData(
+                user_id,
+                campus_id
+            );
 
             // Get student's latest courses data
-            const coursesData = await this.getStudentCoursesData(user_id, campus_id);
+            const coursesData = await this.getStudentCoursesData(
+                user_id,
+                campus_id
+            );
 
             return {
                 profile: {
@@ -419,7 +469,7 @@ export class DashboardService {
                 hoursSpent,
                 grades,
                 // Enhanced course data without breaking existing API
-                courses: coursesData
+                courses: coursesData,
             };
         } catch (error) {
             throw new Error(`Failed to get student dashboard: ${error}`);
@@ -442,7 +492,7 @@ export class DashboardService {
                 is_active: true,
                 is_deleted: false,
             });
-            
+
             const profile = userResult.rows?.[0];
             if (!profile) {
                 throw new Error("Teacher not found");
@@ -481,27 +531,28 @@ export class DashboardService {
                     is_active: true,
                     is_deleted: false,
                 });
-                
+
                 const allClasses = allClassesResult.rows || [];
-                
+
                 // Filter classes where teacher is assigned
-                classes = allClasses.filter(cls => {
+                classes = allClasses.filter((cls) => {
                     const isClassTeacher = cls.class_teacher_id === teacherId;
-                    const isAssignedTeacher = cls.teacher_ids && cls.teacher_ids.includes(teacherId);
+                    const isAssignedTeacher =
+                        cls.teacher_ids && cls.teacher_ids.includes(teacherId);
                     return isClassTeacher || isAssignedTeacher;
                 });
             }
 
             // Get teacher's subjects from Teacher record or ClassSubject
             let subjects: any[] = [];
-            
+
             // First, get the Teacher record by user_id
             const teacherResult = await Teacher.find({
                 campus_id,
                 user_id,
             });
             const teacherRecord = teacherResult.rows?.[0];
-            
+
             if (teacherRecord?.subjects && teacherRecord.subjects.length > 0) {
                 // Get subjects from Teacher record
                 const subjectResult = await Subject.find({
@@ -518,9 +569,15 @@ export class DashboardService {
                         campus_id,
                         teacher_id: teacherId,
                     });
-                    
-                    const subjectIds = [...new Set(classSubjectResult.rows?.map((cs: any) => cs.subject_id) || [])];
-                    
+
+                    const subjectIds = [
+                        ...new Set(
+                            classSubjectResult.rows?.map(
+                                (cs: any) => cs.subject_id
+                            ) || []
+                        ),
+                    ];
+
                     if (subjectIds.length > 0) {
                         const subjectResult = await Subject.find({
                             campus_id,
@@ -531,48 +588,58 @@ export class DashboardService {
                         subjects = subjectResult.rows || [];
                     }
                 } catch (error) {
-                    console.error("Error fetching subjects from ClassSubject:", error);
+                    console.error(
+                        "Error fetching subjects from ClassSubject:",
+                        error
+                    );
                 }
             }
 
             // Get total students count
-            const totalStudents = classes.reduce((sum, c) => sum + (c.student_count || 0), 0);
+            const totalStudents = classes.reduce(
+                (sum, c) => sum + (c.student_count || 0),
+                0
+            );
 
             // Get assignments to grade
             const classIds = classes.map((c) => c.id);
             let assignmentsToGrade: any[] = [];
-            
+
             if (classIds.length > 0) {
                 // Get assignments for teacher's classes
                 const assignmentResult = await Assignment.find({
                     campus_id,
                     class_id: { $in: classIds },
                 });
-                
+
                 // Filter assignments created by this teacher (user_id should match)
                 const allAssignments = assignmentResult.rows || [];
-                assignmentsToGrade = allAssignments.filter(assignment => 
-                    assignment.user_id === user_id
+                assignmentsToGrade = allAssignments.filter(
+                    (assignment) => assignment.user_id === user_id
                 );
             }
-            
+
             // Also get assignments by teacher's user_id directly (alternative approach)
             try {
                 const teacherAssignmentsResult = await Assignment.find({
                     campus_id,
                     user_id,
                 });
-                
+
                 const teacherAssignments = teacherAssignmentsResult.rows || [];
-                
+
                 // Merge and deduplicate assignments
                 const allTeacherAssignments = [...assignmentsToGrade];
                 for (const assignment of teacherAssignments) {
-                    if (!allTeacherAssignments.find(a => a.id === assignment.id)) {
+                    if (
+                        !allTeacherAssignments.find(
+                            (a) => a.id === assignment.id
+                        )
+                    ) {
                         allTeacherAssignments.push(assignment);
                     }
                 }
-                
+
                 assignmentsToGrade = allTeacherAssignments;
             } catch (error) {
                 console.error("Error fetching teacher assignments:", error);
@@ -587,15 +654,18 @@ export class DashboardService {
             });
 
             const notifications = notificationResult.rows || [];
-            const unreadNotifications = notifications.filter((n) => !n.is_seen).length;
+            const unreadNotifications = notifications.filter(
+                (n) => !n.is_seen
+            ).length;
 
             // Get teacher's schedule/timetable
             let upcomingClasses: any[] = [];
-            
+
             // Get the Teacher record to find the correct teacher_id for timetable
             const teacherRecordForTimetable = teacherResult.rows?.[0];
-            const timetableTeacherId = teacherRecordForTimetable?.id || teacherId;
-            
+            const timetableTeacherId =
+                teacherRecordForTimetable?.id || teacherId;
+
             if (timetableTeacherId) {
                 try {
                     // Get all active timetable entries for the teacher
@@ -607,30 +677,44 @@ export class DashboardService {
                         is_cancelled: false,
                         is_suspended: false,
                     });
-                    
+
                     const allSchedule = allTimetableResult.rows || [];
-                    
+
                     // Get current date and time
                     const now = new Date();
-                    const currentDay = now.toLocaleDateString("en-US", { weekday: "long" });
+                    const currentDay = now.toLocaleDateString("en-US", {
+                        weekday: "long",
+                    });
                     const currentTime = now.toTimeString().slice(0, 5); // Format: "HH:MM"
-                    
+
                     // Define day order for sorting
-                    const dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+                    const dayOrder = [
+                        "Monday",
+                        "Tuesday",
+                        "Wednesday",
+                        "Thursday",
+                        "Friday",
+                        "Saturday",
+                        "Sunday",
+                    ];
                     const currentDayIndex = dayOrder.indexOf(currentDay);
-                    
+
                     // Filter and sort upcoming classes
                     const upcomingSchedule = allSchedule
-                        .map(schedule => {
-                            const scheduleDayIndex = dayOrder.indexOf(schedule.day);
+                        .map((schedule) => {
+                            const scheduleDayIndex = dayOrder.indexOf(
+                                schedule.day
+                            );
                             return {
                                 ...schedule,
                                 dayIndex: scheduleDayIndex,
                                 isToday: schedule.day === currentDay,
-                                isPast: schedule.day === currentDay && schedule.end_time < currentTime
+                                isPast:
+                                    schedule.day === currentDay &&
+                                    schedule.end_time < currentTime,
                             };
                         })
-                        .filter(schedule => {
+                        .filter((schedule) => {
                             // Include classes that are:
                             // 1. Later today (not yet finished)
                             // 2. On future days this week
@@ -638,22 +722,31 @@ export class DashboardService {
                             if (schedule.isToday) {
                                 return !schedule.isPast; // Only future classes today
                             }
-                            return schedule.dayIndex > currentDayIndex || schedule.dayIndex < currentDayIndex;
+                            return (
+                                schedule.dayIndex > currentDayIndex ||
+                                schedule.dayIndex < currentDayIndex
+                            );
                         })
                         .sort((a, b) => {
                             // Sort by day, then by start time
                             if (a.day === b.day) {
                                 return a.start_time.localeCompare(b.start_time);
                             }
-                            
+
                             // Handle week boundary (today to end of week, then start of next week)
-                            const aDayFromToday = a.dayIndex >= currentDayIndex ? a.dayIndex - currentDayIndex : 7 + a.dayIndex - currentDayIndex;
-                            const bDayFromToday = b.dayIndex >= currentDayIndex ? b.dayIndex - currentDayIndex : 7 + b.dayIndex - currentDayIndex;
-                            
+                            const aDayFromToday =
+                                a.dayIndex >= currentDayIndex
+                                    ? a.dayIndex - currentDayIndex
+                                    : 7 + a.dayIndex - currentDayIndex;
+                            const bDayFromToday =
+                                b.dayIndex >= currentDayIndex
+                                    ? b.dayIndex - currentDayIndex
+                                    : 7 + b.dayIndex - currentDayIndex;
+
                             return aDayFromToday - bDayFromToday;
                         })
                         .slice(0, 3); // Get only the next 3 upcoming classes
-                    
+
                     upcomingClasses = upcomingSchedule;
                 } catch (error) {
                     console.error("Error fetching teacher schedule:", error);
@@ -661,7 +754,10 @@ export class DashboardService {
             }
 
             // Get teacher's course management data
-            const teacherCoursesData = await this.getTeacherCoursesData(user_id, campus_id);
+            const teacherCoursesData = await this.getTeacherCoursesData(
+                user_id,
+                campus_id
+            );
 
             return {
                 profile: {
@@ -709,8 +805,12 @@ export class DashboardService {
                         isAdjourned: t.is_adjourned,
                         isToday: t.isToday,
                         // Add class and subject names if available
-                        className: classes.find(c => c.id === t.class_id)?.name || "Unknown Class",
-                        subjectName: subjects.find(s => s.id === t.subject_id)?.name || "Unknown Subject",
+                        className:
+                            classes.find((c) => c.id === t.class_id)?.name ||
+                            "Unknown Class",
+                        subjectName:
+                            subjects.find((s) => s.id === t.subject_id)?.name ||
+                            "Unknown Subject",
                     })),
                 },
                 notifications: {
@@ -724,12 +824,28 @@ export class DashboardService {
                     })),
                 },
                 quickActions: [
-                    { id: "take_attendance", title: "Take Attendance", icon: "📝" },
-                    { id: "create_assignment", title: "Create Assignment", icon: "📋" },
-                    { id: "grade_assignments", title: "Grade Assignments", icon: "✏️" },
-                    { id: "schedule_meeting", title: "Schedule Meeting", icon: "📅" },
+                    {
+                        id: "take_attendance",
+                        title: "Take Attendance",
+                        icon: "📝",
+                    },
+                    {
+                        id: "create_assignment",
+                        title: "Create Assignment",
+                        icon: "📋",
+                    },
+                    {
+                        id: "grade_assignments",
+                        title: "Grade Assignments",
+                        icon: "✏️",
+                    },
+                    {
+                        id: "schedule_meeting",
+                        title: "Schedule Meeting",
+                        icon: "📅",
+                    },
                 ],
-                courses: teacherCoursesData
+                courses: teacherCoursesData,
             };
         } catch (error) {
             throw new Error(`Failed to get teacher dashboard: ${error}`);
@@ -752,7 +868,7 @@ export class DashboardService {
                 is_active: true,
                 is_deleted: false,
             });
-            
+
             const profile = userResult.rows?.[0];
             if (!profile) {
                 throw new Error("Parent not found");
@@ -760,7 +876,7 @@ export class DashboardService {
 
             // Get children IDs from parent's meta_data
             const childrenIds = profile.meta_data?.student_id || [];
-            
+
             if (childrenIds.length === 0) {
                 return {
                     profile: {
@@ -792,7 +908,8 @@ export class DashboardService {
                     try {
                         // Get child's classes using ClassService
                         const classService = new ClassService();
-                        const classes = await classService.getClassesByStudentId(child.id);
+                        const classes =
+                            await classService.getClassesByStudentId(child.id);
                         const classIds = classes.map((c) => c.id);
 
                         // Get child's grades
@@ -813,9 +930,12 @@ export class DashboardService {
                         });
 
                         const attendanceRecords = attendanceResult.rows || [];
-                        const presentDays = attendanceRecords.filter((a) => a.status === "Present").length;
+                        const presentDays = attendanceRecords.filter(
+                            (a) => a.status === "Present"
+                        ).length;
                         const totalDays = attendanceRecords.length;
-                        const attendancePercentage = totalDays > 0 ? (presentDays / totalDays) * 100 : 0;
+                        const attendancePercentage =
+                            totalDays > 0 ? (presentDays / totalDays) * 100 : 0;
 
                         // Get child's assignments
                         const assignmentResult = await Assignment.find({
@@ -862,9 +982,9 @@ export class DashboardService {
                         const upcomingExams = allExams.filter(
                             (e) => new Date(e.exam_date) > now
                         );
-                        const recentExams = allExams.filter(
-                            (e) => new Date(e.exam_date) <= now
-                        ).slice(0, 5);
+                        const recentExams = allExams
+                            .filter((e) => new Date(e.exam_date) <= now)
+                            .slice(0, 5);
 
                         // Get child's library data
                         const libraryResult = await Library.find({
@@ -879,7 +999,9 @@ export class DashboardService {
                             (l) => l.status === "issued"
                         );
                         const dueBooks = libraryRecords.filter(
-                            (l) => l.status === "issued" && new Date(l.due_date) < now
+                            (l) =>
+                                l.status === "issued" &&
+                                new Date(l.due_date) < now
                         );
 
                         // Get child's schedule (meetings/classes for today and this week)
@@ -898,87 +1020,124 @@ export class DashboardService {
 
                         const meetings = meetingResult.rows || [];
                         const todayMeetings = meetings.filter(
-                            (m) => new Date(m.meeting_date).toDateString() === today.toDateString()
+                            (m) =>
+                                new Date(m.meeting_date).toDateString() ===
+                                today.toDateString()
                         );
 
                         // Get performance metrics for child
-                        const childPerformance = await PerformanceAnalyticsHelper.calculateStudentPerformance(child.id, campus_id, classIds);
+                        const childPerformance =
+                            await PerformanceAnalyticsHelper.calculateStudentPerformance(
+                                child.id,
+                                campus_id,
+                                classIds
+                            );
 
                         // Get study hours data for child
-                        const childHoursSpent = await StudyHoursAnalyticsHelper.calculateStudyHours(child.id, campus_id);
+                        const childHoursSpent =
+                            await StudyHoursAnalyticsHelper.calculateStudyHours(
+                                child.id,
+                                campus_id
+                            );
 
                         // Get comprehensive grades data for child
-                        const childGrades = await GradesAnalyticsHelper.getGradesData(child.id, campus_id);
+                        const childGrades =
+                            await GradesAnalyticsHelper.getGradesData(
+                                child.id,
+                                campus_id
+                            );
 
                         // Get child's course data
-                        const childCoursesData = await this.getStudentCoursesData(child.id, campus_id);
+                        const childCoursesData =
+                            await this.getStudentCoursesData(
+                                child.id,
+                                campus_id
+                            );
 
                         return {
                             profile: {
                                 id: child.id,
                                 name: `${child.first_name} ${child.last_name}`,
                                 email: child.email,
-                                class: classes.length > 0 ? classes[0].name : "No class assigned",
+                                class:
+                                    classes.length > 0
+                                        ? classes[0].name
+                                        : "No class assigned",
                                 user_id: child.user_id,
                             },
                             attendance: {
                                 thisMonth: presentDays,
                                 percentage: Math.round(attendancePercentage),
                                 totalDays: totalDays,
-                                recent: attendanceRecords.slice(0, 7).map((a) => ({
-                                    id: a.id,
-                                    date: a.date,
-                                    status: a.status,
-                                })),
+                                recent: attendanceRecords
+                                    .slice(0, 7)
+                                    .map((a) => ({
+                                        id: a.id,
+                                        date: a.date,
+                                        status: a.status,
+                                    })),
                             },
                             assignments: {
-                                pending: pendingAssignments.slice(0, 5).map((a) => ({
-                                    id: a.id,
-                                    title: a.title,
-                                    description: a.description,
-                                    dueDate: a.due_date,
-                                    subject: a.subject,
-                                })),
+                                pending: pendingAssignments
+                                    .slice(0, 5)
+                                    .map((a) => ({
+                                        id: a.id,
+                                        title: a.title,
+                                        description: a.description,
+                                        dueDate: a.due_date,
+                                        subject: a.subject,
+                                    })),
                                 submitted: [], // This would need assignment submission tracking
-                                overdue: overdueAssignments.slice(0, 5).map((a) => ({
-                                    id: a.id,
-                                    title: a.title,
-                                    description: a.description,
-                                    dueDate: a.due_date,
-                                    subject: a.subject,
-                                })),
+                                overdue: overdueAssignments
+                                    .slice(0, 5)
+                                    .map((a) => ({
+                                        id: a.id,
+                                        title: a.title,
+                                        description: a.description,
+                                        dueDate: a.due_date,
+                                        subject: a.subject,
+                                    })),
                                 total: allAssignments.length,
                             },
                             quizzes: {
-                                upcoming: upcomingQuizzes.slice(0, 5).map((q) => ({
-                                    id: q.id,
-                                    title: q.title,
-                                    description: q.description,
-                                    quizDate: q.quiz_date,
-                                    duration: q.duration,
-                                })),
-                                completed: completedQuizzes.slice(0, 5).map((q) => ({
-                                    id: q.id,
-                                    title: q.title,
-                                    quizDate: q.quiz_date,
-                                    score: q.total_marks, // This might need quiz attempt data
-                                })),
+                                upcoming: upcomingQuizzes
+                                    .slice(0, 5)
+                                    .map((q) => ({
+                                        id: q.id,
+                                        title: q.title,
+                                        description: q.description,
+                                        quizDate: q.quiz_date,
+                                        duration: q.duration,
+                                    })),
+                                completed: completedQuizzes
+                                    .slice(0, 5)
+                                    .map((q) => ({
+                                        id: q.id,
+                                        title: q.title,
+                                        quizDate: q.quiz_date,
+                                        score: q.total_marks, // This might need quiz attempt data
+                                    })),
                                 recent: allQuizzes.slice(0, 3).map((q) => ({
                                     id: q.id,
                                     title: q.title,
                                     quizDate: q.quiz_date,
-                                    status: new Date(q.quiz_date) > now ? "upcoming" : "completed",
+                                    status:
+                                        new Date(q.quiz_date) > now
+                                            ? "upcoming"
+                                            : "completed",
                                 })),
                             },
                             exams: {
-                                upcoming: upcomingExams.slice(0, 5).map((e) => ({
-                                    id: e.id,
-                                    title: e.title,
-                                    subject: e.subject,
-                                    examDate: e.exam_date,
-                                    duration: e.duration,
-                                    totalMarks: e.total_marks,
-                                })),
+                                upcoming: upcomingExams
+                                    .slice(0, 5)
+                                    .map((e) => ({
+                                        id: e.id,
+                                        title: e.title,
+                                        subject: e.subject,
+                                        examDate: e.exam_date,
+                                        duration: e.duration,
+                                        totalMarks: e.total_marks,
+                                    })),
                                 recent: recentExams.map((e) => ({
                                     id: e.id,
                                     title: e.title,
@@ -999,7 +1158,11 @@ export class DashboardService {
                                     id: l.id,
                                     bookTitle: l.book_title,
                                     dueDate: l.due_date,
-                                    daysOverdue: Math.floor((now.getTime() - new Date(l.due_date).getTime()) / (1000 * 60 * 60 * 24)),
+                                    daysOverdue: Math.floor(
+                                        (now.getTime() -
+                                            new Date(l.due_date).getTime()) /
+                                            (1000 * 60 * 60 * 24)
+                                    ),
                                 })),
                             },
                             schedule: {
@@ -1036,7 +1199,13 @@ export class DashboardService {
                                     title: `Upcoming exam: ${e.title}`,
                                     date: e.exam_date,
                                 })),
-                            ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5),
+                            ]
+                                .sort(
+                                    (a, b) =>
+                                        new Date(b.date).getTime() -
+                                        new Date(a.date).getTime()
+                                )
+                                .slice(0, 5),
                             upcomingEvents: [
                                 ...upcomingQuizzes.slice(0, 3).map((q) => ({
                                     type: "quiz",
@@ -1053,14 +1222,23 @@ export class DashboardService {
                                     title: `${a.title} due`,
                                     date: a.due_date,
                                 })),
-                            ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).slice(0, 5),
+                            ]
+                                .sort(
+                                    (a, b) =>
+                                        new Date(a.date).getTime() -
+                                        new Date(b.date).getTime()
+                                )
+                                .slice(0, 5),
                             performance: childPerformance,
                             hoursSpent: childHoursSpent,
                             grades: childGrades,
-                            courses: childCoursesData
+                            courses: childCoursesData,
                         };
                     } catch (error) {
-                        console.error(`Error fetching data for child ${child.id}:`, error);
+                        console.error(
+                            `Error fetching data for child ${child.id}:`,
+                            error
+                        );
                         return {
                             profile: {
                                 id: child.id,
@@ -1069,9 +1247,23 @@ export class DashboardService {
                                 class: "Unknown",
                                 user_id: child.user_id,
                             },
-                            attendance: { thisMonth: 0, percentage: 0, totalDays: 0, recent: [] },
-                            assignments: { pending: [], submitted: [], overdue: [], total: 0 },
-                            quizzes: { upcoming: [], completed: [], recent: [] },
+                            attendance: {
+                                thisMonth: 0,
+                                percentage: 0,
+                                totalDays: 0,
+                                recent: [],
+                            },
+                            assignments: {
+                                pending: [],
+                                submitted: [],
+                                overdue: [],
+                                total: 0,
+                            },
+                            quizzes: {
+                                upcoming: [],
+                                completed: [],
+                                recent: [],
+                            },
                             exams: { upcoming: [], recent: [] },
                             library: { booksIssued: [], dueBooks: [] },
                             schedule: { today: [], thisWeek: [] },
@@ -1114,7 +1306,9 @@ export class DashboardService {
             });
 
             const notifications = notificationResult.rows || [];
-            const unreadNotifications = notifications.filter((n) => !n.is_seen).length;
+            const unreadNotifications = notifications.filter(
+                (n) => !n.is_seen
+            ).length;
 
             return {
                 profile: {
@@ -1156,19 +1350,38 @@ export class DashboardService {
                 is_active: true,
                 is_deleted: false,
             });
-            
+
             const profile = userResult.rows?.[0];
             if (!profile) {
                 throw new Error("Admin user not found");
             }
 
             // Get campus statistics
-            const [studentResult, teacherResult, classResult, courseResult] = await Promise.all([
-                User.find({ campus_id, user_type: "Student", is_active: true, is_deleted: false }),
-                User.find({ campus_id, user_type: "Teacher", is_active: true, is_deleted: false }),
-                Class.find({ campus_id, is_active: true, is_deleted: false }),
-                Course.find({ campus_id, is_active: true, is_deleted: false }),
-            ]);
+            const [studentResult, teacherResult, classResult, courseResult] =
+                await Promise.all([
+                    User.find({
+                        campus_id,
+                        user_type: "Student",
+                        is_active: true,
+                        is_deleted: false,
+                    }),
+                    User.find({
+                        campus_id,
+                        user_type: "Teacher",
+                        is_active: true,
+                        is_deleted: false,
+                    }),
+                    Class.find({
+                        campus_id,
+                        is_active: true,
+                        is_deleted: false,
+                    }),
+                    Course.find({
+                        campus_id,
+                        is_active: true,
+                        is_deleted: false,
+                    }),
+                ]);
 
             const totalStudents = studentResult.rows?.length || 0;
             const totalTeachers = teacherResult.rows?.length || 0;
@@ -1176,11 +1389,17 @@ export class DashboardService {
             const activeCourses = courseResult.rows?.length || 0;
 
             // Get additional course statistics
-            const enrollmentsResult = await CourseEnrollment.find({ campus_id });
+            const enrollmentsResult = await CourseEnrollment.find({
+                campus_id,
+            });
             const allEnrollments = enrollmentsResult.rows || [];
             const totalEnrollments = allEnrollments.length;
-            const completedEnrollments = allEnrollments.filter(e => e.enrollment_status === "completed").length;
-            const certificatesIssued = allEnrollments.filter(e => e.certificate_issued).length;
+            const completedEnrollments = allEnrollments.filter(
+                (e) => e.enrollment_status === "completed"
+            ).length;
+            const certificatesIssued = allEnrollments.filter(
+                (e) => e.certificate_issued
+            ).length;
 
             // Get today's attendance
             const today = new Date();
@@ -1235,8 +1454,16 @@ export class DashboardService {
                 quickActions: [
                     { id: "manage_users", title: "Manage Users", icon: "👥" },
                     { id: "view_reports", title: "View Reports", icon: "📊" },
-                    { id: "create_notification", title: "Send Notification", icon: "📢" },
-                    { id: "manage_classes", title: "Manage Classes", icon: "🏫" },
+                    {
+                        id: "create_notification",
+                        title: "Send Notification",
+                        icon: "📢",
+                    },
+                    {
+                        id: "manage_classes",
+                        title: "Manage Classes",
+                        icon: "🏫",
+                    },
                 ],
             };
         } catch (error) {
@@ -1260,12 +1487,16 @@ export class DashboardService {
             });
 
             const allClasses = allClassesResult.rows || [];
-            const classes = allClasses.filter(cls => 
-                cls.student_ids && cls.student_ids.includes(user_id)
+            const classes = allClasses.filter(
+                (cls) => cls.student_ids && cls.student_ids.includes(user_id)
             );
             const classIds = classes.map((c) => c.id);
 
-            return await PerformanceAnalyticsHelper.calculateStudentPerformance(user_id, campus_id, classIds);
+            return await PerformanceAnalyticsHelper.calculateStudentPerformance(
+                user_id,
+                campus_id,
+                classIds
+            );
         } catch (error) {
             throw new Error(`Failed to get student performance: ${error}`);
         }
@@ -1279,7 +1510,10 @@ export class DashboardService {
         campus_id: string
     ): Promise<StudyHoursData> {
         try {
-            return await StudyHoursAnalyticsHelper.calculateStudyHours(user_id, campus_id);
+            return await StudyHoursAnalyticsHelper.calculateStudyHours(
+                user_id,
+                campus_id
+            );
         } catch (error) {
             throw new Error(`Failed to get student hours: ${error}`);
         }
@@ -1293,7 +1527,10 @@ export class DashboardService {
         campus_id: string
     ): Promise<GradesData> {
         try {
-            return await GradesAnalyticsHelper.getGradesData(user_id, campus_id);
+            return await GradesAnalyticsHelper.getGradesData(
+                user_id,
+                campus_id
+            );
         } catch (error) {
             throw new Error(`Failed to get student grades: ${error}`);
         }
@@ -1335,12 +1572,17 @@ export class DashboardService {
             });
 
             const allClasses = allClassesResult.rows || [];
-            const classes = allClasses.filter(cls => 
-                cls.student_ids && cls.student_ids.includes(child_user_id)
+            const classes = allClasses.filter(
+                (cls) =>
+                    cls.student_ids && cls.student_ids.includes(child_user_id)
             );
             const classIds = classes.map((c) => c.id);
 
-            return await PerformanceAnalyticsHelper.calculateStudentPerformance(child_user_id, campus_id, classIds);
+            return await PerformanceAnalyticsHelper.calculateStudentPerformance(
+                child_user_id,
+                campus_id,
+                classIds
+            );
         } catch (error) {
             throw new Error(`Failed to get child performance: ${error}`);
         }
@@ -1374,7 +1616,10 @@ export class DashboardService {
                 throw new Error("Unauthorized access to child data");
             }
 
-            return await StudyHoursAnalyticsHelper.calculateStudyHours(child_user_id, campus_id);
+            return await StudyHoursAnalyticsHelper.calculateStudyHours(
+                child_user_id,
+                campus_id
+            );
         } catch (error) {
             throw new Error(`Failed to get child hours: ${error}`);
         }
@@ -1408,7 +1653,10 @@ export class DashboardService {
                 throw new Error("Unauthorized access to child data");
             }
 
-            return await GradesAnalyticsHelper.getGradesData(child_user_id, campus_id);
+            return await GradesAnalyticsHelper.getGradesData(
+                child_user_id,
+                campus_id
+            );
         } catch (error) {
             throw new Error(`Failed to get child grades: ${error}`);
         }
@@ -1426,8 +1674,9 @@ export class DashboardService {
             switch (user_type) {
                 case "Student": {
                     const classService = new ClassService();
-                    const studentClasses = await classService.getClassesByStudentId(user_id);
-                    
+                    const studentClasses =
+                        await classService.getClassesByStudentId(user_id);
+
                     const notificationResult = await StudentNotification.find({
                         campus_id,
                         user_id,
@@ -1437,15 +1686,19 @@ export class DashboardService {
 
                     return {
                         classes: studentClasses.length,
-                        unreadNotifications: notificationResult.rows?.length || 0,
+                        unreadNotifications:
+                            notificationResult.rows?.length || 0,
                         pendingAssignments: 0, // Would need detailed calculation
                     };
                 }
 
                 case "Teacher": {
-                    const teacherResult = await Teacher.find({ campus_id, user_id });
+                    const teacherResult = await Teacher.find({
+                        campus_id,
+                        user_id,
+                    });
                     const teacherRecord = teacherResult.rows?.[0];
-                    
+
                     const teacherClassResult = await Class.find({
                         campus_id,
                         $or: [
@@ -1459,7 +1712,10 @@ export class DashboardService {
 
                     return {
                         classes: teacherClasses.length,
-                        students: teacherClasses.reduce((sum, c) => sum + (c.student_count || 0), 0),
+                        students: teacherClasses.reduce(
+                            (sum, c) => sum + (c.student_count || 0),
+                            0
+                        ),
                         subjects: teacherRecord?.subjects?.length || 0,
                     };
                 }
@@ -1511,7 +1767,9 @@ export class DashboardService {
                         is_deleted: false,
                     });
                     notifications = studentResult.rows || [];
-                    unreadCount = notifications.filter(n => !n.is_seen).length;
+                    unreadCount = notifications.filter(
+                        (n) => !n.is_seen
+                    ).length;
                     break;
                 }
 
@@ -1523,7 +1781,9 @@ export class DashboardService {
                         is_deleted: false,
                     });
                     notifications = teacherResult.rows || [];
-                    unreadCount = notifications.filter(n => !n.is_seen).length;
+                    unreadCount = notifications.filter(
+                        (n) => !n.is_seen
+                    ).length;
                     break;
                 }
 
@@ -1535,14 +1795,16 @@ export class DashboardService {
                         is_deleted: false,
                     });
                     notifications = parentResult.rows || [];
-                    unreadCount = notifications.filter(n => !n.is_seen).length;
+                    unreadCount = notifications.filter(
+                        (n) => !n.is_seen
+                    ).length;
                     break;
                 }
             }
 
             return {
                 unreadCount,
-                recentNotifications: notifications.slice(0, 5).map(n => ({
+                recentNotifications: notifications.slice(0, 5).map((n) => ({
                     id: n.id,
                     title: n.title,
                     message: n.message,
@@ -1580,13 +1842,15 @@ export class DashboardService {
             });
 
             const upcomingExams = examResult.rows || [];
-            events.push(...upcomingExams.map(exam => ({
-                id: exam.id,
-                title: `Exam: ${exam.subject_id}`,
-                type: "exam",
-                date: exam.exam_date,
-                description: exam.description,
-            })));
+            events.push(
+                ...upcomingExams.map((exam) => ({
+                    id: exam.id,
+                    title: `Exam: ${exam.subject_id}`,
+                    type: "exam",
+                    date: exam.exam_date,
+                    description: exam.description,
+                }))
+            );
 
             // Get upcoming meetings
             const meetingResult = await Meeting.find({
@@ -1597,16 +1861,21 @@ export class DashboardService {
             });
 
             const upcomingMeetings = meetingResult.rows || [];
-            events.push(...upcomingMeetings.map(meeting => ({
-                id: meeting.id,
-                title: meeting.title,
-                type: "meeting",
-                date: meeting.meeting_date,
-                description: meeting.description,
-            })));
+            events.push(
+                ...upcomingMeetings.map((meeting) => ({
+                    id: meeting.id,
+                    title: meeting.title,
+                    type: "meeting",
+                    date: meeting.meeting_date,
+                    description: meeting.description,
+                }))
+            );
 
             // Sort by date
-            events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+            events.sort(
+                (a, b) =>
+                    new Date(a.date).getTime() - new Date(b.date).getTime()
+            );
 
             return events;
         } catch (error) {

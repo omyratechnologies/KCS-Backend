@@ -63,7 +63,6 @@ export interface BulkPaymentResult {
 }
 
 export class BulkOperationsService {
-
     // ========================= BULK FEE GENERATION =========================
 
     /**
@@ -85,8 +84,8 @@ export class BulkOperationsService {
             summary: {
                 total_amount: 0,
                 success_rate: 0,
-                processing_time_ms: 0
-            }
+                processing_time_ms: 0,
+            },
         };
 
         try {
@@ -98,7 +97,7 @@ export class BulkOperationsService {
             // Get the fee template
             const template = await FeeTemplate.findOne({
                 id: request.template_id,
-                campus_id
+                campus_id,
             });
 
             if (!template) {
@@ -122,7 +121,7 @@ export class BulkOperationsService {
                         campus_id,
                         user_id: student.id,
                         academic_year: request.academic_year,
-                        fee_template_id: request.template_id
+                        fee_template_id: request.template_id,
                     });
 
                     if (existingFee) {
@@ -134,7 +133,7 @@ export class BulkOperationsService {
                             fee_id: existingFee.id,
                             amount: existingFee.total_amount,
                             status: "skipped",
-                            reason: "Fee already exists"
+                            reason: "Fee already exists",
                         });
                         continue;
                     }
@@ -144,14 +143,17 @@ export class BulkOperationsService {
                     const feeAmount = customAmount || template.total_amount;
 
                     // Create fee items from template
-                    const feeItems = template.fee_structure.map(item => ({
+                    const feeItems = template.fee_structure.map((item) => ({
                         category_id: item.category_id,
                         fee_type: "template",
-                        amount: customAmount ? (item.amount / template.total_amount) * customAmount : item.amount,
+                        amount: customAmount
+                            ? (item.amount / template.total_amount) *
+                              customAmount
+                            : item.amount,
                         name: item.category_name,
                         due_date: request.due_date_override || item.due_date,
                         is_mandatory: item.is_mandatory,
-                        late_fee_applicable: item.late_fee_applicable
+                        late_fee_applicable: item.late_fee_applicable,
                     }));
 
                     // Create the fee
@@ -170,60 +172,74 @@ export class BulkOperationsService {
                         late_fee_amount: 0,
                         payment_status: "unpaid",
                         is_paid: false,
-                        installments_allowed: request.installments_allowed ?? false,
+                        installments_allowed:
+                            request.installments_allowed ?? false,
                         auto_late_fee: true,
                         reminder_sent: {
                             email_count: 0,
-                            sms_count: 0
+                            sms_count: 0,
                         },
                         meta_data: {
                             created_by,
                             bulk_generation: true,
-                            template_used: request.template_id
+                            template_used: request.template_id,
                         },
                         created_at: new Date(),
-                        updated_at: new Date()
+                        updated_at: new Date(),
                     };
 
                     const createdFee = await Fee.create(newFee);
 
                     // Apply discounts if requested
                     if (request.apply_discounts) {
-                        await this.applyAutoDiscounts(campus_id, createdFee.id, student.id);
+                        await this.applyAutoDiscounts(
+                            campus_id,
+                            createdFee.id,
+                            student.id
+                        );
                     }
 
                     result.successful++;
-                    result.summary.total_amount = (result.summary.total_amount || 0) + feeAmount;
-                    
+                    result.summary.total_amount =
+                        (result.summary.total_amount || 0) + feeAmount;
+
                     result.results.push({
                         student_id: student.id,
                         student_name: `${student.first_name} ${student.last_name}`,
                         class_name: student.class_name,
                         fee_id: createdFee.id,
                         amount: feeAmount,
-                        status: "created"
+                        status: "created",
                     });
 
                     // Send notification if requested
                     if (request.send_notifications) {
-                        await this.sendFeeGenerationNotification(campus_id, createdFee, student);
+                        await this.sendFeeGenerationNotification(
+                            campus_id,
+                            createdFee,
+                            student
+                        );
                     }
-
                 } catch (error) {
                     result.failed++;
                     result.errors.push({
                         entity_id: student.id,
-                        error: error instanceof Error ? error.message : "Unknown error",
-                        details: { student_name: `${student.first_name} ${student.last_name}` }
+                        error:
+                            error instanceof Error
+                                ? error.message
+                                : "Unknown error",
+                        details: {
+                            student_name: `${student.first_name} ${student.last_name}`,
+                        },
                     });
                 }
             }
 
-            result.summary.success_rate = (result.successful / result.total_requested) * 100;
+            result.summary.success_rate =
+                (result.successful / result.total_requested) * 100;
             result.summary.processing_time_ms = Date.now() - startTime;
 
             return result;
-
         } catch (error) {
             throw new Error(`Bulk fee generation failed: ${error}`);
         }
@@ -250,13 +266,15 @@ export class BulkOperationsService {
             summary: {
                 total_amount: 0,
                 success_rate: 0,
-                processing_time_ms: 0
-            }
+                processing_time_ms: 0,
+            },
         };
 
         try {
             const { Fee } = await import("@/models/fee.model");
-            const { PaymentService } = await import("@/services/payment.service");
+            const { PaymentService } = await import(
+                "@/services/payment.service"
+            );
             const { UserService } = await import("@/services/users.service");
 
             // Get target fees
@@ -281,7 +299,7 @@ export class BulkOperationsService {
                             fee_id: fee.id,
                             amount: fee.total_amount,
                             status: "skipped",
-                            reason: "Already paid"
+                            reason: "Already paid",
                         });
                         continue;
                     }
@@ -290,35 +308,42 @@ export class BulkOperationsService {
 
                     if (request.auto_approve) {
                         // For admin-initiated payments, mark as completed
-                        await this.processAdminPayment(campus_id, fee, processed_by);
-                        
+                        await this.processAdminPayment(
+                            campus_id,
+                            fee,
+                            processed_by
+                        );
+
                         result.successful++;
-                        result.summary.total_amount = (result.summary.total_amount || 0) + fee.due_amount;
-                        
+                        result.summary.total_amount =
+                            (result.summary.total_amount || 0) + fee.due_amount;
+
                         result.results.push({
                             student_id: fee.user_id,
                             student_name: `${student.first_name} ${student.last_name}`,
                             fee_id: fee.id,
                             amount: fee.due_amount,
                             status: "completed",
-                            reason: "Admin processed"
+                            reason: "Admin processed",
                         });
                     } else {
                         // Initiate normal payment process
-                        const paymentResult = await PaymentService.initiatePayment(
-                            campus_id,
-                            fee.id,
-                            fee.user_id,
-                            fee.parent_id,
-                            request.payment_gateway,
-                            fee.due_amount,
-                            `${process.env.FRONTEND_URL}/payment/callback`,
-                            `${process.env.FRONTEND_URL}/payment/cancel`
-                        );
+                        const paymentResult =
+                            await PaymentService.initiatePayment(
+                                campus_id,
+                                fee.id,
+                                fee.user_id,
+                                fee.parent_id,
+                                request.payment_gateway,
+                                fee.due_amount,
+                                `${process.env.FRONTEND_URL}/payment/callback`,
+                                `${process.env.FRONTEND_URL}/payment/cancel`
+                            );
 
                         result.successful++;
-                        result.summary.total_amount = (result.summary.total_amount || 0) + fee.due_amount;
-                        
+                        result.summary.total_amount =
+                            (result.summary.total_amount || 0) + fee.due_amount;
+
                         result.results.push({
                             student_id: fee.user_id,
                             student_name: `${student.first_name} ${student.last_name}`,
@@ -326,30 +351,41 @@ export class BulkOperationsService {
                             transaction_id: paymentResult.transaction.id,
                             amount: fee.due_amount,
                             status: "initiated",
-                            payment_url: paymentResult.payment_details?.payment_url
+                            payment_url:
+                                paymentResult.payment_details?.payment_url,
                         });
                     }
 
                     // Send notification if requested
                     if (request.send_notifications) {
-                        await this.sendPaymentNotification(campus_id, fee, student, request.auto_approve || false);
+                        await this.sendPaymentNotification(
+                            campus_id,
+                            fee,
+                            student,
+                            request.auto_approve || false
+                        );
                     }
-
                 } catch (error) {
                     result.failed++;
                     result.errors.push({
                         entity_id: fee.id,
-                        error: error instanceof Error ? error.message : "Unknown error",
-                        details: { student_id: fee.user_id, amount: fee.due_amount }
+                        error:
+                            error instanceof Error
+                                ? error.message
+                                : "Unknown error",
+                        details: {
+                            student_id: fee.user_id,
+                            amount: fee.due_amount,
+                        },
                     });
                 }
             }
 
-            result.summary.success_rate = (result.successful / result.total_requested) * 100;
+            result.summary.success_rate =
+                (result.successful / result.total_requested) * 100;
             result.summary.processing_time_ms = Date.now() - startTime;
 
             return result;
-
         } catch (error) {
             throw new Error(`Bulk payment processing failed: ${error}`);
         }
@@ -370,9 +406,14 @@ export class BulkOperationsService {
             installments_allowed?: boolean;
         },
         updated_by: string
-    ): Promise<BulkOperationResult<{ fee_id: string; updated_fields: string[] }>> {
+    ): Promise<
+        BulkOperationResult<{ fee_id: string; updated_fields: string[] }>
+    > {
         const startTime = Date.now();
-        const result: BulkOperationResult<{ fee_id: string; updated_fields: string[] }> = {
+        const result: BulkOperationResult<{
+            fee_id: string;
+            updated_fields: string[];
+        }> = {
             total_requested: fee_ids.length,
             successful: 0,
             failed: 0,
@@ -381,8 +422,8 @@ export class BulkOperationsService {
             errors: [],
             summary: {
                 success_rate: 0,
-                processing_time_ms: 0
-            }
+                processing_time_ms: 0,
+            },
         };
 
         try {
@@ -391,7 +432,7 @@ export class BulkOperationsService {
             for (const fee_id of fee_ids) {
                 try {
                     const fee = await Fee.findOne({ id: fee_id, campus_id });
-                    
+
                     if (!fee) {
                         result.skipped++;
                         continue;
@@ -404,20 +445,22 @@ export class BulkOperationsService {
                             ...fee.meta_data,
                             bulk_updated: true,
                             updated_by,
-                            update_timestamp: new Date()
-                        }
+                            update_timestamp: new Date(),
+                        },
                     };
 
                     if (updates.amount_adjustment) {
-                        feeUpdates.total_amount = fee.total_amount + updates.amount_adjustment;
-                        feeUpdates.due_amount = fee.due_amount + updates.amount_adjustment;
+                        feeUpdates.total_amount =
+                            fee.total_amount + updates.amount_adjustment;
+                        feeUpdates.due_amount =
+                            fee.due_amount + updates.amount_adjustment;
                         updatedFields.push("amount");
                     }
 
                     if (updates.due_date) {
-                        feeUpdates.items = fee.items.map(item => ({
+                        feeUpdates.items = fee.items.map((item) => ({
                             ...item,
-                            due_date: updates.due_date
+                            due_date: updates.due_date,
                         }));
                         updatedFields.push("due_date");
                     }
@@ -428,7 +471,8 @@ export class BulkOperationsService {
                     }
 
                     if (updates.installments_allowed !== undefined) {
-                        feeUpdates.installments_allowed = updates.installments_allowed;
+                        feeUpdates.installments_allowed =
+                            updates.installments_allowed;
                         updatedFields.push("installments");
                     }
 
@@ -437,23 +481,25 @@ export class BulkOperationsService {
                     result.successful++;
                     result.results.push({
                         fee_id,
-                        updated_fields: updatedFields
+                        updated_fields: updatedFields,
                     });
-
                 } catch (error) {
                     result.failed++;
                     result.errors.push({
                         entity_id: fee_id,
-                        error: error instanceof Error ? error.message : "Unknown error"
+                        error:
+                            error instanceof Error
+                                ? error.message
+                                : "Unknown error",
                     });
                 }
             }
 
-            result.summary.success_rate = (result.successful / result.total_requested) * 100;
+            result.summary.success_rate =
+                (result.successful / result.total_requested) * 100;
             result.summary.processing_time_ms = Date.now() - startTime;
 
             return result;
-
         } catch (error) {
             throw new Error(`Bulk fee update failed: ${error}`);
         }
@@ -476,12 +522,12 @@ export class BulkOperationsService {
                 const student = await UserService.getUser(student_id);
                 const studentClass = await Class.findOne({
                     campus_id,
-                    student_ids: { $in: [student_id] }
+                    student_ids: { $in: [student_id] },
                 });
                 students.push({
                     ...student,
                     class_id: studentClass?.id,
-                    class_name: studentClass?.name || "Unknown"
+                    class_name: studentClass?.name || "Unknown",
                 });
             }
             return students;
@@ -502,7 +548,7 @@ export class BulkOperationsService {
                 allStudents.push({
                     ...student,
                     class_id: classData.id,
-                    class_name: classData.name
+                    class_name: classData.name,
                 });
             }
         }
@@ -520,7 +566,7 @@ export class BulkOperationsService {
         if (fee_ids && fee_ids.length > 0) {
             const fees = await Fee.find({
                 campus_id,
-                id: { $in: fee_ids }
+                id: { $in: fee_ids },
             });
             return fees.rows || [];
         }
@@ -529,7 +575,7 @@ export class BulkOperationsService {
         const fees = await Fee.find({
             campus_id,
             user_id: { $in: student_ids },
-            payment_status: { $in: ["unpaid", "partial", "overdue"] }
+            payment_status: { $in: ["unpaid", "partial", "overdue"] },
         });
 
         return fees.rows || [];
@@ -541,9 +587,11 @@ export class BulkOperationsService {
         student_id: string
     ): Promise<void> {
         try {
-            const { DiscountService } = await import("@/services/discount.service");
+            const { DiscountService } = await import(
+                "@/services/discount.service"
+            );
             const { Fee } = await import("@/models/fee.model");
-            
+
             const fee = await Fee.findById(fee_id);
             if (!fee) return;
 
@@ -576,8 +624,12 @@ export class BulkOperationsService {
         processed_by: string
     ): Promise<void> {
         const { Fee } = await import("@/models/fee.model");
-        const { PaymentTransaction } = await import("@/models/payment_transaction.model");
-        const { PaymentInvoice } = await import("@/models/payment_invoice.model");
+        const { PaymentTransaction } = await import(
+            "@/models/payment_transaction.model"
+        );
+        const { PaymentInvoice } = await import(
+            "@/models/payment_invoice.model"
+        );
 
         // Create transaction record
         const transaction: Partial<IPaymentTransaction> = {
@@ -594,8 +646,8 @@ export class BulkOperationsService {
                 gateway_response: {
                     processed_by,
                     processing_type: "bulk_admin",
-                    timestamp: new Date()
-                }
+                    timestamp: new Date(),
+                },
             },
             initiated_at: new Date(),
             completed_at: new Date(),
@@ -603,10 +655,10 @@ export class BulkOperationsService {
             invoice_generated: false,
             meta_data: {
                 bulk_processed: true,
-                processed_by
+                processed_by,
             },
             created_at: new Date(),
-            updated_at: new Date()
+            updated_at: new Date(),
         };
 
         const createdTransaction = await PaymentTransaction.create(transaction);
@@ -619,7 +671,7 @@ export class BulkOperationsService {
             is_paid: true,
             payment_date: new Date(),
             payment_mode: "admin_processed",
-            updated_at: new Date()
+            updated_at: new Date(),
         });
 
         // Generate invoice
@@ -632,9 +684,11 @@ export class BulkOperationsService {
         fee: IFeeData
     ): Promise<void> {
         try {
-            const { PaymentInvoice } = await import("@/models/payment_invoice.model");
+            const { PaymentInvoice } = await import(
+                "@/models/payment_invoice.model"
+            );
             const { UserService } = await import("@/services/users.service");
-            
+
             const student = await UserService.getUser(fee.user_id);
             const schoolData = await this.getSchoolData(campus_id);
 
@@ -651,10 +705,10 @@ export class BulkOperationsService {
                     school_details: schoolData,
                     student_details: student,
                     fee_breakdown: fee.items,
-                    payment_details: transaction
+                    payment_details: transaction,
                 },
                 status: "paid",
-                generated_at: new Date()
+                generated_at: new Date(),
             };
 
             await PaymentInvoice.create(invoice);
@@ -669,9 +723,12 @@ export class BulkOperationsService {
         student: any
     ): Promise<void> {
         try {
-            const { PaymentNotificationService } = await import("@/services/payment_notification.service");
-            const schoolData = await PaymentNotificationService.getSchoolDetails(campus_id);
-            
+            const { PaymentNotificationService } = await import(
+                "@/services/payment_notification.service"
+            );
+            const schoolData =
+                await PaymentNotificationService.getSchoolDetails(campus_id);
+
             await PaymentNotificationService.sendPaymentDueReminder(
                 campus_id,
                 fee,
@@ -690,19 +747,22 @@ export class BulkOperationsService {
         isCompleted: boolean
     ): Promise<void> {
         try {
-            const { PaymentNotificationService } = await import("@/services/payment_notification.service");
-            const schoolData = await PaymentNotificationService.getSchoolDetails(campus_id);
-            
+            const { PaymentNotificationService } = await import(
+                "@/services/payment_notification.service"
+            );
+            const schoolData =
+                await PaymentNotificationService.getSchoolDetails(campus_id);
+
             if (isCompleted) {
                 // Send payment success notification
                 const mockTransaction = {
                     id: `bulk_${Date.now()}`,
-                    amount: fee.due_amount
+                    amount: fee.due_amount,
                 };
                 const mockInvoice = {
-                    id: `inv_bulk_${Date.now()}`
+                    id: `inv_bulk_${Date.now()}`,
                 };
-                
+
                 await PaymentNotificationService.sendPaymentSuccessConfirmation(
                     campus_id,
                     mockTransaction as any,

@@ -48,7 +48,6 @@ export interface PaymentVerificationRequest {
 }
 
 export const PaymentGatewayService = {
-    
     /**
      * Create payment order with Razorpay
      */
@@ -78,7 +77,9 @@ export const PaymentGatewayService = {
             };
         } catch (error: any) {
             console.error("Razorpay order creation failed:", error);
-            throw new Error(`Razorpay order creation failed: ${error?.message || "Unknown error"}`);
+            throw new Error(
+                `Razorpay order creation failed: ${error?.message || "Unknown error"}`
+            );
         }
     },
 
@@ -102,7 +103,10 @@ export const PaymentGatewayService = {
 
             // Create hash
             const hashString = `${config.merchant_key}|${txnid}|${orderRequest.amount}|${productinfo}|${firstname}|${email}|||||||||||${config.merchant_salt}`;
-            const hash = crypto.createHash("sha512").update(hashString).digest("hex");
+            const hash = crypto
+                .createHash("sha512")
+                .update(hashString)
+                .digest("hex");
 
             const formData = {
                 key: config.merchant_key,
@@ -130,7 +134,9 @@ export const PaymentGatewayService = {
             };
         } catch (error: any) {
             console.error("PayU order creation failed:", error);
-            throw new Error(`PayU order creation failed: ${error?.message || "Unknown error"}`);
+            throw new Error(
+                `PayU order creation failed: ${error?.message || "Unknown error"}`
+            );
         }
     },
 
@@ -147,7 +153,7 @@ export const PaymentGatewayService = {
 
         try {
             const orderId = `CF_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
-            
+
             const orderData = {
                 order_id: orderId,
                 order_amount: orderRequest.amount,
@@ -174,7 +180,9 @@ export const PaymentGatewayService = {
             };
         } catch (error: any) {
             console.error("Cashfree order creation failed:", error);
-            throw new Error(`Cashfree order creation failed: ${error?.message || "Unknown error"}`);
+            throw new Error(
+                `Cashfree order creation failed: ${error?.message || "Unknown error"}`
+            );
         }
     },
 
@@ -208,7 +216,7 @@ export const PaymentGatewayService = {
      */
     verifyPayUPayment(
         config: PaymentGatewayConfig["payu"],
-        verification: PaymentVerificationRequest & { 
+        verification: PaymentVerificationRequest & {
             status: string;
             txnid: string;
             amount: string;
@@ -223,7 +231,10 @@ export const PaymentGatewayService = {
 
         try {
             const hashString = `${config.merchant_salt}|${verification.status}|||||||||||${verification.email}|${verification.firstname}|${verification.productinfo}|${verification.amount}|${verification.txnid}|${config.merchant_key}`;
-            const hash = crypto.createHash("sha512").update(hashString).digest("hex");
+            const hash = crypto
+                .createHash("sha512")
+                .update(hashString)
+                .digest("hex");
 
             return hash === verification.signature;
         } catch (error) {
@@ -258,11 +269,11 @@ export const PaymentGatewayService = {
      */
     getAvailableGateways(config: PaymentGatewayConfig): string[] {
         const gateways: string[] = [];
-        
+
         if (config.razorpay?.enabled) gateways.push("razorpay");
         if (config.payu?.enabled) gateways.push("payu");
         if (config.cashfree?.enabled) gateways.push("cashfree");
-        
+
         return gateways;
     },
 };

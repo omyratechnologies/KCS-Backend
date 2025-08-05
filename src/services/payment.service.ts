@@ -1,38 +1,30 @@
 import { Fee, IFeeData } from "@/models/fee.model";
-import { 
-    FeeCategory, 
-    IFeeCategory 
-} from "@/models/fee_category.model";
-import { 
-    FeeTemplate, 
-    IFeeTemplate 
-} from "@/models/fee_template.model";
-import { 
-    IPaymentInvoice, 
-    PaymentInvoice} from "@/models/payment_invoice.model";
-import { 
-    IPaymentTransaction, 
-    PaymentTransaction} from "@/models/payment_transaction.model";
-import { 
-    ISchoolBankDetails, 
-    SchoolBankDetails} from "@/models/school_bank_details.model";
+import { FeeCategory, IFeeCategory } from "@/models/fee_category.model";
+import { FeeTemplate, IFeeTemplate } from "@/models/fee_template.model";
+import {
+    IPaymentInvoice,
+    PaymentInvoice,
+} from "@/models/payment_invoice.model";
+import {
+    IPaymentTransaction,
+    PaymentTransaction,
+} from "@/models/payment_transaction.model";
+import {
+    ISchoolBankDetails,
+    SchoolBankDetails,
+} from "@/models/school_bank_details.model";
 
-import { 
-    PaymentGatewayCredentials 
-} from "./credential_encryption.service";
+import { PaymentGatewayCredentials } from "./credential_encryption.service";
 import PaymentErrorHandler from "./payment_error_handler.service";
-import { 
-    PaymentGatewayConfig, 
-    PaymentGatewayService, 
-    PaymentOrderRequest 
+import {
+    PaymentGatewayConfig,
+    PaymentGatewayService,
+    PaymentOrderRequest,
 } from "./payment_gateway.service";
 import PaymentSecurityMonitor from "./payment_security_monitor.service";
-import { 
-    SecurePaymentCredentialService 
-} from "./secure_payment_credential.service";
+import { SecurePaymentCredentialService } from "./secure_payment_credential.service";
 
 export class PaymentService {
-
     // ========================= SCHOOL BANK DETAILS =========================
 
     /**
@@ -43,7 +35,7 @@ export class PaymentService {
         bankData: Partial<ISchoolBankDetails>
     ): Promise<ISchoolBankDetails> {
         const startTime = Date.now();
-        
+
         // Log bank details operation attempt
         PaymentSecurityMonitor.logSecurityEvent({
             event_type: "bank_details_operation",
@@ -52,44 +44,53 @@ export class PaymentService {
                 operation: "create_or_update",
                 has_account_number: !!bankData.account_number,
                 has_ifsc: !!bankData.ifsc_code,
-                has_bank_name: !!bankData.bank_name
+                has_bank_name: !!bankData.bank_name,
             },
             severity: "low",
-            success: false
+            success: false,
         });
 
         try {
             // Validate required fields
             if (!campus_id) {
-                throw PaymentErrorHandler.createError("VAL_001", { missing_fields: { campus_id: true } });
+                throw PaymentErrorHandler.createError("VAL_001", {
+                    missing_fields: { campus_id: true },
+                });
             }
 
-            if (!bankData.account_number || !bankData.ifsc_code || !bankData.bank_name) {
+            if (
+                !bankData.account_number ||
+                !bankData.ifsc_code ||
+                !bankData.bank_name
+            ) {
                 throw PaymentErrorHandler.createError("VAL_001", {
                     missing_fields: {
                         account_number: !bankData.account_number,
                         ifsc_code: !bankData.ifsc_code,
-                        bank_name: !bankData.bank_name
-                    }
+                        bank_name: !bankData.bank_name,
+                    },
                 });
             }
 
             // Check if bank details already exist
             const existingBankDetails = await SchoolBankDetails.find({
                 campus_id,
-                is_active: true
+                is_active: true,
             });
 
             let result: ISchoolBankDetails;
             const executionTime = Date.now() - startTime;
 
-            if (existingBankDetails.rows && existingBankDetails.rows.length > 0) {
+            if (
+                existingBankDetails.rows &&
+                existingBankDetails.rows.length > 0
+            ) {
                 // Update existing details
                 result = await SchoolBankDetails.updateById(
                     existingBankDetails.rows[0].id,
                     {
                         ...bankData,
-                        updated_at: new Date()
+                        updated_at: new Date(),
                     }
                 );
 
@@ -99,10 +100,10 @@ export class PaymentService {
                     details: {
                         operation: "update",
                         bank_details_id: result.id,
-                        execution_time_ms: executionTime
+                        execution_time_ms: executionTime,
                     },
                     severity: "low",
-                    success: true
+                    success: true,
                 });
             } else {
                 // Create new bank details
@@ -113,7 +114,7 @@ export class PaymentService {
                     is_verified: false,
                     meta_data: bankData.meta_data || {},
                     created_at: new Date(),
-                    updated_at: new Date()
+                    updated_at: new Date(),
                 });
 
                 PaymentSecurityMonitor.logSecurityEvent({
@@ -122,28 +123,30 @@ export class PaymentService {
                     details: {
                         operation: "create",
                         bank_details_id: result.id,
-                        execution_time_ms: executionTime
+                        execution_time_ms: executionTime,
                     },
                     severity: "low",
-                    success: true
+                    success: true,
                 });
             }
 
             return result;
         } catch (error) {
             const executionTime = Date.now() - startTime;
-            
+
             PaymentSecurityMonitor.logSecurityEvent({
                 event_type: "bank_details_operation",
                 campus_id,
                 details: {
                     operation: "create_or_update",
                     execution_time_ms: executionTime,
-                    error_details: error instanceof Error ? error.message : String(error)
+                    error_details:
+                        error instanceof Error ? error.message : String(error),
                 },
                 severity: "medium",
                 success: false,
-                error_message: error instanceof Error ? error.message : String(error)
+                error_message:
+                    error instanceof Error ? error.message : String(error),
             });
 
             throw error;
@@ -153,15 +156,17 @@ export class PaymentService {
     /**
      * Get school bank details by campus
      */
-    static async getSchoolBankDetails(campus_id: string): Promise<ISchoolBankDetails | null> {
+    static async getSchoolBankDetails(
+        campus_id: string
+    ): Promise<ISchoolBankDetails | null> {
         try {
             const bankDetails = await SchoolBankDetails.find({
                 campus_id,
-                is_active: true
+                is_active: true,
             });
 
-            return bankDetails.rows && bankDetails.rows.length > 0 
-                ? bankDetails.rows[0] 
+            return bankDetails.rows && bankDetails.rows.length > 0
+                ? bankDetails.rows[0]
                 : null;
         } catch (error) {
             throw new Error(`Failed to get bank details: ${error}`);
@@ -184,7 +189,7 @@ export class PaymentService {
                 is_active: true,
                 meta_data: categoryData.meta_data || {},
                 created_at: new Date(),
-                updated_at: new Date()
+                updated_at: new Date(),
             });
         } catch (error) {
             throw new Error(`Failed to create fee category: ${error}`);
@@ -221,7 +226,7 @@ export class PaymentService {
         try {
             return await FeeCategory.updateById(category_id, {
                 ...updateData,
-                updated_at: new Date()
+                updated_at: new Date(),
             });
         } catch (error) {
             throw new Error(`Failed to update fee category: ${error}`);
@@ -244,7 +249,7 @@ export class PaymentService {
                 is_active: true,
                 meta_data: templateData.meta_data || {},
                 created_at: new Date(),
-                updated_at: new Date()
+                updated_at: new Date(),
             });
 
             // If auto_generate is true, generate fees for applicable students
@@ -281,7 +286,9 @@ export class PaymentService {
     /**
      * Generate fees from template
      */
-    static async generateFeesFromTemplate(template_id: string): Promise<IFeeData[]> {
+    static async generateFeesFromTemplate(
+        template_id: string
+    ): Promise<IFeeData[]> {
         try {
             const template = await FeeTemplate.findById(template_id);
             if (!template) {
@@ -289,9 +296,10 @@ export class PaymentService {
             }
 
             const fees: IFeeData[] = [];
-            const students = template.applicable_students.length > 0 
-                ? template.applicable_students 
-                : await this.getStudentsByClass(template.class_id);
+            const students =
+                template.applicable_students.length > 0
+                    ? template.applicable_students
+                    : await this.getStudentsByClass(template.class_id);
 
             for (const student_id of students) {
                 // Check if fee already exists for this student and template
@@ -299,7 +307,7 @@ export class PaymentService {
                     campus_id: template.campus_id,
                     user_id: student_id,
                     fee_template_id: template_id,
-                    academic_year: template.academic_year
+                    academic_year: template.academic_year,
                 });
 
                 if (!existingFee.rows || existingFee.rows.length === 0) {
@@ -309,14 +317,14 @@ export class PaymentService {
                         class_id: template.class_id,
                         academic_year: template.academic_year,
                         fee_template_id: template_id,
-                        items: template.fee_structure.map(item => ({
+                        items: template.fee_structure.map((item) => ({
                             category_id: item.category_id,
                             fee_type: item.category_name,
                             amount: item.amount,
                             name: item.category_name,
                             due_date: item.due_date,
                             is_mandatory: item.is_mandatory,
-                            late_fee_applicable: item.late_fee_applicable
+                            late_fee_applicable: item.late_fee_applicable,
                         })),
                         total_amount: template.total_amount,
                         paid_amount: 0,
@@ -329,9 +337,9 @@ export class PaymentService {
                         auto_late_fee: true,
                         reminder_sent: {
                             email_count: 0,
-                            sms_count: 0
+                            sms_count: 0,
                         },
-                        meta_data: {}
+                        meta_data: {},
                     };
 
                     const fee = await Fee.create(feeData);
@@ -359,13 +367,13 @@ export class PaymentService {
         amount: number,
         callback_url: string,
         cancel_url: string
-    ): Promise<{ 
-        transaction: IPaymentTransaction; 
+    ): Promise<{
+        transaction: IPaymentTransaction;
         payment_details: any;
         available_gateways: string[];
     }> {
         const startTime = Date.now();
-        
+
         // Log payment initiation attempt
         PaymentSecurityMonitor.logSecurityEvent({
             event_type: "payment_initiated",
@@ -376,22 +384,29 @@ export class PaymentService {
                 gateway,
                 amount,
                 parent_id,
-                callback_url
+                callback_url,
             },
             severity: "low",
-            success: false // Will be updated to true on success
+            success: false, // Will be updated to true on success
         });
 
         try {
             // Validate input parameters
             if (!campus_id || !fee_id || !student_id || !gateway) {
                 throw PaymentErrorHandler.createError("VAL_001", {
-                    missing_fields: { campus_id: !campus_id, fee_id: !fee_id, student_id: !student_id, gateway: !gateway }
+                    missing_fields: {
+                        campus_id: !campus_id,
+                        fee_id: !fee_id,
+                        student_id: !student_id,
+                        gateway: !gateway,
+                    },
                 });
             }
 
             if (amount <= 0) {
-                throw PaymentErrorHandler.createError("VAL_003", { provided_amount: amount });
+                throw PaymentErrorHandler.createError("VAL_003", {
+                    provided_amount: amount,
+                });
             }
 
             // Get school bank details
@@ -401,18 +416,25 @@ export class PaymentService {
             }
 
             // Get secure credentials
-            const gatewayCredentials = await SecurePaymentCredentialService.getSecureCredentials(campus_id);
+            const gatewayCredentials =
+                await SecurePaymentCredentialService.getSecureCredentials(
+                    campus_id
+                );
             if (!gatewayCredentials) {
-                throw PaymentErrorHandler.createError("GATEWAY_001", { campus_id, gateway });
+                throw PaymentErrorHandler.createError("GATEWAY_001", {
+                    campus_id,
+                    gateway,
+                });
             }
 
             const gatewayConfig = gatewayCredentials as any;
-            const availableGateways = PaymentGatewayService.getAvailableGateways(gatewayConfig);
+            const availableGateways =
+                PaymentGatewayService.getAvailableGateways(gatewayConfig);
 
             if (!availableGateways.includes(gateway)) {
-                throw PaymentErrorHandler.createError("GATEWAY_006", { 
-                    requested_gateway: gateway, 
-                    available_gateways: availableGateways 
+                throw PaymentErrorHandler.createError("GATEWAY_006", {
+                    requested_gateway: gateway,
+                    available_gateways: availableGateways,
                 });
             }
 
@@ -430,7 +452,7 @@ export class PaymentService {
                 initiated_at: new Date(),
                 webhook_verified: false,
                 invoice_generated: false,
-                meta_data: {}
+                meta_data: {},
             });
 
             // Create payment order with selected gateway
@@ -443,46 +465,52 @@ export class PaymentService {
                 fee_id,
                 campus_id,
                 callback_url,
-                cancel_url
+                cancel_url,
             };
 
             let paymentDetails;
             switch (gateway) {
                 case "razorpay": {
-                    paymentDetails = await PaymentGatewayService.createRazorpayOrder(
-                        gatewayConfig.razorpay as any,
-                        orderRequest
-                    );
+                    paymentDetails =
+                        await PaymentGatewayService.createRazorpayOrder(
+                            gatewayConfig.razorpay as any,
+                            orderRequest
+                        );
                     break;
                 }
                 case "payu": {
-                    paymentDetails = await PaymentGatewayService.createPayUOrder(
-                        gatewayConfig.payu as any,
-                        orderRequest
-                    );
+                    paymentDetails =
+                        await PaymentGatewayService.createPayUOrder(
+                            gatewayConfig.payu as any,
+                            orderRequest
+                        );
                     break;
                 }
                 case "cashfree": {
-                    paymentDetails = await PaymentGatewayService.createCashfreeOrder(
-                        gatewayConfig.cashfree as any,
-                        orderRequest
-                    );
+                    paymentDetails =
+                        await PaymentGatewayService.createCashfreeOrder(
+                            gatewayConfig.cashfree as any,
+                            orderRequest
+                        );
                     break;
                 }
                 default: {
-                    throw PaymentErrorHandler.createError("GATEWAY_006", { 
-                        gateway, 
-                        supported_gateways: ["razorpay", "payu", "cashfree"] 
+                    throw PaymentErrorHandler.createError("GATEWAY_006", {
+                        gateway,
+                        supported_gateways: ["razorpay", "payu", "cashfree"],
                     });
                 }
             }
 
             // Update transaction with gateway details
-            const updatedTransaction = await PaymentTransaction.updateById(transaction.id, {
-                gateway_order_id: paymentDetails.gateway_order_id,
-                payment_details: paymentDetails,
-                updated_at: new Date()
-            });
+            const updatedTransaction = await PaymentTransaction.updateById(
+                transaction.id,
+                {
+                    gateway_order_id: paymentDetails.gateway_order_id,
+                    payment_details: paymentDetails,
+                    updated_at: new Date(),
+                }
+            );
 
             // Log successful payment initiation
             const executionTime = Date.now() - startTime;
@@ -496,10 +524,10 @@ export class PaymentService {
                     amount,
                     transaction_id: transaction.id,
                     gateway_order_id: paymentDetails.gateway_order_id,
-                    execution_time_ms: executionTime
+                    execution_time_ms: executionTime,
                 },
                 severity: "low",
-                success: true
+                success: true,
             });
 
             PaymentSecurityMonitor.logAuditEvent({
@@ -513,21 +541,20 @@ export class PaymentService {
                     fee_id,
                     parent_id,
                     callback_url,
-                    gateway_order_id: paymentDetails.gateway_order_id
+                    gateway_order_id: paymentDetails.gateway_order_id,
                 },
                 success: true,
-                execution_time_ms: executionTime
+                execution_time_ms: executionTime,
             });
 
             return {
                 transaction: updatedTransaction,
                 payment_details: paymentDetails,
-                available_gateways: availableGateways
+                available_gateways: availableGateways,
             };
-
         } catch (error) {
             const executionTime = Date.now() - startTime;
-            
+
             // Log failed payment initiation
             PaymentSecurityMonitor.logSecurityEvent({
                 event_type: "payment_initiated",
@@ -538,11 +565,13 @@ export class PaymentService {
                     gateway,
                     amount,
                     execution_time_ms: executionTime,
-                    error_details: error instanceof Error ? error.message : String(error)
+                    error_details:
+                        error instanceof Error ? error.message : String(error),
                 },
                 severity: "medium",
                 success: false,
-                error_message: error instanceof Error ? error.message : String(error)
+                error_message:
+                    error instanceof Error ? error.message : String(error),
             });
 
             // Re-throw the error for the controller to handle
@@ -558,40 +587,50 @@ export class PaymentService {
         payment_id: string,
         signature: string,
         additionalData?: any
-    ): Promise<{ success: boolean; transaction: IPaymentTransaction; invoice?: IPaymentInvoice }> {
+    ): Promise<{
+        success: boolean;
+        transaction: IPaymentTransaction;
+        invoice?: IPaymentInvoice;
+    }> {
         const startTime = Date.now();
-        
+
         try {
             // Validate input parameters
             if (!transaction_id || !payment_id || !signature) {
                 throw PaymentErrorHandler.createError("VAL_001", {
-                    missing_fields: { 
-                        transaction_id: !transaction_id, 
-                        payment_id: !payment_id, 
-                        signature: !signature 
-                    }
+                    missing_fields: {
+                        transaction_id: !transaction_id,
+                        payment_id: !payment_id,
+                        signature: !signature,
+                    },
                 });
             }
 
-            const transaction = await PaymentTransaction.findById(transaction_id);
+            const transaction =
+                await PaymentTransaction.findById(transaction_id);
             if (!transaction) {
-                throw PaymentErrorHandler.createError("TRANS_001", { transaction_id });
+                throw PaymentErrorHandler.createError("TRANS_001", {
+                    transaction_id,
+                });
             }
 
             // Check if transaction is already processed
             if (transaction.status === "success") {
-                throw PaymentErrorHandler.createError("TRANS_002", { 
-                    transaction_id, 
-                    current_status: transaction.status 
+                throw PaymentErrorHandler.createError("TRANS_002", {
+                    transaction_id,
+                    current_status: transaction.status,
                 });
             }
 
             // Get secure credentials
-            const gatewayCredentials = await SecurePaymentCredentialService.getSecureCredentials(transaction.campus_id);
+            const gatewayCredentials =
+                await SecurePaymentCredentialService.getSecureCredentials(
+                    transaction.campus_id
+                );
             if (!gatewayCredentials) {
-                throw PaymentErrorHandler.createError("GATEWAY_001", { 
+                throw PaymentErrorHandler.createError("GATEWAY_001", {
                     campus_id: transaction.campus_id,
-                    gateway: transaction.payment_gateway 
+                    gateway: transaction.payment_gateway,
                 });
             }
 
@@ -608,7 +647,7 @@ export class PaymentService {
                             payment_id,
                             order_id: transaction.gateway_order_id!,
                             signature,
-                            amount: transaction.amount
+                            amount: transaction.amount,
                         }
                     );
                     break;
@@ -622,7 +661,7 @@ export class PaymentService {
                             payment_id,
                             order_id: transaction.gateway_order_id!,
                             signature,
-                            amount: transaction.amount
+                            amount: transaction.amount,
                         }
                     );
                     break;
@@ -635,7 +674,7 @@ export class PaymentService {
                             payment_id,
                             order_id: transaction.gateway_order_id!,
                             signature,
-                            amount: transaction.amount
+                            amount: transaction.amount,
                         }
                     );
                     break;
@@ -647,17 +686,24 @@ export class PaymentService {
 
             if (isVerified) {
                 // Update transaction status
-                const updatedTransaction = await PaymentTransaction.updateById(transaction_id, {
-                    gateway_payment_id: payment_id,
-                    status: "success",
-                    completed_at: new Date(),
-                    webhook_verified: true,
-                    payment_details: {
-                        ...transaction.payment_details,
-                        verification_data: { payment_id, signature, ...additionalData }
-                    },
-                    updated_at: new Date()
-                });
+                const updatedTransaction = await PaymentTransaction.updateById(
+                    transaction_id,
+                    {
+                        gateway_payment_id: payment_id,
+                        status: "success",
+                        completed_at: new Date(),
+                        webhook_verified: true,
+                        payment_details: {
+                            ...transaction.payment_details,
+                            verification_data: {
+                                payment_id,
+                                signature,
+                                ...additionalData,
+                            },
+                        },
+                        updated_at: new Date(),
+                    }
+                );
 
                 // Update fee status
                 await Fee.updateById(transaction.fee_id, {
@@ -666,7 +712,7 @@ export class PaymentService {
                     is_paid: true,
                     payment_date: new Date(),
                     payment_mode: transaction.payment_gateway,
-                    updated_at: new Date()
+                    updated_at: new Date(),
                 });
 
                 // Generate invoice
@@ -683,10 +729,10 @@ export class PaymentService {
                         payment_id,
                         gateway: transaction.payment_gateway,
                         amount: transaction.amount,
-                        execution_time_ms: executionTime
+                        execution_time_ms: executionTime,
                     },
                     severity: "low",
-                    success: true
+                    success: true,
                 });
 
                 PaymentSecurityMonitor.logAuditEvent({
@@ -699,23 +745,30 @@ export class PaymentService {
                     details: {
                         payment_id,
                         signature_verified: true,
-                        invoice_id: invoice.id
+                        invoice_id: invoice.id,
                     },
                     success: true,
-                    execution_time_ms: executionTime
+                    execution_time_ms: executionTime,
                 });
 
-                return { success: true, transaction: updatedTransaction, invoice };
+                return {
+                    success: true,
+                    transaction: updatedTransaction,
+                    invoice,
+                };
             } else {
                 // Update transaction as failed
-                const updatedTransaction = await PaymentTransaction.updateById(transaction_id, {
-                    status: "failed",
-                    payment_details: {
-                        ...transaction.payment_details,
-                        failure_reason: "Payment verification failed"
-                    },
-                    updated_at: new Date()
-                });
+                const updatedTransaction = await PaymentTransaction.updateById(
+                    transaction_id,
+                    {
+                        status: "failed",
+                        payment_details: {
+                            ...transaction.payment_details,
+                            failure_reason: "Payment verification failed",
+                        },
+                        updated_at: new Date(),
+                    }
+                );
 
                 // Log failed payment verification
                 const executionTime = Date.now() - startTime;
@@ -729,23 +782,23 @@ export class PaymentService {
                         gateway: transaction.payment_gateway,
                         amount: transaction.amount,
                         failure_reason: "signature_verification_failed",
-                        execution_time_ms: executionTime
+                        execution_time_ms: executionTime,
                     },
                     severity: "high",
                     success: false,
-                    error_message: "Payment verification failed - invalid signature"
+                    error_message:
+                        "Payment verification failed - invalid signature",
                 });
 
                 throw PaymentErrorHandler.createError("GATEWAY_005", {
                     transaction_id,
                     payment_id,
-                    gateway: transaction.payment_gateway
+                    gateway: transaction.payment_gateway,
                 });
             }
-
         } catch (error) {
             const executionTime = Date.now() - startTime;
-            
+
             // Log verification error
             PaymentSecurityMonitor.logSecurityEvent({
                 event_type: "payment_verified",
@@ -754,11 +807,13 @@ export class PaymentService {
                     transaction_id,
                     payment_id,
                     execution_time_ms: executionTime,
-                    error_details: error instanceof Error ? error.message : String(error)
+                    error_details:
+                        error instanceof Error ? error.message : String(error),
                 },
                 severity: "high",
                 success: false,
-                error_message: error instanceof Error ? error.message : String(error)
+                error_message:
+                    error instanceof Error ? error.message : String(error),
             });
 
             // Re-throw the error for the controller to handle
@@ -769,9 +824,12 @@ export class PaymentService {
     /**
      * Generate invoice for payment
      */
-    static async generateInvoice(transaction_id: string): Promise<IPaymentInvoice> {
+    static async generateInvoice(
+        transaction_id: string
+    ): Promise<IPaymentInvoice> {
         try {
-            const transaction = await PaymentTransaction.findById(transaction_id);
+            const transaction =
+                await PaymentTransaction.findById(transaction_id);
             if (!transaction) {
                 throw new Error("Transaction not found");
             }
@@ -785,8 +843,12 @@ export class PaymentService {
             const invoiceNumber = `INV-${transaction.campus_id}-${Date.now()}`;
 
             // Get student and school details (this would need actual implementation)
-            const studentDetails = await this.getStudentDetails(transaction.student_id);
-            const schoolDetails = await this.getSchoolDetails(transaction.campus_id);
+            const studentDetails = await this.getStudentDetails(
+                transaction.student_id
+            );
+            const schoolDetails = await this.getSchoolDetails(
+                transaction.campus_id
+            );
 
             const invoice = await PaymentInvoice.create({
                 campus_id: transaction.campus_id,
@@ -802,39 +864,38 @@ export class PaymentService {
                     discount_amount: fee.discount_amount,
                     late_fee_amount: fee.late_fee_amount,
                     tax_amount: 0, // Calculate if applicable
-                    total_amount: transaction.amount
+                    total_amount: transaction.amount,
                 },
                 payment_details: {
                     amount_paid: transaction.amount,
                     payment_date: transaction.completed_at,
                     payment_method: transaction.payment_gateway,
-                    transaction_reference: transaction.gateway_payment_id
+                    transaction_reference: transaction.gateway_payment_id,
                 },
                 student_details: studentDetails,
                 school_details: schoolDetails,
-                fee_breakdown: fee.items.map(item => ({
+                fee_breakdown: fee.items.map((item) => ({
                     category_name: item.name,
                     amount: item.amount,
-                    description: item.fee_type
+                    description: item.fee_type,
                 })),
                 status: "generated",
                 sent_notifications: {
                     email_sent: false,
                     sms_sent: false,
-                    whatsapp_sent: false
+                    whatsapp_sent: false,
                 },
-                meta_data: {}
+                meta_data: {},
             });
 
             // Update transaction with invoice generated flag
             await PaymentTransaction.updateById(transaction_id, {
                 invoice_generated: true,
                 receipt_number: invoiceNumber,
-                updated_at: new Date()
+                updated_at: new Date(),
             });
 
             return invoice;
-
         } catch (error) {
             throw new Error(`Failed to generate invoice: ${error}`);
         }
@@ -858,13 +919,14 @@ export class PaymentService {
             if (student_id) query.user_id = student_id;
 
             const fees = await Fee.find(query);
-            
+
             const transactionQuery: any = { campus_id };
             if (student_id) transactionQuery.student_id = student_id;
             if (parent_id) transactionQuery.parent_id = parent_id;
             if (status) transactionQuery.status = status;
 
-            const transactions = await PaymentTransaction.find(transactionQuery);
+            const transactions =
+                await PaymentTransaction.find(transactionQuery);
 
             const invoiceQuery: any = { campus_id };
             if (student_id) invoiceQuery.student_id = student_id;
@@ -875,9 +937,8 @@ export class PaymentService {
             return {
                 fees: fees.rows || [],
                 transactions: transactions.rows || [],
-                invoices: invoices.rows || []
+                invoices: invoices.rows || [],
             };
-
         } catch (error) {
             throw new Error(`Failed to get payment history: ${error}`);
         }
@@ -895,7 +956,7 @@ export class PaymentService {
         enabled: boolean = true
     ): Promise<ISchoolBankDetails> {
         const startTime = Date.now();
-        
+
         // Log gateway configuration attempt
         PaymentSecurityMonitor.logSecurityEvent({
             event_type: "credential_modified",
@@ -904,10 +965,10 @@ export class PaymentService {
                 gateway,
                 operation: "configure_gateway",
                 enabled,
-                has_credentials: !!credentials
+                has_credentials: !!credentials,
             },
             severity: "medium",
-            success: false
+            success: false,
         });
 
         try {
@@ -917,8 +978,8 @@ export class PaymentService {
                     missing_fields: {
                         campus_id: !campus_id,
                         gateway: !gateway,
-                        credentials: !credentials
-                    }
+                        credentials: !credentials,
+                    },
                 });
             }
 
@@ -933,15 +994,16 @@ export class PaymentService {
             // Prepare credentials for secure storage
             const gatewayCredentials = {
                 ...credentials,
-                enabled
+                enabled,
             };
 
             // Store securely
-            const result = await SecurePaymentCredentialService.updateGatewayCredentials(
-                campus_id,
-                gateway,
-                gatewayCredentials
-            );
+            const result =
+                await SecurePaymentCredentialService.updateGatewayCredentials(
+                    campus_id,
+                    gateway,
+                    gatewayCredentials
+                );
 
             const executionTime = Date.now() - startTime;
 
@@ -953,10 +1015,10 @@ export class PaymentService {
                     gateway,
                     operation: "configure_gateway",
                     enabled,
-                    execution_time_ms: executionTime
+                    execution_time_ms: executionTime,
                 },
                 severity: "medium",
-                success: true
+                success: true,
             });
 
             PaymentSecurityMonitor.logAuditEvent({
@@ -965,16 +1027,16 @@ export class PaymentService {
                 gateway,
                 details: {
                     enabled,
-                    credentials_updated: true
+                    credentials_updated: true,
                 },
                 success: true,
-                execution_time_ms: executionTime
+                execution_time_ms: executionTime,
             });
 
             return result;
         } catch (error) {
             const executionTime = Date.now() - startTime;
-            
+
             PaymentSecurityMonitor.logSecurityEvent({
                 event_type: "credential_modified",
                 campus_id,
@@ -982,11 +1044,13 @@ export class PaymentService {
                     gateway,
                     operation: "configure_gateway",
                     execution_time_ms: executionTime,
-                    error_details: error instanceof Error ? error.message : String(error)
+                    error_details:
+                        error instanceof Error ? error.message : String(error),
                 },
                 severity: "high",
                 success: false,
-                error_message: error instanceof Error ? error.message : String(error)
+                error_message:
+                    error instanceof Error ? error.message : String(error),
             });
 
             throw error;
@@ -1001,42 +1065,50 @@ export class PaymentService {
         gateway: "razorpay" | "payu" | "cashfree"
     ): Promise<{ success: boolean; message: string; details?: any }> {
         const startTime = Date.now();
-        
+
         // Log gateway test attempt
         PaymentSecurityMonitor.logSecurityEvent({
             event_type: "gateway_test",
             campus_id,
             details: {
                 gateway,
-                operation: "test_configuration"
+                operation: "test_configuration",
             },
             severity: "low",
-            success: false
+            success: false,
         });
 
         try {
             // Validate input parameters
             if (!campus_id || !gateway) {
                 const error = PaymentErrorHandler.createError("VAL_001", {
-                    missing_fields: { campus_id: !campus_id, gateway: !gateway }
+                    missing_fields: {
+                        campus_id: !campus_id,
+                        gateway: !gateway,
+                    },
                 });
-                const errorResponse = PaymentErrorHandler.formatErrorResponse(error);
-                return { 
-                    success: false, 
-                    message: errorResponse.error.message 
+                const errorResponse =
+                    PaymentErrorHandler.formatErrorResponse(error);
+                return {
+                    success: false,
+                    message: errorResponse.error.message,
                 };
             }
 
             const bankDetails = await this.getSchoolBankDetails(campus_id);
             if (!bankDetails) {
-                return { success: false, message: "School bank details not found" };
+                return {
+                    success: false,
+                    message: "School bank details not found",
+                };
             }
 
             // Get secure credentials
-            const gatewayConfig = await SecurePaymentCredentialService.getGatewayCredentials(
-                campus_id,
-                gateway
-            );
+            const gatewayConfig =
+                await SecurePaymentCredentialService.getGatewayCredentials(
+                    campus_id,
+                    gateway
+                );
 
             if (!gatewayConfig) {
                 return { success: false, message: `${gateway} not configured` };
@@ -1050,7 +1122,8 @@ export class PaymentService {
             let testResult;
             switch (gateway) {
                 case "razorpay": {
-                    testResult = await this.testRazorpayConnection(gatewayConfig);
+                    testResult =
+                        await this.testRazorpayConnection(gatewayConfig);
                     break;
                 }
                 case "payu": {
@@ -1058,7 +1131,8 @@ export class PaymentService {
                     break;
                 }
                 case "cashfree": {
-                    testResult = await this.testCashfreeConnection(gatewayConfig);
+                    testResult =
+                        await this.testCashfreeConnection(gatewayConfig);
                     break;
                 }
                 default: {
@@ -1072,7 +1146,7 @@ export class PaymentService {
                 gateway,
                 {
                     last_tested: new Date(),
-                    test_status: testResult.success ? "success" : "failed"
+                    test_status: testResult.success ? "success" : "failed",
                 }
             );
 
@@ -1086,10 +1160,10 @@ export class PaymentService {
                     gateway,
                     operation: "test_configuration",
                     test_success: testResult.success,
-                    execution_time_ms: executionTime
+                    execution_time_ms: executionTime,
                 },
                 severity: testResult.success ? "low" : "medium",
-                success: testResult.success
+                success: testResult.success,
             });
 
             PaymentSecurityMonitor.logAuditEvent({
@@ -1098,16 +1172,16 @@ export class PaymentService {
                 gateway,
                 details: {
                     test_result: testResult.success,
-                    test_message: testResult.message
+                    test_message: testResult.message,
                 },
                 success: testResult.success,
-                execution_time_ms: executionTime
+                execution_time_ms: executionTime,
             });
 
             return testResult;
         } catch (error) {
             const executionTime = Date.now() - startTime;
-            
+
             PaymentSecurityMonitor.logSecurityEvent({
                 event_type: "gateway_test",
                 campus_id,
@@ -1115,17 +1189,19 @@ export class PaymentService {
                     gateway,
                     operation: "test_configuration",
                     execution_time_ms: executionTime,
-                    error_details: error instanceof Error ? error.message : String(error)
+                    error_details:
+                        error instanceof Error ? error.message : String(error),
                 },
                 severity: "medium",
                 success: false,
-                error_message: error instanceof Error ? error.message : String(error)
+                error_message:
+                    error instanceof Error ? error.message : String(error),
             });
 
-            return { 
-                success: false, 
+            return {
+                success: false,
                 message: `Gateway test failed: ${error}`,
-                details: { error: String(error) }
+                details: { error: String(error) },
             };
         }
     }
@@ -1145,11 +1221,14 @@ export class PaymentService {
             }
 
             // Get gateway status (non-sensitive data)
-            const gatewayStatus = await SecurePaymentCredentialService.getGatewayStatus(campus_id);
-            
+            const gatewayStatus =
+                await SecurePaymentCredentialService.getGatewayStatus(
+                    campus_id
+                );
+
             const available = Object.keys(gatewayStatus || {});
-            const enabled = available.filter(gateway => 
-                gatewayStatus[gateway]?.enabled === true
+            const enabled = available.filter(
+                (gateway) => gatewayStatus[gateway]?.enabled === true
             );
 
             // Return configurations without sensitive data
@@ -1160,14 +1239,14 @@ export class PaymentService {
                     enabled: status?.enabled || false,
                     configured: status?.configured || false,
                     last_tested: status?.last_tested || null,
-                    test_status: status?.test_status || "untested"
+                    test_status: status?.test_status || "untested",
                 };
             }
 
             return {
                 available,
                 enabled,
-                configurations: safeConfigurations
+                configurations: safeConfigurations,
             };
         } catch (error) {
             throw new Error(`Failed to get available gateways: ${error}`);
@@ -1189,10 +1268,11 @@ export class PaymentService {
             }
 
             // Get current credentials
-            const gatewayConfig = await SecurePaymentCredentialService.getGatewayCredentials(
-                campus_id,
-                gateway
-            );
+            const gatewayConfig =
+                await SecurePaymentCredentialService.getGatewayCredentials(
+                    campus_id,
+                    gateway
+                );
 
             if (!gatewayConfig) {
                 throw new Error(`${gateway} is not configured`);
@@ -1200,9 +1280,14 @@ export class PaymentService {
 
             // If enabling, test the configuration first
             if (enabled) {
-                const testResult = await this.testGatewayConfiguration(campus_id, gateway);
+                const testResult = await this.testGatewayConfiguration(
+                    campus_id,
+                    gateway
+                );
                 if (!testResult.success) {
-                    throw new Error(`Cannot enable ${gateway}: ${testResult.message}`);
+                    throw new Error(
+                        `Cannot enable ${gateway}: ${testResult.message}`
+                    );
                 }
             }
 
@@ -1210,14 +1295,15 @@ export class PaymentService {
             const updatedCredentials = {
                 ...gatewayConfig,
                 enabled,
-                last_modified: new Date()
+                last_modified: new Date(),
             };
 
-            const updated = await SecurePaymentCredentialService.updateGatewayCredentials(
-                campus_id,
-                gateway,
-                updatedCredentials
-            );
+            const updated =
+                await SecurePaymentCredentialService.updateGatewayCredentials(
+                    campus_id,
+                    gateway,
+                    updatedCredentials
+                );
 
             // Update gateway status
             await SecurePaymentCredentialService.updateGatewayStatus(
@@ -1252,7 +1338,9 @@ export class PaymentService {
 
             case "payu": {
                 if (!credentials.merchant_key || !credentials.merchant_salt) {
-                    throw new Error("PayU requires merchant_key and merchant_salt");
+                    throw new Error(
+                        "PayU requires merchant_key and merchant_salt"
+                    );
                 }
                 break;
             }
@@ -1273,28 +1361,33 @@ export class PaymentService {
     /**
      * Test Razorpay connection
      */
-    private static async testRazorpayConnection(config: any): Promise<{ success: boolean; message: string; details?: any }> {
+    private static async testRazorpayConnection(
+        config: any
+    ): Promise<{ success: boolean; message: string; details?: any }> {
         try {
             // This would make an actual API call to Razorpay to test credentials
             // For now, we'll just validate the format
             if (!config.key_id || !config.key_secret) {
-                return { success: false, message: "Missing Razorpay credentials" };
+                return {
+                    success: false,
+                    message: "Missing Razorpay credentials",
+                };
             }
 
             // Here you would make an actual test API call to Razorpay
             // const razorpay = new Razorpay({ key_id: config.key_id, key_secret: config.key_secret });
             // const testOrder = await razorpay.orders.create({ amount: 100, currency: 'INR' });
 
-            return { 
-                success: true, 
+            return {
+                success: true,
                 message: "Razorpay connection successful",
-                details: { gateway: "razorpay", tested_at: new Date() }
+                details: { gateway: "razorpay", tested_at: new Date() },
             };
         } catch (error) {
-            return { 
-                success: false, 
+            return {
+                success: false,
                 message: `Razorpay test failed: ${error}`,
-                details: { error: String(error) }
+                details: { error: String(error) },
             };
         }
     }
@@ -1302,7 +1395,9 @@ export class PaymentService {
     /**
      * Test PayU connection
      */
-    private static async testPayUConnection(config: any): Promise<{ success: boolean; message: string; details?: any }> {
+    private static async testPayUConnection(
+        config: any
+    ): Promise<{ success: boolean; message: string; details?: any }> {
         try {
             if (!config.merchant_key || !config.merchant_salt) {
                 return { success: false, message: "Missing PayU credentials" };
@@ -1312,19 +1407,21 @@ export class PaymentService {
             // Test hash generation
             const testHash = require("node:crypto")
                 .createHash("sha512")
-                .update(`${config.merchant_key}|test|100|test|test|test@test.com|||||||||||${config.merchant_salt}`)
+                .update(
+                    `${config.merchant_key}|test|100|test|test|test@test.com|||||||||||${config.merchant_salt}`
+                )
                 .digest("hex");
 
-            return { 
-                success: true, 
+            return {
+                success: true,
                 message: "PayU connection successful",
-                details: { gateway: "payu", tested_at: new Date() }
+                details: { gateway: "payu", tested_at: new Date() },
             };
         } catch (error) {
-            return { 
-                success: false, 
+            return {
+                success: false,
                 message: `PayU test failed: ${error}`,
-                details: { error: String(error) }
+                details: { error: String(error) },
             };
         }
     }
@@ -1332,23 +1429,28 @@ export class PaymentService {
     /**
      * Test Cashfree connection
      */
-    private static async testCashfreeConnection(config: any): Promise<{ success: boolean; message: string; details?: any }> {
+    private static async testCashfreeConnection(
+        config: any
+    ): Promise<{ success: boolean; message: string; details?: any }> {
         try {
             if (!config.app_id || !config.secret_key) {
-                return { success: false, message: "Missing Cashfree credentials" };
+                return {
+                    success: false,
+                    message: "Missing Cashfree credentials",
+                };
             }
 
             // Here you would make an actual test API call to Cashfree
-            return { 
-                success: true, 
+            return {
+                success: true,
                 message: "Cashfree connection successful",
-                details: { gateway: "cashfree", tested_at: new Date() }
+                details: { gateway: "cashfree", tested_at: new Date() },
             };
         } catch (error) {
-            return { 
-                success: false, 
+            return {
+                success: false,
                 message: `Cashfree test failed: ${error}`,
-                details: { error: String(error) }
+                details: { error: String(error) },
             };
         }
     }
@@ -1356,7 +1458,10 @@ export class PaymentService {
     /**
      * Check if gateway is fully configured
      */
-    private static isGatewayFullyConfigured(gateway: string, config: any): boolean {
+    private static isGatewayFullyConfigured(
+        gateway: string,
+        config: any
+    ): boolean {
         switch (gateway) {
             case "razorpay": {
                 return !!(config.key_id && config.key_secret);
@@ -1378,15 +1483,17 @@ export class PaymentService {
     /**
      * Get students by class (using existing class service)
      */
-    private static async getStudentsByClass(class_id: string): Promise<string[]> {
+    private static async getStudentsByClass(
+        class_id: string
+    ): Promise<string[]> {
         try {
             const { Class } = await import("@/models/class.model");
             const classData = await Class.findById(class_id);
-            
+
             if (!classData || !classData.is_active || classData.is_deleted) {
                 throw new Error("Class not found or inactive");
             }
-            
+
             return classData.student_ids || [];
         } catch (error) {
             throw new Error(`Failed to get students by class: ${error}`);
@@ -1400,11 +1507,15 @@ export class PaymentService {
         try {
             const { UserService } = await import("@/services/users.service");
             const student = await UserService.getUser(student_id);
-            
-            if (!student || student.user_type !== "Student" || !student.is_active) {
+
+            if (
+                !student ||
+                student.user_type !== "Student" ||
+                !student.is_active
+            ) {
                 throw new Error("Student not found or inactive");
             }
-            
+
             return {
                 id: student.id,
                 name: `${student.first_name} ${student.last_name}`,
@@ -1412,7 +1523,7 @@ export class PaymentService {
                 phone: student.phone,
                 user_id: student.user_id,
                 campus_id: student.campus_id,
-                meta_data: student.meta_data
+                meta_data: student.meta_data,
             };
         } catch (error) {
             throw new Error(`Failed to get student details: ${error}`);
@@ -1426,17 +1537,17 @@ export class PaymentService {
         try {
             const { Campus } = await import("@/models/campus.model");
             const campus = await Campus.findById(campus_id);
-            
+
             if (!campus || !campus.is_active || campus.is_deleted) {
                 throw new Error("Campus not found or inactive");
             }
-            
+
             return {
                 id: campus.id,
                 name: campus.name,
                 address: campus.address,
                 domain: campus.domain,
-                meta_data: campus.meta_data
+                meta_data: campus.meta_data,
             };
         } catch (error) {
             throw new Error(`Failed to get campus details: ${error}`);

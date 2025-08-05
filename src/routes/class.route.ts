@@ -4,15 +4,20 @@ import { resolver, validator as zValidator } from "hono-openapi/zod";
 import { z } from "zod";
 
 import { ClassController } from "@/controllers/class.controller";
-import {    assignStudentsRequestBodySchema,
-    assignTeachersRequestBodySchema,    classSchema,
-    classSubjectSchema,    createClassRequestBodySchema,
+import {
+    assignStudentsRequestBodySchema,
+    assignTeachersRequestBodySchema,
+    classSchema,
+    classSubjectSchema,
+    createClassRequestBodySchema,
     createClassResponseSchema,
     createClassSubjectRequestBodySchema,
     createClassSubjectResponseSchema,
-    deleteResponseSchema,    getClassesResponseSchema,
+    deleteResponseSchema,
+    getClassesResponseSchema,
     getClassSubjectsResponseSchema,
-    getStudentsByClassIdResponseSchema,    updateClassRequestBodySchema,
+    getStudentsByClassIdResponseSchema,
+    updateClassRequestBodySchema,
     updateClassResponseSchema,
     updateClassSubjectRequestBodySchema,
     updateClassSubjectResponseSchema,
@@ -97,7 +102,8 @@ app.get(
         tags: ["Class"],
         operationId: "getStudentsByYearAndClass",
         summary: "Get students by academic year and optional class filter",
-        description: "Retrieves all students for a specific academic year, optionally filtered by class_id",
+        description:
+            "Retrieves all students for a specific academic year, optionally filtered by class_id",
         parameters: [
             {
                 name: "academic_year",
@@ -105,16 +111,17 @@ app.get(
                 required: true,
                 schema: { type: "string" },
                 description: "Academic year (e.g., '2023-2024')",
-                example: "2023-2024"
+                example: "2023-2024",
             },
             {
                 name: "class_id",
                 in: "query",
                 required: false,
                 schema: { type: "string" },
-                description: "Optional class ID to filter students by specific class",
-                example: "class123"
-            }
+                description:
+                    "Optional class ID to filter students by specific class",
+                example: "class123",
+            },
         ],
         responses: {
             200: {
@@ -135,18 +142,20 @@ app.get(
                                             email: { type: "string" },
                                             phone: { type: "string" },
                                             user_type: { type: "string" },
-                                            campus_id: { type: "string" }
-                                        }
-                                    }
+                                            campus_id: { type: "string" },
+                                        },
+                                    },
                                 },
                                 academic_year: { type: "string" },
                                 total_students: { type: "number" },
                                 classes_included: {
                                     type: "array",
-                                    items: { $ref: "#/components/schemas/Class" }
-                                }
-                            }
-                        }
+                                    items: {
+                                        $ref: "#/components/schemas/Class",
+                                    },
+                                },
+                            },
+                        },
                     },
                 },
             },
@@ -219,7 +228,7 @@ app.get(
                 required: true,
                 schema: { type: "string" },
                 description: "Class ID",
-                example: "class123"
+                example: "class123",
             },
         ],
         responses: {
@@ -652,7 +661,8 @@ app.post(
         tags: ["Class"],
         operationId: "assignStudentsToClass",
         summary: "Assign students to a class",
-        description: "Assigns one or more students to a specific class with duplicate prevention",
+        description:
+            "Assigns one or more students to a specific class with duplicate prevention",
         parameters: [
             {
                 name: "class_id",
@@ -667,14 +677,18 @@ app.post(
                 description: "Students assigned successfully",
                 content: {
                     "application/json": {
-                        schema: resolver(z.object({
-                            message: z.string(),
-                            data: z.array(z.object({
-                                student_id: z.string(),
-                                class_id: z.string(),
-                                assigned_at: z.string(),
-                            })),
-                        })),
+                        schema: resolver(
+                            z.object({
+                                message: z.string(),
+                                data: z.array(
+                                    z.object({
+                                        student_id: z.string(),
+                                        class_id: z.string(),
+                                        assigned_at: z.string(),
+                                    })
+                                ),
+                            })
+                        ),
                     },
                 },
             },
@@ -731,19 +745,24 @@ app.delete(
                 description: "Students removed successfully",
                 content: {
                     "application/json": {
-                        schema: resolver(z.object({
-                            message: z.string(),
-                            data: z.array(z.object({
-                                student_id: z.string(),
-                                class_id: z.string(),
-                                removed_at: z.string(),
-                            })),
-                        })),
+                        schema: resolver(
+                            z.object({
+                                message: z.string(),
+                                data: z.array(
+                                    z.object({
+                                        student_id: z.string(),
+                                        class_id: z.string(),
+                                        removed_at: z.string(),
+                                    })
+                                ),
+                            })
+                        ),
                     },
                 },
             },
             400: {
-                description: "Bad request - validation error or students not in class",
+                description:
+                    "Bad request - validation error or students not in class",
                 content: {
                     "application/json": {
                         schema: {
@@ -781,7 +800,8 @@ app.post(
         tags: ["Class"],
         operationId: "assignTeachersToClass",
         summary: "Assign teachers to a class",
-        description: "Assigns one or more teachers to a specific class with duplicate prevention",
+        description:
+            "Assigns one or more teachers to a specific class with duplicate prevention",
         parameters: [
             {
                 name: "class_id",
@@ -796,14 +816,18 @@ app.post(
                 description: "Teachers assigned successfully",
                 content: {
                     "application/json": {
-                        schema: resolver(z.object({
-                            message: z.string(),
-                            data: z.array(z.object({
-                                teacher_id: z.string(),
-                                class_id: z.string(),
-                                assigned_at: z.string(),
-                            })),
-                        })),
+                        schema: resolver(
+                            z.object({
+                                message: z.string(),
+                                data: z.array(
+                                    z.object({
+                                        teacher_id: z.string(),
+                                        class_id: z.string(),
+                                        assigned_at: z.string(),
+                                    })
+                                ),
+                            })
+                        ),
                     },
                 },
             },
@@ -860,19 +884,24 @@ app.delete(
                 description: "Teachers removed successfully",
                 content: {
                     "application/json": {
-                        schema: resolver(z.object({
-                            message: z.string(),
-                            data: z.array(z.object({
-                                teacher_id: z.string(),
-                                class_id: z.string(),
-                                removed_at: z.string(),
-                            })),
-                        })),
+                        schema: resolver(
+                            z.object({
+                                message: z.string(),
+                                data: z.array(
+                                    z.object({
+                                        teacher_id: z.string(),
+                                        class_id: z.string(),
+                                        removed_at: z.string(),
+                                    })
+                                ),
+                            })
+                        ),
                     },
                 },
             },
             400: {
-                description: "Bad request - validation error or teachers not in class",
+                description:
+                    "Bad request - validation error or teachers not in class",
                 content: {
                     "application/json": {
                         schema: {
@@ -909,7 +938,8 @@ app.get(
         tags: ["Class"],
         operationId: "getStudentsGroupedByClassForYear",
         summary: "Get students grouped by class for academic year",
-        description: "Retrieves all students grouped by their respective classes for a specific academic year",
+        description:
+            "Retrieves all students grouped by their respective classes for a specific academic year",
         parameters: [
             {
                 name: "academic_year",
@@ -917,8 +947,8 @@ app.get(
                 required: true,
                 schema: { type: "string" },
                 description: "Academic year (e.g., '2023-2024')",
-                example: "2023-2024"
-            }
+                example: "2023-2024",
+            },
         ],
         responses: {
             200: {
@@ -936,27 +966,39 @@ app.get(
                                     items: {
                                         type: "object",
                                         properties: {
-                                            class_info: { $ref: "#/components/schemas/Class" },
+                                            class_info: {
+                                                $ref: "#/components/schemas/Class",
+                                            },
                                             students: {
                                                 type: "array",
                                                 items: {
                                                     type: "object",
                                                     properties: {
                                                         id: { type: "string" },
-                                                        first_name: { type: "string" },
-                                                        last_name: { type: "string" },
-                                                        email: { type: "string" },
-                                                        phone: { type: "string" },
-                                                        user_type: { type: "string" }
-                                                    }
-                                                }
+                                                        first_name: {
+                                                            type: "string",
+                                                        },
+                                                        last_name: {
+                                                            type: "string",
+                                                        },
+                                                        email: {
+                                                            type: "string",
+                                                        },
+                                                        phone: {
+                                                            type: "string",
+                                                        },
+                                                        user_type: {
+                                                            type: "string",
+                                                        },
+                                                    },
+                                                },
                                             },
-                                            student_count: { type: "number" }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                                            student_count: { type: "number" },
+                                        },
+                                    },
+                                },
+                            },
+                        },
                     },
                 },
             },
@@ -989,10 +1031,14 @@ app.get(
                                 academic_years: {
                                     type: "array",
                                     items: { type: "string" },
-                                    example: ["2023-2024", "2022-2023", "2021-2022"]
-                                }
-                            }
-                        }
+                                    example: [
+                                        "2023-2024",
+                                        "2022-2023",
+                                        "2021-2022",
+                                    ],
+                                },
+                            },
+                        },
                     },
                 },
             },
@@ -1053,7 +1099,8 @@ app.get(
         tags: ["Class"],
         operationId: "getAssignmentsDueSoon",
         summary: "Get assignments due soon for a student",
-        description: "Retrieves assignments that are due within the next 7 days for a specific student",
+        description:
+            "Retrieves assignments that are due within the next 7 days for a specific student",
         parameters: [
             {
                 name: "student_id",
@@ -1083,7 +1130,9 @@ app.get(
                                     items: {
                                         type: "object",
                                         properties: {
-                                            assignment: { $ref: "#/components/schemas/Assignment" },
+                                            assignment: {
+                                                $ref: "#/components/schemas/Assignment",
+                                            },
                                             days_until_due: { type: "number" },
                                             is_submitted: { type: "boolean" },
                                             class_info: {
@@ -1091,15 +1140,17 @@ app.get(
                                                 properties: {
                                                     id: { type: "string" },
                                                     name: { type: "string" },
-                                                    academic_year: { type: "string" }
-                                                }
-                                            }
-                                        }
-                                    }
+                                                    academic_year: {
+                                                        type: "string",
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    },
                                 },
-                                total_count: { type: "number" }
-                            }
-                        }
+                                total_count: { type: "number" },
+                            },
+                        },
                     },
                 },
             },

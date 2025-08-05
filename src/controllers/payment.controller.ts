@@ -9,7 +9,6 @@ import PaymentSecurityMonitor from "@/services/payment_security_monitor.service"
 import { SecurePaymentCredentialService } from "@/services/secure_payment_credential.service";
 
 export class PaymentController {
-
     // ========================= SCHOOL BANK DETAILS =========================
 
     /**
@@ -26,7 +25,7 @@ export class PaymentController {
             }
 
             const bankData = await ctx.req.json();
-            
+
             const result = await PaymentService.createOrUpdateSchoolBankDetails(
                 campus_id,
                 bankData
@@ -35,13 +34,19 @@ export class PaymentController {
             return ctx.json({
                 success: true,
                 data: result,
-                message: "Bank details saved successfully"
+                message: "Bank details saved successfully",
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -58,17 +63,24 @@ export class PaymentController {
                 return ctx.json({ error: "Unauthorized" }, 403);
             }
 
-            const bankDetails = await PaymentService.getSchoolBankDetails(campus_id);
+            const bankDetails =
+                await PaymentService.getSchoolBankDetails(campus_id);
 
             return ctx.json({
                 success: true,
-                data: bankDetails
+                data: bankDetails,
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -87,19 +99,28 @@ export class PaymentController {
             }
 
             const categoryData = await ctx.req.json();
-            
-            const result = await PaymentService.createFeeCategory(campus_id, categoryData);
+
+            const result = await PaymentService.createFeeCategory(
+                campus_id,
+                categoryData
+            );
 
             return ctx.json({
                 success: true,
                 data: result,
-                message: "Fee category created successfully"
+                message: "Fee category created successfully",
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -119,13 +140,19 @@ export class PaymentController {
             return ctx.json({
                 success: true,
                 data: categories,
-                count: categories.length
+                count: categories.length,
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -149,13 +176,19 @@ export class PaymentController {
             return ctx.json({
                 success: true,
                 data: result,
-                message: "Fee category updated successfully"
+                message: "Fee category updated successfully",
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -174,19 +207,28 @@ export class PaymentController {
             }
 
             const templateData = await ctx.req.json();
-            
-            const result = await PaymentService.createFeeTemplate(campus_id, templateData);
+
+            const result = await PaymentService.createFeeTemplate(
+                campus_id,
+                templateData
+            );
 
             return ctx.json({
                 success: true,
                 data: result,
-                message: "Fee template created successfully"
+                message: "Fee template created successfully",
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -207,13 +249,19 @@ export class PaymentController {
             return ctx.json({
                 success: true,
                 data: templates,
-                count: templates.length
+                count: templates.length,
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -229,19 +277,26 @@ export class PaymentController {
                 return ctx.json({ error: "Unauthorized" }, 403);
             }
 
-            const fees = await PaymentService.generateFeesFromTemplate(template_id);
+            const fees =
+                await PaymentService.generateFeesFromTemplate(template_id);
 
             return ctx.json({
                 success: true,
                 data: fees,
                 count: fees.length,
-                message: `Generated ${fees.length} fee records`
+                message: `Generated ${fees.length} fee records`,
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -262,7 +317,7 @@ export class PaymentController {
                 gateway,
                 amount,
                 callback_url,
-                cancel_url
+                cancel_url,
             } = await ctx.req.json();
 
             // Determine parent_id based on user type
@@ -280,7 +335,8 @@ export class PaymentController {
                     { userType: user_type, operation: "payment_initiation" },
                     "Unauthorized user type for payment initiation"
                 );
-                const errorResponse = PaymentErrorHandler.formatErrorResponse(authError);
+                const errorResponse =
+                    PaymentErrorHandler.formatErrorResponse(authError);
                 return ctx.json(errorResponse, 403 as any);
             }
 
@@ -298,15 +354,17 @@ export class PaymentController {
             return ctx.json({
                 success: true,
                 data: result,
-                message: "Payment initiated successfully"
+                message: "Payment initiated successfully",
             });
         } catch (error) {
             const errorHandling = PaymentErrorHandler.handleError(error, {
                 operation: "initiate_payment",
                 campus_id: ctx.get("campus_id"),
-                user_id: ctx.get("user_id")
+                user_id: ctx.get("user_id"),
             });
-            const errorResponse = PaymentErrorHandler.formatErrorResponse(errorHandling.error);
+            const errorResponse = PaymentErrorHandler.formatErrorResponse(
+                errorHandling.error
+            );
             return ctx.json(errorResponse, errorHandling.httpStatus as any);
         }
     };
@@ -317,20 +375,21 @@ export class PaymentController {
     public static readonly verifyPayment = async (ctx: Context) => {
         try {
             const { transaction_id } = ctx.req.param();
-            const {
-                payment_id,
-                signature,
-                ...additionalData
-            } = await ctx.req.json();
+            const { payment_id, signature, ...additionalData } =
+                await ctx.req.json();
 
             // Validate required parameters
             if (!transaction_id) {
                 const validationError = PaymentErrorHandler.createError(
                     "VAL_001",
-                    { field: "transaction_id", operation: "payment_verification" },
+                    {
+                        field: "transaction_id",
+                        operation: "payment_verification",
+                    },
                     "Transaction ID is required for payment verification"
                 );
-                const errorResponse = PaymentErrorHandler.formatErrorResponse(validationError);
+                const errorResponse =
+                    PaymentErrorHandler.formatErrorResponse(validationError);
                 return ctx.json(errorResponse, 400 as any);
             }
 
@@ -345,16 +404,20 @@ export class PaymentController {
                 success: result.success,
                 data: {
                     transaction: result.transaction,
-                    invoice: result.invoice
+                    invoice: result.invoice,
                 },
-                message: result.success ? "Payment verified successfully" : "Payment verification failed"
+                message: result.success
+                    ? "Payment verified successfully"
+                    : "Payment verification failed",
             });
         } catch (error) {
             const errorHandling = PaymentErrorHandler.handleError(error, {
                 operation: "verify_payment",
-                transaction_id: ctx.req.param("transaction_id")
+                transaction_id: ctx.req.param("transaction_id"),
             });
-            const errorResponse = PaymentErrorHandler.formatErrorResponse(errorHandling.error);
+            const errorResponse = PaymentErrorHandler.formatErrorResponse(
+                errorHandling.error
+            );
             return ctx.json(errorResponse, errorHandling.httpStatus as any);
         }
     };
@@ -392,13 +455,19 @@ export class PaymentController {
 
             return ctx.json({
                 success: true,
-                data: history
+                data: history,
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -437,11 +506,17 @@ export class PaymentController {
             );
 
             // Separate fees by status for easier frontend handling
-            const pendingFees = history.fees.filter(fee => 
-                fee.payment_status === "unpaid" || fee.payment_status === "partial"
+            const pendingFees = history.fees.filter(
+                (fee) =>
+                    fee.payment_status === "unpaid" ||
+                    fee.payment_status === "partial"
             );
-            const paidFees = history.fees.filter(fee => fee.payment_status === "paid");
-            const overdueFees = history.fees.filter(fee => fee.payment_status === "overdue");
+            const paidFees = history.fees.filter(
+                (fee) => fee.payment_status === "paid"
+            );
+            const overdueFees = history.fees.filter(
+                (fee) => fee.payment_status === "overdue"
+            );
 
             return ctx.json({
                 success: true,
@@ -451,17 +526,32 @@ export class PaymentController {
                     overdue_fees: overdueFees,
                     recent_transactions: history.transactions.slice(0, 10), // Last 10 transactions
                     summary: {
-                        total_pending: pendingFees.reduce((sum, fee) => sum + fee.due_amount, 0),
-                        total_paid: paidFees.reduce((sum, fee) => sum + fee.paid_amount, 0),
-                        total_overdue: overdueFees.reduce((sum, fee) => sum + fee.due_amount, 0)
-                    }
-                }
+                        total_pending: pendingFees.reduce(
+                            (sum, fee) => sum + fee.due_amount,
+                            0
+                        ),
+                        total_paid: paidFees.reduce(
+                            (sum, fee) => sum + fee.paid_amount,
+                            0
+                        ),
+                        total_overdue: overdueFees.reduce(
+                            (sum, fee) => sum + fee.due_amount,
+                            0
+                        ),
+                    },
+                },
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -481,13 +571,19 @@ export class PaymentController {
             return ctx.json({
                 success: true,
                 message: "Invoice download feature to be implemented",
-                invoice_url: `https://yourapp.com/invoices/${invoice_id}.pdf`
+                invoice_url: `https://yourapp.com/invoices/${invoice_id}.pdf`,
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -499,13 +595,18 @@ export class PaymentController {
             const campus_id = ctx.get("campus_id");
 
             // Use the new secure service to get available gateways
-            const gatewayInfo = await PaymentService.getAvailableGateways(campus_id);
-            
+            const gatewayInfo =
+                await PaymentService.getAvailableGateways(campus_id);
+
             if (gatewayInfo.enabled.length === 0) {
-                return ctx.json({
-                    success: false,
-                    message: "No payment gateways are enabled for this school"
-                }, 400);
+                return ctx.json(
+                    {
+                        success: false,
+                        message:
+                            "No payment gateways are enabled for this school",
+                    },
+                    400
+                );
             }
 
             const availableGateways: any[] = [];
@@ -513,17 +614,18 @@ export class PaymentController {
             // Build gateway list based on enabled gateways
             for (const gatewayId of gatewayInfo.enabled) {
                 const config = gatewayInfo.configurations[gatewayId];
-                
+
                 switch (gatewayId) {
                     case "razorpay": {
                         if (config.enabled && config.configured) {
                             availableGateways.push({
                                 id: "razorpay",
                                 name: "Razorpay",
-                                description: "Pay using Credit/Debit Card, Net Banking, UPI, Wallets",
+                                description:
+                                    "Pay using Credit/Debit Card, Net Banking, UPI, Wallets",
                                 logo: "https://razorpay.com/assets/logo.png",
                                 test_status: config.test_status,
-                                last_tested: config.last_tested
+                                last_tested: config.last_tested,
                             });
                         }
                         break;
@@ -533,10 +635,11 @@ export class PaymentController {
                             availableGateways.push({
                                 id: "payu",
                                 name: "PayU",
-                                description: "Secure payment gateway with multiple payment options",
+                                description:
+                                    "Secure payment gateway with multiple payment options",
                                 logo: "https://payu.in/assets/logo.png",
                                 test_status: config.test_status,
-                                last_tested: config.last_tested
+                                last_tested: config.last_tested,
                             });
                         }
                         break;
@@ -549,7 +652,7 @@ export class PaymentController {
                                 description: "Fast and secure payments",
                                 logo: "https://cashfree.com/assets/logo.png",
                                 test_status: config.test_status,
-                                last_tested: config.last_tested
+                                last_tested: config.last_tested,
                             });
                         }
                         break;
@@ -563,14 +666,20 @@ export class PaymentController {
                     gateways: availableGateways,
                     count: availableGateways.length,
                     all_configured: gatewayInfo.available,
-                    gateway_status: gatewayInfo.configurations
-                }
+                    gateway_status: gatewayInfo.configurations,
+                },
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -589,18 +698,27 @@ export class PaymentController {
                 return ctx.json({ error: "Unauthorized" }, 403);
             }
 
-            const result = await PaymentNotificationService.sendBulkPaymentReminders(campus_id);
+            const result =
+                await PaymentNotificationService.sendBulkPaymentReminders(
+                    campus_id
+                );
 
             return ctx.json({
                 success: true,
                 data: result,
-                message: `Sent ${result.sent} reminders, ${result.failed} failed`
+                message: `Sent ${result.sent} reminders, ${result.failed} failed`,
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -620,32 +738,47 @@ export class PaymentController {
 
             const { Fee } = await import("@/models/fee.model");
             const { UserService } = await import("@/services/users.service");
-            
+
             const fee = await Fee.findById(fee_id);
             if (!fee) {
                 return ctx.json({ error: "Fee not found" }, 404);
             }
 
             const studentData = await UserService.getUser(fee.user_id);
-            const schoolData = await PaymentNotificationService.getSchoolDetails(campus_id);
-            
+            const schoolData =
+                await PaymentNotificationService.getSchoolDetails(campus_id);
+
             const isOverdue = fee.payment_status === "overdue";
-            
-            await (isOverdue ? PaymentNotificationService.sendPaymentOverdueNotification(
-                    campus_id, fee, studentData, schoolData
-                ) : PaymentNotificationService.sendPaymentDueReminder(
-                    campus_id, fee, studentData, schoolData
-                ));
+
+            await (isOverdue
+                ? PaymentNotificationService.sendPaymentOverdueNotification(
+                      campus_id,
+                      fee,
+                      studentData,
+                      schoolData
+                  )
+                : PaymentNotificationService.sendPaymentDueReminder(
+                      campus_id,
+                      fee,
+                      studentData,
+                      schoolData
+                  ));
 
             return ctx.json({
                 success: true,
-                message: `${isOverdue ? "Overdue" : "Due"} reminder sent successfully`
+                message: `${isOverdue ? "Overdue" : "Due"} reminder sent successfully`,
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -662,17 +795,25 @@ export class PaymentController {
                 return ctx.json({ error: "Unauthorized" }, 403);
             }
 
-            await PaymentNotificationService.schedulePaymentReminders(campus_id);
+            await PaymentNotificationService.schedulePaymentReminders(
+                campus_id
+            );
 
             return ctx.json({
                 success: true,
-                message: "Automatic payment reminders scheduled successfully"
+                message: "Automatic payment reminders scheduled successfully",
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -692,12 +833,12 @@ export class PaymentController {
             }
 
             const { start_date, end_date } = ctx.req.query();
-            
+
             let dateRange;
             if (start_date && end_date) {
                 dateRange = {
                     start_date: new Date(start_date as string),
-                    end_date: new Date(end_date as string)
+                    end_date: new Date(end_date as string),
                 };
             }
 
@@ -708,13 +849,19 @@ export class PaymentController {
 
             return ctx.json({
                 success: true,
-                data: analytics
+                data: analytics,
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -732,7 +879,7 @@ export class PaymentController {
             }
 
             const { report_type, start_date, end_date } = ctx.req.query();
-            
+
             if (!report_type) {
                 return ctx.json({ error: "Report type is required" }, 400);
             }
@@ -741,7 +888,7 @@ export class PaymentController {
             if (start_date && end_date) {
                 dateRange = {
                     start_date: new Date(start_date as string),
-                    end_date: new Date(end_date as string)
+                    end_date: new Date(end_date as string),
                 };
             }
 
@@ -753,13 +900,19 @@ export class PaymentController {
 
             return ctx.json({
                 success: true,
-                data: report
+                data: report,
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -777,9 +930,12 @@ export class PaymentController {
             }
 
             const { period } = ctx.req.query();
-            
+
             if (!period) {
-                return ctx.json({ error: "Period is required (7d, 30d, 90d, 1y)" }, 400);
+                return ctx.json(
+                    { error: "Period is required (7d, 30d, 90d, 1y)" },
+                    400
+                );
             }
 
             const trends = await PaymentAnalyticsService.getPaymentTrends(
@@ -789,13 +945,19 @@ export class PaymentController {
 
             return ctx.json({
                 success: true,
-                data: trends
+                data: trends,
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -815,21 +977,28 @@ export class PaymentController {
             const { limit } = ctx.req.query();
             const limitNum = limit ? Number.parseInt(limit as string) : 10;
 
-            const topStudents = await PaymentAnalyticsService.getTopPayingStudents(
-                campus_id,
-                limitNum
-            );
+            const topStudents =
+                await PaymentAnalyticsService.getTopPayingStudents(
+                    campus_id,
+                    limitNum
+                );
 
             return ctx.json({
                 success: true,
                 data: topStudents,
-                count: topStudents.length
+                count: topStudents.length,
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -850,8 +1019,10 @@ export class PaymentController {
             }
 
             const ruleData = await ctx.req.json();
-            
-            const { DiscountService } = await import("@/services/discount.service");
+
+            const { DiscountService } = await import(
+                "@/services/discount.service"
+            );
             const result = await DiscountService.createDiscountRule(
                 campus_id,
                 ruleData,
@@ -861,13 +1032,19 @@ export class PaymentController {
             return ctx.json({
                 success: true,
                 data: result,
-                message: "Discount rule created successfully"
+                message: "Discount rule created successfully",
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -885,25 +1062,37 @@ export class PaymentController {
             }
 
             const { is_active, discount_type, academic_year } = ctx.req.query();
-            
+
             const filters: any = {};
-            if (is_active !== undefined) filters.is_active = is_active === "true";
+            if (is_active !== undefined)
+                filters.is_active = is_active === "true";
             if (discount_type) filters.discount_type = discount_type;
             if (academic_year) filters.academic_year = academic_year;
 
-            const { DiscountService } = await import("@/services/discount.service");
-            const rules = await DiscountService.getDiscountRules(campus_id, filters);
+            const { DiscountService } = await import(
+                "@/services/discount.service"
+            );
+            const rules = await DiscountService.getDiscountRules(
+                campus_id,
+                filters
+            );
 
             return ctx.json({
                 success: true,
                 data: rules,
-                count: rules.length
+                count: rules.length,
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -916,8 +1105,10 @@ export class PaymentController {
             const { fee_id, student_id } = ctx.req.param();
 
             const { Fee } = await import("@/models/fee.model");
-            const { DiscountService } = await import("@/services/discount.service");
-            
+            const { DiscountService } = await import(
+                "@/services/discount.service"
+            );
+
             const fee = await Fee.findById(fee_id);
             if (!fee || fee.campus_id !== campus_id) {
                 return ctx.json({ error: "Fee not found" }, 404);
@@ -931,13 +1122,19 @@ export class PaymentController {
 
             return ctx.json({
                 success: true,
-                data: eligibility
+                data: eligibility,
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -955,9 +1152,12 @@ export class PaymentController {
                 return ctx.json({ error: "Unauthorized" }, 403);
             }
 
-            const { fee_id, student_id, discount_rule_id, reason } = await ctx.req.json();
-            
-            const { DiscountService } = await import("@/services/discount.service");
+            const { fee_id, student_id, discount_rule_id, reason } =
+                await ctx.req.json();
+
+            const { DiscountService } = await import(
+                "@/services/discount.service"
+            );
             const application = await DiscountService.applyDiscount(
                 campus_id,
                 fee_id,
@@ -970,13 +1170,19 @@ export class PaymentController {
             return ctx.json({
                 success: true,
                 data: application,
-                message: "Discount applied successfully"
+                message: "Discount applied successfully",
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -994,27 +1200,38 @@ export class PaymentController {
             }
 
             const { start_date, end_date } = ctx.req.query();
-            
+
             let dateRange;
             if (start_date && end_date) {
                 dateRange = {
                     start_date: new Date(start_date as string),
-                    end_date: new Date(end_date as string)
+                    end_date: new Date(end_date as string),
                 };
             }
 
-            const { DiscountService } = await import("@/services/discount.service");
-            const summary = await DiscountService.getDiscountSummary(campus_id, dateRange);
+            const { DiscountService } = await import(
+                "@/services/discount.service"
+            );
+            const summary = await DiscountService.getDiscountSummary(
+                campus_id,
+                dateRange
+            );
 
             return ctx.json({
                 success: true,
-                data: summary
+                data: summary,
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -1035,8 +1252,10 @@ export class PaymentController {
             }
 
             const requestData = await ctx.req.json();
-            
-            const { BulkOperationsService } = await import("@/services/bulk_operations.service");
+
+            const { BulkOperationsService } = await import(
+                "@/services/bulk_operations.service"
+            );
             const result = await BulkOperationsService.generateBulkFees(
                 campus_id,
                 requestData,
@@ -1046,13 +1265,19 @@ export class PaymentController {
             return ctx.json({
                 success: true,
                 data: result,
-                message: `Generated ${result.successful} fees successfully, ${result.failed} failed`
+                message: `Generated ${result.successful} fees successfully, ${result.failed} failed`,
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -1071,8 +1296,10 @@ export class PaymentController {
             }
 
             const requestData = await ctx.req.json();
-            
-            const { BulkOperationsService } = await import("@/services/bulk_operations.service");
+
+            const { BulkOperationsService } = await import(
+                "@/services/bulk_operations.service"
+            );
             const result = await BulkOperationsService.processBulkPayments(
                 campus_id,
                 requestData,
@@ -1082,13 +1309,19 @@ export class PaymentController {
             return ctx.json({
                 success: true,
                 data: result,
-                message: `Processed ${result.successful} payments successfully, ${result.failed} failed`
+                message: `Processed ${result.successful} payments successfully, ${result.failed} failed`,
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -1107,8 +1340,10 @@ export class PaymentController {
             }
 
             const { fee_ids, updates } = await ctx.req.json();
-            
-            const { BulkOperationsService } = await import("@/services/bulk_operations.service");
+
+            const { BulkOperationsService } = await import(
+                "@/services/bulk_operations.service"
+            );
             const result = await BulkOperationsService.updateBulkFees(
                 campus_id,
                 fee_ids,
@@ -1119,13 +1354,19 @@ export class PaymentController {
             return ctx.json({
                 success: true,
                 data: result,
-                message: `Updated ${result.successful} fees successfully, ${result.failed} failed`
+                message: `Updated ${result.successful} fees successfully, ${result.failed} failed`,
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -1134,7 +1375,9 @@ export class PaymentController {
     /**
      * Configure secure payment gateway credentials
      */
-    public static readonly configureSecureCredentials = async (ctx: Context) => {
+    public static readonly configureSecureCredentials = async (
+        ctx: Context
+    ) => {
         try {
             const campus_id = ctx.get("campus_id");
             const user_type = ctx.get("user_type");
@@ -1144,12 +1387,19 @@ export class PaymentController {
                 return ctx.json({ error: "Unauthorized" }, 403);
             }
 
-            const { gateway, credentials, enabled = true } = await ctx.req.json();
+            const {
+                gateway,
+                credentials,
+                enabled = true,
+            } = await ctx.req.json();
 
             if (!gateway || !credentials) {
-                return ctx.json({ 
-                    error: "Gateway and credentials are required" 
-                }, 400);
+                return ctx.json(
+                    {
+                        error: "Gateway and credentials are required",
+                    },
+                    400
+                );
             }
 
             const result = await PaymentService.configurePaymentGateway(
@@ -1162,13 +1412,19 @@ export class PaymentController {
             return ctx.json({
                 success: true,
                 data: result,
-                message: `${gateway} gateway configured successfully`
+                message: `${gateway} gateway configured successfully`,
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -1187,9 +1443,12 @@ export class PaymentController {
             }
 
             if (!["razorpay", "payu", "cashfree"].includes(gateway)) {
-                return ctx.json({ 
-                    error: "Invalid gateway. Supported: razorpay, payu, cashfree" 
-                }, 400);
+                return ctx.json(
+                    {
+                        error: "Invalid gateway. Supported: razorpay, payu, cashfree",
+                    },
+                    400
+                );
             }
 
             const result = await PaymentService.testGatewayConfiguration(
@@ -1200,13 +1459,19 @@ export class PaymentController {
             return ctx.json({
                 success: result.success,
                 data: result,
-                message: result.message
+                message: result.message,
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -1227,15 +1492,21 @@ export class PaymentController {
             const { enabled } = await ctx.req.json();
 
             if (typeof enabled !== "boolean") {
-                return ctx.json({ 
-                    error: "enabled field must be a boolean" 
-                }, 400);
+                return ctx.json(
+                    {
+                        error: "enabled field must be a boolean",
+                    },
+                    400
+                );
             }
 
             if (!["razorpay", "payu", "cashfree"].includes(gateway)) {
-                return ctx.json({ 
-                    error: "Invalid gateway. Supported: razorpay, payu, cashfree" 
-                }, 400);
+                return ctx.json(
+                    {
+                        error: "Invalid gateway. Supported: razorpay, payu, cashfree",
+                    },
+                    400
+                );
             }
 
             const result = await PaymentService.toggleGateway(
@@ -1247,13 +1518,19 @@ export class PaymentController {
             return ctx.json({
                 success: true,
                 data: result,
-                message: `${gateway} gateway ${enabled ? "enabled" : "disabled"} successfully`
+                message: `${gateway} gateway ${enabled ? "enabled" : "disabled"} successfully`,
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -1270,24 +1547,36 @@ export class PaymentController {
                 return ctx.json({ error: "Unauthorized" }, 403);
             }
 
-            const maskedCredentials = await SecurePaymentCredentialService.getMaskedCredentials(campus_id);
+            const maskedCredentials =
+                await SecurePaymentCredentialService.getMaskedCredentials(
+                    campus_id
+                );
 
             if (!maskedCredentials) {
-                return ctx.json({
-                    success: false,
-                    message: "No payment gateway credentials configured"
-                }, 404);
+                return ctx.json(
+                    {
+                        success: false,
+                        message: "No payment gateway credentials configured",
+                    },
+                    404
+                );
             }
 
             return ctx.json({
                 success: true,
-                data: maskedCredentials
+                data: maskedCredentials,
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -1304,18 +1593,27 @@ export class PaymentController {
                 return ctx.json({ error: "Unauthorized" }, 403);
             }
 
-            const result = await SecurePaymentCredentialService.migrateLegacyCredentials(campus_id);
+            const result =
+                await SecurePaymentCredentialService.migrateLegacyCredentials(
+                    campus_id
+                );
 
             return ctx.json({
                 success: result.success,
                 data: result,
-                message: result.message
+                message: result.message,
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -1332,17 +1630,26 @@ export class PaymentController {
                 return ctx.json({ error: "Unauthorized" }, 403);
             }
 
-            const securityStatus = await SecurePaymentCredentialService.validateCredentialSecurity(campus_id);
+            const securityStatus =
+                await SecurePaymentCredentialService.validateCredentialSecurity(
+                    campus_id
+                );
 
             return ctx.json({
                 success: securityStatus.valid,
-                data: securityStatus
+                data: securityStatus,
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -1356,32 +1663,45 @@ export class PaymentController {
 
             // Only super admin can rotate encryption
             if (user_type !== "Super Admin") {
-                return ctx.json({ error: "Unauthorized - Super Admin access required" }, 403);
+                return ctx.json(
+                    { error: "Unauthorized - Super Admin access required" },
+                    403
+                );
             }
 
             const { old_encryption_key } = await ctx.req.json();
 
             if (!old_encryption_key) {
-                return ctx.json({ 
-                    error: "old_encryption_key is required" 
-                }, 400);
+                return ctx.json(
+                    {
+                        error: "old_encryption_key is required",
+                    },
+                    400
+                );
             }
 
-            const result = await SecurePaymentCredentialService.rotateEncryption(
-                campus_id,
-                old_encryption_key
-            );
+            const result =
+                await SecurePaymentCredentialService.rotateEncryption(
+                    campus_id,
+                    old_encryption_key
+                );
 
             return ctx.json({
                 success: result.success,
                 data: result,
-                message: result.message
+                message: result.message,
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -1397,18 +1717,27 @@ export class PaymentController {
                 return ctx.json({ error: "Unauthorized" }, 403);
             }
 
-            const { CredentialEncryptionService } = await import("@/services/credential_encryption.service");
-            const validation = CredentialEncryptionService.validateEncryptionKey();
+            const { CredentialEncryptionService } = await import(
+                "@/services/credential_encryption.service"
+            );
+            const validation =
+                CredentialEncryptionService.validateEncryptionKey();
 
             return ctx.json({
                 success: validation.valid,
-                data: validation
+                data: validation,
             });
         } catch (error) {
-            return ctx.json({
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error"
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
+                },
+                500
+            );
         }
     };
 
@@ -1429,20 +1758,31 @@ export class PaymentController {
             }
 
             // Get security metrics from the last 24 hours
-            const securityMetrics = PaymentSecurityMonitor.getSecurityMetrics(campus_id);
-            
+            const securityMetrics =
+                PaymentSecurityMonitor.getSecurityMetrics(campus_id);
+
             // Get recent security events (last 100)
-            const recentEvents = PaymentSecurityMonitor.getRecentSecurityEvents(campus_id, 100);
-            
+            const recentEvents = PaymentSecurityMonitor.getRecentSecurityEvents(
+                campus_id,
+                100
+            );
+
             // Get audit logs (last 50)
-            const auditLogs = PaymentSecurityMonitor.getAuditLogs(campus_id, 50);
-            
+            const auditLogs = PaymentSecurityMonitor.getAuditLogs(
+                campus_id,
+                50
+            );
+
             // Get gateway status
-            const gatewayStatus = await PaymentService.getAvailableGateways(campus_id);
-            
+            const gatewayStatus =
+                await PaymentService.getAvailableGateways(campus_id);
+
             // Get encryption validation
-            const { CredentialEncryptionService } = await import("@/services/credential_encryption.service");
-            const encryptionStatus = CredentialEncryptionService.validateEncryptionKey();
+            const { CredentialEncryptionService } = await import(
+                "@/services/credential_encryption.service"
+            );
+            const encryptionStatus =
+                CredentialEncryptionService.validateEncryptionKey();
 
             return ctx.json({
                 success: true,
@@ -1453,13 +1793,14 @@ export class PaymentController {
                     gateway_status: gatewayStatus,
                     encryption_status: encryptionStatus,
                     dashboard_generated_at: new Date(),
-                    campus_id
-                }
+                    campus_id,
+                },
             });
         } catch (error) {
             const errorResponse = PaymentErrorHandler.handleError("SYS_001", {
                 operation: "security_dashboard",
-                original_error: error instanceof Error ? error.message : String(error)
+                original_error:
+                    error instanceof Error ? error.message : String(error),
             });
             return ctx.json(errorResponse, 500 as any);
         }
@@ -1482,36 +1823,41 @@ export class PaymentController {
 
             if (!event_id) {
                 const error = PaymentErrorHandler.handleError("VAL_001", {
-                    missing_fields: { event_id: true }
+                    missing_fields: { event_id: true },
                 });
                 return ctx.json(error, 400 as any);
             }
 
-            const eventDetails = PaymentSecurityMonitor.getSecurityEventById(event_id);
-            
+            const eventDetails =
+                PaymentSecurityMonitor.getSecurityEventById(event_id);
+
             if (!eventDetails) {
                 const error = PaymentErrorHandler.handleError("NOT_001", {
                     resource: "security_event",
-                    identifier: event_id
+                    identifier: event_id,
                 });
                 return ctx.json(error, 404 as any);
             }
 
             // Check if user has access to this campus's events
-            if (eventDetails.campus_id && eventDetails.campus_id !== campus_id) {
+            if (
+                eventDetails.campus_id &&
+                eventDetails.campus_id !== campus_id
+            ) {
                 const error = PaymentErrorHandler.handleError("AUTH_002");
                 return ctx.json(error, 403 as any);
             }
 
             return ctx.json({
                 success: true,
-                data: eventDetails
+                data: eventDetails,
             });
         } catch (error) {
             const errorResponse = PaymentErrorHandler.handleError("SYS_001", {
                 operation: "get_security_event_details",
                 event_id: ctx.req.param().event_id,
-                original_error: error instanceof Error ? error.message : String(error)
+                original_error:
+                    error instanceof Error ? error.message : String(error),
             });
             return ctx.json(errorResponse, 500 as any);
         }

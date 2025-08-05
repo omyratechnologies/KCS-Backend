@@ -9,7 +9,12 @@ interface IClassQuizSession {
     quiz_id: string;
     user_id: string;
     session_token: string;
-    status: "not_started" | "in_progress" | "completed" | "expired" | "abandoned";
+    status:
+        | "not_started"
+        | "in_progress"
+        | "completed"
+        | "expired"
+        | "abandoned";
     started_at: Date | null;
     completed_at: Date | null;
     expires_at: Date | null;
@@ -32,10 +37,16 @@ const ClassQuizSessionSchema = new Schema({
     quiz_id: { type: String, required: true },
     user_id: { type: String, required: true },
     session_token: { type: String, required: true },
-    status: { 
-        type: String, 
-        required: true, 
-        enum: ["not_started", "in_progress", "completed", "expired", "abandoned"] 
+    status: {
+        type: String,
+        required: true,
+        enum: [
+            "not_started",
+            "in_progress",
+            "completed",
+            "expired",
+            "abandoned",
+        ],
     },
     started_at: { type: Date, required: false },
     completed_at: { type: Date, required: false },
@@ -61,7 +72,9 @@ ClassQuizSessionSchema.index.findByUserId = { by: "user_id" };
 ClassQuizSessionSchema.index.findBySessionToken = { by: "session_token" };
 ClassQuizSessionSchema.index.findByStatus = { by: "status" };
 ClassQuizSessionSchema.index.findByUserAndQuiz = { by: ["user_id", "quiz_id"] };
-ClassQuizSessionSchema.index.findByQuizAndStatus = { by: ["quiz_id", "status"] };
+ClassQuizSessionSchema.index.findByQuizAndStatus = {
+    by: ["quiz_id", "status"],
+};
 
 const ClassQuizSession = ottoman.model<IClassQuizSession>(
     "class_quiz_session",

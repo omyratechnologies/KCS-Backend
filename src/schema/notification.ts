@@ -7,11 +7,9 @@ const baseNotificationSchema = {
     id: z.string().openapi({ example: "notification123" }),
     campus_id: z.string().openapi({ example: "campus123" }),
     title: z.string().openapi({ example: "Important Announcement" }),
-    message: z
-        .string()
-        .openapi({
-            example: "This is an important notification for all users.",
-        }),
+    message: z.string().openapi({
+        example: "This is an important notification for all users.",
+    }),
     meta_data: z
         .record(z.string(), z.any())
         .openapi({ example: { priority: "high", category: "announcement" } }),
@@ -68,16 +66,12 @@ export const teacherNotificationSchema = z
 export const createCampusWideNotificationRequestBodySchema = z
     .object({
         title: z.string().openapi({ example: "Important Announcement" }),
-        message: z
-            .string()
-            .openapi({
-                example: "This is an important notification for all users.",
-            }),
-        meta_data: z
-            .record(z.string(), z.any())
-            .openapi({
-                example: { priority: "high", category: "announcement" },
-            }),
+        message: z.string().openapi({
+            example: "This is an important notification for all users.",
+        }),
+        meta_data: z.record(z.string(), z.any()).openapi({
+            example: { priority: "high", category: "announcement" },
+        }),
     })
     .openapi({ ref: "CreateCampusWideNotificationRequest" });
 
@@ -91,16 +85,12 @@ export const createClassNotificationRequestBodySchema = z
     .object({
         class_id: z.string().openapi({ example: "class123" }),
         title: z.string().openapi({ example: "Class Announcement" }),
-        message: z
-            .string()
-            .openapi({
-                example: "This is an important notification for this class.",
-            }),
-        meta_data: z
-            .record(z.string(), z.any())
-            .openapi({
-                example: { priority: "medium", category: "class_announcement" },
-            }),
+        message: z.string().openapi({
+            example: "This is an important notification for this class.",
+        }),
+        meta_data: z.record(z.string(), z.any()).openapi({
+            example: { priority: "medium", category: "class_announcement" },
+        }),
     })
     .openapi({ ref: "CreateClassNotificationRequest" });
 
@@ -112,11 +102,9 @@ export const createParentNotificationRequestBodySchema = z
     .object({
         user_id: z.string().openapi({ example: "parent123" }),
         title: z.string().openapi({ example: "Parent Meeting" }),
-        message: z
-            .string()
-            .openapi({
-                example: "There is a parent-teacher meeting scheduled.",
-            }),
+        message: z.string().openapi({
+            example: "There is a parent-teacher meeting scheduled.",
+        }),
         meta_data: z
             .record(z.string(), z.any())
             .openapi({ example: { priority: "high", category: "meeting" } }),

@@ -18,7 +18,7 @@ export const actionMap: {
         "get_assignment",
         // Course content permissions
         "view_course_content",
-        "view_course_materials", 
+        "view_course_materials",
         "track_watch_history",
         "view_course_progress",
         "download_materials",
@@ -52,7 +52,7 @@ export const actionMap: {
         "access_parent_dashboard",
     ],
     Teacher: [
-        "get_user", 
+        "get_user",
         "get_users",
         "create_assignment",
         "update_assignment",
@@ -190,7 +190,7 @@ export const actionMap: {
         "create_users",
         // Course content permissions (Super Admin level - all permissions)
         "create_course",
-        "update_course", 
+        "update_course",
         "delete_course",
         "publish_course",
         "archive_course",
@@ -198,7 +198,7 @@ export const actionMap: {
         "update_course_content",
         "delete_course_content",
         "create_course_sections",
-        "update_course_sections", 
+        "update_course_sections",
         "delete_course_sections",
         "create_course_lectures",
         "update_course_lectures",

@@ -32,11 +32,9 @@ export const feeSchema = z
             .nullable()
             .openapi({ example: "2023-01-15T00:00:00Z" }),
         payment_mode: z.string().nullable().openapi({ example: "online" }),
-        meta_data: z
-            .record(z.string(), z.any())
-            .openapi({
-                example: { semester: "Fall 2023", receipt_number: "R12345" },
-            }),
+        meta_data: z.record(z.string(), z.any()).openapi({
+            example: { semester: "Fall 2023", receipt_number: "R12345" },
+        }),
         created_at: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
         updated_at: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
     })

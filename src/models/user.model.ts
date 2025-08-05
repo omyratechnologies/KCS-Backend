@@ -23,7 +23,7 @@ interface IUser {
     updated_at: Date;
     meta_data: {
         [key: string]: any;
-    }
+    };
 }
 
 const UserSchema = new Schema({

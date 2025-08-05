@@ -152,23 +152,26 @@ export class AuthService {
         try {
             const resetData = {
                 email: user[0].email,
-                reset_date: new Date().toLocaleDateString("en-US", { 
-                    year: "numeric", 
-                    month: "long", 
-                    day: "numeric" 
+                reset_date: new Date().toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
                 }),
-                reset_time: new Date().toLocaleTimeString("en-US", { 
-                    hour: "2-digit", 
+                reset_time: new Date().toLocaleTimeString("en-US", {
+                    hour: "2-digit",
                     minute: "2-digit",
-                    timeZoneName: "short"
+                    timeZoneName: "short",
                 }),
                 ip_address: "Unknown", // TODO: Get actual IP from request context
             };
-            
+
             await sendPasswordResetSuccessEmail(user[0].email, resetData);
         } catch (emailError) {
             // Log email error but don't fail the password reset
-            console.error("Failed to send password reset success email:", emailError);
+            console.error(
+                "Failed to send password reset success email:",
+                emailError
+            );
         }
 
         return {

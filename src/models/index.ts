@@ -1,93 +1,48 @@
 // Import all models to ensure they are registered with Ottoman
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Export all models for easy access
 
-
-export {AndroidApk} from "./android_apk.model";
-export {Assignment} from "./assignment.model";
-export {AssignmentSubmission} from "./assignment_submission.model";
-export {Attendance} from "./attendance.model";
-export {Campus} from "./campus.model";
-export {CampusWideNotification} from "./campus_wide_notification.model";
-export {Class} from "./class.model";
-export {ClassNotification} from "./class_notification.model";
-export {ClassQuiz} from "./class_quiz.model";
-export {ClassQuizAttempt} from "./class_quiz_attempt.model";
-export {ClassQuizQuestion} from "./class_quiz_question.model";
-export {ClassQuizSession} from "./class_quiz_session.model";
-export {ClassQuizSubmission} from "./class_quiz_submission.model";
-export {ClassSubject} from "./class_subject.model";
-export {Course} from "./course.model";
-export {CourseCertificate} from "./course_certificate.model";
-export {CourseEnrollment} from "./course_enrollment.model";
-export {CourseLecture} from "./course_lecture.model";
-export {CourseProgress} from "./course_progress.model";
-export {CourseSection} from "./course_section.model";
-export {Curriculum} from "./curriculum.model";
-export {DocumentStore} from "./document_store.model";
-export {ExamTerm} from "./exam_term.model";
-export {Examination} from "./examination.model";
-export {Fee} from "./fee.model";
-export {GroupMessageStore} from "./group_message_store.model";
-export {Library} from "./library.model";
-export {LibraryIssue} from "./library_issue.model";
-export {LoginSession} from "./login_session.model";
-export {Meeting} from "./meeting.model";
-export {Message} from "./message.model";
-export {MessageGroup} from "./message_group.model";
-export {ParentNotification} from "./parent_notification.model";
-export {PasswordResets} from "./password_reset.model";
-export {StudentNotification} from "./student_notification.model";
-export {StudentPerformance} from "./student_performance.model";
-export {StudentRecord} from "./student_record.model";
-export {Subject} from "./subject.model";
-export {Syllabus} from "./syllabus.model";
-export {Teacher} from "./teacher.model";
-export {TeacherNotification} from "./teacher_notification.model";
-export {Timetable} from "./time_table.model";
-export {Upload} from "./upload.model";
-export {User} from "./user.model";
+export { AndroidApk } from "./android_apk.model";
+export { Assignment } from "./assignment.model";
+export { AssignmentSubmission } from "./assignment_submission.model";
+export { Attendance } from "./attendance.model";
+export { Campus } from "./campus.model";
+export { CampusWideNotification } from "./campus_wide_notification.model";
+export { Class } from "./class.model";
+export { ClassNotification } from "./class_notification.model";
+export { ClassQuiz } from "./class_quiz.model";
+export { ClassQuizAttempt } from "./class_quiz_attempt.model";
+export { ClassQuizQuestion } from "./class_quiz_question.model";
+export { ClassQuizSession } from "./class_quiz_session.model";
+export { ClassQuizSubmission } from "./class_quiz_submission.model";
+export { ClassSubject } from "./class_subject.model";
+export { Course } from "./course.model";
+export { CourseCertificate } from "./course_certificate.model";
+export { CourseEnrollment } from "./course_enrollment.model";
+export { CourseLecture } from "./course_lecture.model";
+export { CourseProgress } from "./course_progress.model";
+export { CourseSection } from "./course_section.model";
+export { Curriculum } from "./curriculum.model";
+export { DocumentStore } from "./document_store.model";
+export { ExamTerm } from "./exam_term.model";
+export { Examination } from "./examination.model";
+export { Fee } from "./fee.model";
+export { GroupMessageStore } from "./group_message_store.model";
+export { Library } from "./library.model";
+export { LibraryIssue } from "./library_issue.model";
+export { LoginSession } from "./login_session.model";
+export { Meeting } from "./meeting.model";
+export { Message } from "./message.model";
+export { MessageGroup } from "./message_group.model";
+export { ParentNotification } from "./parent_notification.model";
+export { PasswordResets } from "./password_reset.model";
+export { StudentNotification } from "./student_notification.model";
+export { StudentPerformance } from "./student_performance.model";
+export { StudentRecord } from "./student_record.model";
+export { Subject } from "./subject.model";
+export { Syllabus } from "./syllabus.model";
+export { Teacher } from "./teacher.model";
+export { TeacherNotification } from "./teacher_notification.model";
+export { Timetable } from "./time_table.model";
+export { Upload } from "./upload.model";
+export { User } from "./user.model";

@@ -5,6 +5,7 @@ This guide provides step-by-step instructions to set up a complete CI/CD pipelin
 ## 📋 Overview
 
 Your CI/CD pipeline includes:
+
 - ✅ Jenkins automated builds and deployments
 - ✅ Microsoft Teams notifications
 - ✅ Docker containerization
@@ -28,16 +29,16 @@ cd /path/to/your/kcs-backend
 ### Step 2: Configure Microsoft Teams Webhook
 
 1. **Create Teams Webhook:**
-   - Go to your Microsoft Teams channel
-   - Click "..." → "Connectors"
-   - Search for "Incoming Webhook"
-   - Configure and copy the webhook URL
+    - Go to your Microsoft Teams channel
+    - Click "..." → "Connectors"
+    - Search for "Incoming Webhook"
+    - Configure and copy the webhook URL
 
 2. **Test Teams Integration:**
-   ```bash
-   export TEAMS_WEBHOOK_URL="your_webhook_url_here"
-   ./.jenkins/test-teams-integration.sh
-   ```
+    ```bash
+    export TEAMS_WEBHOOK_URL="your_webhook_url_here"
+    ./.jenkins/test-teams-integration.sh
+    ```
 
 ### Step 3: Configure Jenkins Credentials
 
@@ -45,11 +46,11 @@ Access Jenkins at `http://65.2.31.97:8080` and add these credentials:
 
 #### Required Credentials:
 
-| ID | Type | Value |
-|---|---|---|
-| `github-access-token` | Secret text | `YOUR_GITHUB_PERSONAL_ACCESS_TOKEN` |
-| `ec2-ssh-key` | SSH Username with private key | Your EC2 private key |
-| `teams-webhook-url` | Secret text | Your Teams webhook URL |
+| ID                    | Type                          | Value                               |
+| --------------------- | ----------------------------- | ----------------------------------- |
+| `github-access-token` | Secret text                   | `YOUR_GITHUB_PERSONAL_ACCESS_TOKEN` |
+| `ec2-ssh-key`         | SSH Username with private key | Your EC2 private key                |
+| `teams-webhook-url`   | Secret text                   | Your Teams webhook URL              |
 
 ### Step 4: Create Jenkins Pipeline Job
 
@@ -73,6 +74,7 @@ Access Jenkins at `http://65.2.31.97:8080` and add these credentials:
 ### Jenkins Credentials Setup
 
 #### 1. GitHub Access Token
+
 ```
 Manage Jenkins → Manage Credentials → Global → Add Credentials
 - Kind: Secret text
@@ -83,6 +85,7 @@ Manage Jenkins → Manage Credentials → Global → Add Credentials
 ```
 
 #### 2. EC2 SSH Key
+
 ```
 Manage Jenkins → Manage Credentials → Global → Add Credentials
 - Kind: SSH Username with private key
@@ -94,6 +97,7 @@ Manage Jenkins → Manage Credentials → Global → Add Credentials
 ```
 
 #### 3. Teams Webhook URL
+
 ```
 Manage Jenkins → Manage Credentials → Global → Add Credentials
 - Kind: Secret text
@@ -118,6 +122,7 @@ PROD_SERVER=65.2.31.97
 ### Required Jenkins Plugins
 
 Install these plugins:
+
 - Git Plugin
 - GitHub Plugin
 - Docker Pipeline Plugin
@@ -136,7 +141,7 @@ Copy and configure these files:
 # For staging
 cp .jenkins/env-staging.example .env.staging
 
-# For production  
+# For production
 cp .jenkins/env-production.example .env.production
 ```
 
@@ -172,6 +177,7 @@ TEAMS_WEBHOOK_URL=your_teams_webhook_url
 ## 🎯 Pipeline Features
 
 ### Automated CI/CD Pipeline
+
 - ✅ **Build Triggers**: Automatic builds on push to main branch
 - ✅ **Quality Gates**: Linting, testing, security scans
 - ✅ **Docker Build**: Optimized multi-stage builds with caching
@@ -192,6 +198,7 @@ TEAMS_WEBHOOK_URL=your_teams_webhook_url
 ### Teams Notifications
 
 You'll receive notifications for:
+
 - 🚀 Build started
 - ✅ Build successful with deployment details
 - ❌ Build failed with error information
@@ -205,14 +212,14 @@ If you prefer GitHub Actions over Jenkins, the repository includes a complete Gi
 
 Add these secrets in your GitHub repository settings:
 
-| Secret Name | Value |
-|---|---|
-| `DOCKER_USERNAME` | Your Docker Hub username |
-| `DOCKER_PASSWORD` | Your Docker Hub password/token |
-| `EC2_SSH_PRIVATE_KEY` | Your EC2 private key |
-| `PRODUCTION_SERVER_IP` | `65.2.31.97` |
-| `PRODUCTION_USER` | `ubuntu` |
-| `TEAMS_WEBHOOK_URL` | Your Teams webhook URL |
+| Secret Name            | Value                          |
+| ---------------------- | ------------------------------ |
+| `DOCKER_USERNAME`      | Your Docker Hub username       |
+| `DOCKER_PASSWORD`      | Your Docker Hub password/token |
+| `EC2_SSH_PRIVATE_KEY`  | Your EC2 private key           |
+| `PRODUCTION_SERVER_IP` | `65.2.31.97`                   |
+| `PRODUCTION_USER`      | `ubuntu`                       |
+| `TEAMS_WEBHOOK_URL`    | Your Teams webhook URL         |
 
 ## 🚀 Deployment Process
 
@@ -246,6 +253,7 @@ curl -f http://localhost:4500/api/health
 ## 🔒 Security Considerations
 
 ### Production Security
+
 - ✅ SSL/TLS encryption with Let's Encrypt
 - ✅ Rate limiting on API endpoints
 - ✅ Security headers configuration
@@ -254,6 +262,7 @@ curl -f http://localhost:4500/api/health
 - ✅ Secret management via Jenkins credentials
 
 ### Access Control
+
 - ✅ SSH key-based authentication
 - ✅ GitHub token with minimal required permissions
 - ✅ Docker registry access control
@@ -262,6 +271,7 @@ curl -f http://localhost:4500/api/health
 ## 📊 Monitoring & Logging
 
 ### Built-in Monitoring
+
 - ✅ Application health checks
 - ✅ Container health monitoring
 - ✅ Nginx access/error logs
@@ -269,6 +279,7 @@ curl -f http://localhost:4500/api/health
 - ✅ Prometheus metrics (optional)
 
 ### Log Locations
+
 ```
 /opt/kcs-backend/logs/          # Application logs
 /opt/kcs-backend/logs/nginx/    # Nginx logs
@@ -280,18 +291,21 @@ curl -f http://localhost:4500/api/health
 ### Common Issues
 
 #### Build Timeouts
+
 ```bash
 # Increase timeout in Jenkinsfile
 timeout(time: 45, unit: 'MINUTES')
 ```
 
 #### Docker Build Failures
+
 ```bash
 # Enable BuildKit for faster builds
 export DOCKER_BUILDKIT=1
 ```
 
 #### SSH Connection Issues
+
 ```bash
 # Test SSH connection
 ssh -i ~/.ssh/your_key ubuntu@65.2.31.97
@@ -301,6 +315,7 @@ ssh -i ~/.ssh/your_key ubuntu@65.2.31.97
 ```
 
 #### Teams Notification Failures
+
 ```bash
 # Test webhook manually
 curl -X POST -H 'Content-Type: application/json' \

@@ -24,14 +24,11 @@ export class StudentPerformanceService {
 
         const performanceRecords: {
             rows: IStudentPerformanceData[];
-        } = await StudentPerformance.find(
-            query,
-            {
-                sort: {
-                    updated_at: "DESC",
-                },
-            }
-        );
+        } = await StudentPerformance.find(query, {
+            sort: {
+                updated_at: "DESC",
+            },
+        });
 
         if (performanceRecords.rows.length === 0) {
             return null;
@@ -101,14 +98,11 @@ export class StudentPerformanceService {
 
         if (existingRecord) {
             // Update existing record
-            return await StudentPerformance.replaceById(
-                existingRecord.id,
-                {
-                    ...existingRecord,
-                    ...performanceData,
-                    updated_at: new Date(),
-                }
-            );
+            return await StudentPerformance.replaceById(existingRecord.id, {
+                ...existingRecord,
+                ...performanceData,
+                updated_at: new Date(),
+            });
         } else {
             // Create new record
             return await StudentPerformance.create({
@@ -132,7 +126,7 @@ export class StudentPerformanceService {
     ) => {
         // This method would calculate performance metrics from various sources
         // like student records, attendance, quiz results, assignments, etc.
-        
+
         // Get student records for the semester
         const studentRecords: any = await StudentRecord.find({
             student_id,
@@ -182,7 +176,7 @@ export class StudentPerformanceService {
     ) => {
         // Implementation would depend on your exam term structure
         // This is a placeholder that you can customize based on your needs
-        
+
         let totalMarksObtained = 0;
         let totalMarksPossible = 0;
         const subjects: any[] = [];
@@ -192,7 +186,7 @@ export class StudentPerformanceService {
                 termData.marks.forEach((mark: any) => {
                     totalMarksObtained += mark.mark_gained;
                     totalMarksPossible += mark.total_marks;
-                    
+
                     subjects.push({
                         subject_id: mark.subject_id,
                         marks_obtained: mark.mark_gained,
@@ -205,9 +199,10 @@ export class StudentPerformanceService {
             });
         }
 
-        const overallPercentage = totalMarksPossible > 0 
-            ? (totalMarksObtained / totalMarksPossible) * 100 
-            : 0;
+        const overallPercentage =
+            totalMarksPossible > 0
+                ? (totalMarksObtained / totalMarksPossible) * 100
+                : 0;
 
         return {
             exam_term_id: "", // You would set this based on your logic
@@ -303,22 +298,19 @@ export class StudentPerformanceService {
         academic_years?: string[]
     ) => {
         const query: any = { student_id };
-        
+
         if (academic_years && academic_years.length > 0) {
             query.academic_year = { $in: academic_years };
         }
 
         const performanceRecords: {
             rows: IStudentPerformanceData[];
-        } = await StudentPerformance.find(
-            query,
-            {
-                sort: {
-                    academic_year: "DESC",
-                    semester: "DESC",
-                },
-            }
-        );
+        } = await StudentPerformance.find(query, {
+            sort: {
+                academic_year: "DESC",
+                semester: "DESC",
+            },
+        });
 
         // Calculate overall statistics
         const summary = {
@@ -331,22 +323,27 @@ export class StudentPerformanceService {
 
         if (performanceRecords.rows.length > 0) {
             const totalGPA = performanceRecords.rows.reduce(
-                (sum, record) => sum + (record.performance_data.overall_gpa || 0),
+                (sum, record) =>
+                    sum + (record.performance_data.overall_gpa || 0),
                 0
             );
             const totalPercentage = performanceRecords.rows.reduce(
-                (sum, record) => sum + (record.performance_data.overall_percentage || 0),
+                (sum, record) =>
+                    sum + (record.performance_data.overall_percentage || 0),
                 0
             );
 
             summary.overall_gpa = totalGPA / performanceRecords.rows.length;
-            summary.overall_percentage = totalPercentage / performanceRecords.rows.length;
-            
+            summary.overall_percentage =
+                totalPercentage / performanceRecords.rows.length;
+
             // Find best semester based on percentage
             summary.best_semester = performanceRecords.rows.reduce(
-                (best, current) => 
-                    !best || current.performance_data.overall_percentage > best.performance_data.overall_percentage
-                        ? current 
+                (best, current) =>
+                    !best ||
+                    current.performance_data.overall_percentage >
+                        best.performance_data.overall_percentage
+                        ? current
                         : best,
                 performanceRecords.rows[0]
             );

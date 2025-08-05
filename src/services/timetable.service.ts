@@ -61,19 +61,24 @@ export class TimetableService {
             data.rows.map(async (timetableItem) => {
                 try {
                     // Fetch subject information
-                    const subject = await Subject.findById(timetableItem.subject_id);
-                    
+                    const subject = await Subject.findById(
+                        timetableItem.subject_id
+                    );
+
                     // Fetch teacher information
-                    const teacher = await Teacher.findById(timetableItem.teacher_id);
+                    const teacher = await Teacher.findById(
+                        timetableItem.teacher_id
+                    );
                     let teacherName = "Unknown Teacher";
-                    
+
                     if (teacher?.user_id) {
                         const user = await User.findById(teacher.user_id);
                         if (user) {
-                            teacherName = `${user.first_name} ${user.last_name}`.trim();
+                            teacherName =
+                                `${user.first_name} ${user.last_name}`.trim();
                         }
                     }
-                    
+
                     return {
                         ...timetableItem,
                         subject_name: subject?.name || "Unknown Subject",
@@ -115,8 +120,12 @@ export class TimetableService {
         return await Promise.all(
             data.rows.map(async (timetableItem) => {
                 try {
-                    const subject = await Subject.findById(timetableItem.subject_id);
-                    const classInfo = await Class.findById(timetableItem.class_id);
+                    const subject = await Subject.findById(
+                        timetableItem.subject_id
+                    );
+                    const classInfo = await Class.findById(
+                        timetableItem.class_id
+                    );
                     return {
                         ...timetableItem,
                         class_name: classInfo?.name || "Unknown Class",

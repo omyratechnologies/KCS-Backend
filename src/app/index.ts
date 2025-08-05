@@ -2,7 +2,6 @@ import { swaggerUI } from "@hono/swagger-ui";
 import { Scalar } from "@scalar/hono-api-reference";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { showRoutes } from "hono/dev";
 import { logger } from "hono/logger";
 import { poweredBy } from "hono/powered-by";
 import { prettyJSON } from "hono/pretty-json";
@@ -17,7 +16,13 @@ const app = new Hono();
 app.use(
     cors({
         origin: "*", // Allow all origins for development
-        allowHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"],
+        allowHeaders: [
+            "Content-Type",
+            "Authorization",
+            "X-Requested-With",
+            "Accept",
+            "Origin",
+        ],
         allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
         credentials: false, // Note: credentials must be false when origin is "*"
         maxAge: 3600,
@@ -90,7 +95,7 @@ app.get(
     })
 );
 
-showRoutes(app);
+// showRoutes(app); // Disabled - only needed during development
 
 log(
     `Server started at http://localhost:${config.PORT}`,

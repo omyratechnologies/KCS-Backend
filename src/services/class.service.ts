@@ -24,35 +24,47 @@ export class ClassService {
                 ...classData,
                 // only send response teacher data (Name, email, phone) to response
                 class_teacher: classData.teacher_ids
-                    ? await Promise.all(classData.teacher_ids.map(async (teacherId) => {
-                        const teacher = await TeacherService.getTeacherById(teacherId);
-                        if (!teacher) {
-                            throw new Error(`Teacher with ID ${teacherId} not found`);
-                        }
-                        return {
-                            id: teacher.id,
-                            user_type: teacher.teacher_profile.user_type,
-                            name: `${teacher.teacher_profile.first_name} ${teacher.teacher_profile.last_name}`,
-                            email: teacher.teacher_profile.email,
-                            phone: teacher.teacher_profile.phone,
-                        };
-                    }))
+                    ? await Promise.all(
+                          classData.teacher_ids.map(async (teacherId) => {
+                              const teacher =
+                                  await TeacherService.getTeacherById(
+                                      teacherId
+                                  );
+                              if (!teacher) {
+                                  throw new Error(
+                                      `Teacher with ID ${teacherId} not found`
+                                  );
+                              }
+                              return {
+                                  id: teacher.id,
+                                  user_type: teacher.teacher_profile.user_type,
+                                  name: `${teacher.teacher_profile.first_name} ${teacher.teacher_profile.last_name}`,
+                                  email: teacher.teacher_profile.email,
+                                  phone: teacher.teacher_profile.phone,
+                              };
+                          })
+                      )
                     : [],
                 // only send response student data (Name, email, phone) to response
                 class_students: classData.student_ids
-                    ? await Promise.all(classData.student_ids.map(async (studentId) => {
-                        const student = await UserService.getUser(studentId);
-                        if (!student) {
-                            throw new Error(`Student with ID ${studentId} not found`);
-                        }
-                        return {
-                            id: student.id,
-                            user_type: student.user_type,
-                            name: `${student.first_name} ${student.last_name}`,
-                            email: student.email,
-                            phone: student.phone,
-                        };
-                    }))
+                    ? await Promise.all(
+                          classData.student_ids.map(async (studentId) => {
+                              const student =
+                                  await UserService.getUser(studentId);
+                              if (!student) {
+                                  throw new Error(
+                                      `Student with ID ${studentId} not found`
+                                  );
+                              }
+                              return {
+                                  id: student.id,
+                                  user_type: student.user_type,
+                                  name: `${student.first_name} ${student.last_name}`,
+                                  email: student.email,
+                                  phone: student.phone,
+                              };
+                          })
+                      )
                     : [],
             };
         } catch (error) {
@@ -140,7 +152,8 @@ export class ClassService {
             // append class from classData.teacher_ids & classData.class_teacher_id to teacher's classes
             if (classData.teacher_ids) {
                 for (const teacherId of classData.teacher_ids) {
-                    const teacher = await TeacherService.getTeacherById(teacherId);
+                    const teacher =
+                        await TeacherService.getTeacherById(teacherId);
                     if (teacher) {
                         if (!teacher.classes) {
                             teacher.classes = [];
@@ -183,7 +196,8 @@ export class ClassService {
             // append class from classData.teacher_ids & classData.class_teacher_id to teacher's classes
             if (classData.teacher_ids) {
                 for (const teacherId of classData.teacher_ids) {
-                    const teacher = await TeacherService.getTeacherById(teacherId);
+                    const teacher =
+                        await TeacherService.getTeacherById(teacherId);
                     if (teacher) {
                         if (!teacher.classes) {
                             teacher.classes = [];
@@ -484,11 +498,13 @@ export class ClassService {
     }
 
     // Get all students by class ID
-    public async getStudentsByClassId(classId: string): Promise<{
-        id: string;
-        user_id: string;
-        name: string;
-    }[]> {
+    public async getStudentsByClassId(classId: string): Promise<
+        {
+            id: string;
+            user_id: string;
+            name: string;
+        }[]
+    > {
         try {
             // Get the class data
             const classData = await Class.findById(classId);
@@ -512,7 +528,9 @@ export class ClassService {
                     try {
                         const student = await UserService.getUser(studentId);
                         if (!student) {
-                            console.warn(`Student with ID ${studentId} not found`);
+                            console.warn(
+                                `Student with ID ${studentId} not found`
+                            );
                             return null;
                         }
                         return {
@@ -521,14 +539,17 @@ export class ClassService {
                             name: `${student.first_name} ${student.last_name}`,
                         };
                     } catch (error) {
-                        console.warn(`Error fetching student with ID ${studentId}:`, error);
+                        console.warn(
+                            `Error fetching student with ID ${studentId}:`,
+                            error
+                        );
                         return null;
                     }
                 })
             );
 
             // Filter out null values and return the results
-            return students.filter(student => student !== null) as {
+            return students.filter((student) => student !== null) as {
                 id: string;
                 user_id: string;
                 name: string;
@@ -588,7 +609,7 @@ export class ClassService {
                 created_at: new Date(),
                 updated_at: new Date(),
             });
-            
+
             console.log("Assignment created successfully:", assignment);
             return assignment;
         } catch (error) {
@@ -614,7 +635,7 @@ export class ClassService {
     public async deleteAssignment(id: string): Promise<boolean> {
         try {
             const deletedAssignment = await Assignment.removeById(id);
-            
+
             // Return true if deletion was successful (assignment existed and was deleted)
             return !!deletedAssignment;
         } catch (error) {
@@ -669,17 +690,22 @@ export class ClassService {
         try {
             // Validate required fields
             if (!assignmentSubmissionData.campus_id) {
-                throw new Error("campus_id is required for assignment submission");
+                throw new Error(
+                    "campus_id is required for assignment submission"
+                );
             }
             if (!assignmentSubmissionData.user_id) {
-                throw new Error("user_id is required for assignment submission");
+                throw new Error(
+                    "user_id is required for assignment submission"
+                );
             }
 
             const submissionData: any = {
                 assignment_id,
                 campus_id: assignmentSubmissionData.campus_id,
                 user_id: assignmentSubmissionData.user_id,
-                submission_date: assignmentSubmissionData.submission_date || new Date(),
+                submission_date:
+                    assignmentSubmissionData.submission_date || new Date(),
                 meta_data: assignmentSubmissionData.meta_data || {},
                 created_at: new Date(),
                 updated_at: new Date(),
@@ -694,7 +720,7 @@ export class ClassService {
             }
 
             const result = await AssignmentSubmission.create(submissionData);
-            
+
             if (!result) {
                 throw new Error("Failed to create assignment submission");
             }
@@ -811,7 +837,9 @@ export class ClassService {
         }
     }
 
-    public async getClassesByStudentId(studentId: string): Promise<IClassData[]> {
+    public async getClassesByStudentId(
+        studentId: string
+    ): Promise<IClassData[]> {
         try {
             // First, let's try with the correct Ottoman syntax for array contains
             const classes: {
@@ -831,8 +859,10 @@ export class ClassService {
 
             if (classes.rows.length === 0) {
                 // If no results found, try alternative approach
-                console.log("No classes found with simple contains, trying alternative query");
-                
+                console.log(
+                    "No classes found with simple contains, trying alternative query"
+                );
+
                 // Get all active classes and filter manually
                 const allClasses: {
                     rows: IClassData[];
@@ -848,8 +878,10 @@ export class ClassService {
                     }
                 );
 
-                const filteredClasses = allClasses.rows.filter(classItem => 
-                    classItem.student_ids && classItem.student_ids.includes(studentId)
+                const filteredClasses = allClasses.rows.filter(
+                    (classItem) =>
+                        classItem.student_ids &&
+                        classItem.student_ids.includes(studentId)
                 );
 
                 if (filteredClasses.length === 0) {
@@ -890,22 +922,28 @@ export class ClassService {
                     throw new Error(`Student with ID ${studentId} not found`);
                 }
                 if (student.user_type !== "Student") {
-                    throw new Error(`User with ID ${studentId} is not a student`);
+                    throw new Error(
+                        `User with ID ${studentId} is not a student`
+                    );
                 }
                 if (!student.is_active || student.is_deleted) {
-                    throw new Error(`Student with ID ${studentId} is not active`);
+                    throw new Error(
+                        `Student with ID ${studentId} is not active`
+                    );
                 }
                 validStudents.push(studentId);
             }
 
             // Get current student IDs to prevent duplicates
             const currentStudentIds = existingClass.student_ids || [];
-            const duplicateStudents = validStudents.filter(studentId => 
+            const duplicateStudents = validStudents.filter((studentId) =>
                 currentStudentIds.includes(studentId)
             );
 
             if (duplicateStudents.length > 0) {
-                throw new Error(`Students with IDs ${duplicateStudents.join(", ")} are already assigned to this class`);
+                throw new Error(
+                    `Students with IDs ${duplicateStudents.join(", ")} are already assigned to this class`
+                );
             }
 
             // Merge new student IDs with existing ones
@@ -947,17 +985,17 @@ export class ClassService {
                             currentMetaData = student.meta_data;
                         }
                     }
-                    
+
                     const currentClasses = currentMetaData.classes || [];
-                    
+
                     // Check if class is already assigned to avoid duplicates
                     if (!currentClasses.includes(classId)) {
                         const updatedClasses = [...currentClasses, classId];
                         const updatedMetaData = {
                             ...currentMetaData,
-                            classes: updatedClasses
+                            classes: updatedClasses,
                         };
-                        
+
                         await UserService.updateUsers(student.id, {
                             meta_data: JSON.stringify(updatedMetaData),
                         });
@@ -1000,12 +1038,14 @@ export class ClassService {
 
             // Get current teacher IDs to prevent duplicates
             const currentTeacherIds = existingClass.teacher_ids || [];
-            const duplicateTeachers = validTeachers.filter(teacherId => 
+            const duplicateTeachers = validTeachers.filter((teacherId) =>
                 currentTeacherIds.includes(teacherId)
             );
 
             if (duplicateTeachers.length > 0) {
-                throw new Error(`Teachers with IDs ${duplicateTeachers.join(", ")} are already assigned to this class`);
+                throw new Error(
+                    `Teachers with IDs ${duplicateTeachers.join(", ")} are already assigned to this class`
+                );
             }
 
             // Merge new teacher IDs with existing ones
@@ -1036,7 +1076,7 @@ export class ClassService {
                     if (!teacher.classes) {
                         teacher.classes = [];
                     }
-                    
+
                     if (!teacher.classes.includes(classId)) {
                         teacher.classes.push(classId);
                         await TeacherService.updateTeacher(teacher.id, {
@@ -1071,17 +1111,19 @@ export class ClassService {
 
             // Get current student IDs
             const currentStudentIds = existingClass.student_ids || [];
-            const studentsNotInClass = studentIds.filter(studentId => 
-                !currentStudentIds.includes(studentId)
+            const studentsNotInClass = studentIds.filter(
+                (studentId) => !currentStudentIds.includes(studentId)
             );
 
             if (studentsNotInClass.length > 0) {
-                throw new Error(`Students with IDs ${studentsNotInClass.join(", ")} are not assigned to this class`);
+                throw new Error(
+                    `Students with IDs ${studentsNotInClass.join(", ")} are not assigned to this class`
+                );
             }
 
             // Remove student IDs from class
-            const updatedStudentIds = currentStudentIds.filter(studentId => 
-                !studentIds.includes(studentId)
+            const updatedStudentIds = currentStudentIds.filter(
+                (studentId) => !studentIds.includes(studentId)
             );
 
             // Update class
@@ -1128,17 +1170,19 @@ export class ClassService {
 
             // Get current teacher IDs
             const currentTeacherIds = existingClass.teacher_ids || [];
-            const teachersNotInClass = teacherIds.filter(teacherId => 
-                !currentTeacherIds.includes(teacherId)
+            const teachersNotInClass = teacherIds.filter(
+                (teacherId) => !currentTeacherIds.includes(teacherId)
             );
 
             if (teachersNotInClass.length > 0) {
-                throw new Error(`Teachers with IDs ${teachersNotInClass.join(", ")} are not assigned to this class`);
+                throw new Error(
+                    `Teachers with IDs ${teachersNotInClass.join(", ")} are not assigned to this class`
+                );
             }
 
             // Remove teacher IDs from class
-            const updatedTeacherIds = currentTeacherIds.filter(teacherId => 
-                !teacherIds.includes(teacherId)
+            const updatedTeacherIds = currentTeacherIds.filter(
+                (teacherId) => !teacherIds.includes(teacherId)
             );
 
             // Update class
@@ -1163,7 +1207,9 @@ export class ClassService {
             for (const teacherId of teacherIds) {
                 const teacher = await TeacherService.getTeacherById(teacherId);
                 if (teacher && teacher.classes) {
-                    const updatedClasses = teacher.classes.filter(id => id !== classId);
+                    const updatedClasses = teacher.classes.filter(
+                        (id) => id !== classId
+                    );
                     await TeacherService.updateTeacher(teacher.id, {
                         classes: updatedClasses,
                     });
@@ -1195,7 +1241,10 @@ export class ClassService {
 
             return assignments.rows;
         } catch (error) {
-            console.error("Error fetching all assignments from all classes:", error);
+            console.error(
+                "Error fetching all assignments from all classes:",
+                error
+            );
             return [];
         }
     }
@@ -1235,7 +1284,7 @@ export class ClassService {
 
             if (classes.rows.length === 0) {
                 throw new Error(
-                    class_id 
+                    class_id
                         ? `No class found with ID: ${class_id} for academic year: ${academic_year}`
                         : `No classes found for academic year: ${academic_year}`
                 );
@@ -1266,14 +1315,19 @@ export class ClassService {
                     try {
                         return await UserService.getUser(studentId);
                     } catch (error) {
-                        console.warn(`Failed to get student data for ID: ${studentId}`, error);
+                        console.warn(
+                            `Failed to get student data for ID: ${studentId}`,
+                            error
+                        );
                         return null;
                     }
                 })
             );
 
             // Filter out null values (failed to fetch students)
-            const validStudents = studentsData.filter(student => student !== null) as IUser[];
+            const validStudents = studentsData.filter(
+                (student) => student !== null
+            ) as IUser[];
 
             // Sort students by name
             validStudents.sort((a, b) => {
@@ -1289,7 +1343,10 @@ export class ClassService {
                 classes_included: classes.rows,
             };
         } catch (error) {
-            console.error("Error fetching students by year and class ID:", error);
+            console.error(
+                "Error fetching students by year and class ID:",
+                error
+            );
             throw error;
         }
     }
@@ -1327,32 +1384,44 @@ export class ClassService {
             );
 
             if (classes.rows.length === 0) {
-                throw new Error(`No classes found for academic year: ${academic_year}`);
+                throw new Error(
+                    `No classes found for academic year: ${academic_year}`
+                );
             }
 
             // Get students for each class
             const classesWithStudents = await Promise.all(
                 classes.rows.map(async (classData) => {
                     let students: IUser[] = [];
-                    
-                    if (classData.student_ids && classData.student_ids.length > 0) {
+
+                    if (
+                        classData.student_ids &&
+                        classData.student_ids.length > 0
+                    ) {
                         const studentsData = await Promise.all(
                             classData.student_ids.map(async (studentId) => {
                                 try {
                                     return await UserService.getUser(studentId);
                                 } catch (error) {
-                                    console.warn(`Failed to get student data for ID: ${studentId}`, error);
+                                    console.warn(
+                                        `Failed to get student data for ID: ${studentId}`,
+                                        error
+                                    );
                                     return null;
                                 }
                             })
                         );
-                        
-                        students = studentsData.filter(student => student !== null) as IUser[];
-                        
+
+                        students = studentsData.filter(
+                            (student) => student !== null
+                        ) as IUser[];
+
                         // Sort students by name
                         students.sort((a, b) => {
-                            const nameA = `${a.first_name} ${a.last_name}`.toLowerCase();
-                            const nameB = `${b.first_name} ${b.last_name}`.toLowerCase();
+                            const nameA =
+                                `${a.first_name} ${a.last_name}`.toLowerCase();
+                            const nameB =
+                                `${b.first_name} ${b.last_name}`.toLowerCase();
                             return nameA.localeCompare(nameB);
                         });
                     }
@@ -1367,7 +1436,8 @@ export class ClassService {
 
             // Calculate total students across all classes
             const totalStudents = classesWithStudents.reduce(
-                (total, classWithStudents) => total + classWithStudents.student_count,
+                (total, classWithStudents) =>
+                    total + classWithStudents.student_count,
                 0
             );
 
@@ -1378,13 +1448,18 @@ export class ClassService {
                 classes: classesWithStudents,
             };
         } catch (error) {
-            console.error("Error fetching students grouped by class for year:", error);
+            console.error(
+                "Error fetching students grouped by class for year:",
+                error
+            );
             throw error;
         }
     }
 
     // Get all unique academic years for a campus
-    public async getAcademicYearsByCampus(campus_id: string): Promise<string[]> {
+    public async getAcademicYearsByCampus(
+        campus_id: string
+    ): Promise<string[]> {
         try {
             const classes: {
                 rows: IClassData[];
@@ -1406,8 +1481,12 @@ export class ClassService {
             }
 
             // Get unique academic years
-            const academicYears = [...new Set(classes.rows.map(classData => classData.academic_year))];
-            
+            const academicYears = [
+                ...new Set(
+                    classes.rows.map((classData) => classData.academic_year)
+                ),
+            ];
+
             return academicYears.sort().reverse(); // Most recent first
         } catch (error) {
             console.error("Error fetching academic years:", error);
@@ -1422,17 +1501,21 @@ export class ClassService {
         feedback?: string
     ): Promise<IAssignmentSubmission> {
         try {
-            const submission = await AssignmentSubmission.findById(submission_id);
-            
+            const submission =
+                await AssignmentSubmission.findById(submission_id);
+
             if (!submission) {
                 throw new Error("Assignment submission not found");
             }
 
-            const updatedSubmission = await AssignmentSubmission.updateById(submission_id, {
-                grade,
-                feedback: feedback || submission.feedback,
-                updated_at: new Date()
-            });
+            const updatedSubmission = await AssignmentSubmission.updateById(
+                submission_id,
+                {
+                    grade,
+                    feedback: feedback || submission.feedback,
+                    updated_at: new Date(),
+                }
+            );
 
             if (!updatedSubmission) {
                 throw new Error("Failed to update assignment submission");
@@ -1449,16 +1532,18 @@ export class ClassService {
     public async getStudentAssignmentsWithSubmissions(
         student_id: string,
         campus_id: string
-    ): Promise<Array<{
-        assignment: IAssignmentData;
-        submission: IAssignmentSubmission | null;
-        status: string;
-        class_info: {
-            id: string;
-            name: string;
-            academic_year: string;
-        };
-    }>> {
+    ): Promise<
+        Array<{
+            assignment: IAssignmentData;
+            submission: IAssignmentSubmission | null;
+            status: string;
+            class_info: {
+                id: string;
+                name: string;
+                academic_year: string;
+            };
+        }>
+    > {
         try {
             // First, get all classes the student is enrolled in
             const studentClasses: {
@@ -1510,12 +1595,15 @@ export class ClassService {
 
                     if (submission.rows.length > 0) {
                         submissionData = submission.rows[0];
-                        
+
                         // Check if assignment is overdue
                         const currentDate = new Date();
                         const dueDate = new Date(assignment.due_date);
-                        
-                        if (submissionData.grade !== null && submissionData.grade !== undefined) {
+
+                        if (
+                            submissionData.grade !== null &&
+                            submissionData.grade !== undefined
+                        ) {
                             status = "graded";
                         } else if (currentDate > dueDate) {
                             status = "overdue";
@@ -1526,7 +1614,7 @@ export class ClassService {
                         // Check if assignment is overdue
                         const currentDate = new Date();
                         const dueDate = new Date(assignment.due_date);
-                        
+
                         if (currentDate > dueDate) {
                             status = "overdue";
                         }
@@ -1539,8 +1627,8 @@ export class ClassService {
                         class_info: {
                             id: classData.id,
                             name: classData.name,
-                            academic_year: classData.academic_year
-                        }
+                            academic_year: classData.academic_year,
+                        },
                     });
                 }
             }
@@ -1554,7 +1642,10 @@ export class ClassService {
 
             return assignments;
         } catch (error) {
-            console.error("Error fetching student assignments with submissions:", error);
+            console.error(
+                "Error fetching student assignments with submissions:",
+                error
+            );
             throw error;
         }
     }
@@ -1568,17 +1659,23 @@ export class ClassService {
         }>
     ): Promise<IAssignmentSubmission> {
         try {
-            const submission = await AssignmentSubmission.findById(submission_id);
-            
+            const submission =
+                await AssignmentSubmission.findById(submission_id);
+
             if (!submission) {
                 throw new Error("Assignment submission not found");
             }
 
-            const updatedSubmission = await AssignmentSubmission.updateById(submission_id, {
-                ...updateData,
-                submission_date: updateData.submission_date ? new Date(updateData.submission_date) : submission.submission_date,
-                updated_at: new Date()
-            });
+            const updatedSubmission = await AssignmentSubmission.updateById(
+                submission_id,
+                {
+                    ...updateData,
+                    submission_date: updateData.submission_date
+                        ? new Date(updateData.submission_date)
+                        : submission.submission_date,
+                    updated_at: new Date(),
+                }
+            );
 
             if (!updatedSubmission) {
                 throw new Error("Failed to update assignment submission");
@@ -1596,16 +1693,18 @@ export class ClassService {
         student_id: string,
         campus_id: string,
         daysAhead: number = 7
-    ): Promise<Array<{
-        assignment: IAssignmentData;
-        days_until_due: number;
-        is_submitted: boolean;
-        class_info: {
-            id: string;
-            name: string;
-            academic_year: string;
-        };
-    }>> {
+    ): Promise<
+        Array<{
+            assignment: IAssignmentData;
+            days_until_due: number;
+            is_submitted: boolean;
+            class_info: {
+                id: string;
+                name: string;
+                academic_year: string;
+            };
+        }>
+    > {
         try {
             // Get current date and future date
             const currentDate = new Date();
@@ -1648,8 +1747,8 @@ export class ClassService {
                     is_deleted: false,
                     due_date: {
                         $gte: currentDate.toISOString(),
-                        $lte: futureDate.toISOString()
-                    }
+                        $lte: futureDate.toISOString(),
+                    },
                 });
 
                 for (const assignment of classAssignments.rows) {
@@ -1662,11 +1761,13 @@ export class ClassService {
                     });
 
                     const isSubmitted = submission.rows.length > 0;
-                    
+
                     // Calculate days until due
                     const dueDate = new Date(assignment.due_date);
                     const timeDiff = dueDate.getTime() - currentDate.getTime();
-                    const daysUntilDue = Math.ceil(timeDiff / (1000 * 3600 * 24));
+                    const daysUntilDue = Math.ceil(
+                        timeDiff / (1000 * 3600 * 24)
+                    );
 
                     dueSoonAssignments.push({
                         assignment,
@@ -1675,14 +1776,16 @@ export class ClassService {
                         class_info: {
                             id: classData.id,
                             name: classData.name,
-                            academic_year: classData.academic_year
-                        }
+                            academic_year: classData.academic_year,
+                        },
                     });
                 }
             }
 
             // Sort by days until due (most urgent first)
-            dueSoonAssignments.sort((a, b) => a.days_until_due - b.days_until_due);
+            dueSoonAssignments.sort(
+                (a, b) => a.days_until_due - b.days_until_due
+            );
 
             return dueSoonAssignments;
         } catch (error) {

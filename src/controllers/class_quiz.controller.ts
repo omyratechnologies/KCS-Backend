@@ -101,12 +101,14 @@ export class ClassQuizController {
         }
     };
 
-    public static readonly getClassQuizByClassIDWithStudentStatus = async (ctx: Context) => {
+    public static readonly getClassQuizByClassIDWithStudentStatus = async (
+        ctx: Context
+    ) => {
         try {
             const campus_id = ctx.get("campus_id");
             const { class_id } = ctx.req.param();
             const { user_id } = ctx.req.query();
-            
+
             // If no user_id in query, use the logged-in user's ID
             const student_id = user_id || ctx.get("user_id");
 
@@ -120,11 +122,12 @@ export class ClassQuizController {
                 );
             }
 
-            const result = await ClassQuizService.getClassQuizByClassIDWithStudentStatus(
-                campus_id,
-                class_id,
-                student_id
-            );
+            const result =
+                await ClassQuizService.getClassQuizByClassIDWithStudentStatus(
+                    campus_id,
+                    class_id,
+                    student_id
+                );
 
             return ctx.json({
                 success: true,
@@ -573,13 +576,14 @@ export class ClassQuizController {
         }
     };
 
-    public static readonly getAllQuizzesFromAllClasses = async (ctx: Context) => {
+    public static readonly getAllQuizzesFromAllClasses = async (
+        ctx: Context
+    ) => {
         try {
             const campus_id = ctx.get("campus_id");
 
-            const result = await ClassQuizService.getAllQuizzesFromAllClasses(
-                campus_id
-            );
+            const result =
+                await ClassQuizService.getAllQuizzesFromAllClasses(campus_id);
 
             return ctx.json({
                 success: true,
@@ -728,7 +732,9 @@ export class ClassQuizController {
         }
     };
 
-    public static readonly navigateToPreviousQuestion = async (ctx: Context) => {
+    public static readonly navigateToPreviousQuestion = async (
+        ctx: Context
+    ) => {
         try {
             const user_id = ctx.get("user_id");
             const { session_token } = ctx.req.param();
@@ -844,7 +850,8 @@ export class ClassQuizController {
 
     public static readonly checkExpiredSessions = async (ctx: Context) => {
         try {
-            const result = await ClassQuizService.checkAndHandleExpiredSessions();
+            const result =
+                await ClassQuizService.checkAndHandleExpiredSessions();
 
             return ctx.json({
                 success: true,
@@ -945,7 +952,9 @@ export class ClassQuizController {
         }
     };
 
-    public static readonly getAllQuizResultsByStudentId = async (ctx: Context) => {
+    public static readonly getAllQuizResultsByStudentId = async (
+        ctx: Context
+    ) => {
         try {
             const campus_id = ctx.get("campus_id");
             const { student_id } = ctx.req.param();
@@ -975,17 +984,20 @@ export class ClassQuizController {
         }
     };
 
-    public static readonly getQuizResultsSummaryByStudentId = async (ctx: Context) => {
+    public static readonly getQuizResultsSummaryByStudentId = async (
+        ctx: Context
+    ) => {
         try {
             const campus_id = ctx.get("campus_id");
             const { student_id } = ctx.req.param();
             const { class_id } = ctx.req.query();
 
-            const summary = await ClassQuizService.getQuizResultsSummaryByStudentId(
-                campus_id,
-                student_id,
-                class_id
-            );
+            const summary =
+                await ClassQuizService.getQuizResultsSummaryByStudentId(
+                    campus_id,
+                    student_id,
+                    class_id
+                );
 
             return ctx.json({
                 success: true,
@@ -1004,16 +1016,19 @@ export class ClassQuizController {
         }
     };
 
-    public static readonly getQuizResultsByStudentIdAndQuizId = async (ctx: Context) => {
+    public static readonly getQuizResultsByStudentIdAndQuizId = async (
+        ctx: Context
+    ) => {
         try {
             const campus_id = ctx.get("campus_id");
             const { student_id, quiz_id } = ctx.req.param();
 
-            const results = await ClassQuizService.getQuizResultsByStudentIdAndQuizId(
-                campus_id,
-                student_id,
-                quiz_id
-            );
+            const results =
+                await ClassQuizService.getQuizResultsByStudentIdAndQuizId(
+                    campus_id,
+                    student_id,
+                    quiz_id
+                );
 
             return ctx.json({
                 success: true,

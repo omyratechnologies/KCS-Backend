@@ -6,30 +6,34 @@ import { config } from "@/utils/env";
 export class Cache {
     private static redis: Redis;
     private static instance: Cache;
+    private static statusReported = false;
 
     public static readonly init = () => {
         this.redis = new Redis(config.REDIS_URI);
-        
-        // Add proper error handling for Redis
-        this.redis.on("error", (error) => {
-            log(`Redis error: ${error.message}`, LogTypes.ERROR, "Cache");
-        });
 
-        this.redis.on("connect", () => {
-            log("Redis connected successfully", LogTypes.LOGS, "Cache");
-        });
-
+        // Only show connection status once after initial attempt
         this.redis.on("ready", () => {
-            log("Redis ready to accept commands", LogTypes.LOGS, "Cache");
+            if (!this.statusReported) {
+                log("Redis connected", LogTypes.LOGS, "Cache");
+                this.statusReported = true;
+            }
         });
 
+        // Show disconnection only if we were previously connected
         this.redis.on("close", () => {
-            log("Redis connection closed", LogTypes.ERROR, "Cache");
+            if (this.statusReported) {
+                log("Redis disconnected", LogTypes.ERROR, "Cache");
+                this.statusReported = false;
+            }
         });
 
-        this.redis.on("reconnecting", () => {
-            log("Redis reconnecting...", LogTypes.LOGS, "Cache");
-        });
+        // Show connection failure after initial timeout
+        setTimeout(() => {
+            if (!this.statusReported && this.redis.status !== "ready") {
+                log("Redis not connected", LogTypes.ERROR, "Cache");
+                this.statusReported = true;
+            }
+        }, 1000);
 
         log("Redis client initialized", LogTypes.LOGS, "Cache");
     };

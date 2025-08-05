@@ -14,19 +14,26 @@ export class UploadController {
             const { file } = await ctx.req.parseBody();
 
             if (!file || typeof file === "string") {
-                return ctx.json({
-                    success: false,
-                    message: "No file uploaded",
-                }, 400);
+                return ctx.json(
+                    {
+                        success: false,
+                        message: "No file uploaded",
+                    },
+                    400
+                );
             }
 
             // Validate file size (max 100MB)
             const maxSize = 100 * 1024 * 1024; // 100MB in bytes
             if (file.size > maxSize) {
-                return ctx.json({
-                    success: false,
-                    message: "File too large. Maximum size allowed is 100MB",
-                }, 400);
+                return ctx.json(
+                    {
+                        success: false,
+                        message:
+                            "File too large. Maximum size allowed is 100MB",
+                    },
+                    400
+                );
             }
 
             // Initialize S3 client
@@ -52,15 +59,21 @@ export class UploadController {
             return ctx.json(upload);
         } catch (error) {
             if (error instanceof Error) {
-                return ctx.json({
-                    success: false,
-                    message: error.message,
-                }, 500);
+                return ctx.json(
+                    {
+                        success: false,
+                        message: error.message,
+                    },
+                    500
+                );
             }
-            return ctx.json({
-                success: false,
-                message: "An unexpected error occurred",
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message: "An unexpected error occurred",
+                },
+                500
+            );
         }
     };
 
@@ -73,15 +86,21 @@ export class UploadController {
             return ctx.json(uploads);
         } catch (error) {
             if (error instanceof Error) {
-                return ctx.json({
-                    success: false,
-                    message: error.message,
-                }, 500);
+                return ctx.json(
+                    {
+                        success: false,
+                        message: error.message,
+                    },
+                    500
+                );
             }
-            return ctx.json({
-                success: false,
-                message: "An unexpected error occurred",
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message: "An unexpected error occurred",
+                },
+                500
+            );
         }
     };
 
@@ -94,15 +113,21 @@ export class UploadController {
             return ctx.json(upload);
         } catch (error) {
             if (error instanceof Error) {
-                return ctx.json({
-                    success: false,
-                    message: error.message,
-                }, 500);
+                return ctx.json(
+                    {
+                        success: false,
+                        message: error.message,
+                    },
+                    500
+                );
             }
-            return ctx.json({
-                success: false,
-                message: "An unexpected error occurred",
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message: "An unexpected error occurred",
+                },
+                500
+            );
         }
     };
 
@@ -115,15 +140,21 @@ export class UploadController {
             return ctx.json(upload);
         } catch (error) {
             if (error instanceof Error) {
-                return ctx.json({
-                    success: false,
-                    message: error.message,
-                }, 500);
+                return ctx.json(
+                    {
+                        success: false,
+                        message: error.message,
+                    },
+                    500
+                );
             }
-            return ctx.json({
-                success: false,
-                message: "An unexpected error occurred",
-            }, 500);
+            return ctx.json(
+                {
+                    success: false,
+                    message: "An unexpected error occurred",
+                },
+                500
+            );
         }
     };
 }

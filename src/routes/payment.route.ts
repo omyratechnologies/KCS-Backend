@@ -20,7 +20,8 @@ import {
     schoolBankDetailsSchema,
     studentFeesResponseSchema,
     successResponseSchema,
-    verifyPaymentRequestSchema} from "@/schema/payment";
+    verifyPaymentRequestSchema,
+} from "@/schema/payment";
 
 const app = new Hono();
 
@@ -31,7 +32,8 @@ app.post(
         tags: ["Payment Management"],
         operationId: "createSchoolBankDetails",
         summary: "Create or update school bank details",
-        description: "School admin can add/update bank account details for payment collection",
+        description:
+            "School admin can add/update bank account details for payment collection",
         responses: {
             200: {
                 description: "Bank details saved successfully",
@@ -78,7 +80,8 @@ app.post(
         tags: ["Payment Management"],
         operationId: "createFeeCategory",
         summary: "Create fee category",
-        description: "Create a new fee category (e.g., Tuition, Transportation, etc.)",
+        description:
+            "Create a new fee category (e.g., Tuition, Transportation, etc.)",
         responses: {
             200: {
                 description: "Fee category created successfully",
@@ -219,7 +222,8 @@ app.post(
         tags: ["Payment Management"],
         operationId: "generateFees",
         summary: "Generate fees from template",
-        description: "Generate individual fee records for students based on template",
+        description:
+            "Generate individual fee records for students based on template",
         responses: {
             200: {
                 description: "Fees generated successfully",
@@ -312,7 +316,10 @@ app.get(
                 name: "status",
                 in: "query",
                 required: false,
-                schema: { type: "string", enum: ["pending", "completed", "failed"] },
+                schema: {
+                    type: "string",
+                    enum: ["pending", "completed", "failed"],
+                },
                 description: "Filter by payment status",
             },
         ],
@@ -350,7 +357,10 @@ app.get(
                 name: "status",
                 in: "query",
                 required: false,
-                schema: { type: "string", enum: ["unpaid", "partial", "paid", "overdue"] },
+                schema: {
+                    type: "string",
+                    enum: ["unpaid", "partial", "paid", "overdue"],
+                },
                 description: "Filter by fee status",
             },
         ],
@@ -375,7 +385,8 @@ app.get(
         tags: ["Payment Information"],
         operationId: "getAvailableGateways",
         summary: "Get available payment gateways",
-        description: "Retrieve list of available payment gateways for the school",
+        description:
+            "Retrieve list of available payment gateways for the school",
         responses: {
             200: {
                 description: "Available gateways retrieved successfully",
@@ -453,7 +464,8 @@ app.get(
         tags: ["Gateway Management"],
         operationId: "getMaskedCredentials",
         summary: "Get masked payment gateway credentials",
-        description: "Admin can view masked gateway credentials for verification",
+        description:
+            "Admin can view masked gateway credentials for verification",
         responses: {
             200: {
                 description: "Masked credentials retrieved successfully",
@@ -525,7 +537,8 @@ app.post(
         tags: ["Security Management"],
         operationId: "migrateLegacyCredentials",
         summary: "Migrate legacy credentials",
-        description: "Admin can migrate legacy credentials to new encryption format",
+        description:
+            "Admin can migrate legacy credentials to new encryption format",
         responses: {
             200: {
                 description: "Credentials migration completed",
@@ -550,7 +563,8 @@ app.get(
         tags: ["Payment Security"],
         operationId: "getSecurityDashboard",
         summary: "Get comprehensive security dashboard",
-        description: "Admin can view payment security metrics, recent events, and audit logs",
+        description:
+            "Admin can view payment security metrics, recent events, and audit logs",
         responses: {
             200: {
                 description: "Security dashboard data retrieved successfully",
@@ -574,7 +588,8 @@ app.get(
         tags: ["Payment Security"],
         operationId: "getSecurityEventDetails",
         summary: "Get detailed security event information",
-        description: "Admin can view detailed information about a specific security event",
+        description:
+            "Admin can view detailed information about a specific security event",
         responses: {
             200: {
                 description: "Security event details retrieved successfully",

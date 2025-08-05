@@ -5,7 +5,7 @@ import { ClassQuizService } from "@/services/class_quiz.service";
  */
 export class QuizBackgroundService {
     private static intervalId: NodeJS.Timeout | null = null;
-    
+
     /**
      * Start the background service to check for expired sessions
      * @param intervalMinutes - How often to check (in minutes), default 1 minute
@@ -17,12 +17,14 @@ export class QuizBackgroundService {
         }
 
         const intervalMs = intervalMinutes * 60 * 1000;
-        
-        console.log(`Starting quiz background service - checking every ${intervalMinutes} minute(s)`);
-        
+
+        console.log(
+            `Starting quiz background service - checking every ${intervalMinutes} minute(s)`
+        );
+
         // Run immediately on start
         this.checkExpiredSessions();
-        
+
         // Set up recurring checks
         this.intervalId = setInterval(() => {
             this.checkExpiredSessions();
@@ -45,18 +47,26 @@ export class QuizBackgroundService {
      */
     private static async checkExpiredSessions(): Promise<void> {
         try {
-            const results = await ClassQuizService.checkAndHandleExpiredSessions();
-            
+            const results =
+                await ClassQuizService.checkAndHandleExpiredSessions();
+
             if (results.length > 0) {
-                console.log(`[${new Date().toISOString()}] Auto-submitted ${results.length} expired quiz sessions`);
-                
+                console.log(
+                    `[${new Date().toISOString()}] Auto-submitted ${results.length} expired quiz sessions`
+                );
+
                 // Log each auto-submission for audit purposes
                 for (const result of results) {
-                    console.log(`  - User ${result.user_id}: Quiz ${result.quiz_id}, Score: ${result.result.score}/${result.result.total_questions}`);
+                    console.log(
+                        `  - User ${result.user_id}: Quiz ${result.quiz_id}, Score: ${result.result.score}/${result.result.total_questions}`
+                    );
                 }
             }
         } catch (error) {
-            console.error("[Quiz Background Service] Error checking expired sessions:", error);
+            console.error(
+                "[Quiz Background Service] Error checking expired sessions:",
+                error
+            );
         }
     }
 
@@ -71,7 +81,10 @@ export class QuizBackgroundService {
     /**
      * Get service status
      */
-    public static getStatus(): { running: boolean; intervalId: NodeJS.Timeout | null } {
+    public static getStatus(): {
+        running: boolean;
+        intervalId: NodeJS.Timeout | null;
+    } {
         return {
             running: this.intervalId !== null,
             intervalId: this.intervalId,
@@ -85,10 +98,10 @@ export class QuizBackgroundService {
 export const QUIZ_TIMEOUT_CONFIG = {
     // Default check interval (1 minute)
     DEFAULT_CHECK_INTERVAL_MINUTES: 1,
-    
+
     // Grace period after timeout before auto-submission (30 seconds)
     TIMEOUT_GRACE_PERIOD_SECONDS: 30,
-    
+
     // Maximum time a session can be inactive before being considered abandoned (30 minutes)
     MAX_INACTIVE_MINUTES: 30,
 };
@@ -110,11 +123,11 @@ export class QuizTimeUtils {
      */
     public static getRemainingTimeSeconds(expiresAt: Date | null): number {
         if (!expiresAt) return -1; // No time limit
-        
+
         const now = new Date();
         const expires = new Date(expiresAt);
         const remainingMs = expires.getTime() - now.getTime();
-        
+
         return Math.max(0, Math.floor(remainingMs / 1000));
     }
 
@@ -125,8 +138,9 @@ export class QuizTimeUtils {
         const now = new Date();
         const lastActivity = new Date(lastActivityAt);
         const inactiveMs = now.getTime() - lastActivity.getTime();
-        const maxInactiveMs = QUIZ_TIMEOUT_CONFIG.MAX_INACTIVE_MINUTES * 60 * 1000;
-        
+        const maxInactiveMs =
+            QUIZ_TIMEOUT_CONFIG.MAX_INACTIVE_MINUTES * 60 * 1000;
+
         return inactiveMs > maxInactiveMs;
     }
 
@@ -135,11 +149,13 @@ export class QuizTimeUtils {
      */
     public static formatTimeRemaining(seconds: number): string {
         if (seconds < 0) return "No time limit";
-        
+
         const hours = Math.floor(seconds / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);
         const secs = seconds % 60;
-        
-        return hours > 0 ? `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}` : `${minutes}:${secs.toString().padStart(2, "0")}`;
+
+        return hours > 0
+            ? `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
+            : `${minutes}:${secs.toString().padStart(2, "0")}`;
     }
 }

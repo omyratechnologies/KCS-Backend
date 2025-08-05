@@ -1,352 +1,435 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Reset Your Password - Let's Catch Up</title>
-    <style>
-        /* Reset styles */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { margin: 0; padding: 0; font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8fafc; }
-        
-        /* Container */
-        .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; }
-        
-        /* Header */
-        .header { 
-            background: linear-gradient(135deg, #0A0A0A 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #0e4b99 100%);
-            padding: 40px 30px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: 
-                radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
-                radial-gradient(circle at 80% 80%, rgba(85, 218, 215, 0.2) 1px, transparent 1px);
-            background-size: 50px 50px, 80px 80px;
-        }
-        
-        .logo { 
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 20px;
-            display: inline-block;
-            margin-bottom: 20px;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .logo img { 
-            width: 80px; 
-            height: 80px; 
-            border-radius: 12px;
-        }
-        
-        .brand-title { 
-            color: #ffffff;
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .brand-subtitle { 
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 16px;
-            font-weight: 400;
-            position: relative;
-            z-index: 1;
-        }
-        
-        /* Content */
-        .content { padding: 50px 40px; }
-        
-        .reset-title {
-            color: #0A1929;
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 16px;
-            text-align: center;
-        }
-        
-        .reset-subtitle {
-            color: #64748B;
-            font-size: 18px;
-            font-weight: 400;
-            margin-bottom: 40px;
-            text-align: center;
-            line-height: 1.5;
-        }
-        
-        /* OTP Box */
-        .otp-box {
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-            border: 2px solid #0ea5e9;
-            border-radius: 16px;
-            padding: 32px;
-            margin: 32px 0;
-            text-align: center;
-        }
-        
-        .otp-title {
-            color: #0369a1;
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        
-        .otp-code {
-            color: #0f172a;
-            font-size: 36px;
-            font-weight: 700;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            background: #ffffff;
-            padding: 20px 32px;
-            border-radius: 12px;
-            border: 2px solid #0ea5e9;
-            margin: 16px 0;
-            letter-spacing: 8px;
-            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.1);
-        }
-        
-        .otp-note {
-            color: #0369a1;
-            font-size: 14px;
-            font-weight: 500;
-            margin-top: 16px;
-        }
-        
-        /* Warning Box */
-        .warning-box {
-            background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 100%);
-            border-left: 4px solid #f59e0b;
-            border-radius: 8px;
-            padding: 24px;
-            margin: 32px 0;
-        }
-        
-        .warning-title {
-            color: #f59e0b;
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .warning-text {
-            color: #92400e;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-        
-        /* Security Tips */
-        .security-tips {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 24px;
-            margin: 32px 0;
-        }
-        
-        .security-title {
-            color: #0A1929;
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .security-list {
-            list-style: none;
-            padding: 0;
-        }
-        
-        .security-list li {
-            color: #64748B;
-            font-size: 14px;
-            line-height: 1.6;
-            margin-bottom: 8px;
-            padding-left: 24px;
-            position: relative;
-        }
-        
-        .security-list li::before {
-            content: '✓';
-            color: #10b981;
-            font-weight: 600;
-            position: absolute;
-            left: 0;
-        }
-        
-        /* Alternative Link */
-        .alternative-text {
-            color: #64748B;
-            font-size: 14px;
-            text-align: center;
-            margin: 32px 0;
-            line-height: 1.6;
-        }
-        
-        .alternative-link {
-            color: #55dad7;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        
-        .alternative-link:hover {
-            color: #F1531C;
-            text-decoration: underline;
-        }
-        
-        /* Footer */
-        .footer {
-            background: #0A1929;
-            color: #94a3b8;
-            padding: 32px 40px;
-            text-align: center;
-        }
-        
-        .footer-title {
-            color: #ffffff;
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 16px;
-        }
-        
-        .footer-text {
-            font-size: 14px;
-            line-height: 1.6;
-            margin-bottom: 24px;
-        }
-        
-        .footer-links {
-            display: flex;
-            justify-content: center;
-            gap: 24px;
-            margin-bottom: 24px;
-        }
-        
-        .footer-link {
-            color: #55dad7;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        
-        .footer-link:hover {
-            color: #F1531C;
-        }
-        
-        .footer-copy {
-            color: #64748B;
-            font-size: 12px;
-            margin-top: 24px;
-            padding-top: 24px;
-            border-top: 1px solid #1e293b;
-        }
-        
-        /* Responsive */
-        @media (max-width: 600px) {
-            .content { padding: 32px 24px; }
-            .otp-box { padding: 24px 20px; }
-            .otp-code { font-size: 28px; letter-spacing: 4px; padding: 16px 24px; }
-            .footer { padding: 24px 20px; }
-            .footer-links { flex-direction: column; gap: 12px; }
-        }
-    </style>
-</head>
-<body>
-    <div class="email-container">
-        <!-- Header -->
-        <div class="header">
-            <div class="logo">
-                <div style="width: 80px; height: 80px; background: rgba(255,255,255,0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 24px; font-weight: 700;">KCS</div>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <title>Reset Your Password - Let's Catch Up</title>
+        <style>
+            /* Reset styles */
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                margin: 0;
+                padding: 0;
+                font-family:
+                    "Poppins",
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Roboto,
+                    sans-serif;
+                background-color: #f8fafc;
+            }
+
+            /* Container */
+            .email-container {
+                max-width: 600px;
+                margin: 0 auto;
+                background-color: #ffffff;
+            }
+
+            /* Header */
+            .header {
+                background: linear-gradient(
+                    135deg,
+                    #0a0a0a 0%,
+                    #1a1a2e 25%,
+                    #16213e 50%,
+                    #0f3460 75%,
+                    #0e4b99 100%
+                );
+                padding: 40px 30px;
+                text-align: center;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .header::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-image:
+                    radial-gradient(
+                        circle at 20% 20%,
+                        rgba(255, 255, 255, 0.1) 1px,
+                        transparent 1px
+                    ),
+                    radial-gradient(
+                        circle at 80% 80%,
+                        rgba(85, 218, 215, 0.2) 1px,
+                        transparent 1px
+                    );
+                background-size:
+                    50px 50px,
+                    80px 80px;
+            }
+
+            .logo {
+                background-color: rgba(255, 255, 255, 0.1);
+                border-radius: 20px;
+                padding: 20px;
+                display: inline-block;
+                margin-bottom: 20px;
+                position: relative;
+                z-index: 1;
+            }
+
+            .logo img {
+                width: 80px;
+                height: 80px;
+                border-radius: 12px;
+            }
+
+            .brand-title {
+                color: #ffffff;
+                font-size: 32px;
+                font-weight: 700;
+                margin-bottom: 8px;
+                position: relative;
+                z-index: 1;
+            }
+
+            .brand-subtitle {
+                color: rgba(255, 255, 255, 0.8);
+                font-size: 16px;
+                font-weight: 400;
+                position: relative;
+                z-index: 1;
+            }
+
+            /* Content */
+            .content {
+                padding: 50px 40px;
+            }
+
+            .reset-title {
+                color: #0a1929;
+                font-size: 28px;
+                font-weight: 700;
+                margin-bottom: 16px;
+                text-align: center;
+            }
+
+            .reset-subtitle {
+                color: #64748b;
+                font-size: 18px;
+                font-weight: 400;
+                margin-bottom: 40px;
+                text-align: center;
+                line-height: 1.5;
+            }
+
+            /* OTP Box */
+            .otp-box {
+                background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+                border: 2px solid #0ea5e9;
+                border-radius: 16px;
+                padding: 32px;
+                margin: 32px 0;
+                text-align: center;
+            }
+
+            .otp-title {
+                color: #0369a1;
+                font-size: 20px;
+                font-weight: 600;
+                margin-bottom: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+            }
+
+            .otp-code {
+                color: #0f172a;
+                font-size: 36px;
+                font-weight: 700;
+                font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+                background: #ffffff;
+                padding: 20px 32px;
+                border-radius: 12px;
+                border: 2px solid #0ea5e9;
+                margin: 16px 0;
+                letter-spacing: 8px;
+                box-shadow: 0 4px 12px rgba(14, 165, 233, 0.1);
+            }
+
+            .otp-note {
+                color: #0369a1;
+                font-size: 14px;
+                font-weight: 500;
+                margin-top: 16px;
+            }
+
+            /* Warning Box */
+            .warning-box {
+                background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 100%);
+                border-left: 4px solid #f59e0b;
+                border-radius: 8px;
+                padding: 24px;
+                margin: 32px 0;
+            }
+
+            .warning-title {
+                color: #f59e0b;
+                font-size: 16px;
+                font-weight: 600;
+                margin-bottom: 12px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .warning-text {
+                color: #92400e;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+
+            /* Security Tips */
+            .security-tips {
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                padding: 24px;
+                margin: 32px 0;
+            }
+
+            .security-title {
+                color: #0a1929;
+                font-size: 18px;
+                font-weight: 600;
+                margin-bottom: 16px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .security-list {
+                list-style: none;
+                padding: 0;
+            }
+
+            .security-list li {
+                color: #64748b;
+                font-size: 14px;
+                line-height: 1.6;
+                margin-bottom: 8px;
+                padding-left: 24px;
+                position: relative;
+            }
+
+            .security-list li::before {
+                content: "✓";
+                color: #10b981;
+                font-weight: 600;
+                position: absolute;
+                left: 0;
+            }
+
+            /* Alternative Link */
+            .alternative-text {
+                color: #64748b;
+                font-size: 14px;
+                text-align: center;
+                margin: 32px 0;
+                line-height: 1.6;
+            }
+
+            .alternative-link {
+                color: #55dad7;
+                text-decoration: none;
+                font-weight: 500;
+            }
+
+            .alternative-link:hover {
+                color: #f1531c;
+                text-decoration: underline;
+            }
+
+            /* Footer */
+            .footer {
+                background: #0a1929;
+                color: #94a3b8;
+                padding: 32px 40px;
+                text-align: center;
+            }
+
+            .footer-title {
+                color: #ffffff;
+                font-size: 18px;
+                font-weight: 600;
+                margin-bottom: 16px;
+            }
+
+            .footer-text {
+                font-size: 14px;
+                line-height: 1.6;
+                margin-bottom: 24px;
+            }
+
+            .footer-links {
+                display: flex;
+                justify-content: center;
+                gap: 24px;
+                margin-bottom: 24px;
+            }
+
+            .footer-link {
+                color: #55dad7;
+                text-decoration: none;
+                font-size: 14px;
+                font-weight: 500;
+            }
+
+            .footer-link:hover {
+                color: #f1531c;
+            }
+
+            .footer-copy {
+                color: #64748b;
+                font-size: 12px;
+                margin-top: 24px;
+                padding-top: 24px;
+                border-top: 1px solid #1e293b;
+            }
+
+            /* Responsive */
+            @media (max-width: 600px) {
+                .content {
+                    padding: 32px 24px;
+                }
+                .otp-box {
+                    padding: 24px 20px;
+                }
+                .otp-code {
+                    font-size: 28px;
+                    letter-spacing: 4px;
+                    padding: 16px 24px;
+                }
+                .footer {
+                    padding: 24px 20px;
+                }
+                .footer-links {
+                    flex-direction: column;
+                    gap: 12px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="email-container">
+            <!-- Header -->
+            <div class="header">
+                <div class="logo">
+                    <div
+                        style="
+                            width: 80px;
+                            height: 80px;
+                            background: rgba(255, 255, 255, 0.2);
+                            border-radius: 12px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            color: #ffffff;
+                            font-size: 24px;
+                            font-weight: 700;
+                        "
+                    >
+                        KCS
+                    </div>
+                </div>
+                <div class="brand-title">Let's Catch Up</div>
+                <div class="brand-subtitle">
+                    Learning & Communication Platform
+                </div>
             </div>
-            <div class="brand-title">Let's Catch Up</div>
-            <div class="brand-subtitle">Learning & Communication Platform</div>
+
+            <!-- Content -->
+            <div class="content">
+                <h1 class="reset-title">🔐 Reset Your Password</h1>
+                <p class="reset-subtitle">
+                    We received a request to reset your password. Use the OTP
+                    code below to create a new password.
+                </p>
+
+                <!-- OTP Box -->
+                <div class="otp-box">
+                    <div class="otp-title">📱 Your Password Reset Code</div>
+                    <div class="otp-code">{{ body.code }}</div>
+                    <div class="otp-note">This code expires in 10 minutes</div>
+                </div>
+
+                <!-- Warning Box -->
+                <div class="warning-box">
+                    <div class="warning-title">
+                        ⚠️ Important Security Notice
+                    </div>
+                    <div class="warning-text">
+                        This password reset code will expire in 10 minutes. If
+                        you didn't request this password reset, please ignore
+                        this email and contact our support team immediately.
+                    </div>
+                </div>
+
+                <!-- Security Tips -->
+                <div class="security-tips">
+                    <div class="security-title">🛡️ Security Best Practices</div>
+                    <ul class="security-list">
+                        <li>
+                            Choose a strong password with at least 8 characters
+                        </li>
+                        <li>
+                            Include uppercase, lowercase, numbers, and special
+                            characters
+                        </li>
+                        <li>Don't reuse passwords from other accounts</li>
+                        <li>Enable two-factor authentication if available</li>
+                        <li>Never share your password with anyone</li>
+                    </ul>
+                </div>
+
+                <div class="alternative-text">
+                    Having trouble?
+                    <a href="mailto:support@omyra.dev" class="alternative-link"
+                        >Contact our support team</a
+                    >
+                    for assistance.
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                <div class="footer-title">Didn't Request This?</div>
+                <div class="footer-text">
+                    If you didn't request a password reset, you can safely
+                    ignore this email. Your account remains secure.
+                </div>
+
+                <div class="footer-links">
+                    <a href="mailto:support@omyra.dev" class="footer-link"
+                        >Contact Support</a
+                    >
+                    <a href="#" class="footer-link">Help Center</a>
+                    <a href="https://omyra.dev" class="footer-link"
+                        >Visit Website</a
+                    >
+                </div>
+
+                <div class="footer-copy">
+                    © 2025 KANDHUGULE CONSULTANCY SERVICES PRIVATE LIMITED. All
+                    Rights Reserved.<br />
+                    This email was sent to you. If you received this email by
+                    mistake, please ignore it.
+                </div>
+            </div>
         </div>
-        
-        <!-- Content -->
-        <div class="content">
-            <h1 class="reset-title">🔐 Reset Your Password</h1>
-            <p class="reset-subtitle">We received a request to reset your password. Use the OTP code below to create a new password.</p>
-            
-            <!-- OTP Box -->
-            <div class="otp-box">
-                <div class="otp-title">
-                    📱 Your Password Reset Code
-                </div>
-                <div class="otp-code">{{ body.code }}</div>
-                <div class="otp-note">
-                    This code expires in 10 minutes
-                </div>
-            </div>
-            
-            <!-- Warning Box -->
-            <div class="warning-box">
-                <div class="warning-title">
-                    ⚠️ Important Security Notice
-                </div>
-                <div class="warning-text">
-                    This password reset code will expire in 10 minutes. If you didn't request this password reset, please ignore this email and contact our support team immediately.
-                </div>
-            </div>
-            
-            <!-- Security Tips -->
-            <div class="security-tips">
-                <div class="security-title">
-                    🛡️ Security Best Practices
-                </div>
-                <ul class="security-list">
-                    <li>Choose a strong password with at least 8 characters</li>
-                    <li>Include uppercase, lowercase, numbers, and special characters</li>
-                    <li>Don't reuse passwords from other accounts</li>
-                    <li>Enable two-factor authentication if available</li>
-                    <li>Never share your password with anyone</li>
-                </ul>
-            </div>
-            
-            <div class="alternative-text">
-                Having trouble? <a href="mailto:support@omyra.dev" class="alternative-link">Contact our support team</a> for assistance.
-            </div>
-        </div>
-        
-        <!-- Footer -->
-        <div class="footer">
-            <div class="footer-title">Didn't Request This?</div>
-            <div class="footer-text">
-                If you didn't request a password reset, you can safely ignore this email. Your account remains secure.
-            </div>
-            
-            <div class="footer-links">
-                <a href="mailto:support@omyra.dev" class="footer-link">Contact Support</a>
-                <a href="#" class="footer-link">Help Center</a>
-                <a href="https://omyra.dev" class="footer-link">Visit Website</a>
-            </div>
-            
-            <div class="footer-copy">
-                © 2025 KANDHUGULE CONSULTANCY SERVICES PRIVATE LIMITED. All Rights Reserved.<br>
-                This email was sent to you. If you received this email by mistake, please ignore it.
-            </div>
-        </div>
-    </div>
-</body>
+    </body>
 </html>

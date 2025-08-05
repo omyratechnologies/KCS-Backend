@@ -61,7 +61,11 @@ const FeeSchema = new Schema({
             name: { type: String, required: true },
             due_date: { type: Date, required: true },
             is_mandatory: { type: Boolean, required: true, default: true },
-            late_fee_applicable: { type: Boolean, required: true, default: true },
+            late_fee_applicable: {
+                type: Boolean,
+                required: true,
+                default: true,
+            },
         },
     ],
     total_amount: { type: Number, required: true },
@@ -69,11 +73,11 @@ const FeeSchema = new Schema({
     due_amount: { type: Number, required: true },
     discount_amount: { type: Number, required: false, default: 0 },
     late_fee_amount: { type: Number, required: false, default: 0 },
-    payment_status: { 
-        type: String, 
+    payment_status: {
+        type: String,
         required: true,
         enum: ["unpaid", "partial", "paid", "overdue"],
-        default: "unpaid"
+        default: "unpaid",
     },
     is_paid: { type: Boolean, required: true, default: false },
     payment_date: { type: Date, required: false },
@@ -81,7 +85,7 @@ const FeeSchema = new Schema({
     installments_allowed: { type: Boolean, required: true, default: false },
     installment_plan: {
         type: Object,
-        required: false
+        required: false,
     },
     auto_late_fee: { type: Boolean, required: true, default: true },
     reminder_sent: {
@@ -89,8 +93,8 @@ const FeeSchema = new Schema({
         required: true,
         default: {
             email_count: 0,
-            sms_count: 0
-        }
+            sms_count: 0,
+        },
     },
     meta_data: { type: Object, required: true, default: {} },
     created_at: { type: Date, default: () => new Date() },
@@ -108,7 +112,9 @@ FeeSchema.index.findByPaymentMode = { by: "payment_mode" };
 FeeSchema.index.findByFeeTemplateId = { by: "fee_template_id" };
 FeeSchema.index.findByCampusIdAndUserId = { by: ["campus_id", "user_id"] };
 FeeSchema.index.findByCampusIdAndClassId = { by: ["campus_id", "class_id"] };
-FeeSchema.index.findByCampusIdAndAcademicYear = { by: ["campus_id", "academic_year"] };
+FeeSchema.index.findByCampusIdAndAcademicYear = {
+    by: ["campus_id", "academic_year"],
+};
 
 const Fee = ottoman.model<IFeeData>("fee", FeeSchema);
 

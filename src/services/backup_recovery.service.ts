@@ -43,7 +43,6 @@ export interface BackupJob {
 }
 
 export class BackupRecoveryService {
-
     // ========================= BACKUP OPERATIONS =========================
 
     /**
@@ -68,7 +67,9 @@ export class BackupRecoveryService {
                 status: "initiated",
                 started_at: new Date(),
                 progress: 0,
-                estimated_completion: new Date(Date.now() + this.estimateBackupTime(backupType))
+                estimated_completion: new Date(
+                    Date.now() + this.estimateBackupTime(backupType)
+                ),
             };
 
             // In a real implementation, this would queue the job for background processing
@@ -76,7 +77,6 @@ export class BackupRecoveryService {
             setTimeout(() => this.processBackupJob(job), 1000);
 
             return job;
-
         } catch (error) {
             throw new Error(`Failed to initiate backup: ${error}`);
         }
@@ -111,11 +111,13 @@ export class BackupRecoveryService {
                 checksum: "sha256:abc123def456...",
                 compression: "gzip",
                 encryption: true,
-                retention_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+                retention_expires_at: new Date(
+                    Date.now() + 30 * 24 * 60 * 60 * 1000
+                ), // 30 days
                 campus_count: 5,
                 user_count: 1250,
                 transaction_count: 15_000,
-                status: "completed"
+                status: "completed",
             };
 
             const nextScheduledBackup = new Date();
@@ -130,16 +132,15 @@ export class BackupRecoveryService {
                 backup_retention_policy: {
                     retention_period_days: 30,
                     max_backups: 10,
-                    auto_cleanup: true
+                    auto_cleanup: true,
                 },
                 storage_info: {
                     total_space_used: "12.5GB",
                     available_space: "87.5GB",
-                    backup_location: "encrypted_cloud_storage"
+                    backup_location: "encrypted_cloud_storage",
                 },
-                recent_backups: [mockLastBackup]
+                recent_backups: [mockLastBackup],
             };
-
         } catch (error) {
             throw new Error(`Failed to get backup status: ${error}`);
         }
@@ -161,11 +162,13 @@ export class BackupRecoveryService {
                     checksum: "sha256:abc123def456...",
                     compression: "gzip",
                     encryption: true,
-                    retention_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+                    retention_expires_at: new Date(
+                        Date.now() + 30 * 24 * 60 * 60 * 1000
+                    ),
                     campus_count: 5,
                     user_count: 1250,
                     transaction_count: 15_000,
-                    status: "completed"
+                    status: "completed",
                 },
                 {
                     backup_id: "backup_20250709_001",
@@ -176,16 +179,17 @@ export class BackupRecoveryService {
                     checksum: "sha256:def456ghi789...",
                     compression: "gzip",
                     encryption: true,
-                    retention_expires_at: new Date(Date.now() + 29 * 24 * 60 * 60 * 1000),
+                    retention_expires_at: new Date(
+                        Date.now() + 29 * 24 * 60 * 60 * 1000
+                    ),
                     campus_count: 5,
                     user_count: 1245,
                     transaction_count: 14_800,
-                    status: "completed"
-                }
+                    status: "completed",
+                },
             ];
 
             return mockBackups;
-
         } catch (error) {
             throw new Error(`Failed to list available backups: ${error}`);
         }
@@ -198,46 +202,62 @@ export class BackupRecoveryService {
      */
     static async initiateRestore(restoreOptions: RestoreOptions): Promise<{
         restore_job_id: string;
-        status: "initiated" | "validating" | "in_progress" | "completed" | "failed";
+        status:
+            | "initiated"
+            | "validating"
+            | "in_progress"
+            | "completed"
+            | "failed";
         estimated_completion: Date;
         warnings: string[];
     }> {
         try {
             const restoreJobId = `restore_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
-            
+
             const warnings: string[] = [];
-            
+
             // Validate backup exists
             const availableBackups = await this.listAvailableBackups();
-            const backup = availableBackups.find(b => b.backup_id === restoreOptions.backup_id);
-            
+            const backup = availableBackups.find(
+                (b) => b.backup_id === restoreOptions.backup_id
+            );
+
             if (!backup) {
                 throw new Error(`Backup ${restoreOptions.backup_id} not found`);
             }
 
             if (backup.status !== "completed") {
-                throw new Error(`Backup ${restoreOptions.backup_id} is not in completed status`);
+                throw new Error(
+                    `Backup ${restoreOptions.backup_id} is not in completed status`
+                );
             }
 
             // Add warnings for risky operations
             if (restoreOptions.restore_type === "full") {
-                warnings.push("Full restore will overwrite all existing data", "Ensure all users are logged out before proceeding");
+                warnings.push(
+                    "Full restore will overwrite all existing data",
+                    "Ensure all users are logged out before proceeding"
+                );
             }
 
             if (!restoreOptions.create_restore_point) {
-                warnings.push("No restore point will be created - this operation cannot be undone");
+                warnings.push(
+                    "No restore point will be created - this operation cannot be undone"
+                );
             }
 
-            const estimatedCompletion = new Date(Date.now() + this.estimateRestoreTime(restoreOptions.restore_type));
+            const estimatedCompletion = new Date(
+                Date.now() +
+                    this.estimateRestoreTime(restoreOptions.restore_type)
+            );
 
             // In a real implementation, this would queue the restore job for background processing
             return {
                 restore_job_id: restoreJobId,
                 status: "initiated",
                 estimated_completion: estimatedCompletion,
-                warnings
+                warnings,
             };
-
         } catch (error) {
             throw new Error(`Failed to initiate restore: ${error}`);
         }
@@ -256,8 +276,10 @@ export class BackupRecoveryService {
     }> {
         try {
             const availableBackups = await this.listAvailableBackups();
-            const backup = availableBackups.find(b => b.backup_id === backup_id);
-            
+            const backup = availableBackups.find(
+                (b) => b.backup_id === backup_id
+            );
+
             if (!backup) {
                 throw new Error(`Backup ${backup_id} not found`);
             }
@@ -269,16 +291,20 @@ export class BackupRecoveryService {
                 file_accessible: true,
                 encryption_status: "valid" as const,
                 estimated_restore_size: backup.file_size,
-                issues: [] as string[]
+                issues: [] as string[],
             };
 
             // Simulate some potential issues
-            if (backup.created_at < new Date(Date.now() - 25 * 24 * 60 * 60 * 1000)) {
-                validation.issues.push("Backup is older than 25 days - consider using a more recent backup");
+            if (
+                backup.created_at <
+                new Date(Date.now() - 25 * 24 * 60 * 60 * 1000)
+            ) {
+                validation.issues.push(
+                    "Backup is older than 25 days - consider using a more recent backup"
+                );
             }
 
             return validation;
-
         } catch (error) {
             throw new Error(`Failed to validate backup integrity: ${error}`);
         }
@@ -315,71 +341,77 @@ export class BackupRecoveryService {
         return {
             recovery_objectives: {
                 rto: "4 hours", // System must be restored within 4 hours
-                rpo: "1 hour"   // Maximum 1 hour of data loss acceptable
+                rpo: "1 hour", // Maximum 1 hour of data loss acceptable
             },
             backup_strategy: {
-                frequency: "Daily full backups at 2 AM, incremental every 6 hours",
-                retention: "30 days for daily backups, 90 days for weekly backups",
-                storage_locations: ["Primary encrypted cloud storage", "Secondary geo-replicated storage"]
+                frequency:
+                    "Daily full backups at 2 AM, incremental every 6 hours",
+                retention:
+                    "30 days for daily backups, 90 days for weekly backups",
+                storage_locations: [
+                    "Primary encrypted cloud storage",
+                    "Secondary geo-replicated storage",
+                ],
             },
             escalation_procedures: [
                 {
                     level: 1,
                     description: "Technical team response",
                     contacts: ["tech-team@company.com"],
-                    estimated_time: "15 minutes"
+                    estimated_time: "15 minutes",
                 },
                 {
                     level: 2,
                     description: "Management escalation",
                     contacts: ["management@company.com"],
-                    estimated_time: "1 hour"
+                    estimated_time: "1 hour",
                 },
                 {
                     level: 3,
                     description: "Executive escalation",
                     contacts: ["executives@company.com"],
-                    estimated_time: "2 hours"
-                }
+                    estimated_time: "2 hours",
+                },
             ],
             recovery_steps: [
                 {
                     step: 1,
                     description: "Assess the scope of the disaster",
                     estimated_time: "30 minutes",
-                    dependencies: []
+                    dependencies: [],
                 },
                 {
                     step: 2,
                     description: "Activate disaster recovery team",
                     estimated_time: "15 minutes",
-                    dependencies: ["Step 1"]
+                    dependencies: ["Step 1"],
                 },
                 {
                     step: 3,
                     description: "Identify and validate most recent backup",
                     estimated_time: "30 minutes",
-                    dependencies: ["Step 2"]
+                    dependencies: ["Step 2"],
                 },
                 {
                     step: 4,
                     description: "Restore infrastructure and database",
                     estimated_time: "2 hours",
-                    dependencies: ["Step 3"]
+                    dependencies: ["Step 3"],
                 },
                 {
                     step: 5,
-                    description: "Validate data integrity and system functionality",
+                    description:
+                        "Validate data integrity and system functionality",
                     estimated_time: "1 hour",
-                    dependencies: ["Step 4"]
+                    dependencies: ["Step 4"],
                 },
                 {
                     step: 6,
                     description: "Notify stakeholders and resume operations",
                     estimated_time: "15 minutes",
-                    dependencies: ["Step 5"]
-                }
-            ]
+                    dependencies: ["Step 5"],
+                },
+            ],
         };
     }
 
@@ -388,7 +420,9 @@ export class BackupRecoveryService {
     /**
      * Estimate backup time based on type
      */
-    private static estimateBackupTime(backupType: "full" | "incremental" | "payment_only"): number {
+    private static estimateBackupTime(
+        backupType: "full" | "incremental" | "payment_only"
+    ): number {
         switch (backupType) {
             case "full": {
                 return 45 * 60 * 1000;
@@ -408,7 +442,9 @@ export class BackupRecoveryService {
     /**
      * Estimate restore time based on type
      */
-    private static estimateRestoreTime(restoreType: "full" | "payment_only" | "specific_campus"): number {
+    private static estimateRestoreTime(
+        restoreType: "full" | "payment_only" | "specific_campus"
+    ): number {
         switch (restoreType) {
             case "full": {
                 return 60 * 60 * 1000;
@@ -432,23 +468,24 @@ export class BackupRecoveryService {
         try {
             // Simulate backup processing
             job.status = "in_progress";
-            
+
             // Mock progress updates
             const intervals = 10;
             const progressIncrement = 100 / intervals;
-            
+
             for (let i = 0; i < intervals; i++) {
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                await new Promise((resolve) => setTimeout(resolve, 1000));
                 job.progress = Math.min(100, (i + 1) * progressIncrement);
             }
-            
+
             job.status = "completed";
             job.completed_at = new Date();
-            job.file_size = Math.floor(Math.random() * 1_000_000_000) + 500_000_000; // Random size between 500MB and 1.5GB
-            
+            job.file_size =
+                Math.floor(Math.random() * 1_000_000_000) + 500_000_000; // Random size between 500MB and 1.5GB
         } catch (error) {
             job.status = "failed";
-            job.error_message = error instanceof Error ? error.message : "Unknown error";
+            job.error_message =
+                error instanceof Error ? error.message : "Unknown error";
         }
     }
 }

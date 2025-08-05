@@ -92,7 +92,8 @@ app.get(
         ],
         responses: {
             200: {
-                description: "Student performance summary retrieved successfully",
+                description:
+                    "Student performance summary retrieved successfully",
                 content: {
                     "application/json": {
                         schema: resolver(performanceSummaryResponseSchema),
@@ -158,11 +159,13 @@ app.post(
     describeRoute({
         operationId: "calculateStudentPerformance",
         summary: "Calculate and save student performance metrics",
-        description: "Calculate performance metrics from raw data and save them",
+        description:
+            "Calculate performance metrics from raw data and save them",
         tags: ["Student Performance"],
         responses: {
             200: {
-                description: "Performance metrics calculated and saved successfully",
+                description:
+                    "Performance metrics calculated and saved successfully",
                 content: {
                     "application/json": {
                         schema: resolver(studentPerformanceResponseSchema),
@@ -260,7 +263,8 @@ app.get(
     describeRoute({
         operationId: "getStudentPerformanceByAcademicYear",
         summary: "Get student performance by academic year",
-        description: "Get all semester performance data for a specific student and academic year",
+        description:
+            "Get all semester performance data for a specific student and academic year",
         tags: ["Student Performance"],
         parameters: [
             {
@@ -367,7 +371,8 @@ app.get(
         ],
         responses: {
             200: {
-                description: "Student performance summary retrieved successfully",
+                description:
+                    "Student performance summary retrieved successfully",
                 content: {
                     "application/json": {
                         schema: resolver(performanceSummaryResponseSchema),

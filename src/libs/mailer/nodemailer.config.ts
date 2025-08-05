@@ -40,8 +40,8 @@ export const createTransporter = () => {
         },
         // For development/testing - ignore certificate errors
         tls: {
-            rejectUnauthorized: false
-        }
+            rejectUnauthorized: false,
+        },
     });
 };
 
@@ -55,7 +55,7 @@ export interface EmailOptions {
 
 export const sendEmailWithNodemailer = async (options: EmailOptions) => {
     const transporter = createTransporter();
-    
+
     const mailOptions = {
         from: options.from || config.EMAIL_FROM || config.EMAIL_USER,
         to: options.to,

@@ -40,6 +40,9 @@ CourseSectionSchema.index.findByCourseId = { by: "course_id" };
 CourseSectionSchema.index.findByCampusId = { by: "campus_id" };
 CourseSectionSchema.index.findByOrder = { by: "section_order" };
 
-const CourseSection = ottoman.model<ICourseSectionData>("course_sections", CourseSectionSchema);
+const CourseSection = ottoman.model<ICourseSectionData>(
+    "course_sections",
+    CourseSectionSchema
+);
 
 export { CourseSection };

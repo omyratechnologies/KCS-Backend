@@ -10,11 +10,9 @@ export const examTermSchema = z
         name: z.string().openapi({ example: "Midterm Examination" }),
         start_date: z.string().openapi({ example: "2023-03-15T00:00:00Z" }),
         end_date: z.string().openapi({ example: "2023-03-25T00:00:00Z" }),
-        meta_data: z
-            .record(z.string(), z.any())
-            .openapi({
-                example: { type: "midterm", academic_year: "2022-2023" },
-            }),
+        meta_data: z.record(z.string(), z.any()).openapi({
+            example: { type: "midterm", academic_year: "2022-2023" },
+        }),
         created_at: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
         updated_at: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
     })
@@ -26,11 +24,9 @@ export const createExamTermRequestBodySchema = z
         name: z.string().openapi({ example: "Midterm Examination" }),
         start_date: z.string().openapi({ example: "2023-03-15T00:00:00Z" }),
         end_date: z.string().openapi({ example: "2023-03-25T00:00:00Z" }),
-        meta_data: z
-            .record(z.string(), z.any())
-            .openapi({
-                example: { type: "midterm", academic_year: "2022-2023" },
-            }),
+        meta_data: z.record(z.string(), z.any()).openapi({
+            example: { type: "midterm", academic_year: "2022-2023" },
+        }),
     })
     .openapi({ ref: "CreateExamTermRequest" });
 
