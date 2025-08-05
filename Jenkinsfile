@@ -168,18 +168,28 @@ pipeline {
                             # Security scanning with Bun-compatible tools
                             echo "Checking for known vulnerabilities in dependencies..."
                             
-                            # Use npm list to check for known vulnerabilities via Snyk database
-                            echo "Creating temporary package-lock.json for vulnerability scanning..."
-                            npm install --package-lock-only --silent || echo "Lock file creation skipped"
+                            # Security scanning with Bun-compatible tools
+                            echo "Checking dependencies for known vulnerabilities..."
                             
-                            if [ -f "package-lock.json" ]; then
-                                bunx audit-ci --moderate || echo "Audit completed with warnings"
+                            # Try to create package-lock.json for npm audit (with fallback)
+                            echo "Attempting to create temporary package-lock.json for vulnerability scanning..."
+                            if npm install --package-lock-only --legacy-peer-deps 2>/dev/null; then
+                                echo "✅ package-lock.json created successfully"
+                                # Run audit with bun if available
+                                if bunx audit-ci --moderate 2>/dev/null; then
+                                    echo "✅ Audit completed successfully"
+                                else
+                                    echo "⚠️ Audit completed with warnings"
+                                fi
                                 rm package-lock.json
                             else
-                                echo "Using alternative security checks..."
-                                # Check for outdated packages that might have vulnerabilities
-                                bun outdated || echo "Package check completed"
+                                echo "⚠️ Could not create package-lock.json due to dependency conflicts"
+                                echo "Using alternative Bun-based security checks..."
                             fi
+                            
+                            # Alternative security checks using Bun
+                            echo "Checking for outdated packages that might have vulnerabilities..."
+                            bun outdated || echo "Package check completed"
                             
                             # Check for sensitive files and patterns
                             echo "Scanning for potential security issues..."
