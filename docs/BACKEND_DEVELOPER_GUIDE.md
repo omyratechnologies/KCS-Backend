@@ -36,6 +36,7 @@ The KCS Backend is a comprehensive educational management system API built with 
 ## Technology Stack
 
 ### Core Technologies
+
 - **Runtime**: [Bun](https://bun.sh/) - Fast JavaScript runtime and package manager
 - **Framework**: [Hono](https://hono.dev/) - Lightweight web framework for the edge
 - **Language**: TypeScript with strict type checking
@@ -44,6 +45,7 @@ The KCS Backend is a comprehensive educational management system API built with 
 - **Storage**: AWS S3/Cloudflare R2 for file storage
 
 ### Development Tools
+
 - **API Documentation**: OpenAPI/Swagger with Scalar UI
 - **Validation**: Zod for runtime type validation
 - **Authentication**: JWT tokens
@@ -95,6 +97,7 @@ The KCS Backend is a comprehensive educational management system API built with 
 ```
 
 ### Architecture Principles
+
 - **Layered Architecture**: Clear separation between routes, controllers, services, and models
 - **Dependency Injection**: Services are injected into controllers
 - **Single Responsibility**: Each layer has a specific purpose
@@ -153,6 +156,7 @@ KCS-Backend/
 ## Getting Started
 
 ### Prerequisites
+
 - **Node.js** 18+ or **Bun** 1.0+
 - **Couchbase** Server or Cloud account
 - **Redis** instance
@@ -161,33 +165,37 @@ KCS-Backend/
 ### Installation
 
 1. **Clone the repository**
-   ```bash
-   git clone https://github.com/omyratechnologies/KCS-Backend.git
-   cd KCS-Backend
-   ```
+
+    ```bash
+    git clone https://github.com/omyratechnologies/KCS-Backend.git
+    cd KCS-Backend
+    ```
 
 2. **Install dependencies**
-   ```bash
-   bun install
-   # or npm install
-   ```
+
+    ```bash
+    bun install
+    # or npm install
+    ```
 
 3. **Environment setup**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
+
+    ```bash
+    cp .env.example .env
+    # Edit .env with your configuration
+    ```
 
 4. **Database setup**
-   ```bash
-   # Run database setup scripts
-   bun run scripts/complete-db-setup.ts
-   ```
+
+    ```bash
+    # Run database setup scripts
+    bun run scripts/complete-db-setup.ts
+    ```
 
 5. **Start development server**
-   ```bash
-   bun run dev
-   ```
+    ```bash
+    bun run dev
+    ```
 
 ### Environment Variables
 
@@ -210,7 +218,7 @@ JWT_SECRET=your_super_secret_jwt_key
 # AWS Configuration
 AWS_ACCESS_KEY_ID=your_aws_access_key
 AWS_ACCESS_SECRET_KEY=your_aws_secret_key
-AWS_REGION=us-east-1
+AWS_REGION=ap-south-1
 
 # AWS SES Configuration
 AWS_SES_EMAIL_FROM=noreply@yourdomain.com
@@ -235,72 +243,79 @@ REDIS_URI=redis://localhost:6379
 When adding a new feature, follow this structure:
 
 1. **Define the Model** (`src/models/`)
-   ```typescript
-   // src/models/example.model.ts
-   import { Schema } from "ottoman";
-   import { ottoman } from "@/libs/db";
 
-   export interface IExampleData {
-       id: string;
-       name: string;
-       // ... other fields
-   }
+    ```typescript
+    // src/models/example.model.ts
+    import { Schema } from "ottoman";
+    import { ottoman } from "@/libs/db";
 
-   const ExampleSchema = new Schema({
-       name: { type: String, required: true },
-       // ... other fields
-   });
+    export interface IExampleData {
+        id: string;
+        name: string;
+        // ... other fields
+    }
 
-   export const Example = ottoman.model<IExampleData>("Example", ExampleSchema);
-   ```
+    const ExampleSchema = new Schema({
+        name: { type: String, required: true },
+        // ... other fields
+    });
+
+    export const Example = ottoman.model<IExampleData>(
+        "Example",
+        ExampleSchema
+    );
+    ```
 
 2. **Create the Service** (`src/services/`)
-   ```typescript
-   // src/services/example.service.ts
-   export class ExampleService {
-       public async create(data: Partial<IExampleData>) {
-           // Business logic here
-       }
-       
-       public async findById(id: string) {
-           // Business logic here
-       }
-   }
-   ```
+
+    ```typescript
+    // src/services/example.service.ts
+    export class ExampleService {
+        public async create(data: Partial<IExampleData>) {
+            // Business logic here
+        }
+
+        public async findById(id: string) {
+            // Business logic here
+        }
+    }
+    ```
 
 3. **Add the Controller** (`src/controllers/`)
-   ```typescript
-   // src/controllers/example.controller.ts
-   import { Context } from "hono";
-   import { ExampleService } from "@/services/example.service";
 
-   export class ExampleController {
-       private exampleService = new ExampleService();
+    ```typescript
+    // src/controllers/example.controller.ts
+    import { Context } from "hono";
+    import { ExampleService } from "@/services/example.service";
 
-       public create = async (c: Context) => {
-           // Handle request/response
-       };
-   }
-   ```
+    export class ExampleController {
+        private exampleService = new ExampleService();
+
+        public create = async (c: Context) => {
+            // Handle request/response
+        };
+    }
+    ```
 
 4. **Define Routes** (`src/routes/`)
-   ```typescript
-   // src/routes/example.route.ts
-   import { Hono } from "hono";
-   import { ExampleController } from "@/controllers/example.controller";
 
-   const app = new Hono();
-   const controller = new ExampleController();
+    ```typescript
+    // src/routes/example.route.ts
+    import { Hono } from "hono";
+    import { ExampleController } from "@/controllers/example.controller";
 
-   app.post("/", controller.create);
-   export default app;
-   ```
+    const app = new Hono();
+    const controller = new ExampleController();
+
+    app.post("/", controller.create);
+    export default app;
+    ```
 
 5. **Add to Main Router** (`src/routes/index.ts`)
-   ```typescript
-   import exampleRoute from "@/routes/example.route";
-   app.route("/examples", exampleRoute);
-   ```
+    ```typescript
+    import exampleRoute from "@/routes/example.route";
+    app.route("/examples", exampleRoute);
+    ```
 
 ### 2. Testing
 
@@ -371,6 +386,7 @@ All API responses follow a consistent format:
 ### API Documentation
 
 The API documentation is auto-generated and available at:
+
 - Swagger UI: `http://localhost:3000/swagger`
 - Scalar UI: `http://localhost:3000/docs`
 
@@ -383,25 +399,25 @@ The project uses Ottoman ODM for Couchbase. Models are defined in `src/models/`:
 #### Key Models:
 
 1. **User Management**
-   - `user.model.ts` - Base user model
-   - `teacher.model.ts` - Teacher-specific data
-   - `student.model.ts` - Student-specific data
-   - `parent.model.ts` - Parent/guardian data
+    - `user.model.ts` - Base user model
+    - `teacher.model.ts` - Teacher-specific data
+    - `student.model.ts` - Student-specific data
+    - `parent.model.ts` - Parent/guardian data
 
 2. **Academic Structure**
-   - `campus.model.ts` - Campus/institution data
-   - `class.model.ts` - Class/grade definitions
-   - `course.model.ts` - Course information
-   - `subject.model.ts` - Subject definitions
+    - `campus.model.ts` - Campus/institution data
+    - `class.model.ts` - Class/grade definitions
+    - `course.model.ts` - Course information
+    - `subject.model.ts` - Subject definitions
 
 3. **Assignment System**
-   - `assignment.model.ts` - Legacy assignments
-   - `enhanced_assignment.model.ts` - New assignment system
-   - `assignment_submission.model.ts` - Student submissions
+    - `assignment.model.ts` - Legacy assignments
+    - `enhanced_assignment.model.ts` - New assignment system
+    - `assignment_submission.model.ts` - Student submissions
 
 4. **Assessment System**
-   - `exam.model.ts` - Exam definitions
-   - `class_quiz.model.ts` - Quiz system
+    - `exam.model.ts` - Exam definitions
+    - `class_quiz.model.ts` - Quiz system
 
 ### Model Conventions
 
@@ -423,11 +439,11 @@ const ModelSchema = new Schema({
     campus_id: { type: String, required: true },
     is_active: { type: Boolean, default: true },
     is_deleted: { type: Boolean, default: false },
-    
+
     // Timestamps
     created_at: { type: Date, default: Date.now },
     updated_at: { type: Date, default: Date.now },
-    
+
     // Specific fields...
 });
 
@@ -505,7 +521,7 @@ export class ExampleService {
 app.use(authMiddleware());
 
 // Role-based access control
-app.use(roleMiddleware(['teacher', 'admin']));
+app.use(roleMiddleware(["teacher", "admin"]));
 ```
 
 ### Token Structure
@@ -553,17 +569,17 @@ tests/
 
 ```typescript
 // Example test file
-describe('ExampleService', () => {
+describe("ExampleService", () => {
     let service: ExampleService;
 
     beforeEach(() => {
         service = new ExampleService();
     });
 
-    it('should create a new example', async () => {
-        const data = { name: 'Test Example' };
+    it("should create a new example", async () => {
+        const data = { name: "Test Example" };
         const result = await service.create(data);
-        
+
         expect(result).toBeDefined();
         expect(result.name).toBe(data.name);
     });
@@ -591,30 +607,35 @@ docker run -p 3000:3000 --env-file .env kcs-backend
 ## Best Practices
 
 ### 1. Code Organization
+
 - Keep functions small and focused
 - Use meaningful variable and function names
 - Follow TypeScript strict mode
 - Implement proper error handling
 
 ### 2. Database Operations
+
 - Always include campus_id in queries for multi-tenancy
 - Use soft deletes (is_deleted flag) instead of hard deletes
 - Implement proper indexing for performance
 - Use transactions for related operations
 
 ### 3. API Design
+
 - Follow RESTful conventions
 - Use proper HTTP status codes
 - Implement consistent response formats
 - Add proper validation for all inputs
 
 ### 4. Security
+
 - Validate all user inputs
 - Use parameterized queries
 - Implement rate limiting
 - Log security-relevant events
 
 ### 5. Performance
+
 - Use caching strategically
 - Implement pagination for large datasets
 - Optimize database queries
@@ -625,33 +646,36 @@ docker run -p 3000:3000 --env-file .env kcs-backend
 ### Common Issues
 
 1. **Database Connection Issues**
-   ```bash
-   # Test database connection
-   bun run scripts/test-db-connection.ts
-   ```
+
+    ```bash
+    # Test database connection
+    bun run scripts/test-db-connection.ts
+    ```
 
 2. **Redis Connection Issues**
-   ```bash
-   # Check Redis connection
-   redis-cli ping
-   ```
+
+    ```bash
+    # Check Redis connection
+    redis-cli ping
+    ```
 
 3. **Environment Variable Issues**
-   - Ensure all required variables are set
-   - Check for typos in variable names
-   - Validate with the Zod schema
+    - Ensure all required variables are set
+    - Check for typos in variable names
+    - Validate with the Zod schema
 
 4. **Build Issues**
-   ```bash
-   # Clean and rebuild
-   bun run clean
-   bun install
-   bun run build
-   ```
+    ```bash
+    # Clean and rebuild
+    bun run clean
+    bun install
+    bun run build
+    ```
 
 ### Debug Mode
 
 Enable debug logging:
+
 ```env
 NODE_ENV=development
 DEBUG=true
@@ -660,6 +684,7 @@ DEBUG=true
 ### Database Scripts
 
 Useful database management scripts in `scripts/`:
+
 - `complete-db-setup.ts` - Full database initialization
 - `create-collections.ts` - Create required collections
 - `setup-super-admin.ts` - Create admin user

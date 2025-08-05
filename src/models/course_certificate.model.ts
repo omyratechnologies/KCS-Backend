@@ -9,7 +9,11 @@ export interface ICourseCertificateData {
     enrollment_id: string;
     campus_id: string;
     certificate_number: string; // Unique certificate number
-    certificate_type: "completion" | "achievement" | "participation" | "excellence";
+    certificate_type:
+        | "completion"
+        | "achievement"
+        | "participation"
+        | "excellence";
     status: "pending" | "generated" | "issued" | "revoked";
     issue_date: Date;
     expiry_date?: Date;
@@ -85,15 +89,15 @@ const CourseCertificateSchema = new Schema({
     enrollment_id: { type: String, required: true },
     campus_id: { type: String, required: true },
     certificate_number: { type: String, required: true, unique: true },
-    certificate_type: { 
-        type: String, 
+    certificate_type: {
+        type: String,
         enum: ["completion", "achievement", "participation", "excellence"],
-        default: "completion"
+        default: "completion",
     },
-    status: { 
-        type: String, 
+    status: {
+        type: String,
         enum: ["pending", "generated", "issued", "revoked"],
-        default: "pending"
+        default: "pending",
     },
     issue_date: { type: Date, required: true },
     expiry_date: { type: Date },
@@ -104,13 +108,13 @@ const CourseCertificateSchema = new Schema({
     verification_details: { type: Object, required: true },
     recipient_details: { type: Object, required: true },
     course_details: { type: Object, required: true },
-    delivery_status: { 
-        type: Object, 
+    delivery_status: {
+        type: Object,
         default: {
             email_sent: false,
             download_count: 0,
-            shared_count: 0
-        }
+            shared_count: 0,
+        },
     },
     meta_data: { type: Object, default: {} },
     created_at: { type: Date, default: () => new Date() },
@@ -121,10 +125,17 @@ CourseCertificateSchema.index.findByCourseId = { by: "course_id" };
 CourseCertificateSchema.index.findByUserId = { by: "user_id" };
 CourseCertificateSchema.index.findByEnrollmentId = { by: "enrollment_id" };
 CourseCertificateSchema.index.findByCampusId = { by: "campus_id" };
-CourseCertificateSchema.index.findByCertificateNumber = { by: "certificate_number" };
+CourseCertificateSchema.index.findByCertificateNumber = {
+    by: "certificate_number",
+};
 CourseCertificateSchema.index.findByStatus = { by: "status" };
-CourseCertificateSchema.index.findByVerificationCode = { by: "verification_details.verification_code" };
+CourseCertificateSchema.index.findByVerificationCode = {
+    by: "verification_details.verification_code",
+};
 
-const CourseCertificate = ottoman.model<ICourseCertificateData>("course_certificates", CourseCertificateSchema);
+const CourseCertificate = ottoman.model<ICourseCertificateData>(
+    "course_certificates",
+    CourseCertificateSchema
+);
 
 export { CourseCertificate };

@@ -3,61 +3,99 @@ node_modules
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.bun/
 
-# Build output
+# Build output and caches
 dist
 build
+out
 *.tsbuildinfo
+coverage/
+.nyc_output
+
+# Cache directories
+.cache
+.parcel-cache
+.next
+.nuxt
+
+# Environment files (security)
+.env
+.env.*
+!.env.example
 
 # Development files
-.env.local
-.env.development
-.env.test
 *.log
+logs/
 
-# Git
+# Git and version control
 .git
 .gitignore
+.github/
 
-# Docker files
+# Docker files (avoid recursion)
 Dockerfile*
 docker-compose*.yml
-*.md
+.dockerignore
 
-# IDE files
+# Documentation and guides
+*.md
+docs/
+HEALTH_API_TESTING_SUMMARY.md
+MANUAL-SETUP-GUIDE.md
+
+# IDE and editor files
 .vscode
 .idea
 *.swp
 *.swo
-
-# OS generated files
 .DS_Store
 .DS_Store?
 ._*
+
+# OS generated files
 .Spotlight-V100
 .Trashes
 ehthumbs.db
 Thumbs.db
 
-# Test files
-tests/
+# Test files and coverage (only exclude coverage, keep test files for CI/CD)
 coverage/
-*.test.ts
-*.spec.ts
+.nyc_output
+*.test.js.snap
+jest-coverage/
 
-# Backup files
-backup/
-
-# Documentation
-docs/
-
-# Scripts
+# Scripts and deployment files
+scripts/
 *.sh
+quick-deploy.sh
+complete-server-setup.sh
+.jenkins/
 
-# Lock files (only keep the one we need)
+# Lock files (keep only bun.lock for consistency)
 package-lock.json
 yarn.lock
+pnpm-lock.yaml
 
-# Temporary files
+# Nginx configuration files
+nginx/
+nginx.conf
+
+# Temporary and backup files
 tmp/
 temp/
+backup/
+
+# KCS Backend specific
+mediasoup-worker*
+builder.ts
+
+# SSL certificates and keys
+*.pem
+*.key
+*.crt
+*.csr
+
+# Terraform files
+terraform/
+deployment/

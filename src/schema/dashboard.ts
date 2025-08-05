@@ -112,170 +112,194 @@ const courseSchema = z.object({
     completion_rate: z.number().optional(),
     rating_count: z.number().optional(),
     created_at: z.string().optional(),
-    updated_at: z.string().optional()
+    updated_at: z.string().optional(),
 });
 
-const coursesDataSchema = z.object({
-    enrolled: z.array(courseSchema),
-    inProgress: z.array(courseSchema),
-    completed: z.array(courseSchema),
-    totalCourses: z.number(),
-    totalProgress: z.number(),
-    certificates: z.number(),
-}).optional();
+const coursesDataSchema = z
+    .object({
+        enrolled: z.array(courseSchema),
+        inProgress: z.array(courseSchema),
+        completed: z.array(courseSchema),
+        totalCourses: z.number(),
+        totalProgress: z.number(),
+        certificates: z.number(),
+    })
+    .optional();
 
-const teachingCoursesDataSchema = z.object({
-    teaching: z.array(courseSchema),
-    totalCourses: z.number(),
-    totalEnrollments: z.number(),
-    totalCompletions: z.number(),
-    averageRating: z.number(),
-}).optional();
+const teachingCoursesDataSchema = z
+    .object({
+        teaching: z.array(courseSchema),
+        totalCourses: z.number(),
+        totalEnrollments: z.number(),
+        totalCompletions: z.number(),
+        averageRating: z.number(),
+    })
+    .optional();
 
 // Student Dashboard Schema
-export const studentDashboardResponseSchema = z.object({
-    success: z.boolean(),
-    data: z.object({
-        profile: profileSchema,
-        classes: z.array(classSchema),
-        currentGrades: z.array(gradeSchema),
-        assignments: z.object({
-            pending: z.array(assignmentSchema),
-            submitted: z.array(assignmentSchema),
-            overdue: z.array(assignmentSchema),
-        }),
-        quizzes: z.object({
-            upcoming: z.array(quizSchema),
-            completed: z.array(quizSchema),
-        }),
-        attendance: z.object({
-            thisMonth: z.number(),
-            percentage: z.number(),
-            recent: z.array(attendanceRecordSchema),
-        }),
-        notifications: z.object({
-            unread: z.number(),
-            recent: z.array(notificationSchema),
-        }),
-        schedule: z.object({
-            today: z.array(scheduleItemSchema),
-            thisWeek: z.array(scheduleItemSchema),
-        }),
-        library: z.object({
-            booksIssued: z.array(libraryBookSchema),
-            dueBooks: z.array(libraryBookSchema),
-        }),
-        courses: coursesDataSchema,
-    }),
-}).openapi({ ref: "StudentDashboardResponse" });
-
-// Teacher Dashboard Schema
-export const teacherDashboardResponseSchema = z.object({
-    success: z.boolean(),
-    data: z.object({
-        profile: profileSchema,
-        classes: z.array(classSchema),
-        subjects: z.array(subjectSchema),
-        students: z.object({
-            total: z.number(),
-            activeToday: z.number(),
-        }),
-        assignments: z.object({
-            toGrade: z.array(assignmentSchema),
-            recent: z.array(assignmentSchema),
-        }),
-        schedule: z.object({
-            today: z.array(scheduleItemSchema),
-            thisWeek: z.array(scheduleItemSchema),
-        }),
-        notifications: z.object({
-            unread: z.number(),
-            recent: z.array(notificationSchema),
-        }),
-        quickActions: z.array(quickActionSchema),
-        courses: teachingCoursesDataSchema,
-    }),
-}).openapi({ ref: "TeacherDashboardResponse" });
-
-// Parent Dashboard Schema
-export const parentDashboardResponseSchema = z.object({
-    success: z.boolean(),
-    data: z.object({
-        profile: profileSchema,
-        children: z.array(z.object({
+export const studentDashboardResponseSchema = z
+    .object({
+        success: z.boolean(),
+        data: z.object({
             profile: profileSchema,
-            grades: z.array(gradeSchema),
+            classes: z.array(classSchema),
+            currentGrades: z.array(gradeSchema),
+            assignments: z.object({
+                pending: z.array(assignmentSchema),
+                submitted: z.array(assignmentSchema),
+                overdue: z.array(assignmentSchema),
+            }),
+            quizzes: z.object({
+                upcoming: z.array(quizSchema),
+                completed: z.array(quizSchema),
+            }),
             attendance: z.object({
                 thisMonth: z.number(),
                 percentage: z.number(),
+                recent: z.array(attendanceRecordSchema),
             }),
-            recentActivities: z.array(z.any()),
-            upcomingEvents: z.array(eventSchema),
+            notifications: z.object({
+                unread: z.number(),
+                recent: z.array(notificationSchema),
+            }),
+            schedule: z.object({
+                today: z.array(scheduleItemSchema),
+                thisWeek: z.array(scheduleItemSchema),
+            }),
+            library: z.object({
+                booksIssued: z.array(libraryBookSchema),
+                dueBooks: z.array(libraryBookSchema),
+            }),
             courses: coursesDataSchema,
-        })),
-        notifications: z.object({
-            unread: z.number(),
-            recent: z.array(notificationSchema),
         }),
-    }),
-}).openapi({ ref: "ParentDashboardResponse" });
+    })
+    .openapi({ ref: "StudentDashboardResponse" });
+
+// Teacher Dashboard Schema
+export const teacherDashboardResponseSchema = z
+    .object({
+        success: z.boolean(),
+        data: z.object({
+            profile: profileSchema,
+            classes: z.array(classSchema),
+            subjects: z.array(subjectSchema),
+            students: z.object({
+                total: z.number(),
+                activeToday: z.number(),
+            }),
+            assignments: z.object({
+                toGrade: z.array(assignmentSchema),
+                recent: z.array(assignmentSchema),
+            }),
+            schedule: z.object({
+                today: z.array(scheduleItemSchema),
+                thisWeek: z.array(scheduleItemSchema),
+            }),
+            notifications: z.object({
+                unread: z.number(),
+                recent: z.array(notificationSchema),
+            }),
+            quickActions: z.array(quickActionSchema),
+            courses: teachingCoursesDataSchema,
+        }),
+    })
+    .openapi({ ref: "TeacherDashboardResponse" });
+
+// Parent Dashboard Schema
+export const parentDashboardResponseSchema = z
+    .object({
+        success: z.boolean(),
+        data: z.object({
+            profile: profileSchema,
+            children: z.array(
+                z.object({
+                    profile: profileSchema,
+                    grades: z.array(gradeSchema),
+                    attendance: z.object({
+                        thisMonth: z.number(),
+                        percentage: z.number(),
+                    }),
+                    recentActivities: z.array(z.any()),
+                    upcomingEvents: z.array(eventSchema),
+                    courses: coursesDataSchema,
+                })
+            ),
+            notifications: z.object({
+                unread: z.number(),
+                recent: z.array(notificationSchema),
+            }),
+        }),
+    })
+    .openapi({ ref: "ParentDashboardResponse" });
 
 // Admin Dashboard Schema
-export const adminDashboardResponseSchema = z.object({
-    success: z.boolean(),
-    data: z.object({
-        profile: profileSchema,
-        stats: z.object({
-            totalStudents: z.number(),
-            totalTeachers: z.number(),
-            totalClasses: z.number(),
-            activeCourses: z.number(),
-            totalEnrollments: z.number().optional(),
-            completedEnrollments: z.number().optional(),
-            certificatesIssued: z.number().optional(),
+export const adminDashboardResponseSchema = z
+    .object({
+        success: z.boolean(),
+        data: z.object({
+            profile: profileSchema,
+            stats: z.object({
+                totalStudents: z.number(),
+                totalTeachers: z.number(),
+                totalClasses: z.number(),
+                activeCourses: z.number(),
+                totalEnrollments: z.number().optional(),
+                completedEnrollments: z.number().optional(),
+                certificatesIssued: z.number().optional(),
+            }),
+            attendance: z.object({
+                today: z.number(),
+                thisWeek: z.number(),
+            }),
+            recentActivities: z.array(z.any()),
+            notifications: z.object({
+                unread: z.number(),
+                recent: z.array(notificationSchema),
+            }),
+            quickActions: z.array(quickActionSchema),
         }),
-        attendance: z.object({
-            today: z.number(),
-            thisWeek: z.number(),
-        }),
-        recentActivities: z.array(z.any()),
-        notifications: z.object({
-            unread: z.number(),
-            recent: z.array(notificationSchema),
-        }),
-        quickActions: z.array(quickActionSchema),
-    }),
-}).openapi({ ref: "AdminDashboardResponse" });
+    })
+    .openapi({ ref: "AdminDashboardResponse" });
 
 // Quick Stats Schema
-export const quickStatsResponseSchema = z.object({
-    success: z.boolean(),
-    data: z.record(z.any()),
-}).openapi({ ref: "QuickStatsResponse" });
+export const quickStatsResponseSchema = z
+    .object({
+        success: z.boolean(),
+        data: z.record(z.any()),
+    })
+    .openapi({ ref: "QuickStatsResponse" });
 
 // Recent Activities Schema
-export const recentActivitiesResponseSchema = z.object({
-    success: z.boolean(),
-    data: z.array(z.any()),
-}).openapi({ ref: "RecentActivitiesResponse" });
+export const recentActivitiesResponseSchema = z
+    .object({
+        success: z.boolean(),
+        data: z.array(z.any()),
+    })
+    .openapi({ ref: "RecentActivitiesResponse" });
 
 // Notifications Summary Schema
-export const notificationsSummaryResponseSchema = z.object({
-    success: z.boolean(),
-    data: z.object({
-        unreadCount: z.number(),
-        recentNotifications: z.array(notificationSchema),
-    }),
-}).openapi({ ref: "NotificationsSummaryResponse" });
+export const notificationsSummaryResponseSchema = z
+    .object({
+        success: z.boolean(),
+        data: z.object({
+            unreadCount: z.number(),
+            recentNotifications: z.array(notificationSchema),
+        }),
+    })
+    .openapi({ ref: "NotificationsSummaryResponse" });
 
 // Upcoming Events Schema
-export const upcomingEventsResponseSchema = z.object({
-    success: z.boolean(),
-    data: z.array(eventSchema),
-}).openapi({ ref: "UpcomingEventsResponse" });
+export const upcomingEventsResponseSchema = z
+    .object({
+        success: z.boolean(),
+        data: z.array(eventSchema),
+    })
+    .openapi({ ref: "UpcomingEventsResponse" });
 
 // Error Schema
-export const errorResponseSchema = z.object({
-    success: z.boolean(),
-    message: z.string(),
-}).openapi({ ref: "ErrorResponse" });
+export const errorResponseSchema = z
+    .object({
+        success: z.boolean(),
+        message: z.string(),
+    })
+    .openapi({ ref: "ErrorResponse" });

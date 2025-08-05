@@ -22,7 +22,8 @@ export class StudentPerformanceController {
             if (!performance) {
                 return ctx.json(
                     {
-                        message: "Performance data not found for the specified semester",
+                        message:
+                            "Performance data not found for the specified semester",
                     },
                     404
                 );
@@ -110,7 +111,7 @@ export class StudentPerformanceController {
         try {
             const student_id = ctx.req.param("student_id");
             const academic_years = ctx.req.query("academic_years");
-            
+
             let academicYearsArray: string[] | undefined;
             if (academic_years) {
                 academicYearsArray = academic_years.split(",");
@@ -220,7 +221,8 @@ export class StudentPerformanceController {
             return ctx.json({
                 success: true,
                 data: performance,
-                message: "Performance metrics calculated and saved successfully",
+                message:
+                    "Performance metrics calculated and saved successfully",
             });
         } catch (error) {
             if (error instanceof Error) {
@@ -258,7 +260,8 @@ export class StudentPerformanceController {
                     return ctx.json(
                         {
                             success: false,
-                            message: "Performance data not found for the specified semester",
+                            message:
+                                "Performance data not found for the specified semester",
                         },
                         404
                     );

@@ -1,4 +1,8 @@
-import { IDiscountApplication, IDiscountRule, IDiscountSummary } from "@/models/discount_rule.model";
+import {
+    IDiscountApplication,
+    IDiscountRule,
+    IDiscountSummary,
+} from "@/models/discount_rule.model";
 import { IFeeData } from "@/models/fee.model";
 
 export interface DiscountEligibilityResult {
@@ -22,20 +26,24 @@ export interface BulkDiscountRequest {
 }
 
 export class DiscountService {
-    
     // ========================= DISCOUNT RULE MANAGEMENT =========================
-    
+
     /**
      * Create a new discount rule
      */
     static async createDiscountRule(
         campus_id: string,
-        ruleData: Omit<IDiscountRule, "id" | "campus_id" | "used_count" | "created_at" | "updated_at">,
+        ruleData: Omit<
+            IDiscountRule,
+            "id" | "campus_id" | "used_count" | "created_at" | "updated_at"
+        >,
         created_by: string
     ): Promise<IDiscountRule> {
         try {
-            const { DiscountRule } = await import("@/models/discount_rule.model");
-            
+            const { DiscountRule } = await import(
+                "@/models/discount_rule.model"
+            );
+
             const discountRule: IDiscountRule = {
                 ...ruleData,
                 id: `discount_rule_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
@@ -43,7 +51,7 @@ export class DiscountService {
                 used_count: 0,
                 created_by,
                 created_at: new Date(),
-                updated_at: new Date()
+                updated_at: new Date(),
             };
 
             // Validate rule conditions
@@ -67,23 +75,27 @@ export class DiscountService {
         }
     ): Promise<IDiscountRule[]> {
         try {
-            const { DiscountRule } = await import("@/models/discount_rule.model");
-            
+            const { DiscountRule } = await import(
+                "@/models/discount_rule.model"
+            );
+
             const query: any = { campus_id };
-            
+
             if (filters?.is_active !== undefined) {
                 query.is_active = filters.is_active;
             }
-            
+
             if (filters?.discount_type) {
                 query.discount_type = filters.discount_type;
             }
-            
+
             if (filters?.academic_year) {
                 query["conditions.academic_year"] = filters.academic_year;
             }
 
-            const result = await DiscountRule.find(query, { sort: { priority: "DESC" } });
+            const result = await DiscountRule.find(query, {
+                sort: { priority: "DESC" },
+            });
             return result.rows || [];
         } catch (error) {
             throw new Error(`Failed to get discount rules: ${error}`);
@@ -99,8 +111,10 @@ export class DiscountService {
         updates: Partial<IDiscountRule>
     ): Promise<IDiscountRule> {
         try {
-            const { DiscountRule } = await import("@/models/discount_rule.model");
-            
+            const { DiscountRule } = await import(
+                "@/models/discount_rule.model"
+            );
+
             const rule = await DiscountRule.findOne({ id: rule_id, campus_id });
             if (!rule) {
                 throw new Error("Discount rule not found");
@@ -109,12 +123,12 @@ export class DiscountService {
             const updatedRule = {
                 ...rule,
                 ...updates,
-                updated_at: new Date()
+                updated_at: new Date(),
             };
 
             await this.validateDiscountRule(updatedRule);
             await DiscountRule.updateById(rule_id, updatedRule);
-            
+
             return updatedRule;
         } catch (error) {
             throw new Error(`Failed to update discount rule: ${error}`);
@@ -124,24 +138,33 @@ export class DiscountService {
     /**
      * Delete discount rule
      */
-    static async deleteDiscountRule(rule_id: string, campus_id: string): Promise<void> {
+    static async deleteDiscountRule(
+        rule_id: string,
+        campus_id: string
+    ): Promise<void> {
         try {
-            const { DiscountRule } = await import("@/models/discount_rule.model");
-            
+            const { DiscountRule } = await import(
+                "@/models/discount_rule.model"
+            );
+
             const rule = await DiscountRule.findOne({ id: rule_id, campus_id });
             if (!rule) {
                 throw new Error("Discount rule not found");
             }
 
             // Check if rule is being used
-            const { DiscountApplication } = await import("@/models/discount_rule.model");
-            const applications = await DiscountApplication.find({ 
+            const { DiscountApplication } = await import(
+                "@/models/discount_rule.model"
+            );
+            const applications = await DiscountApplication.find({
                 discount_rule_id: rule_id,
-                status: { $in: ["approved", "applied"] }
+                status: { $in: ["approved", "applied"] },
             });
 
             if (applications.rows && applications.rows.length > 0) {
-                throw new Error("Cannot delete discount rule that has active applications");
+                throw new Error(
+                    "Cannot delete discount rule that has active applications"
+                );
             }
 
             await DiscountRule.deleteById(rule_id);
@@ -163,14 +186,16 @@ export class DiscountService {
         try {
             const { UserService } = await import("@/services/users.service");
             const { Class } = await import("@/models/class.model");
-            
+
             const student = await UserService.getUser(student_id);
-            const studentClass = await Class.findOne({ 
-                campus_id, 
-                student_ids: { $in: [student_id] }
+            const studentClass = await Class.findOne({
+                campus_id,
+                student_ids: { $in: [student_id] },
             });
 
-            const rules = await this.getDiscountRules(campus_id, { is_active: true });
+            const rules = await this.getDiscountRules(campus_id, {
+                is_active: true,
+            });
             const applicableDiscounts: Array<{
                 rule: IDiscountRule;
                 discount_amount: number;
@@ -180,17 +205,26 @@ export class DiscountService {
             let totalDiscount = 0;
 
             for (const rule of rules) {
-                const eligibility = await this.evaluateRuleConditions(rule, fee, student, studentClass);
-                
+                const eligibility = await this.evaluateRuleConditions(
+                    rule,
+                    fee,
+                    student,
+                    studentClass
+                );
+
                 if (eligibility.eligible) {
-                    const discountAmount = this.calculateDiscountAmount(rule, fee.total_amount);
-                    const discountPercentage = (discountAmount / fee.total_amount) * 100;
-                    
+                    const discountAmount = this.calculateDiscountAmount(
+                        rule,
+                        fee.total_amount
+                    );
+                    const discountPercentage =
+                        (discountAmount / fee.total_amount) * 100;
+
                     applicableDiscounts.push({
                         rule,
                         discount_amount: discountAmount,
                         discount_percentage: discountPercentage,
-                        reason: eligibility.reason
+                        reason: eligibility.reason,
                     });
 
                     if (rule.is_stackable) {
@@ -210,9 +244,10 @@ export class DiscountService {
                 eligible: applicableDiscounts.length > 0,
                 applicable_discounts: applicableDiscounts,
                 total_discount: finalDiscount,
-                total_discount_percentage: (finalDiscount / fee.total_amount) * 100,
+                total_discount_percentage:
+                    (finalDiscount / fee.total_amount) * 100,
                 original_amount: fee.total_amount,
-                final_amount: finalAmount
+                final_amount: finalAmount,
             };
         } catch (error) {
             throw new Error(`Failed to check discount eligibility: ${error}`);
@@ -232,16 +267,22 @@ export class DiscountService {
     ): Promise<IDiscountApplication> {
         try {
             const { Fee } = await import("@/models/fee.model");
-            const { DiscountApplication } = await import("@/models/discount_rule.model");
-            
+            const { DiscountApplication } = await import(
+                "@/models/discount_rule.model"
+            );
+
             const fee = await Fee.findById(fee_id);
             if (!fee || fee.campus_id !== campus_id) {
                 throw new Error("Fee not found");
             }
 
-            const eligibility = await this.checkDiscountEligibility(campus_id, fee, student_id);
+            const eligibility = await this.checkDiscountEligibility(
+                campus_id,
+                fee,
+                student_id
+            );
             const applicableDiscount = eligibility.applicable_discounts.find(
-                d => d.rule.id === discount_rule_id
+                (d) => d.rule.id === discount_rule_id
             );
 
             if (!applicableDiscount) {
@@ -259,25 +300,29 @@ export class DiscountService {
                 discount_amount: applicableDiscount.discount_amount,
                 applied_percentage: applicableDiscount.discount_percentage,
                 original_amount: fee.total_amount,
-                discounted_amount: fee.total_amount - applicableDiscount.discount_amount,
+                discounted_amount:
+                    fee.total_amount - applicableDiscount.discount_amount,
                 status: rule.requires_approval ? "pending" : "approved",
                 application_reason,
                 applied_by,
                 created_at: new Date(),
-                updated_at: new Date()
+                updated_at: new Date(),
             };
 
             if (!rule.requires_approval) {
                 discountApplication.approved_by = applied_by;
                 discountApplication.approved_at = new Date();
                 discountApplication.status = "applied";
-                
+
                 // Update fee with discount
-                await this.applyDiscountToFee(fee, applicableDiscount.discount_amount);
+                await this.applyDiscountToFee(
+                    fee,
+                    applicableDiscount.discount_amount
+                );
             }
 
             await DiscountApplication.create(discountApplication);
-            
+
             // Update rule usage count
             await this.updateRuleUsageCount(discount_rule_id);
 
@@ -296,17 +341,21 @@ export class DiscountService {
         approved_by: string
     ): Promise<void> {
         try {
-            const { DiscountApplication } = await import("@/models/discount_rule.model");
+            const { DiscountApplication } = await import(
+                "@/models/discount_rule.model"
+            );
             const { Fee } = await import("@/models/fee.model");
-            
+
             const application = await DiscountApplication.findOne({
                 id: application_id,
                 campus_id,
-                status: "pending"
+                status: "pending",
             });
 
             if (!application) {
-                throw new Error("Discount application not found or already processed");
+                throw new Error(
+                    "Discount application not found or already processed"
+                );
             }
 
             const fee = await Fee.findById(application.fee_id);
@@ -322,7 +371,7 @@ export class DiscountService {
                 status: "applied",
                 approved_by,
                 approved_at: new Date(),
-                updated_at: new Date()
+                updated_at: new Date(),
             });
         } catch (error) {
             throw new Error(`Failed to approve discount application: ${error}`);
@@ -339,8 +388,10 @@ export class DiscountService {
         rejection_reason: string
     ): Promise<void> {
         try {
-            const { DiscountApplication } = await import("@/models/discount_rule.model");
-            
+            const { DiscountApplication } = await import(
+                "@/models/discount_rule.model"
+            );
+
             await DiscountApplication.updateOne(
                 { id: application_id, campus_id, status: "pending" },
                 {
@@ -348,7 +399,7 @@ export class DiscountService {
                     approved_by: rejected_by,
                     approved_at: new Date(),
                     rejection_reason,
-                    updated_at: new Date()
+                    updated_at: new Date(),
                 }
             );
         } catch (error) {
@@ -375,7 +426,7 @@ export class DiscountService {
             successful: 0,
             failed: 0,
             applications: [] as IDiscountApplication[],
-            errors: [] as Array<{ student_id: string; error: string }>
+            errors: [] as Array<{ student_id: string; error: string }>,
         };
 
         for (const student_id of request.student_ids) {
@@ -385,7 +436,7 @@ export class DiscountService {
                 const studentFees = await Fee.find({
                     campus_id,
                     user_id: student_id,
-                    payment_status: { $ne: "paid" }
+                    payment_status: { $ne: "paid" },
                 });
 
                 for (const fee of studentFees.rows || []) {
@@ -397,16 +448,19 @@ export class DiscountService {
                         applied_by,
                         request.reason
                     );
-                    
+
                     results.applications.push(application);
                 }
-                
+
                 results.successful++;
             } catch (error) {
                 results.failed++;
                 results.errors.push({
                     student_id,
-                    error: error instanceof Error ? error.message : "Unknown error"
+                    error:
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error",
                 });
             }
         }
@@ -424,18 +478,20 @@ export class DiscountService {
         date_range?: { start_date: Date; end_date: Date }
     ): Promise<IDiscountSummary> {
         try {
-            const { DiscountApplication } = await import("@/models/discount_rule.model");
+            const { DiscountApplication } = await import(
+                "@/models/discount_rule.model"
+            );
             const { Class } = await import("@/models/class.model");
-            
+
             const query: any = {
                 campus_id,
-                status: "applied"
+                status: "applied",
             };
 
             if (date_range) {
                 query.applied_at = {
                     $gte: date_range.start_date,
-                    $lte: date_range.end_date
+                    $lte: date_range.end_date,
                 };
             }
 
@@ -443,50 +499,80 @@ export class DiscountService {
             const applicationData = applications.rows || [];
 
             const totalDiscountsGiven = applicationData.length;
-            const totalDiscountAmount = applicationData.reduce((sum, app) => sum + app.discount_amount, 0);
-            const uniqueStudents = new Set(applicationData.map(app => app.student_id));
+            const totalDiscountAmount = applicationData.reduce(
+                (sum, app) => sum + app.discount_amount,
+                0
+            );
+            const uniqueStudents = new Set(
+                applicationData.map((app) => app.student_id)
+            );
             const totalStudentsBenefited = uniqueStudents.size;
 
             // Group by discount type
-            const discountByType = new Map<string, { count: number; amount: number }>();
+            const discountByType = new Map<
+                string,
+                { count: number; amount: number }
+            >();
             for (const app of applicationData) {
-                const rule = await this.getDiscountRuleById(app.discount_rule_id);
+                const rule = await this.getDiscountRuleById(
+                    app.discount_rule_id
+                );
                 if (rule) {
-                    const existing = discountByType.get(rule.discount_type) || { count: 0, amount: 0 };
+                    const existing = discountByType.get(rule.discount_type) || {
+                        count: 0,
+                        amount: 0,
+                    };
                     discountByType.set(rule.discount_type, {
                         count: existing.count + 1,
-                        amount: existing.amount + app.discount_amount
+                        amount: existing.amount + app.discount_amount,
                     });
                 }
             }
 
             // Group by class
-            const discountByClass = new Map<string, { count: number; amount: number }>();
+            const discountByClass = new Map<
+                string,
+                { count: number; amount: number }
+            >();
             const classes = await Class.find({ campus_id });
-            
+
             for (const app of applicationData) {
-                const studentClass = (classes.rows || []).find(cls => 
-                    cls.student_ids && cls.student_ids.includes(app.student_id)
+                const studentClass = (classes.rows || []).find(
+                    (cls) =>
+                        cls.student_ids &&
+                        cls.student_ids.includes(app.student_id)
                 );
-                
+
                 const className = studentClass?.name || "Unknown";
-                const existing = discountByClass.get(className) || { count: 0, amount: 0 };
+                const existing = discountByClass.get(className) || {
+                    count: 0,
+                    amount: 0,
+                };
                 discountByClass.set(className, {
                     count: existing.count + 1,
-                    amount: existing.amount + app.discount_amount
+                    amount: existing.amount + app.discount_amount,
                 });
             }
 
             // Top discount rules
-            const ruleUsage = new Map<string, { count: number; amount: number; name: string }>();
+            const ruleUsage = new Map<
+                string,
+                { count: number; amount: number; name: string }
+            >();
             for (const app of applicationData) {
-                const rule = await this.getDiscountRuleById(app.discount_rule_id);
+                const rule = await this.getDiscountRuleById(
+                    app.discount_rule_id
+                );
                 if (rule) {
-                    const existing = ruleUsage.get(rule.id) || { count: 0, amount: 0, name: rule.name };
+                    const existing = ruleUsage.get(rule.id) || {
+                        count: 0,
+                        amount: 0,
+                        name: rule.name,
+                    };
                     ruleUsage.set(rule.id, {
                         count: existing.count + 1,
                         amount: existing.amount + app.discount_amount,
-                        name: rule.name
+                        name: rule.name,
                     });
                 }
             }
@@ -495,24 +581,28 @@ export class DiscountService {
                 total_discounts_given: totalDiscountsGiven,
                 total_discount_amount: totalDiscountAmount,
                 total_students_benefited: totalStudentsBenefited,
-                discount_by_type: [...discountByType.entries()].map(([type, data]) => ({
-                    type,
-                    count: data.count,
-                    amount: data.amount
-                })),
-                discount_by_class: [...discountByClass.entries()].map(([className, data]) => ({
-                    class_name: className,
-                    count: data.count,
-                    amount: data.amount
-                })),
+                discount_by_type: [...discountByType.entries()].map(
+                    ([type, data]) => ({
+                        type,
+                        count: data.count,
+                        amount: data.amount,
+                    })
+                ),
+                discount_by_class: [...discountByClass.entries()].map(
+                    ([className, data]) => ({
+                        class_name: className,
+                        count: data.count,
+                        amount: data.amount,
+                    })
+                ),
                 top_discount_rules: [...ruleUsage.values()]
                     .sort((a, b) => b.amount - a.amount)
                     .slice(0, 10)
-                    .map(rule => ({
+                    .map((rule) => ({
                         rule_name: rule.name,
                         usage_count: rule.count,
-                        total_amount: rule.amount
-                    }))
+                        total_amount: rule.amount,
+                    })),
             };
         } catch (error) {
             throw new Error(`Failed to get discount summary: ${error}`);
@@ -521,9 +611,14 @@ export class DiscountService {
 
     // ========================= HELPER METHODS =========================
 
-    private static async validateDiscountRule(rule: IDiscountRule): Promise<void> {
+    private static async validateDiscountRule(
+        rule: IDiscountRule
+    ): Promise<void> {
         // Validate discount value
-        if (rule.discount_type === "percentage" && (rule.discount_value < 0 || rule.discount_value > 100)) {
+        if (
+            rule.discount_type === "percentage" &&
+            (rule.discount_value < 0 || rule.discount_value > 100)
+        ) {
             throw new Error("Percentage discount must be between 0 and 100");
         }
 
@@ -532,9 +627,13 @@ export class DiscountService {
         }
 
         // Validate conditions
-        if (rule.conditions.valid_from && rule.conditions.valid_until && rule.conditions.valid_from >= rule.conditions.valid_until) {
-                throw new Error("Valid from date must be before valid until date");
-            }
+        if (
+            rule.conditions.valid_from &&
+            rule.conditions.valid_until &&
+            rule.conditions.valid_from >= rule.conditions.valid_until
+        ) {
+            throw new Error("Valid from date must be before valid until date");
+        }
 
         // Additional validations...
     }
@@ -548,25 +647,42 @@ export class DiscountService {
         const conditions = rule.conditions;
 
         // Check academic year
-        if (conditions.academic_year && fee.academic_year !== conditions.academic_year) {
+        if (
+            conditions.academic_year &&
+            fee.academic_year !== conditions.academic_year
+        ) {
             return { eligible: false, reason: "Academic year mismatch" };
         }
 
         // Check fee categories
-        if (conditions.applicable_fee_categories && conditions.applicable_fee_categories.length > 0) {
-            const feeCategories = new Set(fee.items.map(item => item.category_id));
-            const hasApplicableCategory = conditions.applicable_fee_categories.some(cat => 
-                feeCategories.has(cat)
+        if (
+            conditions.applicable_fee_categories &&
+            conditions.applicable_fee_categories.length > 0
+        ) {
+            const feeCategories = new Set(
+                fee.items.map((item) => item.category_id)
             );
+            const hasApplicableCategory =
+                conditions.applicable_fee_categories.some((cat) =>
+                    feeCategories.has(cat)
+                );
             if (!hasApplicableCategory) {
-                return { eligible: false, reason: "Fee category not applicable" };
+                return {
+                    eligible: false,
+                    reason: "Fee category not applicable",
+                };
             }
         }
 
         // Check classes
-        if (conditions.applicable_classes && conditions.applicable_classes.length > 0 && (!studentClass || !conditions.applicable_classes.includes(studentClass.id))) {
-                return { eligible: false, reason: "Class not applicable" };
-            }
+        if (
+            conditions.applicable_classes &&
+            conditions.applicable_classes.length > 0 &&
+            (!studentClass ||
+                !conditions.applicable_classes.includes(studentClass.id))
+        ) {
+            return { eligible: false, reason: "Class not applicable" };
+        }
 
         // Check amount limits
         if (conditions.min_amount && fee.total_amount < conditions.min_amount) {
@@ -590,9 +706,15 @@ export class DiscountService {
         // Check early payment (simplified)
         if (conditions.early_payment_days && fee.items.length > 0) {
             const dueDate = new Date(fee.items[0].due_date);
-            const earlyPaymentDeadline = new Date(dueDate.getTime() - (conditions.early_payment_days * 24 * 60 * 60 * 1000));
+            const earlyPaymentDeadline = new Date(
+                dueDate.getTime() -
+                    conditions.early_payment_days * 24 * 60 * 60 * 1000
+            );
             if (now > earlyPaymentDeadline) {
-                return { eligible: false, reason: "Early payment deadline passed" };
+                return {
+                    eligible: false,
+                    reason: "Early payment deadline passed",
+                };
             }
         }
 
@@ -601,7 +723,10 @@ export class DiscountService {
         return { eligible: true, reason: "All conditions met" };
     }
 
-    private static calculateDiscountAmount(rule: IDiscountRule, originalAmount: number): number {
+    private static calculateDiscountAmount(
+        rule: IDiscountRule,
+        originalAmount: number
+    ): number {
         let discountAmount = 0;
 
         switch (rule.discount_type) {
@@ -626,14 +751,17 @@ export class DiscountService {
         return Math.min(discountAmount, originalAmount);
     }
 
-    private static async applyDiscountToFee(fee: IFeeData, discountAmount: number): Promise<void> {
+    private static async applyDiscountToFee(
+        fee: IFeeData,
+        discountAmount: number
+    ): Promise<void> {
         const { Fee } = await import("@/models/fee.model");
-        
+
         const updatedFee = {
             ...fee,
             discount_amount: (fee.discount_amount || 0) + discountAmount,
             due_amount: fee.due_amount - discountAmount,
-            updated_at: new Date()
+            updated_at: new Date(),
         };
 
         await Fee.updateById(fee.id, updatedFee);
@@ -641,19 +769,23 @@ export class DiscountService {
 
     private static async updateRuleUsageCount(rule_id: string): Promise<void> {
         const { DiscountRule } = await import("@/models/discount_rule.model");
-        
+
         const rule = await DiscountRule.findById(rule_id);
         if (rule) {
             await DiscountRule.updateById(rule_id, {
                 used_count: rule.used_count + 1,
-                updated_at: new Date()
+                updated_at: new Date(),
             });
         }
     }
 
-    private static async getDiscountRuleById(rule_id: string): Promise<IDiscountRule | null> {
+    private static async getDiscountRuleById(
+        rule_id: string
+    ): Promise<IDiscountRule | null> {
         try {
-            const { DiscountRule } = await import("@/models/discount_rule.model");
+            const { DiscountRule } = await import(
+                "@/models/discount_rule.model"
+            );
             return await DiscountRule.findById(rule_id);
         } catch {
             return null;

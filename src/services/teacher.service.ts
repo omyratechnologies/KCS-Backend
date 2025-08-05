@@ -33,23 +33,28 @@ export class TeacherService {
                         } catch {
                             existingMetaData = {};
                         }
-                    } else if (user.meta_data && typeof user.meta_data === "object") {
+                    } else if (
+                        user.meta_data &&
+                        typeof user.meta_data === "object"
+                    ) {
                         existingMetaData = user.meta_data;
                     }
-                    
+
                     // Add teacher_id to meta_data
                     const updatedMetaData = {
                         ...existingMetaData,
-                        teacher_id: teacher.id
+                        teacher_id: teacher.id,
                     };
 
                     // Update the user with the new meta_data (will be converted to JSON string by validation)
                     await UserService.updateUsers(teacherData.user_id, {
-                        meta_data: updatedMetaData as any
+                        meta_data: updatedMetaData as any,
                     });
                 }
             } catch (error) {
-                console.error(`Failed to update user meta_data with teacher_id: ${error}`);
+                console.error(
+                    `Failed to update user meta_data with teacher_id: ${error}`
+                );
                 // Don't throw error here as teacher creation was successful
                 // Just log the error for debugging
             }
@@ -162,20 +167,25 @@ export class TeacherService {
                         } catch {
                             existingMetaData = {};
                         }
-                    } else if (user.meta_data && typeof user.meta_data === "object") {
+                    } else if (
+                        user.meta_data &&
+                        typeof user.meta_data === "object"
+                    ) {
                         existingMetaData = user.meta_data;
                     }
-                    
+
                     // Remove teacher_id from meta_data
                     delete (existingMetaData as any).teacher_id;
 
                     // Update the user with the updated meta_data
                     await UserService.updateUsers(teacher.user_id, {
-                        meta_data: existingMetaData as any
+                        meta_data: existingMetaData as any,
                     });
                 }
             } catch (error) {
-                console.error(`Failed to remove teacher_id from user meta_data: ${error}`);
+                console.error(
+                    `Failed to remove teacher_id from user meta_data: ${error}`
+                );
                 // Don't throw error here as we still want to delete the teacher
                 // Just log the error for debugging
             }

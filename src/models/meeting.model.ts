@@ -14,20 +14,20 @@ interface IMeetingData {
     meeting_end_time: Date;
     meeting_location: string;
     meeting_meta_data: object;
-    
+
     // Real-time meeting features
     meeting_room_id: string;
-    meeting_type: 'scheduled' | 'instant' | 'recurring';
-    meeting_status: 'scheduled' | 'live' | 'ended' | 'cancelled';
+    meeting_type: "scheduled" | "instant" | "recurring";
+    meeting_status: "scheduled" | "live" | "ended" | "cancelled";
     max_participants: number;
     current_participants: string[];
-    
+
     // Security & Access Control
     meeting_password?: string;
     waiting_room_enabled: boolean;
     require_host_approval: boolean;
     allow_guests: boolean;
-    
+
     // Meeting Features
     features: {
         video_enabled: boolean;
@@ -39,17 +39,17 @@ interface IMeetingData {
         whiteboard_enabled: boolean;
         hand_raise_enabled: boolean;
     };
-    
+
     // Recording & Storage
     recording_config?: {
         auto_record: boolean;
         record_video: boolean;
         record_audio: boolean;
         record_chat: boolean;
-        storage_location: 'local' | 'cloud';
+        storage_location: "local" | "cloud";
         retention_days: number;
     };
-    
+
     // WebRTC Configuration
     webrtc_config: {
         ice_servers: Array<{
@@ -60,7 +60,7 @@ interface IMeetingData {
         media_constraints: {
             video: {
                 enabled: boolean;
-                quality: 'low' | 'medium' | 'high' | 'hd';
+                quality: "low" | "medium" | "high" | "hd";
                 frameRate: number;
             };
             audio: {
@@ -70,7 +70,7 @@ interface IMeetingData {
             };
         };
     };
-    
+
     // Analytics & Monitoring
     analytics: {
         total_duration_minutes: number;
@@ -80,7 +80,7 @@ interface IMeetingData {
         chat_messages_count: number;
         screen_shares_count: number;
     };
-    
+
     // Compliance & Audit
     audit_trail: Array<{
         timestamp: Date;
@@ -88,7 +88,7 @@ interface IMeetingData {
         user_id: string;
         details: object;
     }>;
-    
+
     is_active: boolean;
     is_deleted: boolean;
     created_at: Date;
@@ -102,13 +102,17 @@ interface IMeetingParticipant {
     user_id: string;
     participant_name: string;
     participant_email?: string;
-    
+
     // Connection Status
-    connection_status: 'connecting' | 'connected' | 'reconnecting' | 'disconnected';
-    connection_quality: 'poor' | 'fair' | 'good' | 'excellent';
+    connection_status:
+        | "connecting"
+        | "connected"
+        | "reconnecting"
+        | "disconnected";
+    connection_quality: "poor" | "fair" | "good" | "excellent";
     joined_at: Date;
     left_at?: Date;
-    
+
     // Media Status
     media_status: {
         video_enabled: boolean;
@@ -117,7 +121,7 @@ interface IMeetingParticipant {
         is_speaking: boolean;
         is_muted_by_host: boolean;
     };
-    
+
     // Permissions
     permissions: {
         can_share_screen: boolean;
@@ -126,13 +130,13 @@ interface IMeetingParticipant {
         is_moderator: boolean;
         is_host: boolean;
     };
-    
+
     // Technical Details
     peer_connection_id: string;
     socket_id: string;
     ip_address: string;
     user_agent: string;
-    
+
     created_at: Date;
     updated_at: Date;
 }
@@ -144,8 +148,8 @@ interface IMeetingChat {
     sender_id: string;
     sender_name: string;
     message: string;
-    message_type: 'text' | 'file' | 'poll' | 'announcement';
-    recipient_type: 'all' | 'private' | 'host';
+    message_type: "text" | "file" | "poll" | "announcement";
+    recipient_type: "all" | "private" | "host";
     recipient_id?: string;
     timestamp: Date;
     edited_at?: Date;
@@ -156,7 +160,7 @@ interface IMeetingChat {
 interface IMeetingRecording {
     id: string;
     meeting_id: string;
-    recording_type: 'video' | 'audio' | 'screen' | 'chat';
+    recording_type: "video" | "audio" | "screen" | "chat";
     file_path: string;
     file_size_bytes: number;
     duration_seconds: number;
@@ -181,20 +185,28 @@ const MeetingSchema = new Schema({
     meeting_end_time: { type: Date, required: true },
     meeting_location: { type: String, required: true },
     meeting_meta_data: { type: Object, required: true },
-    
+
     // Real-time meeting features
     meeting_room_id: { type: String, required: true },
-    meeting_type: { type: String, enum: ['scheduled', 'instant', 'recurring'], default: 'scheduled' },
-    meeting_status: { type: String, enum: ['scheduled', 'live', 'ended', 'cancelled'], default: 'scheduled' },
+    meeting_type: {
+        type: String,
+        enum: ["scheduled", "instant", "recurring"],
+        default: "scheduled",
+    },
+    meeting_status: {
+        type: String,
+        enum: ["scheduled", "live", "ended", "cancelled"],
+        default: "scheduled",
+    },
     max_participants: { type: Number, default: 100 },
     current_participants: { type: [String], default: [] },
-    
+
     // Security & Access Control
     meeting_password: { type: String },
     waiting_room_enabled: { type: Boolean, default: false },
     require_host_approval: { type: Boolean, default: false },
     allow_guests: { type: Boolean, default: true },
-    
+
     // Meeting Features
     features: {
         type: Object,
@@ -206,10 +218,10 @@ const MeetingSchema = new Schema({
             recording_enabled: false,
             breakout_rooms_enabled: false,
             whiteboard_enabled: false,
-            hand_raise_enabled: true
-        }
+            hand_raise_enabled: true,
+        },
     },
-    
+
     // Recording & Storage
     recording_config: {
         type: Object,
@@ -218,34 +230,34 @@ const MeetingSchema = new Schema({
             record_video: true,
             record_audio: true,
             record_chat: false,
-            storage_location: 'cloud',
-            retention_days: 30
-        }
+            storage_location: "cloud",
+            retention_days: 30,
+        },
     },
-    
+
     // WebRTC Configuration
     webrtc_config: {
         type: Object,
         default: {
             ice_servers: [
-                { urls: ['stun:stun.l.google.com:19302'] },
-                { urls: ['stun:stun1.l.google.com:19302'] }
+                { urls: ["stun:stun.l.google.com:19302"] },
+                { urls: ["stun:stun1.l.google.com:19302"] },
             ],
             media_constraints: {
                 video: {
                     enabled: true,
-                    quality: 'medium',
-                    frameRate: 30
+                    quality: "medium",
+                    frameRate: 30,
                 },
                 audio: {
                     enabled: true,
                     noise_suppression: true,
-                    echo_cancellation: true
-                }
-            }
-        }
+                    echo_cancellation: true,
+                },
+            },
+        },
     },
-    
+
     // Analytics & Monitoring
     analytics: {
         type: Object,
@@ -255,13 +267,13 @@ const MeetingSchema = new Schema({
             total_participants_joined: 0,
             connection_quality_avg: 0,
             chat_messages_count: 0,
-            screen_shares_count: 0
-        }
+            screen_shares_count: 0,
+        },
     },
-    
+
     // Compliance & Audit
     audit_trail: { type: [Object], default: [] },
-    
+
     is_active: { type: Boolean, required: true },
     is_deleted: { type: Boolean, required: true },
     created_at: { type: Date, default: () => new Date() },
@@ -273,21 +285,21 @@ const MeetingParticipantSchema = new Schema({
     user_id: { type: String, required: true },
     participant_name: { type: String, required: true },
     participant_email: { type: String },
-    
+
     // Connection Status
-    connection_status: { 
-        type: String, 
-        enum: ['connecting', 'connected', 'reconnecting', 'disconnected'],
-        default: 'connecting'
+    connection_status: {
+        type: String,
+        enum: ["connecting", "connected", "reconnecting", "disconnected"],
+        default: "connecting",
     },
     connection_quality: {
         type: String,
-        enum: ['poor', 'fair', 'good', 'excellent'],
-        default: 'good'
+        enum: ["poor", "fair", "good", "excellent"],
+        default: "good",
     },
     joined_at: { type: Date, default: () => new Date() },
     left_at: { type: Date },
-    
+
     // Media Status
     media_status: {
         type: Object,
@@ -296,10 +308,10 @@ const MeetingParticipantSchema = new Schema({
             audio_enabled: true,
             screen_sharing: false,
             is_speaking: false,
-            is_muted_by_host: false
-        }
+            is_muted_by_host: false,
+        },
     },
-    
+
     // Permissions
     permissions: {
         type: Object,
@@ -308,16 +320,16 @@ const MeetingParticipantSchema = new Schema({
             can_use_chat: true,
             can_use_whiteboard: true,
             is_moderator: false,
-            is_host: false
-        }
+            is_host: false,
+        },
     },
-    
+
     // Technical Details
     peer_connection_id: { type: String, required: true },
     socket_id: { type: String, required: true },
     ip_address: { type: String },
     user_agent: { type: String },
-    
+
     created_at: { type: Date, default: () => new Date() },
     updated_at: { type: Date, default: () => new Date() },
 });
@@ -327,15 +339,15 @@ const MeetingChatSchema = new Schema({
     sender_id: { type: String, required: true },
     sender_name: { type: String, required: true },
     message: { type: String, required: true },
-    message_type: { 
-        type: String, 
-        enum: ['text', 'file', 'poll', 'announcement'],
-        default: 'text'
+    message_type: {
+        type: String,
+        enum: ["text", "file", "poll", "announcement"],
+        default: "text",
     },
     recipient_type: {
         type: String,
-        enum: ['all', 'private', 'host'],
-        default: 'all'
+        enum: ["all", "private", "host"],
+        default: "all",
     },
     recipient_id: { type: String },
     timestamp: { type: Date, default: () => new Date() },
@@ -347,8 +359,8 @@ const MeetingRecordingSchema = new Schema({
     meeting_id: { type: String, required: true },
     recording_type: {
         type: String,
-        enum: ['video', 'audio', 'screen', 'chat'],
-        required: true
+        enum: ["video", "audio", "screen", "chat"],
+        required: true,
     },
     file_path: { type: String, required: true },
     file_size_bytes: { type: Number, default: 0 },
@@ -371,7 +383,9 @@ MeetingSchema.index.findByRoomId = { by: "meeting_room_id" };
 
 MeetingParticipantSchema.index.findByMeetingId = { by: "meeting_id" };
 MeetingParticipantSchema.index.findByUserId = { by: "user_id" };
-MeetingParticipantSchema.index.findByConnectionStatus = { by: "connection_status" };
+MeetingParticipantSchema.index.findByConnectionStatus = {
+    by: "connection_status",
+};
 
 MeetingChatSchema.index.findByMeetingId = { by: "meeting_id" };
 MeetingChatSchema.index.findByTimestamp = { by: "timestamp" };
@@ -380,17 +394,26 @@ MeetingRecordingSchema.index.findByMeetingId = { by: "meeting_id" };
 MeetingRecordingSchema.index.findByType = { by: "recording_type" };
 
 const Meeting = ottoman.model<IMeetingData>("meeting", MeetingSchema);
-const MeetingParticipant = ottoman.model<IMeetingParticipant>("meeting_participant", MeetingParticipantSchema);
-const MeetingChat = ottoman.model<IMeetingChat>("meeting_chat", MeetingChatSchema);
-const MeetingRecording = ottoman.model<IMeetingRecording>("meeting_recording", MeetingRecordingSchema);
+const MeetingParticipant = ottoman.model<IMeetingParticipant>(
+    "meeting_participant",
+    MeetingParticipantSchema
+);
+const MeetingChat = ottoman.model<IMeetingChat>(
+    "meeting_chat",
+    MeetingChatSchema
+);
+const MeetingRecording = ottoman.model<IMeetingRecording>(
+    "meeting_recording",
+    MeetingRecordingSchema
+);
 
-export { 
-    type IMeetingData, 
-    type IMeetingParticipant,
+export {
     type IMeetingChat,
+    type IMeetingData,
+    type IMeetingParticipant,
     type IMeetingRecording,
     Meeting,
-    MeetingParticipant,
     MeetingChat,
-    MeetingRecording
+    MeetingParticipant,
+    MeetingRecording,
 };

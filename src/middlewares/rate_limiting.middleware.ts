@@ -11,30 +11,35 @@ export const meetingRateLimit = () => {
     return async (ctx: Context, next: Next) => {
         const userKey = `${ctx.get("user_id")}_${ctx.get("campus_id")}`;
         const now = Date.now();
-        
+
         // Clean up expired entries
         for (const [key, data] of requests.entries()) {
             if (now > data.resetTime) {
                 requests.delete(key);
             }
         }
-        
+
         const userRequests = requests.get(userKey);
-        
+
         if (!userRequests) {
             requests.set(userKey, { count: 1, resetTime: now + WINDOW_MS });
         } else if (now > userRequests.resetTime) {
             requests.set(userKey, { count: 1, resetTime: now + WINDOW_MS });
         } else if (userRequests.count >= RATE_LIMIT) {
-            return ctx.json({
-                success: false,
-                message: 'Rate limit exceeded. Too many requests.',
-                retryAfter: Math.ceil((userRequests.resetTime - now) / 1000),
-            }, 429);
+            return ctx.json(
+                {
+                    success: false,
+                    message: "Rate limit exceeded. Too many requests.",
+                    retryAfter: Math.ceil(
+                        (userRequests.resetTime - now) / 1000
+                    ),
+                },
+                429
+            );
         } else {
             userRequests.count++;
         }
-        
+
         await next();
     };
 };
@@ -50,30 +55,36 @@ export const strictMeetingRateLimit = () => {
     return async (ctx: Context, next: Next) => {
         const userKey = ctx.get("user_id");
         const now = Date.now();
-        
+
         // Clean up expired entries
         for (const [key, data] of requests.entries()) {
             if (now > data.resetTime) {
                 requests.delete(key);
             }
         }
-        
+
         const userRequests = requests.get(userKey);
-        
+
         if (!userRequests) {
             requests.set(userKey, { count: 1, resetTime: now + WINDOW_MS });
         } else if (now > userRequests.resetTime) {
             requests.set(userKey, { count: 1, resetTime: now + WINDOW_MS });
         } else if (userRequests.count >= RATE_LIMIT) {
-            return ctx.json({
-                success: false,
-                message: 'Rate limit exceeded for resource-intensive operations.',
-                retryAfter: Math.ceil((userRequests.resetTime - now) / 1000),
-            }, 429);
+            return ctx.json(
+                {
+                    success: false,
+                    message:
+                        "Rate limit exceeded for resource-intensive operations.",
+                    retryAfter: Math.ceil(
+                        (userRequests.resetTime - now) / 1000
+                    ),
+                },
+                429
+            );
         } else {
             userRequests.count++;
         }
-        
+
         await next();
     };
 };

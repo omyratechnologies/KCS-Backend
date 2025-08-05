@@ -13,10 +13,10 @@ interface ISchoolBankDetails {
     branch_name: string;
     account_type: string; // savings, current
     upi_id?: string;
-    
+
     // Encrypted payment gateway credentials
     encrypted_payment_credentials?: EncryptedCredential;
-    
+
     // Legacy field for backward compatibility (deprecated)
     payment_gateway_credentials?: {
         razorpay?: {
@@ -36,7 +36,7 @@ interface ISchoolBankDetails {
             enabled: boolean;
         };
     };
-    
+
     // Gateway status information (not encrypted)
     gateway_status: {
         razorpay?: {
@@ -58,7 +58,7 @@ interface ISchoolBankDetails {
             test_status?: "success" | "failed" | "untested";
         };
     };
-    
+
     is_active: boolean;
     is_verified: boolean;
     verified_at?: Date;
@@ -76,33 +76,33 @@ const SchoolBankDetailsSchema = new Schema({
     account_holder_name: { type: String, required: true },
     ifsc_code: { type: String, required: true },
     branch_name: { type: String, required: true },
-    account_type: { 
-        type: String, 
+    account_type: {
+        type: String,
         required: true,
-        enum: ["savings", "current"]
+        enum: ["savings", "current"],
     },
     upi_id: { type: String, required: false },
-    
+
     // Encrypted credentials storage
     encrypted_payment_credentials: {
         type: Object,
-        required: false
+        required: false,
     },
-    
+
     // Legacy field for backward compatibility (deprecated)
     payment_gateway_credentials: {
         type: Object,
         required: false,
-        default: {}
+        default: {},
     },
-    
+
     // Gateway status (non-sensitive data)
     gateway_status: {
         type: Object,
         required: true,
-        default: {}
+        default: {},
     },
-    
+
     is_active: { type: Boolean, required: true, default: true },
     is_verified: { type: Boolean, required: true, default: false },
     verified_at: { type: Date, required: false },
@@ -122,4 +122,4 @@ const SchoolBankDetails = ottoman.model<ISchoolBankDetails>(
     SchoolBankDetailsSchema
 );
 
-export { type ISchoolBankDetails,SchoolBankDetails };
+export { type ISchoolBankDetails, SchoolBankDetails };

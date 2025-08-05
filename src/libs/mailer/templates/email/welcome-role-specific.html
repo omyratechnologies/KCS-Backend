@@ -1,509 +1,600 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Welcome to Let's Catch Up - {{USER_ROLE}}</title>
-    <style>
-        /* Reset styles */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { margin: 0; padding: 0; font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8fafc; }
-        
-        /* Container */
-        .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; }
-        
-        /* Header */
-        .header { 
-            background: linear-gradient(135deg, #0A0A0A 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #0e4b99 100%);
-            padding: 40px 30px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: 
-                radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
-                radial-gradient(circle at 80% 80%, rgba(85, 218, 215, 0.2) 1px, transparent 1px);
-            background-size: 50px 50px, 80px 80px;
-        }
-        
-        .logo { 
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 20px;
-            display: inline-block;
-            margin-bottom: 20px;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .logo img { 
-            width: 80px; 
-            height: 80px; 
-            border-radius: 12px;
-        }
-        
-        .brand-title { 
-            color: #ffffff;
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .brand-subtitle { 
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 16px;
-            font-weight: 400;
-            position: relative;
-            z-index: 1;
-        }
-        
-        /* Role Badge */
-        .role-badge {
-            background: linear-gradient(135deg, #55dad7 0%, #F1531C 100%);
-            color: #ffffff;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 16px;
-            display: inline-block;
-            position: relative;
-            z-index: 1;
-        }
-        
-        /* Content */
-        .content { padding: 50px 40px; }
-        
-        .welcome-title {
-            color: #0A1929;
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 16px;
-            text-align: center;
-        }
-        
-        .welcome-subtitle {
-            color: #64748B;
-            font-size: 18px;
-            font-weight: 400;
-            margin-bottom: 40px;
-            text-align: center;
-            line-height: 1.5;
-        }
-        
-        /* Role-specific content styling */
-        .role-specific-box {
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-            border: 2px solid #0ea5e9;
-            border-radius: 16px;
-            padding: 32px;
-            margin: 32px 0;
-        }
-        
-        .role-specific-box.student {
-            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-            border-color: #22c55e;
-        }
-        
-        .role-specific-box.teacher {
-            background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%);
-            border-color: #f59e0b;
-        }
-        
-        .role-specific-box.admin {
-            background: linear-gradient(135deg, #fdf4ff 0%, #ddd6fe 100%);
-            border-color: #8b5cf6;
-        }
-        
-        .role-title {
-            color: #0369a1;
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        
-        .role-title.student { color: #166534; }
-        .role-title.teacher { color: #92400e; }
-        .role-title.admin { color: #7c3aed; }
-        
-        .role-description {
-            color: #0c4a6e;
-            font-size: 16px;
-            line-height: 1.6;
-            text-align: center;
-            margin-bottom: 24px;
-        }
-        
-        .role-description.student { color: #166534; }
-        .role-description.teacher { color: #92400e; }
-        .role-description.admin { color: #6b21a8; }
-        
-        /* Getting Started Section */
-        .getting-started {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 24px;
-            margin: 32px 0;
-        }
-        
-        .getting-started-title {
-            color: #0A1929;
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .steps-list {
-            list-style: none;
-            padding: 0;
-        }
-        
-        .step-item {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .step-number {
-            background: linear-gradient(135deg, #55dad7 0%, #F1531C 100%);
-            color: #ffffff;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: 600;
-            flex-shrink: 0;
-        }
-        
-        .step-content {
-            flex: 1;
-        }
-        
-        .step-title {
-            color: #0A1929;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-        
-        .step-description {
-            color: #64748B;
-            font-size: 12px;
-            line-height: 1.4;
-        }
-        
-        /* Features Grid */
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin: 32px 0;
-        }
-        
-        .feature-item {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 24px;
-            text-align: center;
-            transition: all 0.2s ease;
-        }
-        
-        .feature-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            border-color: #55dad7;
-        }
-        
-        .feature-icon {
-            font-size: 36px;
-            margin-bottom: 16px;
-        }
-        
-        .feature-title {
-            color: #0A1929;
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        
-        .feature-description {
-            color: #64748B;
-            font-size: 14px;
-            line-height: 1.4;
-        }
-        
-        /* Action Button */
-        .action-button {
-            display: inline-block;
-            background: linear-gradient(135deg, #55dad7 0%, #F1531C 100%);
-            color: #ffffff;
-            text-decoration: none;
-            padding: 18px 36px;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: 600;
-            margin: 32px 0;
-            text-align: center;
-            transition: transform 0.2s ease;
-            box-shadow: 0 4px 15px rgba(85, 218, 215, 0.3);
-        }
-        
-        .action-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(85, 218, 215, 0.4);
-        }
-        
-        /* Support Box */
-        .support-box {
-            background: linear-gradient(135deg, #fef2f2 0%, #fca5a5 100%);
-            border-left: 4px solid #ef4444;
-            border-radius: 8px;
-            padding: 24px;
-            margin: 32px 0;
-        }
-        
-        .support-title {
-            color: #dc2626;
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .support-text {
-            color: #991b1b;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-        
-        /* Quick Links */
-        .quick-links {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 12px;
-            margin: 32px 0;
-        }
-        
-        .quick-link {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 16px;
-            text-align: center;
-            text-decoration: none;
-            transition: all 0.2s ease;
-        }
-        
-        .quick-link:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            border-color: #55dad7;
-        }
-        
-        .quick-link-icon {
-            font-size: 24px;
-            margin-bottom: 8px;
-        }
-        
-        .quick-link-title {
-            color: #0A1929;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        
-        /* Footer */
-        .footer {
-            background: #0A1929;
-            color: #94a3b8;
-            padding: 32px 40px;
-            text-align: center;
-        }
-        
-        .footer-title {
-            color: #ffffff;
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 16px;
-        }
-        
-        .footer-text {
-            font-size: 14px;
-            line-height: 1.6;
-            margin-bottom: 24px;
-        }
-        
-        .footer-links {
-            display: flex;
-            justify-content: center;
-            gap: 24px;
-            margin-bottom: 24px;
-        }
-        
-        .footer-link {
-            color: #55dad7;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        
-        .footer-link:hover {
-            color: #F1531C;
-        }
-        
-        .footer-copy {
-            color: #64748B;
-            font-size: 12px;
-            margin-top: 24px;
-            padding-top: 24px;
-            border-top: 1px solid #1e293b;
-        }
-        
-        /* Responsive */
-        @media (max-width: 600px) {
-            .content { padding: 32px 24px; }
-            .role-specific-box { padding: 24px 20px; }
-            .features-grid { grid-template-columns: 1fr; }
-            .quick-links { grid-template-columns: repeat(2, 1fr); }
-            .footer { padding: 24px 20px; }
-            .footer-links { flex-direction: column; gap: 12px; }
-        }
-    </style>
-</head>
-<body>
-    <div class="email-container">
-        <!-- Header -->
-        <div class="header">
-            <div class="logo">
-                <img src="{{LOGO_URL}}" alt="Let's Catch Up Logo">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <title>Welcome to Let's Catch Up - {{USER_ROLE}}</title>
+        <style>
+            /* Reset styles */
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                margin: 0;
+                padding: 0;
+                font-family:
+                    "Poppins",
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Roboto,
+                    sans-serif;
+                background-color: #f8fafc;
+            }
+
+            /* Container */
+            .email-container {
+                max-width: 600px;
+                margin: 0 auto;
+                background-color: #ffffff;
+            }
+
+            /* Header */
+            .header {
+                background: linear-gradient(
+                    135deg,
+                    #0a0a0a 0%,
+                    #1a1a2e 25%,
+                    #16213e 50%,
+                    #0f3460 75%,
+                    #0e4b99 100%
+                );
+                padding: 40px 30px;
+                text-align: center;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .header::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-image:
+                    radial-gradient(
+                        circle at 20% 20%,
+                        rgba(255, 255, 255, 0.1) 1px,
+                        transparent 1px
+                    ),
+                    radial-gradient(
+                        circle at 80% 80%,
+                        rgba(85, 218, 215, 0.2) 1px,
+                        transparent 1px
+                    );
+                background-size:
+                    50px 50px,
+                    80px 80px;
+            }
+
+            .logo {
+                background-color: rgba(255, 255, 255, 0.1);
+                border-radius: 20px;
+                padding: 20px;
+                display: inline-block;
+                margin-bottom: 20px;
+                position: relative;
+                z-index: 1;
+            }
+
+            .logo img {
+                width: 80px;
+                height: 80px;
+                border-radius: 12px;
+            }
+
+            .brand-title {
+                color: #ffffff;
+                font-size: 32px;
+                font-weight: 700;
+                margin-bottom: 8px;
+                position: relative;
+                z-index: 1;
+            }
+
+            .brand-subtitle {
+                color: rgba(255, 255, 255, 0.8);
+                font-size: 16px;
+                font-weight: 400;
+                position: relative;
+                z-index: 1;
+            }
+
+            /* Role Badge */
+            .role-badge {
+                background: linear-gradient(135deg, #55dad7 0%, #f1531c 100%);
+                color: #ffffff;
+                padding: 8px 16px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 16px;
+                display: inline-block;
+                position: relative;
+                z-index: 1;
+            }
+
+            /* Content */
+            .content {
+                padding: 50px 40px;
+            }
+
+            .welcome-title {
+                color: #0a1929;
+                font-size: 28px;
+                font-weight: 700;
+                margin-bottom: 16px;
+                text-align: center;
+            }
+
+            .welcome-subtitle {
+                color: #64748b;
+                font-size: 18px;
+                font-weight: 400;
+                margin-bottom: 40px;
+                text-align: center;
+                line-height: 1.5;
+            }
+
+            /* Role-specific content styling */
+            .role-specific-box {
+                background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+                border: 2px solid #0ea5e9;
+                border-radius: 16px;
+                padding: 32px;
+                margin: 32px 0;
+            }
+
+            .role-specific-box.student {
+                background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+                border-color: #22c55e;
+            }
+
+            .role-specific-box.teacher {
+                background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%);
+                border-color: #f59e0b;
+            }
+
+            .role-specific-box.admin {
+                background: linear-gradient(135deg, #fdf4ff 0%, #ddd6fe 100%);
+                border-color: #8b5cf6;
+            }
+
+            .role-title {
+                color: #0369a1;
+                font-size: 20px;
+                font-weight: 600;
+                margin-bottom: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+            }
+
+            .role-title.student {
+                color: #166534;
+            }
+            .role-title.teacher {
+                color: #92400e;
+            }
+            .role-title.admin {
+                color: #7c3aed;
+            }
+
+            .role-description {
+                color: #0c4a6e;
+                font-size: 16px;
+                line-height: 1.6;
+                text-align: center;
+                margin-bottom: 24px;
+            }
+
+            .role-description.student {
+                color: #166534;
+            }
+            .role-description.teacher {
+                color: #92400e;
+            }
+            .role-description.admin {
+                color: #6b21a8;
+            }
+
+            /* Getting Started Section */
+            .getting-started {
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                padding: 24px;
+                margin: 32px 0;
+            }
+
+            .getting-started-title {
+                color: #0a1929;
+                font-size: 18px;
+                font-weight: 600;
+                margin-bottom: 16px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .steps-list {
+                list-style: none;
+                padding: 0;
+            }
+
+            .step-item {
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 16px;
+                margin-bottom: 12px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+
+            .step-number {
+                background: linear-gradient(135deg, #55dad7 0%, #f1531c 100%);
+                color: #ffffff;
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 14px;
+                font-weight: 600;
+                flex-shrink: 0;
+            }
+
+            .step-content {
+                flex: 1;
+            }
+
+            .step-title {
+                color: #0a1929;
+                font-size: 14px;
+                font-weight: 600;
+                margin-bottom: 4px;
+            }
+
+            .step-description {
+                color: #64748b;
+                font-size: 12px;
+                line-height: 1.4;
+            }
+
+            /* Features Grid */
+            .features-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 16px;
+                margin: 32px 0;
+            }
+
+            .feature-item {
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                padding: 24px;
+                text-align: center;
+                transition: all 0.2s ease;
+            }
+
+            .feature-item:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                border-color: #55dad7;
+            }
+
+            .feature-icon {
+                font-size: 36px;
+                margin-bottom: 16px;
+            }
+
+            .feature-title {
+                color: #0a1929;
+                font-size: 16px;
+                font-weight: 600;
+                margin-bottom: 8px;
+            }
+
+            .feature-description {
+                color: #64748b;
+                font-size: 14px;
+                line-height: 1.4;
+            }
+
+            /* Action Button */
+            .action-button {
+                display: inline-block;
+                background: linear-gradient(135deg, #55dad7 0%, #f1531c 100%);
+                color: #ffffff;
+                text-decoration: none;
+                padding: 18px 36px;
+                border-radius: 12px;
+                font-size: 18px;
+                font-weight: 600;
+                margin: 32px 0;
+                text-align: center;
+                transition: transform 0.2s ease;
+                box-shadow: 0 4px 15px rgba(85, 218, 215, 0.3);
+            }
+
+            .action-button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(85, 218, 215, 0.4);
+            }
+
+            /* Support Box */
+            .support-box {
+                background: linear-gradient(135deg, #fef2f2 0%, #fca5a5 100%);
+                border-left: 4px solid #ef4444;
+                border-radius: 8px;
+                padding: 24px;
+                margin: 32px 0;
+            }
+
+            .support-title {
+                color: #dc2626;
+                font-size: 16px;
+                font-weight: 600;
+                margin-bottom: 12px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .support-text {
+                color: #991b1b;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+
+            /* Quick Links */
+            .quick-links {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 12px;
+                margin: 32px 0;
+            }
+
+            .quick-link {
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 16px;
+                text-align: center;
+                text-decoration: none;
+                transition: all 0.2s ease;
+            }
+
+            .quick-link:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                border-color: #55dad7;
+            }
+
+            .quick-link-icon {
+                font-size: 24px;
+                margin-bottom: 8px;
+            }
+
+            .quick-link-title {
+                color: #0a1929;
+                font-size: 12px;
+                font-weight: 600;
+            }
+
+            /* Footer */
+            .footer {
+                background: #0a1929;
+                color: #94a3b8;
+                padding: 32px 40px;
+                text-align: center;
+            }
+
+            .footer-title {
+                color: #ffffff;
+                font-size: 18px;
+                font-weight: 600;
+                margin-bottom: 16px;
+            }
+
+            .footer-text {
+                font-size: 14px;
+                line-height: 1.6;
+                margin-bottom: 24px;
+            }
+
+            .footer-links {
+                display: flex;
+                justify-content: center;
+                gap: 24px;
+                margin-bottom: 24px;
+            }
+
+            .footer-link {
+                color: #55dad7;
+                text-decoration: none;
+                font-size: 14px;
+                font-weight: 500;
+            }
+
+            .footer-link:hover {
+                color: #f1531c;
+            }
+
+            .footer-copy {
+                color: #64748b;
+                font-size: 12px;
+                margin-top: 24px;
+                padding-top: 24px;
+                border-top: 1px solid #1e293b;
+            }
+
+            /* Responsive */
+            @media (max-width: 600px) {
+                .content {
+                    padding: 32px 24px;
+                }
+                .role-specific-box {
+                    padding: 24px 20px;
+                }
+                .features-grid {
+                    grid-template-columns: 1fr;
+                }
+                .quick-links {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+                .footer {
+                    padding: 24px 20px;
+                }
+                .footer-links {
+                    flex-direction: column;
+                    gap: 12px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="email-container">
+            <!-- Header -->
+            <div class="header">
+                <div class="logo">
+                    <img src="{{LOGO_URL}}" alt="Let's Catch Up Logo" />
+                </div>
+                <div class="brand-title">Let's Catch Up</div>
+                <div class="brand-subtitle">
+                    Learning & Communication Platform
+                </div>
+                <div class="role-badge">{{USER_ROLE}} Account</div>
             </div>
-            <div class="brand-title">Let's Catch Up</div>
-            <div class="brand-subtitle">Learning & Communication Platform</div>
-            <div class="role-badge">{{USER_ROLE}} Account</div>
-        </div>
-        
-        <!-- Content -->
-        <div class="content">
-            <h1 class="welcome-title">🎉 Welcome to Let's Catch Up!</h1>
-            <p class="welcome-subtitle">{{GREETING_NAME}}, we're excited to have you join our learning community as a {{USER_ROLE}}!</p>
-            
-            <!-- Role-specific Welcome Box -->
-            <div class="role-specific-box {{USER_ROLE}}">
-                <div class="role-title {{USER_ROLE}}">
-                    {{ROLE_ICON}} Welcome {{USER_ROLE_TITLE}}!
+
+            <!-- Content -->
+            <div class="content">
+                <h1 class="welcome-title">🎉 Welcome to Let's Catch Up!</h1>
+                <p class="welcome-subtitle">
+                    {{GREETING_NAME}}, we're excited to have you join our
+                    learning community as a {{USER_ROLE}}!
+                </p>
+
+                <!-- Role-specific Welcome Box -->
+                <div class="role-specific-box {{USER_ROLE}}">
+                    <div class="role-title {{USER_ROLE}}">
+                        {{ROLE_ICON}} Welcome {{USER_ROLE_TITLE}}!
+                    </div>
+                    <div class="role-description {{USER_ROLE}}">
+                        {{ROLE_WELCOME_MESSAGE}}
+                    </div>
                 </div>
-                <div class="role-description {{USER_ROLE}}">
-                    {{ROLE_WELCOME_MESSAGE}}
-                </div>
-            </div>
-            
-            <!-- Getting Started Section -->
-            <div class="getting-started">
-                <div class="getting-started-title">
-                    🚀 Getting Started - Your First Steps
-                </div>
-                <div class="steps-list">
-                    {{#each GETTING_STARTED_STEPS}}
-                    <div class="step-item">
-                        <div class="step-number">{{@index_plus_one}}</div>
-                        <div class="step-content">
-                            <div class="step-title">{{title}}</div>
-                            <div class="step-description">{{description}}</div>
+
+                <!-- Getting Started Section -->
+                <div class="getting-started">
+                    <div class="getting-started-title">
+                        🚀 Getting Started - Your First Steps
+                    </div>
+                    <div class="steps-list">
+                        {{#each GETTING_STARTED_STEPS}}
+                        <div class="step-item">
+                            <div class="step-number">{{@index_plus_one}}</div>
+                            <div class="step-content">
+                                <div class="step-title">{{title}}</div>
+                                <div class="step-description">
+                                    {{description}}
+                                </div>
+                            </div>
                         </div>
+                        {{/each}}
+                    </div>
+                </div>
+
+                <!-- Action Button -->
+                <div style="text-align: center">
+                    <a href="{{DASHBOARD_URL}}" class="action-button">
+                        🏠 Access Your Dashboard
+                    </a>
+                </div>
+
+                <!-- Role-specific Features -->
+                <div class="features-grid">
+                    {{#each ROLE_FEATURES}}
+                    <div class="feature-item">
+                        <div class="feature-icon">{{icon}}</div>
+                        <div class="feature-title">{{title}}</div>
+                        <div class="feature-description">{{description}}</div>
                     </div>
                     {{/each}}
                 </div>
-            </div>
-            
-            <!-- Action Button -->
-            <div style="text-align: center;">
-                <a href="{{DASHBOARD_URL}}" class="action-button">
-                    🏠 Access Your Dashboard
-                </a>
-            </div>
-            
-            <!-- Role-specific Features -->
-            <div class="features-grid">
-                {{#each ROLE_FEATURES}}
-                <div class="feature-item">
-                    <div class="feature-icon">{{icon}}</div>
-                    <div class="feature-title">{{title}}</div>
-                    <div class="feature-description">{{description}}</div>
+
+                <!-- Quick Links -->
+                <div class="quick-links">
+                    {{#each QUICK_LINKS}}
+                    <a href="{{url}}" class="quick-link">
+                        <div class="quick-link-icon">{{icon}}</div>
+                        <div class="quick-link-title">{{title}}</div>
+                    </a>
+                    {{/each}}
                 </div>
-                {{/each}}
-            </div>
-            
-            <!-- Quick Links -->
-            <div class="quick-links">
-                {{#each QUICK_LINKS}}
-                <a href="{{url}}" class="quick-link">
-                    <div class="quick-link-icon">{{icon}}</div>
-                    <div class="quick-link-title">{{title}}</div>
-                </a>
-                {{/each}}
-            </div>
-            
-            <!-- Support Box -->
-            <div class="support-box">
-                <div class="support-title">
-                    💬 Need Help Getting Started?
+
+                <!-- Support Box -->
+                <div class="support-box">
+                    <div class="support-title">
+                        💬 Need Help Getting Started?
+                    </div>
+                    <div class="support-text">
+                        Our support team is here to help you make the most of
+                        your Let's Catch Up experience. Don't hesitate to reach
+                        out if you have any questions or need assistance with
+                        any features.
+                    </div>
                 </div>
-                <div class="support-text">
-                    Our support team is here to help you make the most of your Let's Catch Up experience. Don't hesitate to reach out if you have any questions or need assistance with any features.
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                <div class="footer-title">
+                    Welcome to Our Learning Community!
+                </div>
+                <div class="footer-text">
+                    Thank you for joining Let's Catch Up. We're committed to
+                    providing you with the best learning and communication
+                    experience. Explore all the features and make the most of
+                    your educational journey!
+                </div>
+
+                <div class="footer-links">
+                    <a href="{{HELP_CENTER_URL}}" class="footer-link"
+                        >Help Center</a
+                    >
+                    <a href="{{USER_GUIDE_URL}}" class="footer-link"
+                        >User Guide</a
+                    >
+                    <a href="{{SUPPORT_URL}}" class="footer-link"
+                        >Contact Support</a
+                    >
+                    <a href="{{WEBSITE_URL}}" class="footer-link"
+                        >Visit Website</a
+                    >
+                </div>
+
+                <div class="footer-copy">
+                    © 2025 KANDHUGULE CONSULTANCY SERVICES PRIVATE LIMITED. All
+                    Rights Reserved.<br />
+                    This welcome email was sent to {{EMAIL}}. For help getting
+                    started,
+                    <a href="{{HELP_CENTER_URL}}" style="color: #55dad7"
+                        >visit our help center</a
+                    >.
                 </div>
             </div>
         </div>
-        
-        <!-- Footer -->
-        <div class="footer">
-            <div class="footer-title">Welcome to Our Learning Community!</div>
-            <div class="footer-text">
-                Thank you for joining Let's Catch Up. We're committed to providing you with the best learning and communication experience. Explore all the features and make the most of your educational journey!
-            </div>
-            
-            <div class="footer-links">
-                <a href="{{HELP_CENTER_URL}}" class="footer-link">Help Center</a>
-                <a href="{{USER_GUIDE_URL}}" class="footer-link">User Guide</a>
-                <a href="{{SUPPORT_URL}}" class="footer-link">Contact Support</a>
-                <a href="{{WEBSITE_URL}}" class="footer-link">Visit Website</a>
-            </div>
-            
-            <div class="footer-copy">
-                © 2025 KANDHUGULE CONSULTANCY SERVICES PRIVATE LIMITED. All Rights Reserved.<br>
-                This welcome email was sent to {{EMAIL}}. For help getting started, <a href="{{HELP_CENTER_URL}}" style="color: #55dad7;">visit our help center</a>.
-            </div>
-        </div>
-    </div>
-</body>
+    </body>
 </html>

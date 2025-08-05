@@ -84,17 +84,17 @@ const CourseSchema = new Schema({
     instructor_ids: { type: [String], default: [] },
     thumbnail: { type: String },
     preview_video: { type: String },
-    status: { 
-        type: String, 
+    status: {
+        type: String,
         enum: ["draft", "published", "archived", "suspended"],
-        default: "draft"
+        default: "draft",
     },
     category: { type: String, required: true },
     sub_category: { type: String },
-    difficulty_level: { 
-        type: String, 
+    difficulty_level: {
+        type: String,
         enum: ["beginner", "intermediate", "advanced"],
-        default: "beginner"
+        default: "beginner",
     },
     language: { type: String, default: "English" },
     estimated_duration_hours: { type: Number },

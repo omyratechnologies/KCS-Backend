@@ -14,12 +14,10 @@ export const uploadSchema = z
             .openapi({ example: "1234567890_assignment.pdf" }),
         file_size: z.number().openapi({ example: 1024 }),
         file_type: z.string().openapi({ example: "application/pdf" }),
-        s3_url: z
-            .string()
-            .openapi({
-                example:
-                    "https://s3.amazonaws.com/bucket/1234567890_assignment.pdf",
-            }),
+        s3_url: z.string().openapi({
+            example:
+                "https://s3.amazonaws.com/bucket/1234567890_assignment.pdf",
+        }),
         meta_data: z.record(z.string(), z.any()).openapi({
             example: {
                 uploadedBy: "John Doe",

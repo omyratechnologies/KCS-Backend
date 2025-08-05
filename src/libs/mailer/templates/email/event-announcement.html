@@ -1,695 +1,769 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Event Announcement - Let's Catch Up</title>
-    <style>
-        /* Reset styles */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { margin: 0; padding: 0; font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8fafc; }
-        
-        /* Container */
-        .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; }
-        
-        /* Header */
-        .header { 
-            background: linear-gradient(135deg, #0A0A0A 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #0e4b99 100%);
-            padding: 40px 30px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: 
-                radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
-                radial-gradient(circle at 80% 80%, rgba(85, 218, 215, 0.2) 1px, transparent 1px);
-            background-size: 50px 50px, 80px 80px;
-        }
-        
-        .logo { 
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 20px;
-            display: inline-block;
-            margin-bottom: 20px;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .logo img { 
-            width: 80px; 
-            height: 80px; 
-            border-radius: 12px;
-        }
-        
-        .brand-title { 
-            color: #ffffff;
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .brand-subtitle { 
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 16px;
-            font-weight: 400;
-            position: relative;
-            z-index: 1;
-        }
-        
-        /* Event Badge */
-        .event-badge {
-            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-            color: #ffffff;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 16px;
-            display: inline-block;
-            position: relative;
-            z-index: 1;
-        }
-        
-        /* Content */
-        .content { padding: 50px 40px; }
-        
-        .event-title {
-            color: #0A1929;
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 16px;
-            text-align: center;
-        }
-        
-        .event-subtitle {
-            color: #64748B;
-            font-size: 18px;
-            font-weight: 400;
-            margin-bottom: 40px;
-            text-align: center;
-            line-height: 1.5;
-        }
-        
-        /* Event Hero Image */
-        .event-hero {
-            border-radius: 16px;
-            overflow: hidden;
-            margin: 32px 0;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-        }
-        
-        .event-hero img {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-        }
-        
-        .event-hero-placeholder {
-            background: linear-gradient(135deg, #ddd6fe 0%, #8b5cf6 100%);
-            height: 200px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 48px;
-            color: #ffffff;
-        }
-        
-        /* Event Details Box */
-        .event-details {
-            background: linear-gradient(135deg, #fdf4ff 0%, #ddd6fe 100%);
-            border: 2px solid #8b5cf6;
-            border-radius: 16px;
-            padding: 32px;
-            margin: 32px 0;
-        }
-        
-        .event-details-title {
-            color: #7c3aed;
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        
-        .event-name {
-            color: #0f172a;
-            font-size: 24px;
-            font-weight: 700;
-            text-align: center;
-            margin-bottom: 24px;
-            background: #ffffff;
-            padding: 16px 24px;
-            border-radius: 12px;
-            border: 1px solid #8b5cf6;
-        }
-        
-        .event-info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin: 24px 0;
-        }
-        
-        .event-info-item {
-            background: #ffffff;
-            border: 1px solid #8b5cf6;
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-        }
-        
-        .info-icon {
-            font-size: 24px;
-            margin-bottom: 8px;
-        }
-        
-        .info-label {
-            color: #7c3aed;
-            font-size: 12px;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-        }
-        
-        .info-value {
-            color: #0f172a;
-            font-size: 14px;
-            font-weight: 600;
-        }
-        
-        .info-value.highlight {
-            color: #dc2626;
-            font-weight: 700;
-        }
-        
-        /* Event Description */
-        .event-description {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 24px;
-            margin: 32px 0;
-        }
-        
-        .description-title {
-            color: #0A1929;
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .description-content {
-            color: #374151;
-            font-size: 16px;
-            line-height: 1.6;
-        }
-        
-        /* Event Agenda */
-        .event-agenda {
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-            border: 2px solid #0ea5e9;
-            border-radius: 16px;
-            padding: 24px;
-            margin: 32px 0;
-        }
-        
-        .agenda-title {
-            color: #0369a1;
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .agenda-list {
-            list-style: none;
-            padding: 0;
-        }
-        
-        .agenda-item {
-            background: #ffffff;
-            border: 1px solid #0ea5e9;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-        }
-        
-        .agenda-time {
-            background: #0ea5e9;
-            color: #ffffff;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-        
-        .agenda-content {
-            flex: 1;
-        }
-        
-        .agenda-item-title {
-            color: #0369a1;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-        
-        .agenda-item-desc {
-            color: #0c4a6e;
-            font-size: 12px;
-            line-height: 1.4;
-        }
-        
-        /* RSVP Section */
-        .rsvp-section {
-            background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%);
-            border: 2px solid #f59e0b;
-            border-radius: 16px;
-            padding: 32px;
-            margin: 32px 0;
-            text-align: center;
-        }
-        
-        .rsvp-title {
-            color: #92400e;
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        
-        .rsvp-message {
-            color: #92400e;
-            font-size: 16px;
-            line-height: 1.6;
-            margin-bottom: 24px;
-        }
-        
-        .rsvp-buttons {
-            display: flex;
-            gap: 16px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        
-        .rsvp-button {
-            display: inline-block;
-            padding: 16px 32px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            text-decoration: none;
-            text-align: center;
-            transition: transform 0.2s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-        
-        .rsvp-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        }
-        
-        .rsvp-button.attending {
-            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-            color: #ffffff;
-        }
-        
-        .rsvp-button.not-attending {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: #ffffff;
-        }
-        
-        .rsvp-button.maybe {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: #ffffff;
-        }
-        
-        /* Location & Map */
-        .location-section {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 24px;
-            margin: 32px 0;
-        }
-        
-        .location-title {
-            color: #0A1929;
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .location-address {
-            color: #374151;
-            font-size: 16px;
-            line-height: 1.6;
-            margin-bottom: 16px;
-        }
-        
-        .location-map {
-            background: #f3f4f6;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            height: 120px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #6b7280;
-            font-size: 14px;
-            margin-bottom: 16px;
-        }
-        
-        .location-link {
-            color: #55dad7;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        
-        .location-link:hover {
-            color: #F1531C;
-            text-decoration: underline;
-        }
-        
-        /* Quick Actions */
-        .quick-actions {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 16px;
-            margin: 32px 0;
-        }
-        
-        .quick-action {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            text-decoration: none;
-            transition: all 0.2s ease;
-        }
-        
-        .quick-action:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            border-color: #8b5cf6;
-        }
-        
-        .quick-action-icon {
-            font-size: 32px;
-            margin-bottom: 12px;
-        }
-        
-        .quick-action-title {
-            color: #0A1929;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        
-        .quick-action-desc {
-            color: #64748B;
-            font-size: 12px;
-            line-height: 1.4;
-        }
-        
-        /* Footer */
-        .footer {
-            background: #0A1929;
-            color: #94a3b8;
-            padding: 32px 40px;
-            text-align: center;
-        }
-        
-        .footer-title {
-            color: #ffffff;
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 16px;
-        }
-        
-        .footer-text {
-            font-size: 14px;
-            line-height: 1.6;
-            margin-bottom: 24px;
-        }
-        
-        .footer-links {
-            display: flex;
-            justify-content: center;
-            gap: 24px;
-            margin-bottom: 24px;
-        }
-        
-        .footer-link {
-            color: #55dad7;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        
-        .footer-link:hover {
-            color: #F1531C;
-        }
-        
-        .footer-copy {
-            color: #64748B;
-            font-size: 12px;
-            margin-top: 24px;
-            padding-top: 24px;
-            border-top: 1px solid #1e293b;
-        }
-        
-        /* Responsive */
-        @media (max-width: 600px) {
-            .content { padding: 32px 24px; }
-            .event-details { padding: 24px 20px; }
-            .event-info-grid { grid-template-columns: 1fr; }
-            .rsvp-buttons { flex-direction: column; align-items: center; }
-            .rsvp-button { width: 200px; }
-            .quick-actions { grid-template-columns: repeat(2, 1fr); }
-            .footer { padding: 24px 20px; }
-            .footer-links { flex-direction: column; gap: 12px; }
-        }
-    </style>
-</head>
-<body>
-    <div class="email-container">
-        <!-- Header -->
-        <div class="header">
-            <div class="logo">
-                <img src="{{LOGO_URL}}" alt="Let's Catch Up Logo">
-            </div>
-            <div class="brand-title">Let's Catch Up</div>
-            <div class="brand-subtitle">Learning & Communication Platform</div>
-            <div class="event-badge">{{EVENT_TYPE}} Event</div>
-        </div>
-        
-        <!-- Content -->
-        <div class="content">
-            <h1 class="event-title">🎉 {{EVENT_TITLE}}</h1>
-            <p class="event-subtitle">{{GREETING_NAME}}, you're invited to join an exciting event!</p>
-            
-            <!-- Event Hero Image -->
-            {{#if EVENT_IMAGE_URL}}
-            <div class="event-hero">
-                <img src="{{EVENT_IMAGE_URL}}" alt="{{EVENT_TITLE}}">
-            </div>
-            {{else}}
-            <div class="event-hero">
-                <div class="event-hero-placeholder">🎊</div>
-            </div>
-            {{/if}}
-            
-            <!-- Event Details -->
-            <div class="event-details">
-                <div class="event-details-title">
-                    📅 Event Details
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <title>Event Announcement - Let's Catch Up</title>
+        <style>
+            /* Reset styles */
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                margin: 0;
+                padding: 0;
+                font-family:
+                    "Poppins",
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Roboto,
+                    sans-serif;
+                background-color: #f8fafc;
+            }
+
+            /* Container */
+            .email-container {
+                max-width: 600px;
+                margin: 0 auto;
+                background-color: #ffffff;
+            }
+
+            /* Header */
+            .header {
+                background: linear-gradient(
+                    135deg,
+                    #0a0a0a 0%,
+                    #1a1a2e 25%,
+                    #16213e 50%,
+                    #0f3460 75%,
+                    #0e4b99 100%
+                );
+                padding: 40px 30px;
+                text-align: center;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .header::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-image:
+                    radial-gradient(
+                        circle at 20% 20%,
+                        rgba(255, 255, 255, 0.1) 1px,
+                        transparent 1px
+                    ),
+                    radial-gradient(
+                        circle at 80% 80%,
+                        rgba(85, 218, 215, 0.2) 1px,
+                        transparent 1px
+                    );
+                background-size:
+                    50px 50px,
+                    80px 80px;
+            }
+
+            .logo {
+                background-color: rgba(255, 255, 255, 0.1);
+                border-radius: 20px;
+                padding: 20px;
+                display: inline-block;
+                margin-bottom: 20px;
+                position: relative;
+                z-index: 1;
+            }
+
+            .logo img {
+                width: 80px;
+                height: 80px;
+                border-radius: 12px;
+            }
+
+            .brand-title {
+                color: #ffffff;
+                font-size: 32px;
+                font-weight: 700;
+                margin-bottom: 8px;
+                position: relative;
+                z-index: 1;
+            }
+
+            .brand-subtitle {
+                color: rgba(255, 255, 255, 0.8);
+                font-size: 16px;
+                font-weight: 400;
+                position: relative;
+                z-index: 1;
+            }
+
+            /* Event Badge */
+            .event-badge {
+                background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+                color: #ffffff;
+                padding: 8px 16px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 16px;
+                display: inline-block;
+                position: relative;
+                z-index: 1;
+            }
+
+            /* Content */
+            .content {
+                padding: 50px 40px;
+            }
+
+            .event-title {
+                color: #0a1929;
+                font-size: 28px;
+                font-weight: 700;
+                margin-bottom: 16px;
+                text-align: center;
+            }
+
+            .event-subtitle {
+                color: #64748b;
+                font-size: 18px;
+                font-weight: 400;
+                margin-bottom: 40px;
+                text-align: center;
+                line-height: 1.5;
+            }
+
+            /* Event Hero Image */
+            .event-hero {
+                border-radius: 16px;
+                overflow: hidden;
+                margin: 32px 0;
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            }
+
+            .event-hero img {
+                width: 100%;
+                height: 200px;
+                object-fit: cover;
+            }
+
+            .event-hero-placeholder {
+                background: linear-gradient(135deg, #ddd6fe 0%, #8b5cf6 100%);
+                height: 200px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 48px;
+                color: #ffffff;
+            }
+
+            /* Event Details Box */
+            .event-details {
+                background: linear-gradient(135deg, #fdf4ff 0%, #ddd6fe 100%);
+                border: 2px solid #8b5cf6;
+                border-radius: 16px;
+                padding: 32px;
+                margin: 32px 0;
+            }
+
+            .event-details-title {
+                color: #7c3aed;
+                font-size: 20px;
+                font-weight: 600;
+                margin-bottom: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+            }
+
+            .event-name {
+                color: #0f172a;
+                font-size: 24px;
+                font-weight: 700;
+                text-align: center;
+                margin-bottom: 24px;
+                background: #ffffff;
+                padding: 16px 24px;
+                border-radius: 12px;
+                border: 1px solid #8b5cf6;
+            }
+
+            .event-info-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+                margin: 24px 0;
+            }
+
+            .event-info-item {
+                background: #ffffff;
+                border: 1px solid #8b5cf6;
+                border-radius: 12px;
+                padding: 20px;
+                text-align: center;
+            }
+
+            .info-icon {
+                font-size: 24px;
+                margin-bottom: 8px;
+            }
+
+            .info-label {
+                color: #7c3aed;
+                font-size: 12px;
+                font-weight: 500;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 8px;
+            }
+
+            .info-value {
+                color: #0f172a;
+                font-size: 14px;
+                font-weight: 600;
+            }
+
+            .info-value.highlight {
+                color: #dc2626;
+                font-weight: 700;
+            }
+
+            /* Event Description */
+            .event-description {
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                padding: 24px;
+                margin: 32px 0;
+            }
+
+            .description-title {
+                color: #0a1929;
+                font-size: 18px;
+                font-weight: 600;
+                margin-bottom: 16px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .description-content {
+                color: #374151;
+                font-size: 16px;
+                line-height: 1.6;
+            }
+
+            /* Event Agenda */
+            .event-agenda {
+                background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+                border: 2px solid #0ea5e9;
+                border-radius: 16px;
+                padding: 24px;
+                margin: 32px 0;
+            }
+
+            .agenda-title {
+                color: #0369a1;
+                font-size: 18px;
+                font-weight: 600;
+                margin-bottom: 16px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .agenda-list {
+                list-style: none;
+                padding: 0;
+            }
+
+            .agenda-item {
+                background: #ffffff;
+                border: 1px solid #0ea5e9;
+                border-radius: 8px;
+                padding: 16px;
+                margin-bottom: 12px;
+                display: flex;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .agenda-time {
+                background: #0ea5e9;
+                color: #ffffff;
+                padding: 4px 8px;
+                border-radius: 6px;
+                font-size: 12px;
+                font-weight: 600;
+                white-space: nowrap;
+            }
+
+            .agenda-content {
+                flex: 1;
+            }
+
+            .agenda-item-title {
+                color: #0369a1;
+                font-size: 14px;
+                font-weight: 600;
+                margin-bottom: 4px;
+            }
+
+            .agenda-item-desc {
+                color: #0c4a6e;
+                font-size: 12px;
+                line-height: 1.4;
+            }
+
+            /* RSVP Section */
+            .rsvp-section {
+                background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%);
+                border: 2px solid #f59e0b;
+                border-radius: 16px;
+                padding: 32px;
+                margin: 32px 0;
+                text-align: center;
+            }
+
+            .rsvp-title {
+                color: #92400e;
+                font-size: 20px;
+                font-weight: 600;
+                margin-bottom: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+            }
+
+            .rsvp-message {
+                color: #92400e;
+                font-size: 16px;
+                line-height: 1.6;
+                margin-bottom: 24px;
+            }
+
+            .rsvp-buttons {
+                display: flex;
+                gap: 16px;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .rsvp-button {
+                display: inline-block;
+                padding: 16px 32px;
+                border-radius: 12px;
+                font-size: 16px;
+                font-weight: 600;
+                text-decoration: none;
+                text-align: center;
+                transition: transform 0.2s ease;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            }
+
+            .rsvp-button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            }
+
+            .rsvp-button.attending {
+                background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+                color: #ffffff;
+            }
+
+            .rsvp-button.not-attending {
+                background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+                color: #ffffff;
+            }
+
+            .rsvp-button.maybe {
+                background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+                color: #ffffff;
+            }
+
+            /* Location & Map */
+            .location-section {
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                padding: 24px;
+                margin: 32px 0;
+            }
+
+            .location-title {
+                color: #0a1929;
+                font-size: 18px;
+                font-weight: 600;
+                margin-bottom: 16px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .location-address {
+                color: #374151;
+                font-size: 16px;
+                line-height: 1.6;
+                margin-bottom: 16px;
+            }
+
+            .location-map {
+                background: #f3f4f6;
+                border: 1px solid #d1d5db;
+                border-radius: 8px;
+                height: 120px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #6b7280;
+                font-size: 14px;
+                margin-bottom: 16px;
+            }
+
+            .location-link {
+                color: #55dad7;
+                text-decoration: none;
+                font-weight: 500;
+            }
+
+            .location-link:hover {
+                color: #f1531c;
+                text-decoration: underline;
+            }
+
+            /* Quick Actions */
+            .quick-actions {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 16px;
+                margin: 32px 0;
+            }
+
+            .quick-action {
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                padding: 20px;
+                text-align: center;
+                text-decoration: none;
+                transition: all 0.2s ease;
+            }
+
+            .quick-action:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                border-color: #8b5cf6;
+            }
+
+            .quick-action-icon {
+                font-size: 32px;
+                margin-bottom: 12px;
+            }
+
+            .quick-action-title {
+                color: #0a1929;
+                font-size: 14px;
+                font-weight: 600;
+                margin-bottom: 8px;
+            }
+
+            .quick-action-desc {
+                color: #64748b;
+                font-size: 12px;
+                line-height: 1.4;
+            }
+
+            /* Footer */
+            .footer {
+                background: #0a1929;
+                color: #94a3b8;
+                padding: 32px 40px;
+                text-align: center;
+            }
+
+            .footer-title {
+                color: #ffffff;
+                font-size: 18px;
+                font-weight: 600;
+                margin-bottom: 16px;
+            }
+
+            .footer-text {
+                font-size: 14px;
+                line-height: 1.6;
+                margin-bottom: 24px;
+            }
+
+            .footer-links {
+                display: flex;
+                justify-content: center;
+                gap: 24px;
+                margin-bottom: 24px;
+            }
+
+            .footer-link {
+                color: #55dad7;
+                text-decoration: none;
+                font-size: 14px;
+                font-weight: 500;
+            }
+
+            .footer-link:hover {
+                color: #f1531c;
+            }
+
+            .footer-copy {
+                color: #64748b;
+                font-size: 12px;
+                margin-top: 24px;
+                padding-top: 24px;
+                border-top: 1px solid #1e293b;
+            }
+
+            /* Responsive */
+            @media (max-width: 600px) {
+                .content {
+                    padding: 32px 24px;
+                }
+                .event-details {
+                    padding: 24px 20px;
+                }
+                .event-info-grid {
+                    grid-template-columns: 1fr;
+                }
+                .rsvp-buttons {
+                    flex-direction: column;
+                    align-items: center;
+                }
+                .rsvp-button {
+                    width: 200px;
+                }
+                .quick-actions {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+                .footer {
+                    padding: 24px 20px;
+                }
+                .footer-links {
+                    flex-direction: column;
+                    gap: 12px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="email-container">
+            <!-- Header -->
+            <div class="header">
+                <div class="logo">
+                    <img src="{{LOGO_URL}}" alt="Let's Catch Up Logo" />
                 </div>
-                
-                <div class="event-name">{{EVENT_TITLE}}</div>
-                
-                <div class="event-info-grid">
-                    <div class="event-info-item">
-                        <div class="info-icon">📅</div>
-                        <div class="info-label">Date</div>
-                        <div class="info-value">{{EVENT_DATE}}</div>
-                    </div>
-                    <div class="event-info-item">
-                        <div class="info-icon">⏰</div>
-                        <div class="info-label">Time</div>
-                        <div class="info-value {{#if IS_URGENT}}highlight{{/if}}">{{EVENT_TIME}}</div>
-                    </div>
-                    <div class="event-info-item">
-                        <div class="info-icon">📍</div>
-                        <div class="info-label">Location</div>
-                        <div class="info-value">{{EVENT_LOCATION}}</div>
-                    </div>
-                    <div class="event-info-item">
-                        <div class="info-icon">👥</div>
-                        <div class="info-label">Duration</div>
-                        <div class="info-value">{{EVENT_DURATION}}</div>
-                    </div>
+                <div class="brand-title">Let's Catch Up</div>
+                <div class="brand-subtitle">
+                    Learning & Communication Platform
                 </div>
+                <div class="event-badge">{{EVENT_TYPE}} Event</div>
             </div>
-            
-            <!-- Event Description -->
-            <div class="event-description">
-                <div class="description-title">
-                    📝 About This Event
+
+            <!-- Content -->
+            <div class="content">
+                <h1 class="event-title">🎉 {{EVENT_TITLE}}</h1>
+                <p class="event-subtitle">
+                    {{GREETING_NAME}}, you're invited to join an exciting event!
+                </p>
+
+                <!-- Event Hero Image -->
+                {{#if EVENT_IMAGE_URL}}
+                <div class="event-hero">
+                    <img src="{{EVENT_IMAGE_URL}}" alt="{{EVENT_TITLE}}" />
                 </div>
-                <div class="description-content">
-                    {{EVENT_DESCRIPTION}}
+                {{else}}
+                <div class="event-hero">
+                    <div class="event-hero-placeholder">🎊</div>
                 </div>
-            </div>
-            
-            <!-- Event Agenda (if provided) -->
-            {{#if EVENT_AGENDA}}
-            <div class="event-agenda">
-                <div class="agenda-title">
-                    📋 Event Agenda
-                </div>
-                <ul class="agenda-list">
-                    {{#each EVENT_AGENDA}}
-                    <li class="agenda-item">
-                        <div class="agenda-time">{{time}}</div>
-                        <div class="agenda-content">
-                            <div class="agenda-item-title">{{title}}</div>
-                            <div class="agenda-item-desc">{{description}}</div>
+                {{/if}}
+
+                <!-- Event Details -->
+                <div class="event-details">
+                    <div class="event-details-title">📅 Event Details</div>
+
+                    <div class="event-name">{{EVENT_TITLE}}</div>
+
+                    <div class="event-info-grid">
+                        <div class="event-info-item">
+                            <div class="info-icon">📅</div>
+                            <div class="info-label">Date</div>
+                            <div class="info-value">{{EVENT_DATE}}</div>
                         </div>
-                    </li>
-                    {{/each}}
-                </ul>
-            </div>
-            {{/if}}
-            
-            <!-- RSVP Section -->
-            {{#if SHOW_RSVP}}
-            <div class="rsvp-section">
-                <div class="rsvp-title">
-                    ✋ RSVP Required
+                        <div class="event-info-item">
+                            <div class="info-icon">⏰</div>
+                            <div class="info-label">Time</div>
+                            <div
+                                class="info-value {{#if IS_URGENT}}highlight{{/if}}"
+                            >
+                                {{EVENT_TIME}}
+                            </div>
+                        </div>
+                        <div class="event-info-item">
+                            <div class="info-icon">📍</div>
+                            <div class="info-label">Location</div>
+                            <div class="info-value">{{EVENT_LOCATION}}</div>
+                        </div>
+                        <div class="event-info-item">
+                            <div class="info-icon">👥</div>
+                            <div class="info-label">Duration</div>
+                            <div class="info-value">{{EVENT_DURATION}}</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="rsvp-message">
-                    Please let us know if you'll be attending so we can prepare accordingly. Your response helps us plan better!
+
+                <!-- Event Description -->
+                <div class="event-description">
+                    <div class="description-title">📝 About This Event</div>
+                    <div class="description-content">{{EVENT_DESCRIPTION}}</div>
                 </div>
-                <div class="rsvp-buttons">
-                    <a href="{{RSVP_YES_URL}}" class="rsvp-button attending">
-                        ✅ I'll Attend
-                    </a>
-                    <a href="{{RSVP_MAYBE_URL}}" class="rsvp-button maybe">
-                        🤔 Maybe
-                    </a>
-                    <a href="{{RSVP_NO_URL}}" class="rsvp-button not-attending">
-                        ❌ Can't Make It
-                    </a>
+
+                <!-- Event Agenda (if provided) -->
+                {{#if EVENT_AGENDA}}
+                <div class="event-agenda">
+                    <div class="agenda-title">📋 Event Agenda</div>
+                    <ul class="agenda-list">
+                        {{#each EVENT_AGENDA}}
+                        <li class="agenda-item">
+                            <div class="agenda-time">{{time}}</div>
+                            <div class="agenda-content">
+                                <div class="agenda-item-title">{{title}}</div>
+                                <div class="agenda-item-desc">
+                                    {{description}}
+                                </div>
+                            </div>
+                        </li>
+                        {{/each}}
+                    </ul>
                 </div>
-            </div>
-            {{/if}}
-            
-            <!-- Location & Map -->
-            {{#if EVENT_ADDRESS}}
-            <div class="location-section">
-                <div class="location-title">
-                    🗺️ Location & Directions
-                </div>
-                <div class="location-address">
-                    {{EVENT_ADDRESS}}
-                </div>
-                <div class="location-map">
-                    📍 Map placeholder - Click to view in maps
-                </div>
-                <div style="text-align: center;">
-                    <a href="{{MAP_URL}}" class="location-link">📍 Open in Maps</a>
-                </div>
-            </div>
-            {{/if}}
-            
-            <!-- Quick Actions -->
-            <div class="quick-actions">
-                {{#if CALENDAR_URL}}
-                <a href="{{CALENDAR_URL}}" class="quick-action">
-                    <div class="quick-action-icon">📅</div>
-                    <div class="quick-action-title">Add to Calendar</div>
-                    <div class="quick-action-desc">Save this event</div>
-                </a>
                 {{/if}}
-                
-                {{#if EVENT_DETAILS_URL}}
-                <a href="{{EVENT_DETAILS_URL}}" class="quick-action">
-                    <div class="quick-action-icon">ℹ️</div>
-                    <div class="quick-action-title">Event Details</div>
-                    <div class="quick-action-desc">More information</div>
-                </a>
+
+                <!-- RSVP Section -->
+                {{#if SHOW_RSVP}}
+                <div class="rsvp-section">
+                    <div class="rsvp-title">✋ RSVP Required</div>
+                    <div class="rsvp-message">
+                        Please let us know if you'll be attending so we can
+                        prepare accordingly. Your response helps us plan better!
+                    </div>
+                    <div class="rsvp-buttons">
+                        <a
+                            href="{{RSVP_YES_URL}}"
+                            class="rsvp-button attending"
+                        >
+                            ✅ I'll Attend
+                        </a>
+                        <a href="{{RSVP_MAYBE_URL}}" class="rsvp-button maybe">
+                            🤔 Maybe
+                        </a>
+                        <a
+                            href="{{RSVP_NO_URL}}"
+                            class="rsvp-button not-attending"
+                        >
+                            ❌ Can't Make It
+                        </a>
+                    </div>
+                </div>
                 {{/if}}
-                
-                {{#if SHARE_URL}}
-                <a href="{{SHARE_URL}}" class="quick-action">
-                    <div class="quick-action-icon">📤</div>
-                    <div class="quick-action-title">Share Event</div>
-                    <div class="quick-action-desc">Invite others</div>
-                </a>
+
+                <!-- Location & Map -->
+                {{#if EVENT_ADDRESS}}
+                <div class="location-section">
+                    <div class="location-title">🗺️ Location & Directions</div>
+                    <div class="location-address">{{EVENT_ADDRESS}}</div>
+                    <div class="location-map">
+                        📍 Map placeholder - Click to view in maps
+                    </div>
+                    <div style="text-align: center">
+                        <a href="{{MAP_URL}}" class="location-link"
+                            >📍 Open in Maps</a
+                        >
+                    </div>
+                </div>
                 {{/if}}
-                
-                <a href="{{CONTACT_ORGANIZER_URL}}" class="quick-action">
-                    <div class="quick-action-icon">💬</div>
-                    <div class="quick-action-title">Contact Organizer</div>
-                    <div class="quick-action-desc">Ask questions</div>
-                </a>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    {{#if CALENDAR_URL}}
+                    <a href="{{CALENDAR_URL}}" class="quick-action">
+                        <div class="quick-action-icon">📅</div>
+                        <div class="quick-action-title">Add to Calendar</div>
+                        <div class="quick-action-desc">Save this event</div>
+                    </a>
+                    {{/if}} {{#if EVENT_DETAILS_URL}}
+                    <a href="{{EVENT_DETAILS_URL}}" class="quick-action">
+                        <div class="quick-action-icon">ℹ️</div>
+                        <div class="quick-action-title">Event Details</div>
+                        <div class="quick-action-desc">More information</div>
+                    </a>
+                    {{/if}} {{#if SHARE_URL}}
+                    <a href="{{SHARE_URL}}" class="quick-action">
+                        <div class="quick-action-icon">📤</div>
+                        <div class="quick-action-title">Share Event</div>
+                        <div class="quick-action-desc">Invite others</div>
+                    </a>
+                    {{/if}}
+
+                    <a href="{{CONTACT_ORGANIZER_URL}}" class="quick-action">
+                        <div class="quick-action-icon">💬</div>
+                        <div class="quick-action-title">Contact Organizer</div>
+                        <div class="quick-action-desc">Ask questions</div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                <div class="footer-title">See You at the Event!</div>
+                <div class="footer-text">
+                    We're looking forward to seeing you at this exciting event.
+                    If you have any questions or need assistance, don't hesitate
+                    to reach out to our team.
+                </div>
+
+                <div class="footer-links">
+                    <a href="{{EVENTS_CALENDAR_URL}}" class="footer-link"
+                        >Events Calendar</a
+                    >
+                    <a href="{{NOTIFICATION_SETTINGS_URL}}" class="footer-link"
+                        >Notification Settings</a
+                    >
+                    <a href="{{SUPPORT_URL}}" class="footer-link"
+                        >Contact Support</a
+                    >
+                    <a href="{{WEBSITE_URL}}" class="footer-link"
+                        >Visit Website</a
+                    >
+                </div>
+
+                <div class="footer-copy">
+                    © 2025 KANDHUGULE CONSULTANCY SERVICES PRIVATE LIMITED. All
+                    Rights Reserved.<br />
+                    This event invitation was sent to {{EMAIL}}. To manage your
+                    event notifications,
+                    <a
+                        href="{{NOTIFICATION_SETTINGS_URL}}"
+                        style="color: #55dad7"
+                        >click here</a
+                    >.
+                </div>
             </div>
         </div>
-        
-        <!-- Footer -->
-        <div class="footer">
-            <div class="footer-title">See You at the Event!</div>
-            <div class="footer-text">
-                We're looking forward to seeing you at this exciting event. If you have any questions or need assistance, don't hesitate to reach out to our team.
-            </div>
-            
-            <div class="footer-links">
-                <a href="{{EVENTS_CALENDAR_URL}}" class="footer-link">Events Calendar</a>
-                <a href="{{NOTIFICATION_SETTINGS_URL}}" class="footer-link">Notification Settings</a>
-                <a href="{{SUPPORT_URL}}" class="footer-link">Contact Support</a>
-                <a href="{{WEBSITE_URL}}" class="footer-link">Visit Website</a>
-            </div>
-            
-            <div class="footer-copy">
-                © 2025 KANDHUGULE CONSULTANCY SERVICES PRIVATE LIMITED. All Rights Reserved.<br>
-                This event invitation was sent to {{EMAIL}}. To manage your event notifications, <a href="{{NOTIFICATION_SETTINGS_URL}}" style="color: #55dad7;">click here</a>.
-            </div>
-        </div>
-    </div>
-</body>
+    </body>
 </html>

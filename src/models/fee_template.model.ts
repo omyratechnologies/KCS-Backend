@@ -36,13 +36,13 @@ const FeeTemplateSchema = new Schema({
     academic_year: { type: String, required: true },
     fee_structure: {
         type: [Object],
-        required: true
+        required: true,
     },
     total_amount: { type: Number, required: true },
     applicable_students: { type: [String], required: true, default: [] },
     validity_period: {
         type: Object,
-        required: true
+        required: true,
     },
     auto_generate: { type: Boolean, required: true, default: false },
     is_active: { type: Boolean, required: true, default: true },
@@ -54,11 +54,11 @@ const FeeTemplateSchema = new Schema({
 FeeTemplateSchema.index.findByCampusId = { by: "campus_id" };
 FeeTemplateSchema.index.findByClassId = { by: "class_id" };
 FeeTemplateSchema.index.findByAcademicYear = { by: "academic_year" };
-FeeTemplateSchema.index.findByCampusIdAndClassId = { 
-    by: ["campus_id", "class_id"] 
+FeeTemplateSchema.index.findByCampusIdAndClassId = {
+    by: ["campus_id", "class_id"],
 };
-FeeTemplateSchema.index.findByCampusIdAndAcademicYear = { 
-    by: ["campus_id", "academic_year"] 
+FeeTemplateSchema.index.findByCampusIdAndAcademicYear = {
+    by: ["campus_id", "academic_year"],
 };
 
 const FeeTemplate = ottoman.model<IFeeTemplate>(

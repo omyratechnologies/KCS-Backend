@@ -37,31 +37,31 @@ const PaymentTransactionSchema = new Schema({
     fee_id: { type: String, required: true },
     student_id: { type: String, required: true },
     parent_id: { type: String, required: false },
-    payment_gateway: { 
-        type: String, 
+    payment_gateway: {
+        type: String,
         required: true,
-        enum: ["razorpay", "payu", "cashfree"]
+        enum: ["razorpay", "payu", "cashfree"],
     },
     gateway_transaction_id: { type: String, required: false },
     gateway_order_id: { type: String, required: false },
     gateway_payment_id: { type: String, required: false },
     amount: { type: Number, required: true },
     currency: { type: String, required: true, default: "INR" },
-    status: { 
-        type: String, 
+    status: {
+        type: String,
         required: true,
         enum: ["pending", "success", "failed", "cancelled", "refunded"],
-        default: "pending"
+        default: "pending",
     },
-    payment_method: { 
-        type: String, 
+    payment_method: {
+        type: String,
         required: false,
-        enum: ["card", "netbanking", "upi", "wallet", "emi"]
+        enum: ["card", "netbanking", "upi", "wallet", "emi"],
     },
     payment_details: {
         type: Object,
         required: true,
-        default: {}
+        default: {},
     },
     initiated_at: { type: Date, required: true, default: () => new Date() },
     completed_at: { type: Date, required: false },
@@ -80,8 +80,12 @@ PaymentTransactionSchema.index.findByStudentId = { by: "student_id" };
 PaymentTransactionSchema.index.findByParentId = { by: "parent_id" };
 PaymentTransactionSchema.index.findByStatus = { by: "status" };
 PaymentTransactionSchema.index.findByPaymentGateway = { by: "payment_gateway" };
-PaymentTransactionSchema.index.findByGatewayTransactionId = { by: "gateway_transaction_id" };
-PaymentTransactionSchema.index.findByGatewayOrderId = { by: "gateway_order_id" };
+PaymentTransactionSchema.index.findByGatewayTransactionId = {
+    by: "gateway_transaction_id",
+};
+PaymentTransactionSchema.index.findByGatewayOrderId = {
+    by: "gateway_order_id",
+};
 PaymentTransactionSchema.index.findByReceiptNumber = { by: "receipt_number" };
 
 const PaymentTransaction = ottoman.model<IPaymentTransaction>(
@@ -89,4 +93,4 @@ const PaymentTransaction = ottoman.model<IPaymentTransaction>(
     PaymentTransactionSchema
 );
 
-export { type IPaymentTransaction,PaymentTransaction };
+export { type IPaymentTransaction, PaymentTransaction };

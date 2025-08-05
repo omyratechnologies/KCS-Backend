@@ -76,8 +76,12 @@ StudentPerformanceSchema.index.findByStudentId = { by: "student_id" };
 StudentPerformanceSchema.index.findByAcademicYear = { by: "academic_year" };
 StudentPerformanceSchema.index.findBySemester = { by: "semester" };
 StudentPerformanceSchema.index.findByClassId = { by: "class_id" };
-StudentPerformanceSchema.index.findByStudentIdAndSemester = { by: ["student_id", "semester"] };
-StudentPerformanceSchema.index.findByStudentIdAndAcademicYear = { by: ["student_id", "academic_year"] };
+StudentPerformanceSchema.index.findByStudentIdAndSemester = {
+    by: ["student_id", "semester"],
+};
+StudentPerformanceSchema.index.findByStudentIdAndAcademicYear = {
+    by: ["student_id", "academic_year"],
+};
 
 const StudentPerformance = ottoman.model<IStudentPerformanceData>(
     "student_performance",

@@ -7,6 +7,60 @@ yarn-error.log*
 lerna-debug.log*
 .pnpm-debug.log*
 
+# KCS Backend specific logs
+logs/
+nginx/logs/
+
+# Deployment sensitive files
+deployment/terraform/terraform.tfvars.local
+deployment/terraform/*.tfplan
+deployment/terraform/.terraform/
+deployment/ansible/vault.yml
+.env.local
+.env.staging
+.env.production
+
+# Terraform sensitive files
+terraform/terraform.tfvars.dev
+terraform/terraform.tfvars.uat
+terraform/terraform.tfvars.prod
+terraform/*.tfplan
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+
+# SSH Keys and Certificates
+*.pem
+*.key
+*.crt
+*.csr
+
+# KCS Backend specific files
+HEALTH_API_TESTING_SUMMARY.md
+MANUAL-SETUP-GUIDE.md
+quick-deploy.sh
+complete-server-setup.sh
+
+# IDE and editor files
+.vscode/settings.json
+.vscode/launch.json
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# MediaSoup generated files
+mediasoup-worker*
+
+# Bun specific
+bun.lockb
+.bun/
+
+# TypeScript build output
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
@@ -21,7 +75,13 @@ lib-cov
 
 # Coverage directory used by tools like istanbul
 coverage
+coverage/
 *.lcov
+
+# Build output
+dist/
+build/
+out/
 
 # nyc test coverage
 .nyc_output

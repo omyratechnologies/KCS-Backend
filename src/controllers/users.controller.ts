@@ -153,7 +153,6 @@ export class UsersController {
                 );
             }
         }
-        
     };
     // getParentForStudent
     public static readonly getParentForStudent = async (c: Context) => {

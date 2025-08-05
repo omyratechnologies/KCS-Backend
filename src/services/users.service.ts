@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable unicorn/no-array-method-this-argument */
 import crypto from "node:crypto";
 
 import { FindOptions } from "ottoman";
@@ -42,7 +41,10 @@ export class UserService {
                 throw new Error("Email already exists");
             }
         } catch (error) {
-            if (error instanceof Error && error.message === "Email already exists") {
+            if (
+                error instanceof Error &&
+                error.message === "Email already exists"
+            ) {
                 throw error;
             }
             // If error is not about existing user, continue with creation
@@ -206,7 +208,10 @@ export class UserService {
                     throw new Error("Email already exists");
                 }
             } catch (error) {
-                if (error instanceof Error && error.message === "Email already exists") {
+                if (
+                    error instanceof Error &&
+                    error.message === "Email already exists"
+                ) {
                     throw error;
                 }
                 // If error is not about existing user, continue with update
@@ -274,10 +279,10 @@ export class UserService {
         }
 
         const student = studentData.rows[0];
-        
+
         // Extract parent IDs from student's meta_data
         const parentIds = (student.meta_data as any)?.parent_id;
-        
+
         if (!parentIds || !Array.isArray(parentIds) || parentIds.length === 0) {
             throw new Error("No parents found for the student");
         }
@@ -318,11 +323,15 @@ export class UserService {
         }
 
         const parent = parentData.rows[0];
-        
+
         // Extract student IDs from parent's meta_data
         const studentIds = (parent.meta_data as any)?.student_id;
-        
-        if (!studentIds || !Array.isArray(studentIds) || studentIds.length === 0) {
+
+        if (
+            !studentIds ||
+            !Array.isArray(studentIds) ||
+            studentIds.length === 0
+        ) {
             throw new Error("No students found for the parent");
         }
 

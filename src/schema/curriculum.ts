@@ -8,11 +8,9 @@ export const curriculumSchema = z
         id: z.string().openapi({ example: "curriculum123" }),
         campus_id: z.string().openapi({ example: "campus123" }),
         name: z.string().openapi({ example: "Mathematics Curriculum" }),
-        description: z
-            .string()
-            .openapi({
-                example: "Comprehensive mathematics curriculum for grades 1-12",
-            }),
+        description: z.string().openapi({
+            example: "Comprehensive mathematics curriculum for grades 1-12",
+        }),
         meta_data: z
             .record(z.string(), z.any())
             .openapi({ example: { grade: "10", subject: "Mathematics" } }),
@@ -27,11 +25,9 @@ export const curriculumSchema = z
 export const createCurriculumRequestBodySchema = z
     .object({
         name: z.string().openapi({ example: "Mathematics Curriculum" }),
-        description: z
-            .string()
-            .openapi({
-                example: "Comprehensive mathematics curriculum for grades 1-12",
-            }),
+        description: z.string().openapi({
+            example: "Comprehensive mathematics curriculum for grades 1-12",
+        }),
         meta_data: z
             .record(z.string(), z.any())
             .openapi({ example: { grade: "10", subject: "Mathematics" } }),
@@ -49,12 +45,9 @@ export const updateCurriculumRequestBodySchema = z
             .string()
             .optional()
             .openapi({ example: "Updated Mathematics Curriculum" }),
-        description: z
-            .string()
-            .optional()
-            .openapi({
-                example: "Updated comprehensive mathematics curriculum",
-            }),
+        description: z.string().optional().openapi({
+            example: "Updated comprehensive mathematics curriculum",
+        }),
         meta_data: z
             .record(z.string(), z.any())
             .optional()

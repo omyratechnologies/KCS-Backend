@@ -39,11 +39,11 @@ const CourseAssignmentSubmissionSchema = new Schema({
     is_late: { type: Boolean, required: true, default: false },
     attempt_number: { type: Number, required: true, default: 1 },
     time_spent_minutes: { type: Number, required: false },
-    submission_status: { 
-        type: String, 
-        required: true, 
+    submission_status: {
+        type: String,
+        required: true,
         default: "submitted",
-        enum: ["submitted", "draft", "graded", "returned"]
+        enum: ["submitted", "draft", "graded", "returned"],
     },
     graded_by: { type: String, required: false },
     graded_date: { type: Date, required: false },
@@ -56,16 +56,23 @@ const CourseAssignmentSubmissionSchema = new Schema({
 
 // Create indexes for efficient querying
 CourseAssignmentSubmissionSchema.index.findByCampusId = { by: "campus_id" };
-CourseAssignmentSubmissionSchema.index.findByAssignmentId = { by: "assignment_id" };
+CourseAssignmentSubmissionSchema.index.findByAssignmentId = {
+    by: "assignment_id",
+};
 CourseAssignmentSubmissionSchema.index.findByCourseId = { by: "course_id" };
 CourseAssignmentSubmissionSchema.index.findByUserId = { by: "user_id" };
-CourseAssignmentSubmissionSchema.index.findBySubmissionDate = { by: "submission_date" };
-CourseAssignmentSubmissionSchema.index.findBySubmissionStatus = { by: "submission_status" };
+CourseAssignmentSubmissionSchema.index.findBySubmissionDate = {
+    by: "submission_date",
+};
+CourseAssignmentSubmissionSchema.index.findBySubmissionStatus = {
+    by: "submission_status",
+};
 CourseAssignmentSubmissionSchema.index.findByGradedBy = { by: "graded_by" };
 
-const CourseAssignmentSubmission = ottoman.model<ICourseAssignmentSubmissionData>(
-    "course_assignment_submissions",
-    CourseAssignmentSubmissionSchema
-);
+const CourseAssignmentSubmission =
+    ottoman.model<ICourseAssignmentSubmissionData>(
+        "course_assignment_submissions",
+        CourseAssignmentSubmissionSchema
+    );
 
 export { CourseAssignmentSubmission, type ICourseAssignmentSubmissionData };

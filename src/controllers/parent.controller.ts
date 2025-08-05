@@ -31,10 +31,13 @@ export class ParentController {
             return ctx.json(students);
         } catch (error) {
             if (error instanceof Error) {
-                return ctx.json({
-                    success: false,
-                    message: error.message,
-                }, 400);
+                return ctx.json(
+                    {
+                        success: false,
+                        message: error.message,
+                    },
+                    400
+                );
             }
         }
     };

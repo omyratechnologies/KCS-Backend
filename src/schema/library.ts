@@ -60,11 +60,9 @@ export const createLibraryRequestBodySchema = z
                 book_tags: z
                     .array(z.string())
                     .openapi({ example: ["fiction", "classic", "american"] }),
-                book_meta_data: z
-                    .record(z.string(), z.any())
-                    .openapi({
-                        example: { publisher: "Scribner", year: 1925 },
-                    }),
+                book_meta_data: z.record(z.string(), z.any()).openapi({
+                    example: { publisher: "Scribner", year: 1925 },
+                }),
             })
             .openapi({
                 example: {

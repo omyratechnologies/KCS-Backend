@@ -176,7 +176,8 @@ app.get(
     describeRoute({
         operationId: "getClassQuizByClassIDWithStudentStatus",
         summary: "Get quizzes with student attempt status",
-        description: "Retrieves all quizzes for a specific class with student's attempt status (completed, in progress, not attempted)",
+        description:
+            "Retrieves all quizzes for a specific class with student's attempt status (completed, in progress, not attempted)",
         tags: ["Student Quiz"],
         parameters: [
             {
@@ -191,7 +192,8 @@ app.get(
                 in: "query",
                 required: false,
                 schema: { type: "string" },
-                description: "Student ID (optional, uses logged-in user if not provided)",
+                description:
+                    "Student ID (optional, uses logged-in user if not provided)",
             },
         ],
         responses: {
@@ -210,24 +212,47 @@ app.get(
                                         properties: {
                                             id: { type: "string" },
                                             quiz_name: { type: "string" },
-                                            quiz_description: { type: "string" },
+                                            quiz_description: {
+                                                type: "string",
+                                            },
                                             quiz_meta_data: { type: "object" },
                                             student_status: {
                                                 type: "object",
                                                 properties: {
-                                                    status: { 
+                                                    status: {
                                                         type: "string",
-                                                        enum: ["not_attempted", "in_progress", "completed", "expired"]
+                                                        enum: [
+                                                            "not_attempted",
+                                                            "in_progress",
+                                                            "completed",
+                                                            "expired",
+                                                        ],
                                                     },
                                                     availability_status: {
                                                         type: "string",
-                                                        enum: ["available", "not_yet_available", "expired"]
+                                                        enum: [
+                                                            "available",
+                                                            "not_yet_available",
+                                                            "expired",
+                                                        ],
                                                     },
-                                                    can_attempt: { type: "boolean" },
-                                                    max_attempts: { type: "number" },
-                                                    attempts_made: { type: "number" },
-                                                    attempt_data: { type: "object", nullable: true },
-                                                    session_data: { type: "object", nullable: true },
+                                                    can_attempt: {
+                                                        type: "boolean",
+                                                    },
+                                                    max_attempts: {
+                                                        type: "number",
+                                                    },
+                                                    attempts_made: {
+                                                        type: "number",
+                                                    },
+                                                    attempt_data: {
+                                                        type: "object",
+                                                        nullable: true,
+                                                    },
+                                                    session_data: {
+                                                        type: "object",
+                                                        nullable: true,
+                                                    },
                                                 },
                                             },
                                         },
@@ -849,7 +874,8 @@ app.get(
     describeRoute({
         operationId: "getQuizStatistics",
         summary: "Get quiz statistics",
-        description: "Retrieves detailed statistics for a specific quiz including attempts, scores, and completion rates",
+        description:
+            "Retrieves detailed statistics for a specific quiz including attempts, scores, and completion rates",
         tags: ["Class Quiz"],
         parameters: [
             {
@@ -903,7 +929,8 @@ app.get(
     describeRoute({
         operationId: "getDetailedQuizStatistics",
         summary: "Get detailed quiz statistics by quiz ID",
-        description: "Retrieves comprehensive statistics for a specific quiz including attempted students count, total students average, each student's quiz marks, and top three students based on marks and completion time",
+        description:
+            "Retrieves comprehensive statistics for a specific quiz including attempted students count, total students average, each student's quiz marks, and top three students based on marks and completion time",
         tags: ["Class Quiz"],
         parameters: [
             {
@@ -931,22 +958,40 @@ app.get(
                                             properties: {
                                                 id: { type: "string" },
                                                 quiz_name: { type: "string" },
-                                                quiz_description: { type: "string" },
+                                                quiz_description: {
+                                                    type: "string",
+                                                },
                                                 class_id: { type: "string" },
                                                 class_name: { type: "string" },
-                                                created_at: { type: "string", format: "date-time" },
+                                                created_at: {
+                                                    type: "string",
+                                                    format: "date-time",
+                                                },
                                             },
                                         },
                                         statistics: {
                                             type: "object",
                                             properties: {
-                                                total_students: { type: "number" },
-                                                attempted_students: { type: "number" },
-                                                completion_percentage: { type: "number" },
-                                                average_score: { type: "number" },
-                                                highest_score: { type: "number" },
-                                                lowest_score: { type: "number" },
-                                                average_completion_time_seconds: { type: "number" },
+                                                total_students: {
+                                                    type: "number",
+                                                },
+                                                attempted_students: {
+                                                    type: "number",
+                                                },
+                                                completion_percentage: {
+                                                    type: "number",
+                                                },
+                                                average_score: {
+                                                    type: "number",
+                                                },
+                                                highest_score: {
+                                                    type: "number",
+                                                },
+                                                lowest_score: {
+                                                    type: "number",
+                                                },
+                                                average_completion_time_seconds:
+                                                    { type: "number" },
                                             },
                                         },
                                         top_three_students: {
@@ -954,15 +999,32 @@ app.get(
                                             items: {
                                                 type: "object",
                                                 properties: {
-                                                    student_id: { type: "string" },
-                                                    student_name: { type: "string" },
-                                                    student_email: { type: "string" },
+                                                    student_id: {
+                                                        type: "string",
+                                                    },
+                                                    student_name: {
+                                                        type: "string",
+                                                    },
+                                                    student_email: {
+                                                        type: "string",
+                                                    },
                                                     score: { type: "number" },
-                                                    submission_date: { type: "string", format: "date-time" },
-                                                    completion_time_seconds: { type: "number" },
-                                                    completion_time_formatted: { type: "string" },
-                                                    feedback: { type: "string" },
-                                                    meta_data: { type: "object" },
+                                                    submission_date: {
+                                                        type: "string",
+                                                        format: "date-time",
+                                                    },
+                                                    completion_time_seconds: {
+                                                        type: "number",
+                                                    },
+                                                    completion_time_formatted: {
+                                                        type: "string",
+                                                    },
+                                                    feedback: {
+                                                        type: "string",
+                                                    },
+                                                    meta_data: {
+                                                        type: "object",
+                                                    },
                                                 },
                                             },
                                         },
@@ -971,24 +1033,47 @@ app.get(
                                             items: {
                                                 type: "object",
                                                 properties: {
-                                                    student_id: { type: "string" },
-                                                    student_name: { type: "string" },
-                                                    student_email: { type: "string" },
+                                                    student_id: {
+                                                        type: "string",
+                                                    },
+                                                    student_name: {
+                                                        type: "string",
+                                                    },
+                                                    student_email: {
+                                                        type: "string",
+                                                    },
                                                     score: { type: "number" },
-                                                    submission_date: { type: "string", format: "date-time" },
-                                                    completion_time_seconds: { type: "number" },
-                                                    completion_time_formatted: { type: "string" },
-                                                    feedback: { type: "string" },
-                                                    meta_data: { type: "object" },
+                                                    submission_date: {
+                                                        type: "string",
+                                                        format: "date-time",
+                                                    },
+                                                    completion_time_seconds: {
+                                                        type: "number",
+                                                    },
+                                                    completion_time_formatted: {
+                                                        type: "string",
+                                                    },
+                                                    feedback: {
+                                                        type: "string",
+                                                    },
+                                                    meta_data: {
+                                                        type: "object",
+                                                    },
                                                 },
                                             },
                                         },
                                         summary: {
                                             type: "object",
                                             properties: {
-                                                total_attempts: { type: "number" },
-                                                success_rate: { type: "number" },
-                                                average_time_formatted: { type: "string" },
+                                                total_attempts: {
+                                                    type: "number",
+                                                },
+                                                success_rate: {
+                                                    type: "number",
+                                                },
+                                                average_time_formatted: {
+                                                    type: "string",
+                                                },
                                             },
                                         },
                                     },
@@ -1062,7 +1147,9 @@ app.post(
                                         quiz: { type: "object" },
                                         current_question: { type: "object" },
                                         questions_count: { type: "number" },
-                                        time_remaining_seconds: { type: "number" },
+                                        time_remaining_seconds: {
+                                            type: "number",
+                                        },
                                     },
                                 },
                             },
@@ -1116,7 +1203,9 @@ app.get(
                                         quiz: { type: "object" },
                                         current_question: { type: "object" },
                                         questions_count: { type: "number" },
-                                        time_remaining_seconds: { type: "number" },
+                                        time_remaining_seconds: {
+                                            type: "number",
+                                        },
                                     },
                                 },
                             },
@@ -1185,7 +1274,9 @@ app.post(
                                         quiz: { type: "object" },
                                         current_question: { type: "object" },
                                         questions_count: { type: "number" },
-                                        time_remaining_seconds: { type: "number" },
+                                        time_remaining_seconds: {
+                                            type: "number",
+                                        },
                                     },
                                 },
                             },
@@ -1240,7 +1331,9 @@ app.post(
                                         quiz: { type: "object" },
                                         current_question: { type: "object" },
                                         questions_count: { type: "number" },
-                                        time_remaining_seconds: { type: "number" },
+                                        time_remaining_seconds: {
+                                            type: "number",
+                                        },
                                         can_go_previous: { type: "boolean" },
                                         can_go_next: { type: "boolean" },
                                     },
@@ -1297,7 +1390,9 @@ app.post(
                                         quiz: { type: "object" },
                                         current_question: { type: "object" },
                                         questions_count: { type: "number" },
-                                        time_remaining_seconds: { type: "number" },
+                                        time_remaining_seconds: {
+                                            type: "number",
+                                        },
                                         can_go_previous: { type: "boolean" },
                                         can_go_next: { type: "boolean" },
                                     },
@@ -1383,7 +1478,8 @@ app.post(
     describeRoute({
         operationId: "checkExpiredSessions",
         summary: "Check and process expired quiz sessions",
-        description: "Checks for expired quiz sessions and auto-submits them (admin only)",
+        description:
+            "Checks for expired quiz sessions and auto-submits them (admin only)",
         tags: ["Quiz Administration"],
         responses: {
             200: {
@@ -1431,7 +1527,8 @@ app.get(
     describeRoute({
         operationId: "getQuizSessionHistory",
         summary: "Get user's quiz session history",
-        description: "Retrieves the history of quiz sessions for the current user",
+        description:
+            "Retrieves the history of quiz sessions for the current user",
         tags: ["Quiz Sessions"],
         parameters: [
             {
@@ -1551,11 +1648,17 @@ app.get(
                                             type: "object",
                                             properties: {
                                                 id: { type: "string" },
-                                                session_token: { type: "string" },
+                                                session_token: {
+                                                    type: "string",
+                                                },
                                                 status: { type: "string" },
                                                 started_at: { type: "string" },
-                                                completed_at: { type: "string" },
-                                                time_taken_seconds: { type: "number" },
+                                                completed_at: {
+                                                    type: "string",
+                                                },
+                                                time_taken_seconds: {
+                                                    type: "number",
+                                                },
                                             },
                                         },
                                         quiz: {
@@ -1563,23 +1666,44 @@ app.get(
                                             properties: {
                                                 id: { type: "string" },
                                                 quiz_name: { type: "string" },
-                                                quiz_description: { type: "string" },
-                                                quiz_meta_data: { type: "object" },
+                                                quiz_description: {
+                                                    type: "string",
+                                                },
+                                                quiz_meta_data: {
+                                                    type: "object",
+                                                },
                                             },
                                         },
                                         results: {
                                             type: "object",
                                             properties: {
-                                                submission_id: { type: "string" },
+                                                submission_id: {
+                                                    type: "string",
+                                                },
                                                 score: { type: "number" },
-                                                total_questions: { type: "number" },
-                                                correct_answers: { type: "number" },
-                                                incorrect_answers: { type: "number" },
+                                                total_questions: {
+                                                    type: "number",
+                                                },
+                                                correct_answers: {
+                                                    type: "number",
+                                                },
+                                                incorrect_answers: {
+                                                    type: "number",
+                                                },
                                                 percentage: { type: "number" },
-                                                submission_date: { type: "string" },
-                                                feedback: { type: "string", nullable: true },
-                                                time_taken_seconds: { type: "number" },
-                                                auto_submitted: { type: "boolean" },
+                                                submission_date: {
+                                                    type: "string",
+                                                },
+                                                feedback: {
+                                                    type: "string",
+                                                    nullable: true,
+                                                },
+                                                time_taken_seconds: {
+                                                    type: "number",
+                                                },
+                                                auto_submitted: {
+                                                    type: "boolean",
+                                                },
                                             },
                                         },
                                         question_details: {
@@ -1587,19 +1711,40 @@ app.get(
                                             items: {
                                                 type: "object",
                                                 properties: {
-                                                    question_id: { type: "string" },
-                                                    question_text: { type: "string" },
-                                                    question_type: { type: "string" },
+                                                    question_id: {
+                                                        type: "string",
+                                                    },
+                                                    question_text: {
+                                                        type: "string",
+                                                    },
+                                                    question_type: {
+                                                        type: "string",
+                                                    },
                                                     options: { type: "object" },
-                                                    correct_answer: { type: "string" },
-                                                    user_answer: { type: "string", nullable: true },
-                                                    is_correct: { type: "boolean" },
-                                                    points_earned: { type: "number" },
-                                                    meta_data: { type: "object", nullable: true },
+                                                    correct_answer: {
+                                                        type: "string",
+                                                    },
+                                                    user_answer: {
+                                                        type: "string",
+                                                        nullable: true,
+                                                    },
+                                                    is_correct: {
+                                                        type: "boolean",
+                                                    },
+                                                    points_earned: {
+                                                        type: "number",
+                                                    },
+                                                    meta_data: {
+                                                        type: "object",
+                                                        nullable: true,
+                                                    },
                                                 },
                                             },
                                         },
-                                        meta_data: { type: "object", nullable: true },
+                                        meta_data: {
+                                            type: "object",
+                                            nullable: true,
+                                        },
                                     },
                                 },
                             },
@@ -1627,7 +1772,8 @@ app.get(
     describeRoute({
         operationId: "getAllQuizResultsByStudentId",
         summary: "Get all quiz results by student ID",
-        description: "Retrieves all quiz results for a specific student with detailed information",
+        description:
+            "Retrieves all quiz results for a specific student with detailed information",
         tags: ["Class Quiz"],
         parameters: [
             {
@@ -1663,31 +1809,58 @@ app.get(
                                                 type: "object",
                                                 properties: {
                                                     id: { type: "string" },
-                                                    submission_date: { type: "string", format: "date-time" },
+                                                    submission_date: {
+                                                        type: "string",
+                                                        format: "date-time",
+                                                    },
                                                     score: { type: "number" },
-                                                    feedback: { type: "string" },
-                                                    meta_data: { type: "object" },
+                                                    feedback: {
+                                                        type: "string",
+                                                    },
+                                                    meta_data: {
+                                                        type: "object",
+                                                    },
                                                 },
                                             },
                                             quiz: {
                                                 type: "object",
                                                 properties: {
                                                     id: { type: "string" },
-                                                    quiz_name: { type: "string" },
-                                                    quiz_description: { type: "string" },
-                                                    class_id: { type: "string" },
-                                                    quiz_meta_data: { type: "object" },
+                                                    quiz_name: {
+                                                        type: "string",
+                                                    },
+                                                    quiz_description: {
+                                                        type: "string",
+                                                    },
+                                                    class_id: {
+                                                        type: "string",
+                                                    },
+                                                    quiz_meta_data: {
+                                                        type: "object",
+                                                    },
                                                 },
                                             },
                                             results: {
                                                 type: "object",
                                                 properties: {
-                                                    total_questions: { type: "number" },
-                                                    correct_answers: { type: "number" },
-                                                    incorrect_answers: { type: "number" },
-                                                    percentage: { type: "number" },
-                                                    time_taken_seconds: { type: "number" },
-                                                    auto_submitted: { type: "boolean" },
+                                                    total_questions: {
+                                                        type: "number",
+                                                    },
+                                                    correct_answers: {
+                                                        type: "number",
+                                                    },
+                                                    incorrect_answers: {
+                                                        type: "number",
+                                                    },
+                                                    percentage: {
+                                                        type: "number",
+                                                    },
+                                                    time_taken_seconds: {
+                                                        type: "number",
+                                                    },
+                                                    auto_submitted: {
+                                                        type: "boolean",
+                                                    },
                                                 },
                                             },
                                             question_details: {
@@ -1695,14 +1868,34 @@ app.get(
                                                 items: {
                                                     type: "object",
                                                     properties: {
-                                                        question_id: { type: "string" },
-                                                        question_text: { type: "string" },
-                                                        question_type: { type: "string" },
-                                                        options: { type: "array", items: { type: "string" } },
-                                                        correct_answer: { type: "string" },
-                                                        user_answer: { type: "string", nullable: true },
-                                                        is_correct: { type: "boolean" },
-                                                        points_earned: { type: "number" },
+                                                        question_id: {
+                                                            type: "string",
+                                                        },
+                                                        question_text: {
+                                                            type: "string",
+                                                        },
+                                                        question_type: {
+                                                            type: "string",
+                                                        },
+                                                        options: {
+                                                            type: "array",
+                                                            items: {
+                                                                type: "string",
+                                                            },
+                                                        },
+                                                        correct_answer: {
+                                                            type: "string",
+                                                        },
+                                                        user_answer: {
+                                                            type: "string",
+                                                            nullable: true,
+                                                        },
+                                                        is_correct: {
+                                                            type: "boolean",
+                                                        },
+                                                        points_earned: {
+                                                            type: "number",
+                                                        },
                                                     },
                                                 },
                                             },
@@ -1710,10 +1903,19 @@ app.get(
                                                 type: "object",
                                                 nullable: true,
                                                 properties: {
-                                                    session_id: { type: "string" },
+                                                    session_id: {
+                                                        type: "string",
+                                                    },
                                                     status: { type: "string" },
-                                                    started_at: { type: "string", format: "date-time" },
-                                                    completed_at: { type: "string", format: "date-time", nullable: true },
+                                                    started_at: {
+                                                        type: "string",
+                                                        format: "date-time",
+                                                    },
+                                                    completed_at: {
+                                                        type: "string",
+                                                        format: "date-time",
+                                                        nullable: true,
+                                                    },
                                                 },
                                             },
                                         },
@@ -1743,7 +1945,8 @@ app.get(
     describeRoute({
         operationId: "getQuizResultsSummaryByStudentId",
         summary: "Get quiz results summary by student ID",
-        description: "Retrieves a summary of all quiz results for a specific student",
+        description:
+            "Retrieves a summary of all quiz results for a specific student",
         tags: ["Class Quiz"],
         parameters: [
             {
@@ -1775,29 +1978,55 @@ app.get(
                                     properties: {
                                         student_id: { type: "string" },
                                         campus_id: { type: "string" },
-                                        class_id: { type: "string", nullable: true },
-                                        total_quizzes_attempted: { type: "number" },
+                                        class_id: {
+                                            type: "string",
+                                            nullable: true,
+                                        },
+                                        total_quizzes_attempted: {
+                                            type: "number",
+                                        },
                                         average_score: { type: "number" },
                                         average_percentage: { type: "number" },
-                                        total_correct_answers: { type: "number" },
-                                        total_questions_attempted: { type: "number" },
+                                        total_correct_answers: {
+                                            type: "number",
+                                        },
+                                        total_questions_attempted: {
+                                            type: "number",
+                                        },
                                         highest_score: { type: "number" },
                                         lowest_score: { type: "number" },
-                                        total_time_spent_seconds: { type: "number" },
+                                        total_time_spent_seconds: {
+                                            type: "number",
+                                        },
                                         quiz_results: {
                                             type: "array",
                                             items: {
                                                 type: "object",
                                                 properties: {
                                                     quiz_id: { type: "string" },
-                                                    quiz_name: { type: "string" },
-                                                    submission_date: { type: "string", format: "date-time" },
+                                                    quiz_name: {
+                                                        type: "string",
+                                                    },
+                                                    submission_date: {
+                                                        type: "string",
+                                                        format: "date-time",
+                                                    },
                                                     score: { type: "number" },
-                                                    percentage: { type: "number" },
-                                                    total_questions: { type: "number" },
-                                                    correct_answers: { type: "number" },
-                                                    time_taken_seconds: { type: "number" },
-                                                    auto_submitted: { type: "boolean" },
+                                                    percentage: {
+                                                        type: "number",
+                                                    },
+                                                    total_questions: {
+                                                        type: "number",
+                                                    },
+                                                    correct_answers: {
+                                                        type: "number",
+                                                    },
+                                                    time_taken_seconds: {
+                                                        type: "number",
+                                                    },
+                                                    auto_submitted: {
+                                                        type: "boolean",
+                                                    },
                                                 },
                                             },
                                         },
@@ -1826,7 +2055,8 @@ app.get(
     describeRoute({
         operationId: "getQuizResultsByStudentIdAndQuizId",
         summary: "Get quiz results by student ID and quiz ID",
-        description: "Retrieves detailed quiz results for a specific student and quiz",
+        description:
+            "Retrieves detailed quiz results for a specific student and quiz",
         tags: ["Class Quiz"],
         parameters: [
             {

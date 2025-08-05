@@ -12,12 +12,9 @@ export const meetingSchema = z
             .array(z.string())
             .openapi({ example: ["user1", "user2", "user3"] }),
         meeting_name: z.string().openapi({ example: "Weekly Staff Meeting" }),
-        meeting_description: z
-            .string()
-            .openapi({
-                example:
-                    "Discussion about upcoming events and curriculum changes",
-            }),
+        meeting_description: z.string().openapi({
+            example: "Discussion about upcoming events and curriculum changes",
+        }),
         meeting_start_time: z
             .string()
             .openapi({ example: "2023-05-15T10:00:00Z" }),
@@ -49,12 +46,9 @@ export const createMeetingRequestBodySchema = z
             .array(z.string())
             .openapi({ example: ["user1", "user2", "user3"] }),
         meeting_name: z.string().openapi({ example: "Weekly Staff Meeting" }),
-        meeting_description: z
-            .string()
-            .openapi({
-                example:
-                    "Discussion about upcoming events and curriculum changes",
-            }),
+        meeting_description: z.string().openapi({
+            example: "Discussion about upcoming events and curriculum changes",
+        }),
         meeting_start_time: z
             .string()
             .openapi({ example: "2023-05-15T10:00:00Z" }),

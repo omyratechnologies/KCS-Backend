@@ -8,7 +8,12 @@ export interface ICourseEnrollmentData {
     user_id: string;
     campus_id: string;
     enrollment_type: "free" | "paid" | "admin_assigned" | "bulk_enrollment";
-    enrollment_status: "active" | "completed" | "dropped" | "suspended" | "expired";
+    enrollment_status:
+        | "active"
+        | "completed"
+        | "dropped"
+        | "suspended"
+        | "expired";
     progress_percentage: number; // 0-100
     enrollment_date: Date;
     completion_date?: Date;
@@ -59,24 +64,24 @@ const CourseEnrollmentSchema = new Schema({
     course_id: { type: String, required: true },
     user_id: { type: String, required: true },
     campus_id: { type: String, required: true },
-    enrollment_type: { 
-        type: String, 
+    enrollment_type: {
+        type: String,
         enum: ["free", "paid", "admin_assigned", "bulk_enrollment"],
-        default: "free"
+        default: "free",
     },
-    enrollment_status: { 
-        type: String, 
+    enrollment_status: {
+        type: String,
         enum: ["active", "completed", "dropped", "suspended", "expired"],
-        default: "active"
+        default: "active",
     },
     progress_percentage: { type: Number, default: 0 },
     enrollment_date: { type: Date, default: () => new Date() },
     completion_date: { type: Date },
     expiry_date: { type: Date },
     last_accessed_at: { type: Date },
-    payment_status: { 
-        type: String, 
-        enum: ["pending", "completed", "failed", "refunded"]
+    payment_status: {
+        type: String,
+        enum: ["pending", "completed", "failed", "refunded"],
     },
     payment_reference: { type: String },
     certificate_issued: { type: Boolean, default: false },
@@ -84,8 +89,8 @@ const CourseEnrollmentSchema = new Schema({
     certificate_issued_at: { type: Date },
     grade: { type: Number },
     completion_time_hours: { type: Number },
-    access_details: { 
-        type: Object, 
+    access_details: {
+        type: Object,
         default: {
             total_lectures: 0,
             completed_lectures: 0,
@@ -93,13 +98,13 @@ const CourseEnrollmentSchema = new Schema({
             bookmarked_lectures: [],
             notes_count: 0,
             quiz_attempts: 0,
-            assignment_submissions: 0
-        }
+            assignment_submissions: 0,
+        },
     },
-    enrollment_source: { 
-        type: String, 
+    enrollment_source: {
+        type: String,
         enum: ["web", "mobile", "admin", "api", "bulk_import"],
-        default: "web"
+        default: "web",
     },
     referral_code: { type: String },
     discount_applied: { type: Object },
@@ -112,10 +117,15 @@ const CourseEnrollmentSchema = new Schema({
 CourseEnrollmentSchema.index.findByCourseId = { by: "course_id" };
 CourseEnrollmentSchema.index.findByUserId = { by: "user_id" };
 CourseEnrollmentSchema.index.findByCampusId = { by: "campus_id" };
-CourseEnrollmentSchema.index.findByUserAndCourse = { by: ["user_id", "course_id"] };
+CourseEnrollmentSchema.index.findByUserAndCourse = {
+    by: ["user_id", "course_id"],
+};
 CourseEnrollmentSchema.index.findByStatus = { by: "enrollment_status" };
 CourseEnrollmentSchema.index.findByPaymentStatus = { by: "payment_status" };
 
-const CourseEnrollment = ottoman.model<ICourseEnrollmentData>("course_enrollments", CourseEnrollmentSchema);
+const CourseEnrollment = ottoman.model<ICourseEnrollmentData>(
+    "course_enrollments",
+    CourseEnrollmentSchema
+);
 
 export { CourseEnrollment };

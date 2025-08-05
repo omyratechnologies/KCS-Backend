@@ -9,12 +9,10 @@ export const syllabusSchema = z
         campus_id: z.string().openapi({ example: "campus123" }),
         subject_id: z.string().openapi({ example: "subject123" }),
         name: z.string().openapi({ example: "Mathematics Syllabus 2023" }),
-        description: z
-            .string()
-            .openapi({
-                example:
-                    "Complete syllabus for Mathematics covering algebra, geometry, and calculus",
-            }),
+        description: z.string().openapi({
+            example:
+                "Complete syllabus for Mathematics covering algebra, geometry, and calculus",
+        }),
         meta_data: z.record(z.string(), z.any()).openapi({
             example: {
                 academic_year: "2023-2024",
@@ -34,12 +32,10 @@ export const createSyllabusRequestBodySchema = z
     .object({
         subject_id: z.string().openapi({ example: "subject123" }),
         name: z.string().openapi({ example: "Mathematics Syllabus 2023" }),
-        description: z
-            .string()
-            .openapi({
-                example:
-                    "Complete syllabus for Mathematics covering algebra, geometry, and calculus",
-            }),
+        description: z.string().openapi({
+            example:
+                "Complete syllabus for Mathematics covering algebra, geometry, and calculus",
+        }),
         meta_data: z.record(z.string(), z.any()).openapi({
             example: {
                 academic_year: "2023-2024",
@@ -62,13 +58,9 @@ export const updateSyllabusRequestBodySchema = z
             .string()
             .optional()
             .openapi({ example: "Updated Mathematics Syllabus 2023" }),
-        description: z
-            .string()
-            .optional()
-            .openapi({
-                example:
-                    "Updated syllabus for Mathematics with additional topics",
-            }),
+        description: z.string().optional().openapi({
+            example: "Updated syllabus for Mathematics with additional topics",
+        }),
         meta_data: z
             .record(z.string(), z.any())
             .optional()

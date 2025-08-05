@@ -9,11 +9,9 @@ export const subjectSchema = z
         campus_id: z.string().openapi({ example: "campus123" }),
         name: z.string().openapi({ example: "Mathematics" }),
         code: z.string().openapi({ example: "MATH101" }),
-        description: z
-            .string()
-            .openapi({
-                example: "Introduction to basic mathematical concepts",
-            }),
+        description: z.string().openapi({
+            example: "Introduction to basic mathematical concepts",
+        }),
         meta_data: z
             .record(z.string(), z.any())
             .openapi({ example: { level: "Beginner", credits: 3 } }),
@@ -31,11 +29,9 @@ export const createSubjectRequestBodySchema = z
             .object({
                 name: z.string().openapi({ example: "Mathematics" }),
                 code: z.string().openapi({ example: "MATH101" }),
-                description: z
-                    .string()
-                    .openapi({
-                        example: "Introduction to basic mathematical concepts",
-                    }),
+                description: z.string().openapi({
+                    example: "Introduction to basic mathematical concepts",
+                }),
                 meta_data: z
                     .record(z.string(), z.any())
                     .openapi({ example: { level: "Beginner", credits: 3 } }),
@@ -63,12 +59,9 @@ export const updateSubjectRequestBodySchema = z
             .optional()
             .openapi({ example: "Advanced Mathematics" }),
         code: z.string().optional().openapi({ example: "MATH201" }),
-        description: z
-            .string()
-            .optional()
-            .openapi({
-                example: "Advanced mathematical concepts and applications",
-            }),
+        description: z.string().optional().openapi({
+            example: "Advanced mathematical concepts and applications",
+        }),
         meta_data: z
             .record(z.string(), z.any())
             .optional()

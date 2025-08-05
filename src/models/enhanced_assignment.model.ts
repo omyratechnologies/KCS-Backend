@@ -64,17 +64,17 @@ const EnhancedAssignmentSchema = new Schema({
     is_graded: { type: Boolean, required: true, default: true },
     allow_late_submission: { type: Boolean, required: true, default: false },
     attachment_urls: { type: [String], required: false, default: [] },
-    priority: { 
-        type: String, 
-        required: true, 
+    priority: {
+        type: String,
+        required: true,
         default: "medium",
-        enum: ["low", "medium", "high"]
+        enum: ["low", "medium", "high"],
     },
-    assignment_type: { 
-        type: String, 
-        required: true, 
+    assignment_type: {
+        type: String,
+        required: true,
         default: "homework",
-        enum: ["homework", "project", "quiz", "exam", "presentation"]
+        enum: ["homework", "project", "quiz", "exam", "presentation"],
     },
     estimated_duration_minutes: { type: Number, required: false },
     meta_data: { type: Object, required: false, default: {} },
@@ -93,7 +93,9 @@ EnhancedAssignmentSchema.index.findByUserId = { by: "user_id" };
 EnhancedAssignmentSchema.index.findByDueDate = { by: "due_date" };
 EnhancedAssignmentSchema.index.findByPriority = { by: "priority" };
 EnhancedAssignmentSchema.index.findByType = { by: "assignment_type" };
-EnhancedAssignmentSchema.index.findByStatus = { by: ["is_active", "is_deleted"] };
+EnhancedAssignmentSchema.index.findByStatus = {
+    by: ["is_active", "is_deleted"],
+};
 
 // Enhanced Assignment Submission Schema
 const EnhancedAssignmentSubmissionSchema = new Schema({
@@ -116,11 +118,15 @@ const EnhancedAssignmentSubmissionSchema = new Schema({
 });
 
 // Indexes for Enhanced Assignment Submission
-EnhancedAssignmentSubmissionSchema.index.findByAssignmentId = { by: "assignment_id" };
+EnhancedAssignmentSubmissionSchema.index.findByAssignmentId = {
+    by: "assignment_id",
+};
 EnhancedAssignmentSubmissionSchema.index.findByCampusId = { by: "campus_id" };
 EnhancedAssignmentSubmissionSchema.index.findByUserId = { by: "user_id" };
 EnhancedAssignmentSubmissionSchema.index.findByGradedBy = { by: "graded_by" };
-EnhancedAssignmentSubmissionSchema.index.findBySubmissionDate = { by: "submission_date" };
+EnhancedAssignmentSubmissionSchema.index.findBySubmissionDate = {
+    by: "submission_date",
+};
 EnhancedAssignmentSubmissionSchema.index.findByGradeStatus = { by: "grade" };
 EnhancedAssignmentSubmissionSchema.index.findByLateStatus = { by: "is_late" };
 
@@ -130,12 +136,10 @@ const EnhancedAssignment = ottoman.model<IEnhancedAssignmentData>(
     EnhancedAssignmentSchema
 );
 
-const EnhancedAssignmentSubmission = ottoman.model<IEnhancedAssignmentSubmissionData>(
-    "enhanced_assignment_submissions",
-    EnhancedAssignmentSubmissionSchema
-);
+const EnhancedAssignmentSubmission =
+    ottoman.model<IEnhancedAssignmentSubmissionData>(
+        "enhanced_assignment_submissions",
+        EnhancedAssignmentSubmissionSchema
+    );
 
-export { 
-    EnhancedAssignment, 
-    EnhancedAssignmentSubmission
-};
+export { EnhancedAssignment, EnhancedAssignmentSubmission };

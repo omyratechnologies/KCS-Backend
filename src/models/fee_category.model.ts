@@ -47,24 +47,24 @@ const FeeCategorySchema = new Schema({
     is_mandatory: { type: Boolean, required: true, default: true },
     applicable_classes: { type: [String], required: true },
     academic_year: { type: String, required: true },
-    frequency: { 
-        type: String, 
+    frequency: {
+        type: String,
         required: true,
-        enum: ["monthly", "quarterly", "annually", "one-time"]
+        enum: ["monthly", "quarterly", "annually", "one-time"],
     },
     due_date_config: {
         type: Object,
-        required: true
+        required: true,
     },
     late_fee_config: {
         type: Object,
         required: true,
-        default: { enabled: false }
+        default: { enabled: false },
     },
     discount_config: {
         type: Object,
         required: true,
-        default: { enabled: false }
+        default: { enabled: false },
     },
     is_active: { type: Boolean, required: true, default: true },
     meta_data: { type: Object, required: true, default: {} },
@@ -75,8 +75,8 @@ const FeeCategorySchema = new Schema({
 FeeCategorySchema.index.findByCampusId = { by: "campus_id" };
 FeeCategorySchema.index.findByCategoryCode = { by: "category_code" };
 FeeCategorySchema.index.findByAcademicYear = { by: "academic_year" };
-FeeCategorySchema.index.findByCampusIdAndAcademicYear = { 
-    by: ["campus_id", "academic_year"] 
+FeeCategorySchema.index.findByCampusIdAndAcademicYear = {
+    by: ["campus_id", "academic_year"],
 };
 
 const FeeCategory = ottoman.model<IFeeCategory>(

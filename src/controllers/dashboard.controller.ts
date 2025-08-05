@@ -171,7 +171,7 @@ export class DashboardController {
             const user_id = ctx.get("user_id");
             const campus_id = ctx.get("campus_id");
             const user_type = ctx.get("user_type");
-            
+
             const limit = Number(ctx.req.query("limit")) || 10;
 
             const activities = await DashboardService.getRecentActivities(
@@ -208,11 +208,12 @@ export class DashboardController {
             const campus_id = ctx.get("campus_id");
             const user_type = ctx.get("user_type");
 
-            const notificationsSummary = await DashboardService.getNotificationsSummary(
-                user_id,
-                campus_id,
-                user_type
-            );
+            const notificationsSummary =
+                await DashboardService.getNotificationsSummary(
+                    user_id,
+                    campus_id,
+                    user_type
+                );
 
             return ctx.json({
                 success: true,
@@ -240,7 +241,7 @@ export class DashboardController {
             const user_id = ctx.get("user_id");
             const campus_id = ctx.get("campus_id");
             const user_type = ctx.get("user_type");
-            
+
             const days = Number(ctx.req.query("days")) || 7;
 
             const events = await DashboardService.getUpcomingEvents(

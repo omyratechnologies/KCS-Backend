@@ -49,35 +49,49 @@ ComplianceCheckSchema.index.findByStatus = { by: "status" };
 ComplianceCheckSchema.index.findByCheckType = { by: "check_type" };
 ComplianceCheckSchema.index.findByCheckDate = { by: "check_date" };
 
-const ComplianceCheck = ottoman.model<IComplianceCheck>("compliance_checks", ComplianceCheckSchema);
+const ComplianceCheck = ottoman.model<IComplianceCheck>(
+    "compliance_checks",
+    ComplianceCheckSchema
+);
 
 export class ComplianceCheckService {
-    public static async createComplianceCheck(data: Omit<IComplianceCheck, "id" | "created_at" | "updated_at">): Promise<IComplianceCheck> {
+    public static async createComplianceCheck(
+        data: Omit<IComplianceCheck, "id" | "created_at" | "updated_at">
+    ): Promise<IComplianceCheck> {
         return await ComplianceCheck.create({
             ...data,
             created_at: new Date(),
-            updated_at: new Date()
+            updated_at: new Date(),
         });
     }
 
-    public static async getComplianceHistory(campus_id: string, limit?: number): Promise<IComplianceCheck[]> {
+    public static async getComplianceHistory(
+        campus_id: string,
+        limit?: number
+    ): Promise<IComplianceCheck[]> {
         const history = await ComplianceCheck.find({
-            campus_id
+            campus_id,
         });
-        
+
         let checks = history.rows || [];
-        
+
         // Sort by check_date descending
-        checks = checks.sort((a, b) => new Date(b.check_date).getTime() - new Date(a.check_date).getTime());
-        
+        checks = checks.sort(
+            (a, b) =>
+                new Date(b.check_date).getTime() -
+                new Date(a.check_date).getTime()
+        );
+
         if (limit) {
             checks = checks.slice(0, limit);
         }
-        
+
         return checks;
     }
 
-    public static async getLatestComplianceCheck(campus_id: string): Promise<IComplianceCheck | null> {
+    public static async getLatestComplianceCheck(
+        campus_id: string
+    ): Promise<IComplianceCheck | null> {
         const checks = await this.getComplianceHistory(campus_id, 1);
         return checks[0] || null;
     }
@@ -96,12 +110,12 @@ export class ComplianceCheckService {
             throw new Error("Compliance check not found");
         }
 
-        const updatedActions = check.remediation_actions.map(action => {
+        const updatedActions = check.remediation_actions.map((action) => {
             if (action.action_id === action_id) {
                 return {
                     ...action,
                     ...updates,
-                    completed_at: updates.completed_at || action.completed_at
+                    completed_at: updates.completed_at || action.completed_at,
                 };
             }
             return action;
@@ -109,11 +123,14 @@ export class ComplianceCheckService {
 
         return await ComplianceCheck.updateById(check_id, {
             remediation_actions: updatedActions,
-            updated_at: new Date()
+            updated_at: new Date(),
         });
     }
 
-    public static async getComplianceTrends(campus_id: string, days: number = 30): Promise<{
+    public static async getComplianceTrends(
+        campus_id: string,
+        days: number = 30
+    ): Promise<{
         trend_direction: "improving" | "declining" | "stable";
         avg_score: number;
         score_change: number;
@@ -128,12 +145,16 @@ export class ComplianceCheckService {
         since.setDate(since.getDate() - days);
 
         const allChecks = await ComplianceCheck.find({
-            campus_id
+            campus_id,
         });
-        
-        const checks = (allChecks.rows || []).filter(check => 
-            new Date(check.check_date) >= since
-        ).sort((a, b) => new Date(a.check_date).getTime() - new Date(b.check_date).getTime());
+
+        const checks = (allChecks.rows || [])
+            .filter((check) => new Date(check.check_date) >= since)
+            .sort(
+                (a, b) =>
+                    new Date(a.check_date).getTime() -
+                    new Date(b.check_date).getTime()
+            );
 
         if (checks.length === 0) {
             return {
@@ -141,25 +162,35 @@ export class ComplianceCheckService {
                 avg_score: 0,
                 score_change: 0,
                 checks_count: 0,
-                recent_issues: []
+                recent_issues: [],
             };
         }
 
-        const avgScore = checks.reduce((sum, check) => sum + check.compliance_score, 0) / checks.length;
-        
+        const avgScore =
+            checks.reduce((sum, check) => sum + check.compliance_score, 0) /
+            checks.length;
+
         // Calculate trend
         let trendDirection: "improving" | "declining" | "stable" = "stable";
         let scoreChange = 0;
-        
+
         if (checks.length >= 2) {
             const firstHalf = checks.slice(0, Math.floor(checks.length / 2));
             const secondHalf = checks.slice(Math.floor(checks.length / 2));
-            
-            const firstHalfAvg = firstHalf.reduce((sum, check) => sum + check.compliance_score, 0) / firstHalf.length;
-            const secondHalfAvg = secondHalf.reduce((sum, check) => sum + check.compliance_score, 0) / secondHalf.length;
-            
+
+            const firstHalfAvg =
+                firstHalf.reduce(
+                    (sum, check) => sum + check.compliance_score,
+                    0
+                ) / firstHalf.length;
+            const secondHalfAvg =
+                secondHalf.reduce(
+                    (sum, check) => sum + check.compliance_score,
+                    0
+                ) / secondHalf.length;
+
             scoreChange = secondHalfAvg - firstHalfAvg;
-            
+
             if (scoreChange > 5) {
                 trendDirection = "improving";
             } else if (scoreChange < -5) {
@@ -168,8 +199,11 @@ export class ComplianceCheckService {
         }
 
         // Aggregate recent issues
-        const issueMap = new Map<string, { category: string; count: number; severity: string }>();
-        
+        const issueMap = new Map<
+            string,
+            { category: string; count: number; severity: string }
+        >();
+
         for (const check of checks) {
             for (const issue of check.issues) {
                 const key = `${issue.category}_${issue.severity}`;
@@ -179,7 +213,7 @@ export class ComplianceCheckService {
                     issueMap.set(key, {
                         category: issue.category,
                         count: 1,
-                        severity: issue.severity
+                        severity: issue.severity,
                     });
                 }
             }
@@ -194,7 +228,7 @@ export class ComplianceCheckService {
             avg_score: avgScore,
             score_change: scoreChange,
             checks_count: checks.length,
-            recent_issues: recentIssues
+            recent_issues: recentIssues,
         };
     }
 
@@ -216,21 +250,31 @@ export class ComplianceCheckService {
     }> {
         const allChecks = await ComplianceCheck.find({});
         const checks = allChecks.rows || [];
-        
+
         const total = checks.length;
-        const compliant = checks.filter(c => c.status === "compliant").length;
-        const nonCompliant = checks.filter(c => c.status === "non_compliant").length;
-        const avgScore = total > 0 ? checks.reduce((sum, c) => sum + c.compliance_score, 0) / total : 0;
-        
+        const compliant = checks.filter((c) => c.status === "compliant").length;
+        const nonCompliant = checks.filter(
+            (c) => c.status === "non_compliant"
+        ).length;
+        const avgScore =
+            total > 0
+                ? checks.reduce((sum, c) => sum + c.compliance_score, 0) / total
+                : 0;
+
         const checksByType = {
-            automated: checks.filter(c => c.check_type === "automated").length,
-            manual: checks.filter(c => c.check_type === "manual").length,
-            scheduled: checks.filter(c => c.check_type === "scheduled").length
+            automated: checks.filter((c) => c.check_type === "automated")
+                .length,
+            manual: checks.filter((c) => c.check_type === "manual").length,
+            scheduled: checks.filter((c) => c.check_type === "scheduled")
+                .length,
         };
-        
+
         // Aggregate common issues
-        const issueMap = new Map<string, { category: string; count: number; severity: string }>();
-        
+        const issueMap = new Map<
+            string,
+            { category: string; count: number; severity: string }
+        >();
+
         for (const check of checks) {
             for (const issue of check.issues) {
                 const key = `${issue.category}_${issue.severity}`;
@@ -240,7 +284,7 @@ export class ComplianceCheckService {
                     issueMap.set(key, {
                         category: issue.category,
                         count: 1,
-                        severity: issue.severity
+                        severity: issue.severity,
                     });
                 }
             }
@@ -249,14 +293,14 @@ export class ComplianceCheckService {
         const commonIssues = [...issueMap.values()]
             .sort((a, b) => b.count - a.count)
             .slice(0, 10);
-        
+
         return {
             total_checks: total,
             compliant_checks: compliant,
             non_compliant_checks: nonCompliant,
             avg_compliance_score: avgScore,
             checks_by_type: checksByType,
-            common_issues: commonIssues
+            common_issues: commonIssues,
         };
     }
 }
