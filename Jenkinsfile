@@ -7,10 +7,7 @@ pipeline {
         
         // Docker registry (if using private registry)
         DOCKER_REGISTRY = 'docker.io'
-        DOCKER_REPO =        stage('🧪 Post-Deployment Tests') {
-            when {
-                branch 'dev'
-            }yratechnologies/kcs-backend'
+        DOCKER_REPO = 'omyratechnologies/kcs-backend'
         
         // Production server details
         PROD_SERVER = '13.204.105.220'
@@ -259,7 +256,7 @@ EOF
         
         stage('🧪 Post-Deployment Tests') {
             when {
-                branch 'main'
+                branch 'dev'
             }
             steps {
                 sh """
