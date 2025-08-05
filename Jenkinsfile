@@ -103,8 +103,6 @@ pipeline {
         
         stage('🧪 Test & Quality Checks') {
             parallel {
-        stage('🧪 Test & Quality Checks') {
-            parallel {
                 stage('Unit Tests') {
                     steps {
                         sh '''
