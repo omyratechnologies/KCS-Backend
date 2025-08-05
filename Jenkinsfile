@@ -24,6 +24,7 @@ pipeline {
         // Build information
         BUILD_TIMESTAMP = sh(script: 'date +"%Y%m%d_%H%M%S"', returnStdout: true).trim()
         BUILD_TAG = "${env.BUILD_NUMBER}_${BUILD_TIMESTAMP}"
+        BRANCH_TAG = "${env.BRANCH_NAME ?: 'dev'}"
         
         // Bun path
         BUN_PATH = "${env.HOME}/.bun/bin"
@@ -503,30 +504,39 @@ pipeline {
         
         stage('🐳 Docker Build & Push') {
             steps {
-                script {
-                    // Build Docker image with environment-specific tags
-                    def imageTag = "${DOCKER_REPO}:${BUILD_TAG}"
-                    def latestTag = "${DOCKER_REPO}:${env.BRANCH_NAME}-latest"
-                    def dockerfile = env.NODE_ENV == 'development' ? 'Dockerfile.dev' : 'Dockerfile'
+                timeout(time: 15, unit: 'MINUTES') {
+                    script {
+                        // Build Docker image with environment-specific tags
+                        def imageTag = "${DOCKER_REPO}:${BUILD_TAG}"
+                        def latestTag = "${DOCKER_REPO}:${BRANCH_TAG}-latest"
+                        def dockerfile = env.NODE_ENV == 'development' ? 'Dockerfile.simple' : 'Dockerfile'
                     
                     sh """
                         echo "🐳 Building Docker image for ${NODE_ENV} environment..."
                         
+                        # Clean up old images to free space
+                        docker system prune -f || echo "Cleanup completed"
+                        
                         # Build with BuildKit for optimization
                         export DOCKER_BUILDKIT=1
                         
-                        # Build the image
-                        docker build \\
+                        # Build the image with timeout and progress
+                        timeout 900 docker build \\
                             -f ${dockerfile} \\
                             --build-arg BUILD_NUMBER=${env.BUILD_NUMBER} \\
                             --build-arg BUILD_TIMESTAMP=${BUILD_TIMESTAMP} \\
-                            --build-arg GIT_COMMIT=${env.GIT_COMMIT} \\
                             --build-arg NODE_ENV=${NODE_ENV} \\
+                            --progress=plain \\
                             -t ${imageTag} \\
                             -t ${latestTag} \\
-                            .
+                            . || {
+                                echo "❌ Docker build failed or timed out"
+                                docker system df
+                                exit 1
+                            }
                         
                         echo "✅ Docker image built: ${imageTag}"
+                        docker images | grep kcs-backend || echo "No images found"
                     """
                     
                     // Push to registry (if configured)
@@ -544,6 +554,7 @@ pipeline {
                                 echo "✅ Image pushed successfully"
                             """
                         }
+                    }
                     }
                 }
             }
