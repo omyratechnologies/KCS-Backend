@@ -188,12 +188,21 @@ TEAMS_WEBHOOK_URL=your_teams_webhook_url
 ### Pipeline Stages
 
 1. **🔍 Checkout & Validate**: Code checkout and environment validation
-2. **📦 Install Dependencies**: Bun dependency installation
-3. **🧪 Test & Quality Checks**: Unit tests, linting, security audit
-4. **🏗️ Build Application**: Application build and compilation
-5. **🐳 Docker Build & Push**: Container image creation
-6. **🚀 Deploy to Production**: Production deployment
-7. **🧪 Post-Deployment Tests**: Health and API endpoint verification
+2. **📦 Install Dependencies**: Bun dependency installation with frozen lockfile
+3. **🧪 Test & Quality Checks**: 
+   - Unit tests with coverage reporting
+   - ESLint code quality checks (CI mode with expanded warning tolerance)
+   - Prettier format validation
+   - TypeScript compilation verification
+4. **🛡️ Security Scan**: 
+   - Dependency vulnerability scanning with npm audit
+   - Outdated package detection
+   - Security anti-pattern detection
+   - Handles dependency conflicts gracefully with fallback options
+5. **🏗️ Build Application**: Application build and compilation
+6. **🐳 Docker Build & Push**: Container image creation with BuildKit optimization
+7. **🚀 Deploy to Production**: Automated production deployment with zero downtime
+8. **🧪 Post-Deployment Tests**: Health and API endpoint verification
 
 ### Teams Notifications
 
@@ -207,6 +216,24 @@ You'll receive notifications for:
 ## 🔄 Alternative: GitHub Actions
 
 If you prefer GitHub Actions over Jenkins, the repository includes a complete GitHub Actions workflow:
+
+### Recent Improvements (Latest Update)
+
+**Enhanced Jenkins Pipeline Security & Reliability:**
+- ✅ **Fixed dependency conflicts**: Resolved npm/Bun dependency resolution issues using `--legacy-peer-deps`
+- ✅ **Improved security scanning**: Enhanced vulnerability detection with graceful fallback options
+- ✅ **Better error handling**: Pipeline now handles dependency conflicts without failing
+- ✅ **Comprehensive quality gates**: Expanded ESLint checks with configurable warning thresholds
+- ✅ **TypeScript validation**: Full type checking without build output
+- ✅ **Format validation**: Prettier code style enforcement
+- ✅ **Test coverage**: Complete unit test suite with coverage reporting
+
+**Security Scan Improvements:**
+- Creates temporary package-lock.json for npm audit compatibility
+- Falls back to Bun-native security checks if npm audit fails
+- Scans for sensitive patterns and security anti-patterns
+- Detects outdated packages with potential vulnerabilities
+- Provides detailed vulnerability reports with severity levels
 
 ### GitHub Secrets Setup
 
