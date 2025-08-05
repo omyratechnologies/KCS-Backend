@@ -41,7 +41,10 @@ export default {
     testTimeout: 30000,
     verbose: true,
     forceExit: true,
+    detectOpenHandles: true,
     clearMocks: true,
     resetMocks: true,
     restoreMocks: true,
+    maxWorkers: 1,
+    runInBand: true,
 };

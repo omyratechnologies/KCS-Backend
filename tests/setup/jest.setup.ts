@@ -36,3 +36,24 @@ global.Date = class extends Date {
         return mockDate.getTime();
     }
 } as DateConstructor;
+
+// Global cleanup
+afterEach(() => {
+    jest.clearAllMocks();
+    jest.clearAllTimers();
+});
+
+// Global teardown
+afterAll(async () => {
+    // Clear any remaining timers
+    jest.clearAllTimers();
+    jest.useRealTimers();
+    
+    // Force garbage collection if available
+    if (global.gc) {
+        global.gc();
+    }
+    
+    // Wait a bit to ensure all async operations complete
+    await new Promise(resolve => setTimeout(resolve, 100));
+});

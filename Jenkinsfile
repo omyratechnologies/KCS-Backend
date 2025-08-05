@@ -126,7 +126,7 @@ pipeline {
                             // Publish test results using junit
                             script {
                                 if (fileExists('coverage/junit.xml')) {
-                                    junit testResultsPattern: 'coverage/junit.xml'
+                                    junit 'coverage/junit.xml'
                                 }
                                 if (fileExists('coverage/cobertura-coverage.xml')) {
                                     publishHTML([
