@@ -45,9 +45,6 @@ ClassQuizAttemptSchema.index.findByCampusIdAndQuestionId = {
     by: ["campus_id", "question_id"],
 };
 
-const ClassQuizAttempt = ottoman.model<IClassQuizAttempt>(
-    "class_quiz_attempt",
-    ClassQuizAttemptSchema
-);
+const ClassQuizAttempt = ottoman.model<IClassQuizAttempt>("class_quiz_attempt", ClassQuizAttemptSchema);
 
 export { ClassQuizAttempt, type IClassQuizAttempt };

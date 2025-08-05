@@ -21,10 +21,7 @@ export const meetingSecurityMiddleware = () => {
             ctx.req.path.includes("/chat") ||
             ctx.req.path.includes("/analytics")
         ) {
-            ctx.header(
-                "Cache-Control",
-                "no-store, no-cache, must-revalidate, proxy-revalidate"
-            );
+            ctx.header("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
             ctx.header("Pragma", "no-cache");
             ctx.header("Expires", "0");
         }
@@ -43,10 +40,7 @@ export const meetingAccessControl = () => {
         const path = ctx.req.path;
 
         // Admin-only endpoints
-        if (
-            path.includes("/system/") &&
-            !["Admin", "Super Admin"].includes(userType)
-        ) {
+        if (path.includes("/system/") && !["Admin", "Super Admin"].includes(userType)) {
             return ctx.json(
                 {
                     success: false,

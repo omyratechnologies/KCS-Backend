@@ -10,8 +10,7 @@ export const syllabusSchema = z
         subject_id: z.string().openapi({ example: "subject123" }),
         name: z.string().openapi({ example: "Mathematics Syllabus 2023" }),
         description: z.string().openapi({
-            example:
-                "Complete syllabus for Mathematics covering algebra, geometry, and calculus",
+            example: "Complete syllabus for Mathematics covering algebra, geometry, and calculus",
         }),
         meta_data: z.record(z.string(), z.any()).openapi({
             example: {
@@ -33,8 +32,7 @@ export const createSyllabusRequestBodySchema = z
         subject_id: z.string().openapi({ example: "subject123" }),
         name: z.string().openapi({ example: "Mathematics Syllabus 2023" }),
         description: z.string().openapi({
-            example:
-                "Complete syllabus for Mathematics covering algebra, geometry, and calculus",
+            example: "Complete syllabus for Mathematics covering algebra, geometry, and calculus",
         }),
         meta_data: z.record(z.string(), z.any()).openapi({
             example: {
@@ -54,10 +52,7 @@ export const createSyllabusResponseSchema = syllabusSchema.openapi({
 export const updateSyllabusRequestBodySchema = z
     .object({
         subject_id: z.string().optional().openapi({ example: "subject456" }),
-        name: z
-            .string()
-            .optional()
-            .openapi({ example: "Updated Mathematics Syllabus 2023" }),
+        name: z.string().optional().openapi({ example: "Updated Mathematics Syllabus 2023" }),
         description: z.string().optional().openapi({
             example: "Updated syllabus for Mathematics with additional topics",
         }),
@@ -81,9 +76,7 @@ export const updateSyllabusResponseSchema = syllabusSchema.openapi({
 });
 
 // Get Syllabuses Response
-export const getSyllabusesResponseSchema = z
-    .array(syllabusSchema)
-    .openapi({ ref: "GetSyllabusesResponse" });
+export const getSyllabusesResponseSchema = z.array(syllabusSchema).openapi({ ref: "GetSyllabusesResponse" });
 
 // Error Response
 export const errorResponseSchema = z

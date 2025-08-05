@@ -90,14 +90,7 @@ export const actionMap: {
         "customize_course_settings",
         "reorder_course_content",
     ],
-    Staff: [
-        "get_user",
-        "get_users",
-        "create_users",
-        "update_users",
-        "delete_users",
-        "get_assignment",
-    ],
+    Staff: ["get_user", "get_users", "create_users", "update_users", "delete_users", "get_assignment"],
     Principal: [
         "get_user",
         "get_users",

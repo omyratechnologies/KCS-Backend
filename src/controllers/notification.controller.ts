@@ -9,9 +9,7 @@ import { NotificationService } from "@/services/notification.service";
 
 export class NotificationController {
     // create campus wide notification
-    public static readonly createCampusWideNotification = async (
-        ctx: Context
-    ) => {
+    public static readonly createCampusWideNotification = async (ctx: Context) => {
         try {
             const campus_id = ctx.get("campus_id");
 
@@ -25,15 +23,11 @@ export class NotificationController {
                 meta_data: object;
             } = await ctx.req.json();
 
-            const notification =
-                await NotificationService.createCampusWideNotification(
-                    campus_id,
-                    {
-                        title,
-                        message,
-                        meta_data,
-                    }
-                );
+            const notification = await NotificationService.createCampusWideNotification(campus_id, {
+                title,
+                message,
+                meta_data,
+            });
 
             return ctx.json(notification);
         } catch (error) {
@@ -47,14 +41,11 @@ export class NotificationController {
     };
 
     // get campus wide notifications
-    public static readonly getCampusWideNotifications = async (
-        ctx: Context
-    ) => {
+    public static readonly getCampusWideNotifications = async (ctx: Context) => {
         try {
             const campus_id = ctx.get("campus_id");
 
-            const notifications =
-                await NotificationService.getCampusWideNotifications(campus_id);
+            const notifications = await NotificationService.getCampusWideNotifications(campus_id);
 
             return ctx.json(notifications);
         } catch (error) {
@@ -68,14 +59,11 @@ export class NotificationController {
     };
 
     // get campus wide notification by id
-    public static readonly getCampusWideNotificationById = async (
-        ctx: Context
-    ) => {
+    public static readonly getCampusWideNotificationById = async (ctx: Context) => {
         try {
             const id = ctx.req.param("id");
 
-            const notification =
-                await NotificationService.getCampusWideNotificationById(id);
+            const notification = await NotificationService.getCampusWideNotificationById(id);
 
             return ctx.json(notification);
         } catch (error) {
@@ -89,20 +77,13 @@ export class NotificationController {
     };
 
     // update campus wide notification
-    public static readonly updateCampusWideNotification = async (
-        ctx: Context
-    ) => {
+    public static readonly updateCampusWideNotification = async (ctx: Context) => {
         try {
             const id = ctx.req.param("id");
 
-            const data: Partial<ICampusWideNotificationData> =
-                await ctx.req.json();
+            const data: Partial<ICampusWideNotificationData> = await ctx.req.json();
 
-            const notification =
-                await NotificationService.updateCampusWideNotification(
-                    id,
-                    data
-                );
+            const notification = await NotificationService.updateCampusWideNotification(id, data);
 
             return ctx.json(notification);
         } catch (error) {
@@ -116,14 +97,11 @@ export class NotificationController {
     };
 
     // delete campus wide notification
-    public static readonly deleteCampusWideNotification = async (
-        ctx: Context
-    ) => {
+    public static readonly deleteCampusWideNotification = async (ctx: Context) => {
         try {
             const id = ctx.req.param("id");
 
-            const notification =
-                await NotificationService.deleteCampusWideNotification(id);
+            const notification = await NotificationService.deleteCampusWideNotification(id);
 
             return ctx.json(notification);
         } catch (error) {
@@ -141,8 +119,7 @@ export class NotificationController {
         try {
             const user_id = ctx.get("user_id");
 
-            const notifications =
-                await NotificationService.getTeacherNotifications(user_id);
+            const notifications = await NotificationService.getTeacherNotifications(user_id);
 
             return ctx.json(notifications);
         } catch (error) {
@@ -161,11 +138,7 @@ export class NotificationController {
             const user_id = ctx.get("user_id");
             const data: ITeacherNotificationData = await ctx.req.json();
 
-            const notification =
-                await NotificationService.createTeacherNotification(
-                    user_id,
-                    data
-                );
+            const notification = await NotificationService.createTeacherNotification(user_id, data);
 
             return ctx.json(notification);
         } catch (error) {
@@ -184,8 +157,7 @@ export class NotificationController {
             const id = ctx.req.param("id");
             const data: ITeacherNotificationData = await ctx.req.json();
 
-            const notification =
-                await NotificationService.updateTeacherNotification(id, data);
+            const notification = await NotificationService.updateTeacherNotification(id, data);
 
             return ctx.json(notification);
         } catch (error) {
@@ -199,14 +171,11 @@ export class NotificationController {
     };
 
     // get teacher notification by id
-    public static readonly getTeacherNotificationById = async (
-        ctx: Context
-    ) => {
+    public static readonly getTeacherNotificationById = async (ctx: Context) => {
         try {
             const id = ctx.req.param("id");
 
-            const notification =
-                await NotificationService.getTeacherNotificationById(id);
+            const notification = await NotificationService.getTeacherNotificationById(id);
 
             return ctx.json(notification);
         } catch (error) {
@@ -224,8 +193,7 @@ export class NotificationController {
         try {
             const id = ctx.req.param("id");
 
-            const notification =
-                await NotificationService.deleteTeacherNotification(id);
+            const notification = await NotificationService.deleteTeacherNotification(id);
 
             return ctx.json(notification);
         } catch (error) {
@@ -243,8 +211,7 @@ export class NotificationController {
         try {
             const user_id = ctx.get("user_id");
 
-            const notifications =
-                await NotificationService.getStudentNotifications(user_id);
+            const notifications = await NotificationService.getStudentNotifications(user_id);
 
             return ctx.json(notifications);
         } catch (error) {
@@ -263,11 +230,7 @@ export class NotificationController {
             const user_id = ctx.get("user_id");
             const data: IStudentNotificationData = await ctx.req.json();
 
-            const notification =
-                await NotificationService.createStudentNotification(
-                    user_id,
-                    data
-                );
+            const notification = await NotificationService.createStudentNotification(user_id, data);
 
             return ctx.json(notification);
         } catch (error) {
@@ -281,14 +244,11 @@ export class NotificationController {
     };
 
     // get student notification by id
-    public static readonly getStudentNotificationById = async (
-        ctx: Context
-    ) => {
+    public static readonly getStudentNotificationById = async (ctx: Context) => {
         try {
             const id = ctx.req.param("id");
 
-            const notification =
-                await NotificationService.getStudentNotificationById(id);
+            const notification = await NotificationService.getStudentNotificationById(id);
 
             return ctx.json(notification);
         } catch (error) {
@@ -305,11 +265,9 @@ export class NotificationController {
     public static readonly updateStudentNotification = async (ctx: Context) => {
         try {
             const id = ctx.req.param("id");
-            const data: Partial<IStudentNotificationData> =
-                await ctx.req.json();
+            const data: Partial<IStudentNotificationData> = await ctx.req.json();
 
-            const notification =
-                await NotificationService.updateStudentNotification(id, data);
+            const notification = await NotificationService.updateStudentNotification(id, data);
 
             return ctx.json(notification);
         } catch (error) {
@@ -327,8 +285,7 @@ export class NotificationController {
         try {
             const id = ctx.req.param("id");
 
-            const notification =
-                await NotificationService.deleteStudentNotification(id);
+            const notification = await NotificationService.deleteStudentNotification(id);
 
             return ctx.json(notification);
         } catch (error) {
@@ -347,11 +304,7 @@ export class NotificationController {
             const user_id = ctx.get("user_id");
             const data: IParentNotificationData = await ctx.req.json();
 
-            const notification =
-                await NotificationService.createParentNotification(
-                    user_id,
-                    data
-                );
+            const notification = await NotificationService.createParentNotification(user_id, data);
 
             return ctx.json(notification);
         } catch (error) {
@@ -369,8 +322,7 @@ export class NotificationController {
         try {
             const id = ctx.req.param("id");
 
-            const notification =
-                await NotificationService.getParentNotificationById(id);
+            const notification = await NotificationService.getParentNotificationById(id);
 
             return ctx.json(notification);
         } catch (error) {
@@ -389,8 +341,7 @@ export class NotificationController {
             const id = ctx.req.param("id");
             const data: Partial<IParentNotificationData> = await ctx.req.json();
 
-            const notification =
-                await NotificationService.updateParentNotification(id, data);
+            const notification = await NotificationService.updateParentNotification(id, data);
 
             return ctx.json(notification);
         } catch (error) {
@@ -408,8 +359,7 @@ export class NotificationController {
         try {
             const id = ctx.req.param("id");
 
-            const notification =
-                await NotificationService.deleteParentNotification(id);
+            const notification = await NotificationService.deleteParentNotification(id);
 
             return ctx.json(notification);
         } catch (error) {
@@ -427,8 +377,7 @@ export class NotificationController {
         try {
             const user_id = ctx.get("user_id");
 
-            const notifications =
-                await NotificationService.getParentNotifications(user_id);
+            const notifications = await NotificationService.getParentNotifications(user_id);
 
             return ctx.json(notifications);
         } catch (error) {
@@ -446,8 +395,7 @@ export class NotificationController {
         try {
             const class_id = ctx.req.param("class_id");
 
-            const notifications =
-                await NotificationService.getClassNotifications(class_id);
+            const notifications = await NotificationService.getClassNotifications(class_id);
 
             return ctx.json(notifications);
         } catch (error) {
@@ -466,11 +414,7 @@ export class NotificationController {
             const campus_id = ctx.get("campus_id");
             const data: IClassNotificationData = await ctx.req.json();
 
-            const notification =
-                await NotificationService.createClassNotification(
-                    campus_id,
-                    data
-                );
+            const notification = await NotificationService.createClassNotification(campus_id, data);
 
             return ctx.json(notification);
         } catch (error) {
@@ -488,8 +432,7 @@ export class NotificationController {
         try {
             const id = ctx.req.param("id");
 
-            const notification =
-                await NotificationService.getClassNotificationById(id);
+            const notification = await NotificationService.getClassNotificationById(id);
 
             return ctx.json(notification);
         } catch (error) {
@@ -508,8 +451,7 @@ export class NotificationController {
             const id = ctx.req.param("id");
             const data: Partial<IClassNotificationData> = await ctx.req.json();
 
-            const notification =
-                await NotificationService.updateClassNotification(id, data);
+            const notification = await NotificationService.updateClassNotification(id, data);
 
             return ctx.json(notification);
         } catch (error) {
@@ -527,8 +469,7 @@ export class NotificationController {
         try {
             const id = ctx.req.param("id");
 
-            const notification =
-                await NotificationService.deleteClassNotification(id);
+            const notification = await NotificationService.deleteClassNotification(id);
 
             return ctx.json(notification);
         } catch (error) {

@@ -7,7 +7,10 @@ export class DocumentStoreController {
         try {
             const campus_id = ctx.get("campus_id") ?? " ";
 
-            const {
+            const { document_name, document_type, document_meta_data, issued_to, issuer_id, issued_type, issuer_type } =
+                await ctx.req.json();
+
+            const document = await DocumentStoreService.createDocumentStore(campus_id, {
                 document_name,
                 document_type,
                 document_meta_data,
@@ -15,20 +18,7 @@ export class DocumentStoreController {
                 issuer_id,
                 issued_type,
                 issuer_type,
-            } = await ctx.req.json();
-
-            const document = await DocumentStoreService.createDocumentStore(
-                campus_id,
-                {
-                    document_name,
-                    document_type,
-                    document_meta_data,
-                    issued_to,
-                    issuer_id,
-                    issued_type,
-                    issuer_type,
-                }
-            );
+            });
 
             return ctx.json(document);
         } catch (error) {
@@ -47,8 +37,7 @@ export class DocumentStoreController {
         try {
             const campus_id = ctx.get("campus_id") ?? " ";
 
-            const documents =
-                await DocumentStoreService.getAllDocumentStore(campus_id);
+            const documents = await DocumentStoreService.getAllDocumentStore(campus_id);
 
             return ctx.json(documents);
         } catch (error) {
@@ -67,8 +56,7 @@ export class DocumentStoreController {
         try {
             const id = ctx.req.param("id");
 
-            const document =
-                await DocumentStoreService.getDocumentStoreById(id);
+            const document = await DocumentStoreService.getDocumentStoreById(id);
 
             return ctx.json(document);
         } catch (error) {
@@ -88,24 +76,15 @@ export class DocumentStoreController {
         try {
             const id = ctx.req.param("id");
 
-            const {
+            const { document_name, document_type, document_meta_data, issued_to, issuer_id } = await ctx.req.json();
+
+            const document = await DocumentStoreService.updateDocumentStore(id, {
                 document_name,
                 document_type,
                 document_meta_data,
                 issued_to,
                 issuer_id,
-            } = await ctx.req.json();
-
-            const document = await DocumentStoreService.updateDocumentStore(
-                id,
-                {
-                    document_name,
-                    document_type,
-                    document_meta_data,
-                    issued_to,
-                    issuer_id,
-                }
-            );
+            });
 
             return ctx.json(document);
         } catch (error) {
@@ -140,16 +119,11 @@ export class DocumentStoreController {
         }
     };
 
-    public static readonly getDocumentStoreByIssuedTo = async (
-        ctx: Context
-    ) => {
+    public static readonly getDocumentStoreByIssuedTo = async (ctx: Context) => {
         try {
             const issued_to = ctx.get("user_id");
 
-            const documents =
-                await DocumentStoreService.getDocumentStoreByIssuedTo(
-                    issued_to
-                );
+            const documents = await DocumentStoreService.getDocumentStoreByIssuedTo(issued_to);
 
             return ctx.json(documents);
         } catch (error) {
@@ -165,16 +139,11 @@ export class DocumentStoreController {
     };
 
     // get document by issuer id
-    public static readonly getDocumentStoreByIssuerId = async (
-        ctx: Context
-    ) => {
+    public static readonly getDocumentStoreByIssuerId = async (ctx: Context) => {
         try {
             const issuer_id = ctx.get("user_id");
 
-            const documents =
-                await DocumentStoreService.getDocumentStoreByIssuerId(
-                    issuer_id
-                );
+            const documents = await DocumentStoreService.getDocumentStoreByIssuerId(issuer_id);
 
             return ctx.json(documents);
         } catch (error) {

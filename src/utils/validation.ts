@@ -9,15 +9,9 @@ const userIdSchema = z
     .string()
     .min(1, "User ID is required")
     .max(50, "User ID must be less than 50 characters")
-    .regex(
-        /^[\w-]+$/,
-        "User ID can only contain alphanumeric characters, underscores, and hyphens"
-    );
+    .regex(/^[\w-]+$/, "User ID can only contain alphanumeric characters, underscores, and hyphens");
 
-const emailSchema = z
-    .string()
-    .email("Invalid email format")
-    .max(255, "Email must be less than 255 characters");
+const emailSchema = z.string().email("Invalid email format").max(255, "Email must be less than 255 characters");
 
 const passwordSchema = z.string();
 
@@ -25,34 +19,19 @@ const nameSchema = z
     .string()
     .min(1, "Name is required")
     .max(100, "Name must be less than 100 characters")
-    .regex(
-        /^[\s'a-z-]+$/i,
-        "Name can only contain letters, spaces, hyphens, and apostrophes"
-    );
+    .regex(/^[\s'a-z-]+$/i, "Name can only contain letters, spaces, hyphens, and apostrophes");
 
-const phoneSchema = z
-    .string()
-    .regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number format");
+const phoneSchema = z.string().regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number format");
 
-const addressSchema = z
-    .string()
-    .min(1, "Address is required")
-    .max(500, "Address must be less than 500 characters");
+const addressSchema = z.string().min(1, "Address is required").max(500, "Address must be less than 500 characters");
 
-const userTypeSchema = z.enum(
-    ["Student", "Teacher", "Parent", "Admin", "Super Admin"],
-    {
-        errorMap: () => ({
-            message:
-                "Invalid user type. Must be one of: Student, Teacher, Parent, Admin, Super Admin",
-        }),
-    }
-);
+const userTypeSchema = z.enum(["Student", "Teacher", "Parent", "Admin", "Super Admin"], {
+    errorMap: () => ({
+        message: "Invalid user type. Must be one of: Student, Teacher, Parent, Admin, Super Admin",
+    }),
+});
 
-const campusIdSchema = z
-    .string()
-    .min(1, "Campus ID is required")
-    .max(50, "Campus ID must be less than 50 characters");
+const campusIdSchema = z.string().min(1, "Campus ID is required").max(50, "Campus ID must be less than 50 characters");
 
 // Create user validation schema
 export const createUserSchema = z.object({
@@ -66,9 +45,7 @@ export const createUserSchema = z.object({
     meta_data: z
         .union([z.string(), z.record(z.any())])
         .optional()
-        .transform((val) =>
-            val && typeof val !== "string" ? JSON.stringify(val) : val
-        ),
+        .transform((val) => (val && typeof val !== "string" ? JSON.stringify(val) : val)),
     user_type: userTypeSchema,
     campus_id: campusIdSchema.optional(),
 });
@@ -85,9 +62,7 @@ export const updateUserSchema = z
         meta_data: z
             .union([z.string(), z.record(z.any())])
             .optional()
-            .transform((val) =>
-                val && typeof val !== "string" ? JSON.stringify(val) : val
-            ),
+            .transform((val) => (val && typeof val !== "string" ? JSON.stringify(val) : val)),
         is_active: z.boolean().optional(),
         is_deleted: z.boolean().optional(),
         user_type: userTypeSchema.optional(),

@@ -28,10 +28,7 @@ export class LibraryController {
                 };
             } = await ctx.req.json();
 
-            const library = await LibraryService.createLibrary(
-                campus_id,
-                bookData
-            );
+            const library = await LibraryService.createLibrary(campus_id, bookData);
 
             return ctx.json(library);
         } catch (error) {
@@ -87,10 +84,7 @@ export class LibraryController {
 
             const data: Partial<ILibraryData> = await ctx.req.json();
 
-            const library = await LibraryService.updateLibrary(
-                library_id,
-                data
-            );
+            const library = await LibraryService.updateLibrary(library_id, data);
 
             return ctx.json(library);
         } catch (error) {
@@ -143,18 +137,15 @@ export class LibraryController {
                 meta_data: object;
             } = await ctx.req.json();
 
-            const library_issue = await LibraryService.createLibraryIssue(
-                campus_id,
-                {
-                    book_id,
-                    user_id,
-                    issue_date,
-                    due_date,
-                    return_date,
-                    fine_amount,
-                    meta_data,
-                }
-            );
+            const library_issue = await LibraryService.createLibraryIssue(campus_id, {
+                book_id,
+                user_id,
+                issue_date,
+                due_date,
+                return_date,
+                fine_amount,
+                meta_data,
+            });
 
             return ctx.json(library_issue);
         } catch (error) {
@@ -172,8 +163,7 @@ export class LibraryController {
         try {
             const campus_id = ctx.get("campus_id");
 
-            const library_issues =
-                await LibraryService.getAllLibraryIssues(campus_id);
+            const library_issues = await LibraryService.getAllLibraryIssues(campus_id);
 
             return ctx.json(library_issues);
         } catch (error) {
@@ -191,8 +181,7 @@ export class LibraryController {
         try {
             const { library_issue_id } = ctx.req.param();
 
-            const library_issue =
-                await LibraryService.getLibraryIssueById(library_issue_id);
+            const library_issue = await LibraryService.getLibraryIssueById(library_issue_id);
 
             return ctx.json(library_issue);
         } catch (error) {
@@ -211,10 +200,7 @@ export class LibraryController {
             const { library_issue_id } = ctx.req.param();
             const data: Partial<ILibraryIssueData> = await ctx.req.json();
 
-            const library_issue = await LibraryService.updateLibraryIssue(
-                library_issue_id,
-                data
-            );
+            const library_issue = await LibraryService.updateLibraryIssue(library_issue_id, data);
 
             return ctx.json(library_issue);
         } catch (error) {
@@ -232,8 +218,7 @@ export class LibraryController {
         try {
             const { library_issue_id } = ctx.req.param();
 
-            const library_issue =
-                await LibraryService.deleteLibraryIssue(library_issue_id);
+            const library_issue = await LibraryService.deleteLibraryIssue(library_issue_id);
 
             return ctx.json(library_issue);
         } catch (error) {
@@ -251,8 +236,7 @@ export class LibraryController {
         try {
             const { user_id } = ctx.req.param();
 
-            const library_issues =
-                await LibraryService.getLibraryIssueByUserId(user_id);
+            const library_issues = await LibraryService.getLibraryIssueByUserId(user_id);
 
             return ctx.json(library_issues);
         } catch (error) {
@@ -270,8 +254,7 @@ export class LibraryController {
         try {
             const { book_id } = ctx.req.param();
 
-            const library_issues =
-                await LibraryService.getLibraryIssueByBookId(book_id);
+            const library_issues = await LibraryService.getLibraryIssueByBookId(book_id);
 
             return ctx.json(library_issues);
         } catch (error) {

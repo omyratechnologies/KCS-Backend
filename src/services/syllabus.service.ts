@@ -27,9 +27,7 @@ export class SyllabusService {
     };
 
     // Get all by campus id
-    public static readonly getSyllabusByCampusId = async (
-        campus_id: string
-    ) => {
+    public static readonly getSyllabusByCampusId = async (campus_id: string) => {
         const syllabus: {
             rows: ISyllabusData[];
         } = await Syllabus.find(
@@ -53,9 +51,7 @@ export class SyllabusService {
     };
 
     // Get all by subject id
-    public static readonly getSyllabusBySubjectId = async (
-        subject_id: string
-    ) => {
+    public static readonly getSyllabusBySubjectId = async (subject_id: string) => {
         const syllabus: {
             rows: ISyllabusData[];
         } = await Syllabus.find(
@@ -79,10 +75,7 @@ export class SyllabusService {
     };
 
     // Update by ID
-    public static readonly updateSyllabusById = async (
-        id: string,
-        data: Partial<ISyllabusData>
-    ) => {
+    public static readonly updateSyllabusById = async (id: string, data: Partial<ISyllabusData>) => {
         return await Syllabus.updateById(id, {
             ...data,
             updated_at: new Date(),

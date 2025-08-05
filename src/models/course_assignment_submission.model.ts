@@ -69,10 +69,9 @@ CourseAssignmentSubmissionSchema.index.findBySubmissionStatus = {
 };
 CourseAssignmentSubmissionSchema.index.findByGradedBy = { by: "graded_by" };
 
-const CourseAssignmentSubmission =
-    ottoman.model<ICourseAssignmentSubmissionData>(
-        "course_assignment_submissions",
-        CourseAssignmentSubmissionSchema
-    );
+const CourseAssignmentSubmission = ottoman.model<ICourseAssignmentSubmissionData>(
+    "course_assignment_submissions",
+    CourseAssignmentSubmissionSchema
+);
 
 export { CourseAssignmentSubmission, type ICourseAssignmentSubmissionData };

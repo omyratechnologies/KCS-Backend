@@ -37,11 +37,7 @@ export class MessageController {
 
             const { from_user_id } = await ctx.req.json();
 
-            const messages = await MessageService.getMessages(
-                campus_id,
-                from_user_id,
-                to_user_id
-            );
+            const messages = await MessageService.getMessages(campus_id, from_user_id, to_user_id);
 
             return ctx.json(messages);
         } catch (error) {
@@ -100,8 +96,7 @@ export class MessageController {
             const campus_id = ctx.get("campus_id");
             const user_id = ctx.get("user_id");
 
-            const { group_name, group_description, members, meta_data } =
-                await ctx.req.json();
+            const { group_name, group_description, members, meta_data } = await ctx.req.json();
 
             const group = await MessageService.createGroup(
                 campus_id,
@@ -129,10 +124,7 @@ export class MessageController {
             const campus_id = ctx.get("campus_id");
             const user_id = ctx.get("user_id");
 
-            const groups = await MessageService.getAllGroups(
-                campus_id,
-                user_id
-            );
+            const groups = await MessageService.getAllGroups(campus_id, user_id);
 
             return ctx.json(groups);
         } catch (error) {
@@ -167,8 +159,7 @@ export class MessageController {
     public static readonly updateGroup = async (ctx: Context) => {
         try {
             const { id } = ctx.req.param();
-            const { group_name, group_description, members, meta_data } =
-                await ctx.req.json();
+            const { group_name, group_description, members, meta_data } = await ctx.req.json();
 
             const group = await MessageService.updateGroup(id, {
                 group_name,
@@ -269,11 +260,7 @@ export class MessageController {
             const { id } = ctx.req.param();
             const { message } = await ctx.req.json();
 
-            const result = await MessageService.storeMessageInGroup(
-                id,
-                user_id,
-                message
-            );
+            const result = await MessageService.storeMessageInGroup(id, user_id, message);
 
             return ctx.json(result);
         } catch (error) {
@@ -292,10 +279,7 @@ export class MessageController {
             const { id } = ctx.req.param();
             const { message } = await ctx.req.json();
 
-            const result = await MessageService.updateMessageInGroup(
-                id,
-                message
-            );
+            const result = await MessageService.updateMessageInGroup(id, message);
 
             return ctx.json(result);
         } catch (error) {

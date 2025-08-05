@@ -41,19 +41,14 @@ export class UserService {
                 throw new Error("Email already exists");
             }
         } catch (error) {
-            if (
-                error instanceof Error &&
-                error.message === "Email already exists"
-            ) {
+            if (error instanceof Error && error.message === "Email already exists") {
                 throw error;
             }
             // If error is not about existing user, continue with creation
         }
 
         const salt = crypto.randomBytes(16).toString("hex");
-        const hash = crypto
-            .pbkdf2Sync(password, salt, 1000, 64, "sha512")
-            .toString("hex");
+        const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, "sha512").toString("hex");
 
         const newUser = await User.create({
             user_id: user_id,
@@ -99,11 +94,7 @@ export class UserService {
                 user_id,
                 campus_name: campusName,
             });
-            infoLogs(
-                `Welcome email sent to new user: ${email}`,
-                LogTypes.LOGS,
-                "USER:CREATE:WELCOME_EMAIL"
-            );
+            infoLogs(`Welcome email sent to new user: ${email}`, LogTypes.LOGS, "USER:CREATE:WELCOME_EMAIL");
         } catch (emailError) {
             // Log the error but don't fail user creation
             infoLogs(
@@ -208,10 +199,7 @@ export class UserService {
                     throw new Error("Email already exists");
                 }
             } catch (error) {
-                if (
-                    error instanceof Error &&
-                    error.message === "Email already exists"
-                ) {
+                if (error instanceof Error && error.message === "Email already exists") {
                     throw error;
                 }
                 // If error is not about existing user, continue with update
@@ -249,9 +237,7 @@ export class UserService {
         }
 
         const salt = crypto.randomBytes(16).toString("hex");
-        const hash = crypto
-            .pbkdf2Sync(password, salt, 1000, 64, "sha512")
-            .toString("hex");
+        const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, "sha512").toString("hex");
 
         await User.updateById(id, {
             hash: hash,
@@ -261,9 +247,7 @@ export class UserService {
     };
 
     // getParentForStudent
-    public static readonly getParentForStudent = async (
-        student_id: string
-    ): Promise<IUser[]> => {
+    public static readonly getParentForStudent = async (student_id: string): Promise<IUser[]> => {
         // First, get the student to extract parent IDs from their meta_data
         const studentData: {
             rows: IUser[];
@@ -305,9 +289,7 @@ export class UserService {
     };
 
     // getStudentForParent
-    public static readonly getStudentForParent = async (
-        parent_id: string
-    ): Promise<IUser[]> => {
+    public static readonly getStudentForParent = async (parent_id: string): Promise<IUser[]> => {
         // First, get the parent to extract student IDs from their meta_data
         const parentData: {
             rows: IUser[];
@@ -327,11 +309,7 @@ export class UserService {
         // Extract student IDs from parent's meta_data
         const studentIds = (parent.meta_data as any)?.student_id;
 
-        if (
-            !studentIds ||
-            !Array.isArray(studentIds) ||
-            studentIds.length === 0
-        ) {
+        if (!studentIds || !Array.isArray(studentIds) || studentIds.length === 0) {
             throw new Error("No students found for the parent");
         }
 

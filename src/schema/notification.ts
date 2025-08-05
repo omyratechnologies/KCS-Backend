@@ -10,9 +10,7 @@ const baseNotificationSchema = {
     message: z.string().openapi({
         example: "This is an important notification for all users.",
     }),
-    meta_data: z
-        .record(z.string(), z.any())
-        .openapi({ example: { priority: "high", category: "announcement" } }),
+    meta_data: z.record(z.string(), z.any()).openapi({ example: { priority: "high", category: "announcement" } }),
     is_active: z.boolean().openapi({ example: true }),
     is_deleted: z.boolean().openapi({ example: false }),
     created_at: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
@@ -75,10 +73,9 @@ export const createCampusWideNotificationRequestBodySchema = z
     })
     .openapi({ ref: "CreateCampusWideNotificationRequest" });
 
-export const createCampusWideNotificationResponseSchema =
-    campusWideNotificationSchema.openapi({
-        ref: "CreateCampusWideNotificationResponse",
-    });
+export const createCampusWideNotificationResponseSchema = campusWideNotificationSchema.openapi({
+    ref: "CreateCampusWideNotificationResponse",
+});
 
 // Create Class Notification Request
 export const createClassNotificationRequestBodySchema = z
@@ -94,8 +91,9 @@ export const createClassNotificationRequestBodySchema = z
     })
     .openapi({ ref: "CreateClassNotificationRequest" });
 
-export const createClassNotificationResponseSchema =
-    classNotificationSchema.openapi({ ref: "CreateClassNotificationResponse" });
+export const createClassNotificationResponseSchema = classNotificationSchema.openapi({
+    ref: "CreateClassNotificationResponse",
+});
 
 // Create Parent Notification Request
 export const createParentNotificationRequestBodySchema = z
@@ -105,66 +103,47 @@ export const createParentNotificationRequestBodySchema = z
         message: z.string().openapi({
             example: "There is a parent-teacher meeting scheduled.",
         }),
-        meta_data: z
-            .record(z.string(), z.any())
-            .openapi({ example: { priority: "high", category: "meeting" } }),
+        meta_data: z.record(z.string(), z.any()).openapi({ example: { priority: "high", category: "meeting" } }),
     })
     .openapi({ ref: "CreateParentNotificationRequest" });
 
-export const createParentNotificationResponseSchema =
-    parentNotificationSchema.openapi({
-        ref: "CreateParentNotificationResponse",
-    });
+export const createParentNotificationResponseSchema = parentNotificationSchema.openapi({
+    ref: "CreateParentNotificationResponse",
+});
 
 // Create Student Notification Request
 export const createStudentNotificationRequestBodySchema = z
     .object({
         user_id: z.string().openapi({ example: "student123" }),
         title: z.string().openapi({ example: "Assignment Due" }),
-        message: z
-            .string()
-            .openapi({ example: "Your assignment is due tomorrow." }),
-        meta_data: z
-            .record(z.string(), z.any())
-            .openapi({ example: { priority: "high", category: "assignment" } }),
+        message: z.string().openapi({ example: "Your assignment is due tomorrow." }),
+        meta_data: z.record(z.string(), z.any()).openapi({ example: { priority: "high", category: "assignment" } }),
     })
     .openapi({ ref: "CreateStudentNotificationRequest" });
 
-export const createStudentNotificationResponseSchema =
-    studentNotificationSchema.openapi({
-        ref: "CreateStudentNotificationResponse",
-    });
+export const createStudentNotificationResponseSchema = studentNotificationSchema.openapi({
+    ref: "CreateStudentNotificationResponse",
+});
 
 // Create Teacher Notification Request
 export const createTeacherNotificationRequestBodySchema = z
     .object({
         user_id: z.string().openapi({ example: "teacher123" }),
         title: z.string().openapi({ example: "Staff Meeting" }),
-        message: z
-            .string()
-            .openapi({ example: "There is a staff meeting scheduled." }),
-        meta_data: z
-            .record(z.string(), z.any())
-            .openapi({ example: { priority: "medium", category: "meeting" } }),
+        message: z.string().openapi({ example: "There is a staff meeting scheduled." }),
+        meta_data: z.record(z.string(), z.any()).openapi({ example: { priority: "medium", category: "meeting" } }),
     })
     .openapi({ ref: "CreateTeacherNotificationRequest" });
 
-export const createTeacherNotificationResponseSchema =
-    teacherNotificationSchema.openapi({
-        ref: "CreateTeacherNotificationResponse",
-    });
+export const createTeacherNotificationResponseSchema = teacherNotificationSchema.openapi({
+    ref: "CreateTeacherNotificationResponse",
+});
 
 // Update Notification Request (generic for all types)
 export const updateNotificationRequestBodySchema = z
     .object({
-        title: z
-            .string()
-            .optional()
-            .openapi({ example: "Updated Announcement" }),
-        message: z
-            .string()
-            .optional()
-            .openapi({ example: "This is an updated notification." }),
+        title: z.string().optional().openapi({ example: "Updated Announcement" }),
+        message: z.string().optional().openapi({ example: "This is an updated notification." }),
         meta_data: z
             .record(z.string(), z.any())
             .optional()

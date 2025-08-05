@@ -22,11 +22,7 @@ const initDB = async () => {
         await ottoman.ensureIndexes();
         log("Database indexes ensured", LogTypes.LOGS, "DB");
     } catch (error) {
-        log(
-            `Warning: Could not ensure indexes: ${error}`,
-            LogTypes.ERROR,
-            "DB"
-        );
+        log(`Warning: Could not ensure indexes: ${error}`, LogTypes.ERROR, "DB");
     }
 
     log("Connected to DB", LogTypes.LOGS, "DB");

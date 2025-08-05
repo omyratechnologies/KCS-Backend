@@ -1,11 +1,4 @@
-import {
-    describe,
-    expect,
-    it,
-    jest,
-    beforeEach,
-    afterEach,
-} from "@jest/globals";
+import { describe, expect, it, jest, beforeEach, afterEach } from "@jest/globals";
 
 describe("UsersController Basic Tests", () => {
     let mockContext: any;
@@ -41,7 +34,7 @@ describe("UsersController Basic Tests", () => {
             };
 
             mockReq.json.mockResolvedValue(userData);
-            
+
             // Simple mock function to test the format
             const createUserMock = async (c: any) => {
                 const data = await c.req.json();
@@ -92,10 +85,13 @@ describe("UsersController Basic Tests", () => {
 
         it("should handle error responses", async () => {
             const errorMock = async (c: any) => {
-                return c.json({
-                    success: false,
-                    message: "Error occurred",
-                }, 400);
+                return c.json(
+                    {
+                        success: false,
+                        message: "Error occurred",
+                    },
+                    400
+                );
             };
 
             await errorMock(mockContext);

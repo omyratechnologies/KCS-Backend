@@ -36,17 +36,14 @@ app.post(
     describeRoute({
         operationId: "createCampusWideNotification",
         summary: "Create a campus-wide notification",
-        description:
-            "Creates a new notification that applies to the entire campus",
+        description: "Creates a new notification that applies to the entire campus",
         tags: ["Notification"],
         responses: {
             200: {
                 description: "Campus-wide notification created successfully",
                 content: {
                     "application/json": {
-                        schema: resolver(
-                            createCampusWideNotificationResponseSchema
-                        ),
+                        schema: resolver(createCampusWideNotificationResponseSchema),
                     },
                 },
             },
@@ -76,9 +73,7 @@ app.get(
                 description: "List of campus-wide notifications",
                 content: {
                     "application/json": {
-                        schema: resolver(
-                            getCampusWideNotificationsResponseSchema
-                        ),
+                        schema: resolver(getCampusWideNotificationsResponseSchema),
                     },
                 },
             },
@@ -407,9 +402,7 @@ app.post(
                 description: "Parent notification created successfully",
                 content: {
                     "application/json": {
-                        schema: resolver(
-                            createParentNotificationResponseSchema
-                        ),
+                        schema: resolver(createParentNotificationResponseSchema),
                     },
                 },
             },
@@ -584,9 +577,7 @@ app.post(
                 description: "Student notification created successfully",
                 content: {
                     "application/json": {
-                        schema: resolver(
-                            createStudentNotificationResponseSchema
-                        ),
+                        schema: resolver(createStudentNotificationResponseSchema),
                     },
                 },
             },
@@ -761,9 +752,7 @@ app.post(
                 description: "Teacher notification created successfully",
                 content: {
                     "application/json": {
-                        schema: resolver(
-                            createTeacherNotificationResponseSchema
-                        ),
+                        schema: resolver(createTeacherNotificationResponseSchema),
                     },
                 },
             },

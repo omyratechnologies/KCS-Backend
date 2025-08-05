@@ -9,12 +9,7 @@ describe("Utility Functions", () => {
                 /^[\w!#$%&'*+/=?^`{|}~-]+(?:\.[\w!#$%&'*+/=?^`{|}~-]+)*@(?:[\da-z](?:[\da-z-]*[\da-z])?\.)+[\da-z](?:[\da-z-]*[\da-z])?$/i;
 
             // Additional checks for common invalid patterns
-            if (
-                email.includes("..") ||
-                email.includes(" ") ||
-                email.startsWith("@") ||
-                email.endsWith("@")
-            ) {
+            if (email.includes("..") || email.includes(" ") || email.startsWith("@") || email.endsWith("@")) {
                 return false;
             }
 
@@ -50,9 +45,7 @@ describe("Utility Functions", () => {
     });
 
     describe("Password Validation", () => {
-        const validatePassword = (
-            password: string
-        ): { valid: boolean; errors: string[] } => {
+        const validatePassword = (password: string): { valid: boolean; errors: string[] } => {
             const errors: string[] = [];
 
             if (password.length < 8) {
@@ -60,15 +53,11 @@ describe("Utility Functions", () => {
             }
 
             if (!/[A-Z]/.test(password)) {
-                errors.push(
-                    "Password must contain at least one uppercase letter"
-                );
+                errors.push("Password must contain at least one uppercase letter");
             }
 
             if (!/[a-z]/.test(password)) {
-                errors.push(
-                    "Password must contain at least one lowercase letter"
-                );
+                errors.push("Password must contain at least one lowercase letter");
             }
 
             if (!/\d/.test(password)) {
@@ -82,12 +71,7 @@ describe("Utility Functions", () => {
         };
 
         it("should accept strong passwords", () => {
-            const strongPasswords = [
-                "Password123",
-                "MyStr0ngP@ss",
-                "SecurePass1",
-                "C0mpl3xP@ssw0rd",
-            ];
+            const strongPasswords = ["Password123", "MyStr0ngP@ss", "SecurePass1", "C0mpl3xP@ssw0rd"];
 
             for (const password of strongPasswords) {
                 const result = validatePassword(password);
@@ -162,9 +146,7 @@ describe("Utility Functions", () => {
             expect(slugify("Hello World")).toBe("hello-world");
             expect(slugify("Special Characters!@#")).toBe("special-characters");
             expect(slugify("  Multiple   Spaces  ")).toBe("multiple-spaces");
-            expect(slugify("Underscores_and-dashes")).toBe(
-                "underscores-and-dashes"
-            );
+            expect(slugify("Underscores_and-dashes")).toBe("underscores-and-dashes");
         });
 
         it("should capitalize text correctly", () => {

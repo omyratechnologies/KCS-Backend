@@ -61,9 +61,6 @@ FeeTemplateSchema.index.findByCampusIdAndAcademicYear = {
     by: ["campus_id", "academic_year"],
 };
 
-const FeeTemplate = ottoman.model<IFeeTemplate>(
-    "fee_templates",
-    FeeTemplateSchema
-);
+const FeeTemplate = ottoman.model<IFeeTemplate>("fee_templates", FeeTemplateSchema);
 
 export { FeeTemplate, type IFeeTemplate };

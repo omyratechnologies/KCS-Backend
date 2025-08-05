@@ -32,14 +32,10 @@ export class AssignmentController {
                 );
             }
 
-            const result = await classService.createAssignment(
-                campus_id,
-                data.class_id,
-                {
-                    ...data,
-                    user_id,
-                }
-            );
+            const result = await classService.createAssignment(campus_id, data.class_id, {
+                ...data,
+                user_id,
+            });
 
             return ctx.json(
                 {
@@ -54,56 +50,35 @@ export class AssignmentController {
             return ctx.json(
                 {
                     success: false,
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Failed to create assignment",
+                    error: error instanceof Error ? error.message : "Failed to create assignment",
                 },
                 500
             );
         }
     };
 
-    public static readonly getAdminAssignmentOverview = async (
-        ctx: Context
-    ) => {
+    public static readonly getAdminAssignmentOverview = async (ctx: Context) => {
         try {
             const campus_id = ctx.get("campus_id");
-            const {
-                status,
-                class_id,
-                subject_id,
-                teacher_id,
-                from_date,
-                to_date,
-                page,
-                limit,
-            } = ctx.req.query();
+            const { status, class_id, subject_id, teacher_id, from_date, to_date, page, limit } = ctx.req.query();
 
             // Get all assignments for the campus
-            const allAssignments =
-                await classService.getAllAssignmentsFromAllClasses(campus_id);
+            const allAssignments = await classService.getAllAssignmentsFromAllClasses(campus_id);
 
             // Use only class assignments
             let combinedAssignments = [...allAssignments];
 
             // Apply filters
             if (class_id) {
-                combinedAssignments = combinedAssignments.filter(
-                    (assignment) => assignment.class_id === class_id
-                );
+                combinedAssignments = combinedAssignments.filter((assignment) => assignment.class_id === class_id);
             }
 
             if (subject_id) {
-                combinedAssignments = combinedAssignments.filter(
-                    (assignment) => assignment.subject_id === subject_id
-                );
+                combinedAssignments = combinedAssignments.filter((assignment) => assignment.subject_id === subject_id);
             }
 
             if (teacher_id) {
-                combinedAssignments = combinedAssignments.filter(
-                    (assignment) => assignment.user_id === teacher_id
-                );
+                combinedAssignments = combinedAssignments.filter((assignment) => assignment.user_id === teacher_id);
             }
 
             if (from_date) {
@@ -138,10 +113,7 @@ export class AssignmentController {
             try {
                 // Get submissions for all assignments (this might need optimization for large datasets)
                 for (const assignment of combinedAssignments) {
-                    const submissions =
-                        await classService.getAssignmentSubmissionByAssignmentId(
-                            assignment.id
-                        );
+                    const submissions = await classService.getAssignmentSubmissionByAssignmentId(assignment.id);
                     totalSubmissions += submissions.length;
 
                     // Count ungraded submissions
@@ -158,59 +130,40 @@ export class AssignmentController {
             const pageNum = Number.parseInt(page) || 1;
             const limitNum = Number.parseInt(limit) || 20;
             const offset = (pageNum - 1) * limitNum;
-            const paginatedAssignments = combinedAssignments.slice(
-                offset,
-                offset + limitNum
-            );
+            const paginatedAssignments = combinedAssignments.slice(offset, offset + limitNum);
 
             // Enrich assignments with additional data
             const enrichedAssignments = await Promise.all(
                 paginatedAssignments.map(async (assignment) => {
                     try {
                         // Get submission count for this assignment
-                        const submissions =
-                            await classService.getAssignmentSubmissionByAssignmentId(
-                                assignment.id
-                            );
+                        const submissions = await classService.getAssignmentSubmissionByAssignmentId(assignment.id);
 
                         return {
                             ...assignment,
                             submission_count: submissions.length,
-                            graded_count: submissions.filter(
-                                (sub) =>
-                                    sub.grade !== undefined &&
-                                    sub.grade !== null
-                            ).length,
-                            pending_count: submissions.filter(
-                                (sub) =>
-                                    sub.grade === undefined ||
-                                    sub.grade === null
-                            ).length,
+                            graded_count: submissions.filter((sub) => sub.grade !== undefined && sub.grade !== null)
+                                .length,
+                            pending_count: submissions.filter((sub) => sub.grade === undefined || sub.grade === null)
+                                .length,
                             days_until_due: Math.ceil(
-                                (new Date(assignment.due_date).getTime() -
-                                    currentDate.getTime()) /
+                                (new Date(assignment.due_date).getTime() - currentDate.getTime()) /
                                     (1000 * 60 * 60 * 24)
                             ),
-                            is_overdue:
-                                new Date(assignment.due_date) < currentDate,
+                            is_overdue: new Date(assignment.due_date) < currentDate,
                         };
                     } catch (error) {
-                        console.log(
-                            `Error enriching assignment ${assignment.id}:`,
-                            error
-                        );
+                        console.log(`Error enriching assignment ${assignment.id}:`, error);
                         return {
                             ...assignment,
                             submission_count: 0,
                             graded_count: 0,
                             pending_count: 0,
                             days_until_due: Math.ceil(
-                                (new Date(assignment.due_date).getTime() -
-                                    currentDate.getTime()) /
+                                (new Date(assignment.due_date).getTime() - currentDate.getTime()) /
                                     (1000 * 60 * 60 * 24)
                             ),
-                            is_overdue:
-                                new Date(assignment.due_date) < currentDate,
+                            is_overdue: new Date(assignment.due_date) < currentDate,
                         };
                     }
                 })
@@ -219,9 +172,7 @@ export class AssignmentController {
             // Calculate completion rate
             const averageCompletionRate =
                 combinedAssignments.length > 0
-                    ? Math.round(
-                          (totalSubmissions / combinedAssignments.length) * 100
-                      ) / 100
+                    ? Math.round((totalSubmissions / combinedAssignments.length) * 100) / 100
                     : 0;
 
             return ctx.json({
@@ -231,9 +182,7 @@ export class AssignmentController {
                     page: pageNum,
                     limit: limitNum,
                     total: combinedAssignments.length,
-                    total_pages: Math.ceil(
-                        combinedAssignments.length / limitNum
-                    ),
+                    total_pages: Math.ceil(combinedAssignments.length / limitNum),
                 },
                 summary_stats: {
                     total_assignments: combinedAssignments.length,
@@ -257,19 +206,14 @@ export class AssignmentController {
             return ctx.json(
                 {
                     success: false,
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Failed to fetch assignment overview",
+                    error: error instanceof Error ? error.message : "Failed to fetch assignment overview",
                 },
                 500
             );
         }
     };
 
-    public static readonly performBulkAssignmentOperations = async (
-        ctx: Context
-    ) => {
+    public static readonly performBulkAssignmentOperations = async (ctx: Context) => {
         try {
             const data = await ctx.req.json();
 
@@ -281,10 +225,7 @@ export class AssignmentController {
                 failed_count: 0,
             });
         } catch (error) {
-            console.error(
-                "Error performing bulk assignment operations:",
-                error
-            );
+            console.error("Error performing bulk assignment operations:", error);
             return ctx.json(
                 {
                     success: false,
@@ -301,22 +242,17 @@ export class AssignmentController {
             const { period, class_id, subject_id } = ctx.req.query();
 
             // Get all assignments for the campus
-            const allAssignments =
-                await classService.getAllAssignmentsFromAllClasses(campus_id);
+            const allAssignments = await classService.getAllAssignmentsFromAllClasses(campus_id);
 
             // Apply filters
             let filteredAssignments = allAssignments;
 
             if (class_id) {
-                filteredAssignments = filteredAssignments.filter(
-                    (assignment) => assignment.class_id === class_id
-                );
+                filteredAssignments = filteredAssignments.filter((assignment) => assignment.class_id === class_id);
             }
 
             if (subject_id) {
-                filteredAssignments = filteredAssignments.filter(
-                    (assignment) => assignment.subject_id === subject_id
-                );
+                filteredAssignments = filteredAssignments.filter((assignment) => assignment.subject_id === subject_id);
             }
 
             // Apply period filter
@@ -326,39 +262,28 @@ export class AssignmentController {
 
                 switch (period) {
                     case "week": {
-                        periodStartDate = new Date(
-                            currentDate.getTime() - 7 * 24 * 60 * 60 * 1000
-                        );
+                        periodStartDate = new Date(currentDate.getTime() - 7 * 24 * 60 * 60 * 1000);
                         break;
                     }
                     case "month": {
-                        periodStartDate = new Date(
-                            currentDate.getTime() - 30 * 24 * 60 * 60 * 1000
-                        );
+                        periodStartDate = new Date(currentDate.getTime() - 30 * 24 * 60 * 60 * 1000);
                         break;
                     }
                     case "quarter": {
-                        periodStartDate = new Date(
-                            currentDate.getTime() - 90 * 24 * 60 * 60 * 1000
-                        );
+                        periodStartDate = new Date(currentDate.getTime() - 90 * 24 * 60 * 60 * 1000);
                         break;
                     }
                     case "year": {
-                        periodStartDate = new Date(
-                            currentDate.getTime() - 365 * 24 * 60 * 60 * 1000
-                        );
+                        periodStartDate = new Date(currentDate.getTime() - 365 * 24 * 60 * 60 * 1000);
                         break;
                     }
                     default: {
-                        periodStartDate = new Date(
-                            currentDate.getTime() - 30 * 24 * 60 * 60 * 1000
-                        );
+                        periodStartDate = new Date(currentDate.getTime() - 30 * 24 * 60 * 60 * 1000);
                     } // Default to month
                 }
 
                 filteredAssignments = filteredAssignments.filter(
-                    (assignment) =>
-                        new Date(assignment.created_at) >= periodStartDate
+                    (assignment) => new Date(assignment.created_at) >= periodStartDate
                 );
             }
 
@@ -379,10 +304,7 @@ export class AssignmentController {
 
             try {
                 for (const assignment of filteredAssignments) {
-                    const submissions =
-                        await classService.getAssignmentSubmissionByAssignmentId(
-                            assignment.id
-                        );
+                    const submissions = await classService.getAssignmentSubmissionByAssignmentId(assignment.id);
                     totalSubmissions += submissions.length;
 
                     const ungradedSubmissions = submissions.filter(
@@ -391,49 +313,34 @@ export class AssignmentController {
                     pendingGrading += ungradedSubmissions.length;
                 }
             } catch (error) {
-                console.log(
-                    "Error fetching submission statistics for analytics:",
-                    error
-                );
+                console.log("Error fetching submission statistics for analytics:", error);
             }
 
             // Calculate completion rate
             const averageCompletionRate =
                 filteredAssignments.length > 0
-                    ? Math.round(
-                          (totalSubmissions / filteredAssignments.length) * 100
-                      ) / 100
+                    ? Math.round((totalSubmissions / filteredAssignments.length) * 100) / 100
                     : 0;
 
             // Generate analytics by subject and time trends
             const subjectAnalytics = await Promise.all(
-                [...new Set(filteredAssignments.map((a) => a.subject_id))].map(
-                    async (subjectId) => {
-                        const subjectAssignments = filteredAssignments.filter(
-                            (a) => a.subject_id === subjectId
-                        );
-                        let subjectSubmissions = 0;
+                [...new Set(filteredAssignments.map((a) => a.subject_id))].map(async (subjectId) => {
+                    const subjectAssignments = filteredAssignments.filter((a) => a.subject_id === subjectId);
+                    let subjectSubmissions = 0;
 
-                        for (const assignment of subjectAssignments) {
-                            const submissions =
-                                await classService.getAssignmentSubmissionByAssignmentId(
-                                    assignment.id
-                                );
-                            subjectSubmissions += submissions.length;
-                        }
-
-                        return {
-                            subject_id: subjectId,
-                            total_assignments: subjectAssignments.length,
-                            total_submissions: subjectSubmissions,
-                            completion_rate:
-                                subjectAssignments.length > 0
-                                    ? subjectSubmissions /
-                                      subjectAssignments.length
-                                    : 0,
-                        };
+                    for (const assignment of subjectAssignments) {
+                        const submissions = await classService.getAssignmentSubmissionByAssignmentId(assignment.id);
+                        subjectSubmissions += submissions.length;
                     }
-                )
+
+                    return {
+                        subject_id: subjectId,
+                        total_assignments: subjectAssignments.length,
+                        total_submissions: subjectSubmissions,
+                        completion_rate:
+                            subjectAssignments.length > 0 ? subjectSubmissions / subjectAssignments.length : 0,
+                    };
+                })
             );
 
             return ctx.json({
@@ -464,10 +371,7 @@ export class AssignmentController {
             return ctx.json(
                 {
                     success: false,
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Failed to fetch assignment analytics",
+                    error: error instanceof Error ? error.message : "Failed to fetch assignment analytics",
                 },
                 500
             );
@@ -481,25 +385,19 @@ export class AssignmentController {
             const user_id = ctx.get("user_id");
             const { status, class_id, page, limit } = ctx.req.query();
 
-            const assignments =
-                await classService.getAllAssignmentByUserId(user_id);
+            const assignments = await classService.getAllAssignmentByUserId(user_id);
 
             // Apply filters if provided
             let filteredAssignments = assignments;
             if (class_id) {
-                filteredAssignments = filteredAssignments.filter(
-                    (a) => a.class_id === class_id
-                );
+                filteredAssignments = filteredAssignments.filter((a) => a.class_id === class_id);
             }
 
             // Apply pagination
             const pageNum = Number.parseInt(page) || 1;
             const limitNum = Number.parseInt(limit) || 20;
             const offset = (pageNum - 1) * limitNum;
-            const paginatedAssignments = filteredAssignments.slice(
-                offset,
-                offset + limitNum
-            );
+            const paginatedAssignments = filteredAssignments.slice(offset, offset + limitNum);
 
             return ctx.json({
                 assignments: paginatedAssignments.map((assignment) => ({
@@ -516,9 +414,7 @@ export class AssignmentController {
                     page: pageNum,
                     limit: limitNum,
                     total: filteredAssignments.length,
-                    total_pages: Math.ceil(
-                        filteredAssignments.length / limitNum
-                    ),
+                    total_pages: Math.ceil(filteredAssignments.length / limitNum),
                 },
                 dashboard_stats: {
                     total_assignments: assignments.length,
@@ -546,9 +442,7 @@ export class AssignmentController {
 
             const [assignment, submissions] = await Promise.all([
                 classService.getAssignmentById(assignment_id),
-                classService.getAssignmentSubmissionByAssignmentId(
-                    assignment_id
-                ),
+                classService.getAssignmentSubmissionByAssignmentId(assignment_id),
             ]);
 
             if (!assignment) {
@@ -564,9 +458,7 @@ export class AssignmentController {
             // Filter submissions if student_id is provided
             let filteredSubmissions = submissions;
             if (student_id) {
-                filteredSubmissions = submissions.filter(
-                    (s) => s.user_id === student_id
-                );
+                filteredSubmissions = submissions.filter((s) => s.user_id === student_id);
             }
 
             // Calculate stats
@@ -574,20 +466,13 @@ export class AssignmentController {
                 total_students: 0, // Would need to get from class enrollment
                 submitted: filteredSubmissions.length,
                 pending: 0, // Would be calculated
-                graded: filteredSubmissions.filter(
-                    (s) => s.grade !== null && s.grade !== undefined
-                ).length,
+                graded: filteredSubmissions.filter((s) => s.grade !== null && s.grade !== undefined).length,
                 average_grade:
                     filteredSubmissions.length > 0
                         ? filteredSubmissions
-                              .filter(
-                                  (s) =>
-                                      s.grade !== null && s.grade !== undefined
-                              )
+                              .filter((s) => s.grade !== null && s.grade !== undefined)
                               .reduce((sum, s) => sum + (s.grade || 0), 0) /
-                          filteredSubmissions.filter(
-                              (s) => s.grade !== null && s.grade !== undefined
-                          ).length
+                          filteredSubmissions.filter((s) => s.grade !== null && s.grade !== undefined).length
                         : 0,
             };
 
@@ -613,11 +498,7 @@ export class AssignmentController {
             const { submission_id } = ctx.req.param();
             const { grade, feedback } = await ctx.req.json();
 
-            const result = await classService.gradeAssignmentSubmission(
-                submission_id,
-                grade,
-                feedback
-            );
+            const result = await classService.gradeAssignmentSubmission(submission_id, grade, feedback);
 
             return ctx.json({
                 success: true,
@@ -636,14 +517,11 @@ export class AssignmentController {
         }
     };
 
-    public static readonly getTeacherAssignmentDashboard = async (
-        ctx: Context
-    ) => {
+    public static readonly getTeacherAssignmentDashboard = async (ctx: Context) => {
         try {
             const user_id = ctx.get("user_id");
 
-            const assignments =
-                await classService.getAllAssignmentByUserId(user_id);
+            const assignments = await classService.getAllAssignmentByUserId(user_id);
 
             return ctx.json({
                 assignments: assignments.map((assignment) => ({
@@ -670,10 +548,7 @@ export class AssignmentController {
                 },
             });
         } catch (error) {
-            console.error(
-                "Error fetching teacher assignment dashboard:",
-                error
-            );
+            console.error("Error fetching teacher assignment dashboard:", error);
             return ctx.json(
                 {
                     success: false,
@@ -690,23 +565,12 @@ export class AssignmentController {
         try {
             const user_id = ctx.get("user_id");
             const campus_id = ctx.get("campus_id");
-            const {
-                status,
-                class_id,
-                subject_id,
-                due_in_days,
-                sort_by,
-                sort_order,
-                page,
-                limit,
-            } = ctx.req.query();
+            const { status, class_id, subject_id, due_in_days, sort_by, sort_order, page, limit } = ctx.req.query();
 
             const filters = {
                 status: status as any,
                 subject_id,
-                due_in_days: due_in_days
-                    ? Number.parseInt(due_in_days)
-                    : undefined,
+                due_in_days: due_in_days ? Number.parseInt(due_in_days) : undefined,
                 assignment_type: undefined,
                 sort_by: sort_by as any,
                 sort_order: sort_order as "asc" | "desc",
@@ -737,9 +601,7 @@ export class AssignmentController {
         }
     };
 
-    public static readonly getStudentAssignmentDetails = async (
-        ctx: Context
-    ) => {
+    public static readonly getStudentAssignmentDetails = async (ctx: Context) => {
         try {
             const user_id = ctx.get("user_id");
             const { assignment_id } = ctx.req.param();
@@ -749,22 +611,13 @@ export class AssignmentController {
             let submission: any = null;
 
             try {
-                assignment =
-                    await classService.getAssignmentById(assignment_id);
+                assignment = await classService.getAssignmentById(assignment_id);
                 if (assignment) {
-                    const submissions =
-                        await classService.getAssignmentSubmissionByAssignmentId(
-                            assignment_id
-                        );
-                    submission =
-                        submissions.find((s) => s.user_id === user_id) || null;
+                    const submissions = await classService.getAssignmentSubmissionByAssignmentId(assignment_id);
+                    submission = submissions.find((s) => s.user_id === user_id) || null;
                 }
             } catch (error) {
-                console.error(
-                    "Error fetching class assignment:",
-                    assignment_id,
-                    error
-                );
+                console.error("Error fetching class assignment:", assignment_id, error);
             }
 
             if (!assignment) {
@@ -779,17 +632,11 @@ export class AssignmentController {
 
             const currentDate = new Date();
             const dueDate = new Date(assignment.due_date);
-            const daysUntilDue = Math.ceil(
-                (dueDate.getTime() - currentDate.getTime()) /
-                    (1000 * 60 * 60 * 24)
-            );
+            const daysUntilDue = Math.ceil((dueDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
 
             let status = "pending";
             if (submission) {
-                status =
-                    submission.grade !== null && submission.grade !== undefined
-                        ? "graded"
-                        : "submitted";
+                status = submission.grade !== null && submission.grade !== undefined ? "graded" : "submitted";
             } else if (dueDate < currentDate) {
                 status = "overdue";
             }
@@ -840,8 +687,7 @@ export class AssignmentController {
             const data = await ctx.req.json();
 
             // Check if assignment exists
-            const assignment =
-                await classService.getAssignmentById(assignment_id);
+            const assignment = await classService.getAssignmentById(assignment_id);
             if (!assignment) {
                 return ctx.json(
                     {
@@ -853,13 +699,8 @@ export class AssignmentController {
             }
 
             // Check if already submitted
-            const existingSubmissions =
-                await classService.getAssignmentSubmissionByAssignmentId(
-                    assignment_id
-                );
-            const existingSubmission = existingSubmissions.find(
-                (s) => s.user_id === user_id
-            );
+            const existingSubmissions = await classService.getAssignmentSubmissionByAssignmentId(assignment_id);
+            const existingSubmission = existingSubmissions.find((s) => s.user_id === user_id);
 
             if (existingSubmission) {
                 return ctx.json(
@@ -899,10 +740,7 @@ export class AssignmentController {
                 },
             };
 
-            const result = await classService.createAssignmentSubmission(
-                assignment_id,
-                submissionData
-            );
+            const result = await classService.createAssignmentSubmission(assignment_id, submissionData);
 
             return ctx.json(
                 {
@@ -925,9 +763,7 @@ export class AssignmentController {
         }
     };
 
-    public static readonly getStudentAssignmentDashboard = async (
-        ctx: Context
-    ) => {
+    public static readonly getStudentAssignmentDashboard = async (ctx: Context) => {
         try {
             const user_id = ctx.get("user_id");
             const campus_id = ctx.get("campus_id");
@@ -953,10 +789,7 @@ export class AssignmentController {
 
             return ctx.json(dashboard);
         } catch (error) {
-            console.error(
-                "Error fetching student assignment dashboard:",
-                error
-            );
+            console.error("Error fetching student assignment dashboard:", error);
             return ctx.json(
                 {
                     success: false,
@@ -967,9 +800,7 @@ export class AssignmentController {
         }
     };
 
-    public static readonly getStudentAssignmentPerformance = async (
-        ctx: Context
-    ) => {
+    public static readonly getStudentAssignmentPerformance = async (ctx: Context) => {
         try {
             const user_id = ctx.get("user_id");
             const campus_id = ctx.get("campus_id");
@@ -986,10 +817,7 @@ export class AssignmentController {
                 ],
             });
         } catch (error) {
-            console.error(
-                "Error fetching student assignment performance:",
-                error
-            );
+            console.error("Error fetching student assignment performance:", error);
             return ctx.json(
                 {
                     success: false,
@@ -1002,9 +830,7 @@ export class AssignmentController {
 
     // ======================= PARENT ROUTES =======================
 
-    public static readonly getParentStudentAssignments = async (
-        ctx: Context
-    ) => {
+    public static readonly getParentStudentAssignments = async (ctx: Context) => {
         try {
             const { student_id } = ctx.req.param();
             const campus_id = ctx.get("campus_id");
@@ -1063,9 +889,7 @@ export class AssignmentController {
         }
     };
 
-    public static readonly getParentStudentPerformance = async (
-        ctx: Context
-    ) => {
+    public static readonly getParentStudentPerformance = async (ctx: Context) => {
         try {
             const { student_id } = ctx.req.param();
             const { period } = ctx.req.query();
@@ -1108,8 +932,7 @@ export class AssignmentController {
             const user_type = ctx.get("user_type");
 
             // Only get class assignments
-            const assignment: any =
-                await classService.getAssignmentById(assignment_id);
+            const assignment: any = await classService.getAssignmentById(assignment_id);
 
             if (!assignment) {
                 return ctx.json(
@@ -1159,10 +982,7 @@ export class AssignmentController {
             const data = await ctx.req.json();
 
             // Only update class assignments
-            const result: any = await classService.updateAssignment(
-                assignment_id,
-                data
-            );
+            const result: any = await classService.updateAssignment(assignment_id, data);
 
             if (!result) {
                 return ctx.json(

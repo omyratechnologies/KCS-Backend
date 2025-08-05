@@ -27,9 +27,6 @@ const CurriculumSchema = new Schema({
 
 CurriculumSchema.index.findByCampusId = { by: "campus_id" };
 
-const Curriculum = ottoman.model<ICurriculumData>(
-    "curriculum",
-    CurriculumSchema
-);
+const Curriculum = ottoman.model<ICurriculumData>("curriculum", CurriculumSchema);
 
 export { Curriculum, type ICurriculumData };

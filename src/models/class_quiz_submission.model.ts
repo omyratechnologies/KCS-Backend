@@ -38,9 +38,6 @@ ClassQuizSubmissionSchema.index.findByClassId = { by: "class_id" };
 ClassQuizSubmissionSchema.index.findByQuizId = { by: "quiz_id" };
 ClassQuizSubmissionSchema.index.findByUserId = { by: "user_id" };
 
-const ClassQuizSubmission = ottoman.model<IClassQuizSubmission>(
-    "class_quiz_submissions",
-    ClassQuizSubmissionSchema
-);
+const ClassQuizSubmission = ottoman.model<IClassQuizSubmission>("class_quiz_submissions", ClassQuizSubmissionSchema);
 
 export { ClassQuizSubmission, type IClassQuizSubmission };

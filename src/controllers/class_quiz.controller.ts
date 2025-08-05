@@ -9,8 +9,7 @@ export class ClassQuizController {
             const created_by = ctx.get("user_id");
             const { class_id } = ctx.req.param();
 
-            const { quiz_name, quiz_description, quiz_meta_data } =
-                await ctx.req.json();
+            const { quiz_name, quiz_description, quiz_meta_data } = await ctx.req.json();
 
             const result = await ClassQuizService.createClassQuiz(
                 campus_id,
@@ -60,10 +59,7 @@ export class ClassQuizController {
             const campus_id = ctx.get("campus_id");
             const { class_id } = ctx.req.param();
 
-            const result = await ClassQuizService.getClassQuizByClassID(
-                campus_id,
-                class_id
-            );
+            const result = await ClassQuizService.getClassQuizByClassID(campus_id, class_id);
 
             return ctx.json(result);
         } catch (error) {
@@ -83,10 +79,7 @@ export class ClassQuizController {
             const campus_id = ctx.get("campus_id");
             const created_by = ctx.get("user_id");
 
-            const result = await ClassQuizService.getClassQuizByCreatedBy(
-                campus_id,
-                created_by
-            );
+            const result = await ClassQuizService.getClassQuizByCreatedBy(campus_id, created_by);
 
             return ctx.json(result);
         } catch (error) {
@@ -101,9 +94,7 @@ export class ClassQuizController {
         }
     };
 
-    public static readonly getClassQuizByClassIDWithStudentStatus = async (
-        ctx: Context
-    ) => {
+    public static readonly getClassQuizByClassIDWithStudentStatus = async (ctx: Context) => {
         try {
             const campus_id = ctx.get("campus_id");
             const { class_id } = ctx.req.param();
@@ -122,12 +113,11 @@ export class ClassQuizController {
                 );
             }
 
-            const result =
-                await ClassQuizService.getClassQuizByClassIDWithStudentStatus(
-                    campus_id,
-                    class_id,
-                    student_id
-                );
+            const result = await ClassQuizService.getClassQuizByClassIDWithStudentStatus(
+                campus_id,
+                class_id,
+                student_id
+            );
 
             return ctx.json({
                 success: true,
@@ -150,8 +140,7 @@ export class ClassQuizController {
         try {
             const { quiz_id } = ctx.req.param();
 
-            const { quiz_name, quiz_description, quiz_meta_data } =
-                await ctx.req.json();
+            const { quiz_name, quiz_description, quiz_meta_data } = await ctx.req.json();
 
             const result = await ClassQuizService.updateClassQuizById(quiz_id, {
                 quiz_name,
@@ -209,12 +198,7 @@ export class ClassQuizController {
                 }[];
             } = await ctx.req.json();
 
-            const result = await ClassQuizService.createClassQuizQuestions(
-                campus_id,
-                class_id,
-                quiz_id,
-                questionBank
-            );
+            const result = await ClassQuizService.createClassQuizQuestions(campus_id, class_id, quiz_id, questionBank);
 
             return ctx.json(result);
         } catch (error) {
@@ -233,8 +217,7 @@ export class ClassQuizController {
         try {
             const { question_id } = ctx.req.param();
 
-            const result =
-                await ClassQuizService.getClassQuizQuestionById(question_id);
+            const result = await ClassQuizService.getClassQuizQuestionById(question_id);
 
             return ctx.json(result);
         } catch (error) {
@@ -249,20 +232,17 @@ export class ClassQuizController {
         }
     };
 
-    public static readonly getClassQuizQuestionByClassIDAndByQuizID = async (
-        ctx: Context
-    ) => {
+    public static readonly getClassQuizQuestionByClassIDAndByQuizID = async (ctx: Context) => {
         try {
             const campus_id = ctx.get("campus_id");
 
             const { class_id, quiz_id } = ctx.req.param();
 
-            const result =
-                await ClassQuizService.getClassQuizQuestionByClassIDAndByQuizID(
-                    campus_id,
-                    class_id,
-                    quiz_id
-                );
+            const result = await ClassQuizService.getClassQuizQuestionByClassIDAndByQuizID(
+                campus_id,
+                class_id,
+                quiz_id
+            );
 
             return ctx.json(result);
         } catch (error) {
@@ -277,9 +257,7 @@ export class ClassQuizController {
         }
     };
 
-    public static readonly updateClassQuizQuestionById = async (
-        ctx: Context
-    ) => {
+    public static readonly updateClassQuizQuestionById = async (ctx: Context) => {
         try {
             const { question_id } = ctx.req.param();
 
@@ -297,16 +275,13 @@ export class ClassQuizController {
                 meta_data: object;
             } = await ctx.req.json();
 
-            const result = await ClassQuizService.updateClassQuizQuestionById(
-                question_id,
-                {
-                    question_text,
-                    question_type,
-                    options,
-                    correct_answer,
-                    meta_data,
-                }
-            );
+            const result = await ClassQuizService.updateClassQuizQuestionById(question_id, {
+                question_text,
+                question_type,
+                options,
+                correct_answer,
+                meta_data,
+            });
 
             return ctx.json(result);
         } catch (error) {
@@ -321,14 +296,11 @@ export class ClassQuizController {
         }
     };
 
-    public static readonly deleteClassQuizQuestionById = async (
-        ctx: Context
-    ) => {
+    public static readonly deleteClassQuizQuestionById = async (ctx: Context) => {
         try {
             const { question_id } = ctx.req.param();
 
-            const result =
-                await ClassQuizService.deleteClassQuizQuestionById(question_id);
+            const result = await ClassQuizService.deleteClassQuizQuestionById(question_id);
 
             return ctx.json(result);
         } catch (error) {
@@ -360,15 +332,55 @@ export class ClassQuizController {
                 };
             } = await ctx.req.json();
 
-            const result = await ClassQuizService.createClassQuizAttempt(
+            const result = await ClassQuizService.createClassQuizAttempt(campus_id, class_id, {
+                quiz_id,
+                student_id,
+                question_id,
+                opted_answer,
+            });
+
+            return ctx.json(result);
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json(
+                    {
+                        message: error.message,
+                    },
+                    500
+                );
+            }
+        }
+    };
+
+    public static readonly getClassQuizAttemptByQuizIdAndStudentId = async (ctx: Context) => {
+        try {
+            const { quiz_id, student_id } = ctx.req.param();
+
+            const result = await ClassQuizService.getClassQuizAttemptByQuizIdAndStudentId(quiz_id, student_id);
+
+            return ctx.json(result);
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json(
+                    {
+                        message: error.message,
+                    },
+                    500
+                );
+            }
+        }
+    };
+
+    public static readonly getClassQuizAttemptByCampusIdAndClassIdAndQuizId = async (ctx: Context) => {
+        try {
+            const campus_id = ctx.get("campus_id");
+
+            const { class_id, quiz_id } = ctx.req.param();
+
+            const result = await ClassQuizService.getClassQuizAttemptByCampusIdAndClassIdAndQuizId(
                 campus_id,
                 class_id,
-                {
-                    quiz_id,
-                    student_id,
-                    question_id,
-                    opted_answer,
-                }
+                quiz_id
             );
 
             return ctx.json(result);
@@ -383,58 +395,6 @@ export class ClassQuizController {
             }
         }
     };
-
-    public static readonly getClassQuizAttemptByQuizIdAndStudentId = async (
-        ctx: Context
-    ) => {
-        try {
-            const { quiz_id, student_id } = ctx.req.param();
-
-            const result =
-                await ClassQuizService.getClassQuizAttemptByQuizIdAndStudentId(
-                    quiz_id,
-                    student_id
-                );
-
-            return ctx.json(result);
-        } catch (error) {
-            if (error instanceof Error) {
-                return ctx.json(
-                    {
-                        message: error.message,
-                    },
-                    500
-                );
-            }
-        }
-    };
-
-    public static readonly getClassQuizAttemptByCampusIdAndClassIdAndQuizId =
-        async (ctx: Context) => {
-            try {
-                const campus_id = ctx.get("campus_id");
-
-                const { class_id, quiz_id } = ctx.req.param();
-
-                const result =
-                    await ClassQuizService.getClassQuizAttemptByCampusIdAndClassIdAndQuizId(
-                        campus_id,
-                        class_id,
-                        quiz_id
-                    );
-
-                return ctx.json(result);
-            } catch (error) {
-                if (error instanceof Error) {
-                    return ctx.json(
-                        {
-                            message: error.message,
-                        },
-                        500
-                    );
-                }
-            }
-        };
 
     public static readonly createClassQuizSubmission = async (ctx: Context) => {
         try {
@@ -443,12 +403,7 @@ export class ClassQuizController {
 
             const { quiz_id, class_id } = ctx.req.param();
 
-            const result = await ClassQuizService.createClassQuizSubmission(
-                campus_id,
-                class_id,
-                quiz_id,
-                user_id
-            );
+            const result = await ClassQuizService.createClassQuizSubmission(campus_id, class_id, quiz_id, user_id);
 
             return ctx.json(result);
         } catch (error) {
@@ -463,16 +418,11 @@ export class ClassQuizController {
         }
     };
 
-    public static readonly getClassQuizSubmissionById = async (
-        ctx: Context
-    ) => {
+    public static readonly getClassQuizSubmissionById = async (ctx: Context) => {
         try {
             const { submission_id } = ctx.req.param();
 
-            const result =
-                await ClassQuizService.getClassQuizSubmissionById(
-                    submission_id
-                );
+            const result = await ClassQuizService.getClassQuizSubmissionById(submission_id);
 
             return ctx.json(result);
         } catch (error) {
@@ -487,19 +437,13 @@ export class ClassQuizController {
         }
     };
 
-    public static readonly getClassQuizSubmissionByQuizIdAndStudentId = async (
-        ctx: Context
-    ) => {
+    public static readonly getClassQuizSubmissionByQuizIdAndStudentId = async (ctx: Context) => {
         try {
             const user_id = ctx.get("user_id");
 
             const { quiz_id } = ctx.req.param();
 
-            const result =
-                await ClassQuizService.getClassQuizSubmissionByQuizIdAndStudentId(
-                    quiz_id,
-                    user_id
-                );
+            const result = await ClassQuizService.getClassQuizSubmissionByQuizIdAndStudentId(quiz_id, user_id);
 
             return ctx.json(result);
         } catch (error) {
@@ -514,19 +458,13 @@ export class ClassQuizController {
         }
     };
 
-    public static readonly getClassQuizSubmissionByCampusIdAndClassId = async (
-        ctx: Context
-    ) => {
+    public static readonly getClassQuizSubmissionByCampusIdAndClassId = async (ctx: Context) => {
         try {
             const campus_id = ctx.get("campus_id");
 
             const { class_id } = ctx.req.param();
 
-            const result =
-                await ClassQuizService.getClassQuizSubmissionByCampusIdAndClassId(
-                    campus_id,
-                    class_id
-                );
+            const result = await ClassQuizService.getClassQuizSubmissionByCampusIdAndClassId(campus_id, class_id);
 
             return ctx.json(result);
         } catch (error) {
@@ -541,9 +479,7 @@ export class ClassQuizController {
         }
     };
 
-    public static readonly updateClassQuizSubmissionById = async (
-        ctx: Context
-    ) => {
+    public static readonly updateClassQuizSubmissionById = async (ctx: Context) => {
         try {
             const { submission_id } = ctx.req.param();
 
@@ -558,10 +494,7 @@ export class ClassQuizController {
                 meta_data: object;
             } = await ctx.req.json();
 
-            const result = await ClassQuizService.updateClassQuizSubmissionById(
-                submission_id,
-                data
-            );
+            const result = await ClassQuizService.updateClassQuizSubmissionById(submission_id, data);
 
             return ctx.json(result);
         } catch (error) {
@@ -576,14 +509,11 @@ export class ClassQuizController {
         }
     };
 
-    public static readonly getAllQuizzesFromAllClasses = async (
-        ctx: Context
-    ) => {
+    public static readonly getAllQuizzesFromAllClasses = async (ctx: Context) => {
         try {
             const campus_id = ctx.get("campus_id");
 
-            const result =
-                await ClassQuizService.getAllQuizzesFromAllClasses(campus_id);
+            const result = await ClassQuizService.getAllQuizzesFromAllClasses(campus_id);
 
             return ctx.json({
                 success: true,
@@ -611,12 +541,7 @@ export class ClassQuizController {
             const user_id = ctx.get("user_id");
             const { class_id, quiz_id } = ctx.req.param();
 
-            const result = await ClassQuizService.startQuizSession(
-                campus_id,
-                class_id,
-                quiz_id,
-                user_id
-            );
+            const result = await ClassQuizService.startQuizSession(campus_id, class_id, quiz_id, user_id);
 
             return ctx.json({
                 success: true,
@@ -641,10 +566,7 @@ export class ClassQuizController {
             const user_id = ctx.get("user_id");
             const { session_token } = ctx.req.param();
 
-            const result = await ClassQuizService.getQuizSession(
-                session_token,
-                user_id
-            );
+            const result = await ClassQuizService.getQuizSession(session_token, user_id);
 
             return ctx.json({
                 success: true,
@@ -679,12 +601,7 @@ export class ClassQuizController {
                 );
             }
 
-            const result = await ClassQuizService.submitAnswer(
-                session_token,
-                user_id,
-                question_id,
-                answer
-            );
+            const result = await ClassQuizService.submitAnswer(session_token, user_id, question_id, answer);
 
             return ctx.json({
                 success: true,
@@ -709,10 +626,7 @@ export class ClassQuizController {
             const user_id = ctx.get("user_id");
             const { session_token } = ctx.req.param();
 
-            const result = await ClassQuizService.navigateToNext(
-                session_token,
-                user_id
-            );
+            const result = await ClassQuizService.navigateToNext(session_token, user_id);
 
             return ctx.json({
                 success: true,
@@ -732,17 +646,12 @@ export class ClassQuizController {
         }
     };
 
-    public static readonly navigateToPreviousQuestion = async (
-        ctx: Context
-    ) => {
+    public static readonly navigateToPreviousQuestion = async (ctx: Context) => {
         try {
             const user_id = ctx.get("user_id");
             const { session_token } = ctx.req.param();
 
-            const result = await ClassQuizService.navigateToPrevious(
-                session_token,
-                user_id
-            );
+            const result = await ClassQuizService.navigateToPrevious(session_token, user_id);
 
             return ctx.json({
                 success: true,
@@ -767,10 +676,7 @@ export class ClassQuizController {
             const user_id = ctx.get("user_id");
             const { session_token } = ctx.req.param();
 
-            const result = await ClassQuizService.completeQuiz(
-                session_token,
-                user_id
-            );
+            const result = await ClassQuizService.completeQuiz(session_token, user_id);
 
             return ctx.json({
                 success: true,
@@ -795,11 +701,7 @@ export class ClassQuizController {
             const campus_id = ctx.get("campus_id");
             const { class_id, quiz_id } = ctx.req.param();
 
-            const result = await ClassQuizService.getQuizStatistics(
-                campus_id,
-                class_id,
-                quiz_id
-            );
+            const result = await ClassQuizService.getQuizStatistics(campus_id, class_id, quiz_id);
 
             return ctx.json({
                 success: true,
@@ -823,11 +725,7 @@ export class ClassQuizController {
             const campus_id = ctx.get("campus_id");
             const { class_id, quiz_id } = ctx.req.query();
 
-            const result = await ClassQuizService.getActiveQuizSessions(
-                campus_id,
-                class_id,
-                quiz_id
-            );
+            const result = await ClassQuizService.getActiveQuizSessions(campus_id, class_id, quiz_id);
 
             return ctx.json({
                 success: true,
@@ -850,8 +748,7 @@ export class ClassQuizController {
 
     public static readonly checkExpiredSessions = async (ctx: Context) => {
         try {
-            const result =
-                await ClassQuizService.checkAndHandleExpiredSessions();
+            const result = await ClassQuizService.checkAndHandleExpiredSessions();
 
             return ctx.json({
                 success: true,
@@ -876,10 +773,7 @@ export class ClassQuizController {
             const user_id = ctx.get("user_id");
             const { quiz_id } = ctx.req.query();
 
-            const result = await ClassQuizService.getQuizSessionHistory(
-                user_id,
-                quiz_id
-            );
+            const result = await ClassQuizService.getQuizSessionHistory(user_id, quiz_id);
 
             return ctx.json({
                 success: true,
@@ -903,10 +797,7 @@ export class ClassQuizController {
             const user_id = ctx.get("user_id");
             const { session_token } = ctx.req.param();
 
-            const result = await ClassQuizService.abandonQuizSession(
-                session_token,
-                user_id
-            );
+            const result = await ClassQuizService.abandonQuizSession(session_token, user_id);
 
             return ctx.json({
                 success: true,
@@ -930,10 +821,7 @@ export class ClassQuizController {
             const user_id = ctx.get("user_id");
             const { session_token } = ctx.req.param();
 
-            const result = await ClassQuizService.getQuizResultsBySession(
-                session_token,
-                user_id
-            );
+            const result = await ClassQuizService.getQuizResultsBySession(session_token, user_id);
 
             return ctx.json({
                 success: true,
@@ -952,19 +840,13 @@ export class ClassQuizController {
         }
     };
 
-    public static readonly getAllQuizResultsByStudentId = async (
-        ctx: Context
-    ) => {
+    public static readonly getAllQuizResultsByStudentId = async (ctx: Context) => {
         try {
             const campus_id = ctx.get("campus_id");
             const { student_id } = ctx.req.param();
             const { class_id } = ctx.req.query();
 
-            const results = await ClassQuizService.getAllQuizResultsByStudentId(
-                campus_id,
-                student_id,
-                class_id
-            );
+            const results = await ClassQuizService.getAllQuizResultsByStudentId(campus_id, student_id, class_id);
 
             return ctx.json({
                 success: true,
@@ -984,20 +866,13 @@ export class ClassQuizController {
         }
     };
 
-    public static readonly getQuizResultsSummaryByStudentId = async (
-        ctx: Context
-    ) => {
+    public static readonly getQuizResultsSummaryByStudentId = async (ctx: Context) => {
         try {
             const campus_id = ctx.get("campus_id");
             const { student_id } = ctx.req.param();
             const { class_id } = ctx.req.query();
 
-            const summary =
-                await ClassQuizService.getQuizResultsSummaryByStudentId(
-                    campus_id,
-                    student_id,
-                    class_id
-                );
+            const summary = await ClassQuizService.getQuizResultsSummaryByStudentId(campus_id, student_id, class_id);
 
             return ctx.json({
                 success: true,
@@ -1016,19 +891,12 @@ export class ClassQuizController {
         }
     };
 
-    public static readonly getQuizResultsByStudentIdAndQuizId = async (
-        ctx: Context
-    ) => {
+    public static readonly getQuizResultsByStudentIdAndQuizId = async (ctx: Context) => {
         try {
             const campus_id = ctx.get("campus_id");
             const { student_id, quiz_id } = ctx.req.param();
 
-            const results =
-                await ClassQuizService.getQuizResultsByStudentIdAndQuizId(
-                    campus_id,
-                    student_id,
-                    quiz_id
-                );
+            const results = await ClassQuizService.getQuizResultsByStudentIdAndQuizId(campus_id, student_id, quiz_id);
 
             return ctx.json({
                 success: true,
@@ -1052,10 +920,7 @@ export class ClassQuizController {
             const campus_id = ctx.get("campus_id");
             const { quiz_id } = ctx.req.param();
 
-            const result = await ClassQuizService.getDetailedQuizStatistics(
-                campus_id,
-                quiz_id
-            );
+            const result = await ClassQuizService.getDetailedQuizStatistics(campus_id, quiz_id);
 
             return ctx.json({
                 success: true,

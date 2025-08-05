@@ -14,9 +14,7 @@ export const timetableSchema = z
         start_time: z.string().openapi({ example: "09:00" }),
         end_time: z.string().openapi({ example: "10:30" }),
         message: z.string().openapi({ example: "Regular class" }),
-        meta_data: z
-            .record(z.string(), z.any())
-            .openapi({ example: { room: "A101", floor: 1 } }),
+        meta_data: z.record(z.string(), z.any()).openapi({ example: { room: "A101", floor: 1 } }),
         is_suspended: z.boolean().openapi({ example: false }),
         is_adjourned: z.boolean().openapi({ example: false }),
         is_cancelled: z.boolean().openapi({ example: false }),
@@ -35,9 +33,7 @@ export const timetableItemSchema = z
         day: z.string().openapi({ example: "Monday" }),
         start_time: z.string().openapi({ example: "09:00" }),
         end_time: z.string().openapi({ example: "10:30" }),
-        meta_data: z
-            .record(z.string(), z.any())
-            .openapi({ example: { room: "A101", floor: 1 } }),
+        meta_data: z.record(z.string(), z.any()).openapi({ example: { room: "A101", floor: 1 } }),
     })
     .openapi({ ref: "TimetableItem" });
 
@@ -101,9 +97,7 @@ export const updateTimetableResponseSchema = timetableSchema.openapi({
 });
 
 // Get Timetables Response
-export const getTimetablesResponseSchema = z
-    .array(timetableSchema)
-    .openapi({ ref: "GetTimetablesResponse" });
+export const getTimetablesResponseSchema = z.array(timetableSchema).openapi({ ref: "GetTimetablesResponse" });
 
 // Error Response
 export const errorResponseSchema = z

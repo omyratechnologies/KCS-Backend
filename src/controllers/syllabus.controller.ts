@@ -16,10 +16,7 @@ export class SyllabusController {
                 meta_data: object;
             } = await ctx.req.json();
 
-            const syllabus = await SyllabusService.createSyllabus(
-                campus_id,
-                syllabusData
-            );
+            const syllabus = await SyllabusService.createSyllabus(campus_id, syllabusData);
 
             return ctx.json(syllabus);
         } catch (error) {
@@ -36,8 +33,7 @@ export class SyllabusController {
     public static readonly getAllSyllabuses = async (ctx: Context) => {
         try {
             const campus_id = ctx.get("campus_id");
-            const syllabuses =
-                await SyllabusService.getSyllabusByCampusId(campus_id);
+            const syllabuses = await SyllabusService.getSyllabusByCampusId(campus_id);
             return ctx.json(syllabuses);
         } catch (error) {
             if (error instanceof Error) {
@@ -72,10 +68,7 @@ export class SyllabusController {
 
             const syllabusData: Partial<ISyllabusData> = await ctx.req.json();
 
-            const syllabus = await SyllabusService.updateSyllabusById(
-                syllabusId,
-                syllabusData
-            );
+            const syllabus = await SyllabusService.updateSyllabusById(syllabusId, syllabusData);
             return ctx.json(syllabus);
         } catch (error) {
             if (error instanceof Error) {
@@ -91,8 +84,7 @@ export class SyllabusController {
     public static readonly deleteSyllabusById = async (ctx: Context) => {
         try {
             const syllabusId = ctx.req.param("id");
-            const syllabus =
-                await SyllabusService.deleteSyllabusById(syllabusId);
+            const syllabus = await SyllabusService.deleteSyllabusById(syllabusId);
             return ctx.json(syllabus);
         } catch (error) {
             if (error instanceof Error) {

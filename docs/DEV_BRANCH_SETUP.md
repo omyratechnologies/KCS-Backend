@@ -1,17 +1,19 @@
 # 🌿 Development Branch CI/CD Setup Guide
 
-This guide explains how the CI/CD pipeline handles the `dev` branch for development environment deployment.
+This guide explains how the CI/CD pipeline handles the `dev` branch for development environment
+deployment.
 
 ## 🎯 Branch Strategy
 
-| Branch | Environment | Deployment Target | URL |
-|--------|-------------|-------------------|-----|
-| `dev` | Development | Development Server | `https://devapi.letscatchup-kcs.com` |
-| `main` | Production | Production Server | `https://api.letscatchup-kcs.com` |
+| Branch | Environment | Deployment Target  | URL                                  |
+| ------ | ----------- | ------------------ | ------------------------------------ |
+| `dev`  | Development | Development Server | `https://devapi.letscatchup-kcs.com` |
+| `main` | Production  | Production Server  | `https://api.letscatchup-kcs.com`    |
 
 ## 🔧 CI/CD Configuration
 
 ### Jenkins Pipeline (Jenkinsfile) - Primary CI/CD Tool
+
 - ✅ **Automatically detects branch**: `dev` vs `main`
 - ✅ **Environment-aware**: Sets `NODE_ENV` and `DEPLOY_URL` based on branch
 - ✅ **Separate deployment stages**: Different deployment logic for dev vs prod
@@ -24,6 +26,7 @@ This guide explains how the CI/CD pipeline handles the `dev` branch for developm
 Configure these credentials in Jenkins (Manage Jenkins → Credentials):
 
 ### Jenkins Credentials Setup
+
 ```bash
 # GitHub access (Username with password or Secret text)
 github-access-token = your-github-personal-access-token
@@ -41,6 +44,7 @@ docker-registry-credentials = username:password
 ## 🚀 Development Workflow
 
 ### 1. Working on Features
+
 ```bash
 # Create feature branch from dev
 git checkout dev
@@ -56,6 +60,7 @@ git push origin feature/your-feature
 ```
 
 ### 2. Deploying to Development
+
 ```bash
 # Merge to dev branch (triggers development deployment)
 git checkout dev
@@ -70,6 +75,7 @@ git push origin dev
 ```
 
 ### 3. Promoting to Production
+
 ```bash
 # Create PR from dev to main
 git checkout main
@@ -87,6 +93,7 @@ git push origin main
 ## 🔍 Pipeline Differences by Branch
 
 ### Development Branch (`dev`)
+
 - **Linting**: More relaxed rules (`--max-warnings 1000`)
 - **Docker**: Uses `Dockerfile.dev` (if available)
 - **Environment**: `NODE_ENV=development`
@@ -94,6 +101,7 @@ git push origin main
 - **Files deployed**: `docker-compose.dev.yml`, `.env.development.example`
 
 ### Production Branch (`main`)
+
 - **Linting**: Strict rules (no warnings allowed)
 - **Docker**: Uses production `Dockerfile`
 - **Environment**: `NODE_ENV=production`
@@ -105,11 +113,13 @@ git push origin main
 Jenkins sends Microsoft Teams notifications for:
 
 ### Development Deployment
+
 - 🟡 **Started**: "Build started for dev branch"
 - ✅ **Success**: "Deployed to development environment"
 - ❌ **Failed**: "Development deployment failed"
 
 ### Production Deployment
+
 - 🟡 **Started**: "Build started for main branch"
 - ✅ **Success**: "Deployed to production environment"
 - ❌ **Failed**: "Production deployment failed"
@@ -119,21 +129,22 @@ Jenkins sends Microsoft Teams notifications for:
 ### Common Issues
 
 1. **Dev deployment not triggering**
-   - Check if webhook is configured in GitHub → Jenkins
-   - Verify Jenkins pipeline is monitoring correct branches
-   - Check Jenkins credentials and GitHub access
+    - Check if webhook is configured in GitHub → Jenkins
+    - Verify Jenkins pipeline is monitoring correct branches
+    - Check Jenkins credentials and GitHub access
 
 2. **Docker build fails**
-   - Ensure `docker-compose.dev.yml` exists
-   - Check Dockerfile.dev configuration
-   - Verify Docker is running on Jenkins server
+    - Ensure `docker-compose.dev.yml` exists
+    - Check Dockerfile.dev configuration
+    - Verify Docker is running on Jenkins server
 
 3. **Health checks fail**
-   - Wait longer for services to start (adjust sleep time)
-   - Check server accessibility from Jenkins
-   - Verify API endpoints are correct
+    - Wait longer for services to start (adjust sleep time)
+    - Check server accessibility from Jenkins
+    - Verify API endpoints are correct
 
 ### Debug Commands
+
 ```bash
 # Check current branch
 git branch
@@ -151,7 +162,7 @@ ssh ubuntu@dev-server "docker ps"
 ## 📝 Next Steps
 
 1. **Configure Jenkins Credentials**: Add all required credentials in Jenkins
-2. **Set up Webhooks**: Configure GitHub → Jenkins webhook trigger  
+2. **Set up Webhooks**: Configure GitHub → Jenkins webhook trigger
 3. **Test Dev Deployment**: Push to dev branch and verify deployment works
 4. **Update Server IPs**: Replace placeholder IPs with actual server addresses
 5. **Monitor First Deployment**: Watch the Jenkins pipeline execution

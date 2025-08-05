@@ -85,9 +85,7 @@ export const quizSubmissionSchema = z
         class_id: z.string().openapi({ example: "class123" }),
         quiz_id: z.string().openapi({ example: "quiz123" }),
         user_id: z.string().openapi({ example: "student123" }),
-        submission_date: z
-            .string()
-            .openapi({ example: "2023-05-15T11:00:00Z" }),
+        submission_date: z.string().openapi({ example: "2023-05-15T11:00:00Z" }),
         score: z.number().openapi({ example: 85 }),
         feedback: z.string().openapi({
             example: "Good work! Review chapter 5 for questions you missed.",
@@ -133,12 +131,9 @@ export const createQuizQuestionsRequestBodySchema = z
             .array(
                 z.object({
                     question_text: z.string().openapi({
-                        example:
-                            "What is the formula for the area of a circle?",
+                        example: "What is the formula for the area of a circle?",
                     }),
-                    question_type: z
-                        .string()
-                        .openapi({ example: "multiple_choice" }),
+                    question_type: z.string().openapi({ example: "multiple_choice" }),
                     options: z.array(z.string()).openapi({
                         example: ["πr", "2πr", "πr²", "2πr²"],
                     }),
@@ -154,8 +149,7 @@ export const createQuizQuestionsRequestBodySchema = z
             .openapi({
                 example: [
                     {
-                        question_text:
-                            "What is the formula for the area of a circle?",
+                        question_text: "What is the formula for the area of a circle?",
                         question_type: "multiple_choice",
                         options: ["πr", "2πr", "πr²", "2πr²"],
                         correct_answer: "πr²",
@@ -231,10 +225,7 @@ export const updateQuizSubmissionRequestBodySchema = z
         class_id: z.string().optional().openapi({ example: "class123" }),
         quiz_id: z.string().optional().openapi({ example: "quiz123" }),
         user_id: z.string().optional().openapi({ example: "student123" }),
-        submission_date: z
-            .string()
-            .optional()
-            .openapi({ example: "2023-05-15T11:00:00Z" }),
+        submission_date: z.string().optional().openapi({ example: "2023-05-15T11:00:00Z" }),
         score: z.number().optional().openapi({ example: 90 }),
         feedback: z.string().optional().openapi({ example: "Excellent work!" }),
         meta_data: z
@@ -254,19 +245,13 @@ export const updateQuizSubmissionResponseSchema = quizSubmissionSchema.openapi({
 });
 
 // Get Class Quizzes Response
-export const getClassQuizzesResponseSchema = z
-    .array(classQuizSchema)
-    .openapi({ ref: "GetClassQuizzesResponse" });
+export const getClassQuizzesResponseSchema = z.array(classQuizSchema).openapi({ ref: "GetClassQuizzesResponse" });
 
 // Get Quiz Questions Response
-export const getQuizQuestionsResponseSchema = z
-    .array(quizQuestionSchema)
-    .openapi({ ref: "GetQuizQuestionsResponse" });
+export const getQuizQuestionsResponseSchema = z.array(quizQuestionSchema).openapi({ ref: "GetQuizQuestionsResponse" });
 
 // Get Quiz Attempts Response
-export const getQuizAttemptsResponseSchema = z
-    .array(quizAttemptSchema)
-    .openapi({ ref: "GetQuizAttemptsResponse" });
+export const getQuizAttemptsResponseSchema = z.array(quizAttemptSchema).openapi({ ref: "GetQuizAttemptsResponse" });
 
 // Get Quiz Submissions Response
 export const getQuizSubmissionsResponseSchema = z

@@ -1,6 +1,7 @@
 # 🚀 Jenkins CI/CD Setup for KCS Backend
 
-This directory contains all Jenkins configuration files and setup scripts for the KCS Backend CI/CD pipeline.
+This directory contains all Jenkins configuration files and setup scripts for the KCS Backend CI/CD
+pipeline.
 
 ## 📋 Quick Setup Checklist
 

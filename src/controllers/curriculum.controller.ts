@@ -58,8 +58,7 @@ export class CurriculumController {
         try {
             const campus_id = ctx.get("campus_id");
 
-            const curriculums =
-                await CurriculumService.getCurriculumsByCampusId(campus_id);
+            const curriculums = await CurriculumService.getCurriculumsByCampusId(campus_id);
 
             return ctx.json(curriculums);
         } catch (error) {
@@ -87,14 +86,11 @@ export class CurriculumController {
                 meta_data: object;
             } = await ctx.req.json();
 
-            const curriculum = await CurriculumService.updateCurriculumById(
-                id,
-                {
-                    name,
-                    description,
-                    meta_data,
-                }
-            );
+            const curriculum = await CurriculumService.updateCurriculumById(id, {
+                name,
+                description,
+                meta_data,
+            });
 
             return ctx.json(curriculum);
         } catch (error) {

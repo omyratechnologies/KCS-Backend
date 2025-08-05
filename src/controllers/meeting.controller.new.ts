@@ -72,26 +72,22 @@ export class MeetingController {
                 };
             } = await ctx.req.json();
 
-            const meeting = await MeetingService.createMeeting(
-                campus_id,
-                creator_id,
-                {
-                    meeting_description,
-                    meeting_end_time: new Date(meeting_end_time),
-                    meeting_location,
-                    meeting_meta_data,
-                    meeting_name,
-                    meeting_start_time: new Date(meeting_start_time),
-                    participants,
-                    meeting_type,
-                    max_participants,
-                    meeting_password,
-                    waiting_room_enabled,
-                    require_host_approval,
-                    features,
-                    recording_config,
-                }
-            );
+            const meeting = await MeetingService.createMeeting(campus_id, creator_id, {
+                meeting_description,
+                meeting_end_time: new Date(meeting_end_time),
+                meeting_location,
+                meeting_meta_data,
+                meeting_name,
+                meeting_start_time: new Date(meeting_start_time),
+                participants,
+                meeting_type,
+                max_participants,
+                meeting_password,
+                waiting_room_enabled,
+                require_host_approval,
+                features,
+                recording_config,
+            });
 
             return ctx.json({
                 success: true,
@@ -103,10 +99,7 @@ export class MeetingController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Failed to create meeting",
+                    message: error instanceof Error ? error.message : "Failed to create meeting",
                 },
                 500
             );
@@ -121,10 +114,7 @@ export class MeetingController {
             const campus_id = ctx.get("campus_id");
             const creator_id = ctx.get("user_id");
 
-            const meetings = await MeetingService.getAllMeetings(
-                campus_id,
-                creator_id
-            );
+            const meetings = await MeetingService.getAllMeetings(campus_id, creator_id);
 
             return ctx.json({
                 success: true,
@@ -136,10 +126,7 @@ export class MeetingController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Failed to fetch meetings",
+                    message: error instanceof Error ? error.message : "Failed to fetch meetings",
                 },
                 500
             );
@@ -177,10 +164,7 @@ export class MeetingController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Meeting not found",
+                    message: error instanceof Error ? error.message : "Meeting not found",
                 },
                 404
             );
@@ -194,8 +178,7 @@ export class MeetingController {
         try {
             const participant_id = ctx.get("user_id");
 
-            const meetings =
-                await MeetingService.getMeetingByParticipantId(participant_id);
+            const meetings = await MeetingService.getMeetingByParticipantId(participant_id);
 
             return ctx.json({
                 success: true,
@@ -207,10 +190,7 @@ export class MeetingController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "No meetings found",
+                    message: error instanceof Error ? error.message : "No meetings found",
                 },
                 404
             );
@@ -226,11 +206,7 @@ export class MeetingController {
             const user_id = ctx.get("user_id");
             const data: Partial<IMeetingData> = await ctx.req.json();
 
-            const meeting = await MeetingService.updateMeeting(
-                meeting_id,
-                data,
-                user_id
-            );
+            const meeting = await MeetingService.updateMeeting(meeting_id, data, user_id);
 
             return ctx.json({
                 success: true,
@@ -242,10 +218,7 @@ export class MeetingController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Failed to update meeting",
+                    message: error instanceof Error ? error.message : "Failed to update meeting",
                 },
                 500
             );
@@ -260,10 +233,7 @@ export class MeetingController {
             const { meeting_id } = ctx.req.param();
             const user_id = ctx.get("user_id");
 
-            const meeting = await MeetingService.deleteMeeting(
-                meeting_id,
-                user_id
-            );
+            const meeting = await MeetingService.deleteMeeting(meeting_id, user_id);
 
             return ctx.json({
                 success: true,
@@ -275,10 +245,7 @@ export class MeetingController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Failed to delete meeting",
+                    message: error instanceof Error ? error.message : "Failed to delete meeting",
                 },
                 500
             );
@@ -293,10 +260,7 @@ export class MeetingController {
             const { meeting_id } = ctx.req.param();
             const user_id = ctx.get("user_id");
 
-            const meeting = await MeetingService.startMeeting(
-                meeting_id,
-                user_id
-            );
+            const meeting = await MeetingService.startMeeting(meeting_id, user_id);
 
             return ctx.json({
                 success: true,
@@ -308,10 +272,7 @@ export class MeetingController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Failed to start meeting",
+                    message: error instanceof Error ? error.message : "Failed to start meeting",
                 },
                 500
             );
@@ -326,10 +287,7 @@ export class MeetingController {
             const { meeting_id } = ctx.req.param();
             const user_id = ctx.get("user_id");
 
-            const meeting = await MeetingService.endMeeting(
-                meeting_id,
-                user_id
-            );
+            const meeting = await MeetingService.endMeeting(meeting_id, user_id);
 
             return ctx.json({
                 success: true,
@@ -341,10 +299,7 @@ export class MeetingController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Failed to end meeting",
+                    message: error instanceof Error ? error.message : "Failed to end meeting",
                 },
                 500
             );
@@ -358,8 +313,7 @@ export class MeetingController {
         try {
             const { meeting_id } = ctx.req.param();
 
-            const participants =
-                await MeetingService.getMeetingParticipants(meeting_id);
+            const participants = await MeetingService.getMeetingParticipants(meeting_id);
 
             return ctx.json({
                 success: true,
@@ -386,10 +340,7 @@ export class MeetingController {
             const { meeting_id } = ctx.req.param();
             const limit = Number(ctx.req.query("limit")) || 100;
 
-            const chatHistory = await MeetingService.getMeetingChat(
-                meeting_id,
-                limit
-            );
+            const chatHistory = await MeetingService.getMeetingChat(meeting_id, limit);
 
             return ctx.json({
                 success: true,
@@ -415,8 +366,7 @@ export class MeetingController {
         try {
             const { meeting_id } = ctx.req.param();
 
-            const recordings =
-                await MeetingService.getMeetingRecordings(meeting_id);
+            const recordings = await MeetingService.getMeetingRecordings(meeting_id);
 
             return ctx.json({
                 success: true,
@@ -442,8 +392,7 @@ export class MeetingController {
         try {
             const { meeting_id } = ctx.req.param();
 
-            const analytics =
-                await MeetingService.getMeetingAnalytics(meeting_id);
+            const analytics = await MeetingService.getMeetingAnalytics(meeting_id);
 
             return ctx.json({
                 success: true,
@@ -472,16 +421,12 @@ export class MeetingController {
             const meeting = await MeetingService.getMeetingById(meeting_id);
 
             // Generate TURN credentials for this user
-            const turnCredentials =
-                WebRTCService.generateTurnCredentials(user_id);
+            const turnCredentials = WebRTCService.generateTurnCredentials(user_id);
 
             // Enhance WebRTC config with TURN servers
             const webrtcConfig = {
                 ...meeting.webrtc_config,
-                ice_servers: [
-                    ...meeting.webrtc_config.ice_servers,
-                    turnCredentials,
-                ],
+                ice_servers: [...meeting.webrtc_config.ice_servers, turnCredentials],
             };
 
             return ctx.json({
@@ -548,9 +493,7 @@ export class MeetingController {
                 );
             }
 
-            const stats = await MeetingService.getSystemStats(
-                user_type === "Super Admin" ? undefined : campus_id
-            );
+            const stats = await MeetingService.getSystemStats(user_type === "Super Admin" ? undefined : campus_id);
 
             return ctx.json({
                 success: true,
@@ -577,10 +520,7 @@ export class MeetingController {
             const socketStats = SocketService.getStats();
 
             const overallStatus =
-                webrtcHealth.status === "healthy" &&
-                socketStats.connectedUsers >= 0
-                    ? "healthy"
-                    : webrtcHealth.status;
+                webrtcHealth.status === "healthy" && socketStats.connectedUsers >= 0 ? "healthy" : webrtcHealth.status;
 
             return ctx.json({
                 success: true,
@@ -628,10 +568,7 @@ export class MeetingController {
             }
 
             // Check password if required
-            if (
-                meeting.meeting_password &&
-                meeting.meeting_password !== meeting_password
-            ) {
+            if (meeting.meeting_password && meeting.meeting_password !== meeting_password) {
                 return ctx.json(
                     {
                         success: false,
@@ -642,10 +579,7 @@ export class MeetingController {
             }
 
             // Check if meeting is active
-            if (
-                meeting.meeting_status === "ended" ||
-                meeting.meeting_status === "cancelled"
-            ) {
+            if (meeting.meeting_status === "ended" || meeting.meeting_status === "cancelled") {
                 return ctx.json(
                     {
                         success: false,
@@ -665,8 +599,7 @@ export class MeetingController {
                         status: meeting.meeting_status,
                         features: meeting.features,
                         max_participants: meeting.max_participants,
-                        current_participants:
-                            meeting.current_participants?.length || 0,
+                        current_participants: meeting.current_participants?.length || 0,
                     },
                     canJoin: true,
                     requiresPassword: !!meeting.meeting_password,

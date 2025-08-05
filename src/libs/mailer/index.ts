@@ -62,10 +62,7 @@ export interface WelcomeEmailData {
     support_email?: string;
 }
 
-export const sendWelcomeEmail = async (
-    email: string,
-    userData: WelcomeEmailData
-) => {
+export const sendWelcomeEmail = async (email: string, userData: WelcomeEmailData) => {
     try {
         const contentTemplate = await fs.readFile(
             path.join(__dirname, "templates", "leaflets", "welcome_user.html"),
@@ -75,8 +72,7 @@ export const sendWelcomeEmail = async (
         // Set default values
         const emailData = {
             ...userData,
-            login_url:
-                userData.login_url || "https://your-kcs-platform.com/login",
+            login_url: userData.login_url || "https://your-kcs-platform.com/login",
             support_email: userData.support_email || "support@kcs-platform.com",
         };
 
@@ -92,17 +88,9 @@ export const sendWelcomeEmail = async (
 
         // Use only nodemailer
         await sendEmailWithNodemailer(mailOptions);
-        infoLogs(
-            `Welcome email sent to ${email} via Nodemailer`,
-            LogTypes.LOGS,
-            "MAIL:WELCOME:NODEMAILER"
-        );
+        infoLogs(`Welcome email sent to ${email} via Nodemailer`, LogTypes.LOGS, "MAIL:WELCOME:NODEMAILER");
     } catch (error) {
-        infoLogs(
-            `Error sending welcome email to ${email}: ${error}`,
-            LogTypes.ERROR,
-            "MAIL:WELCOME:ERROR"
-        );
+        infoLogs(`Error sending welcome email to ${email}: ${error}`, LogTypes.ERROR, "MAIL:WELCOME:ERROR");
         throw error;
     }
 };
@@ -123,44 +111,25 @@ export interface PasswordResetSuccessEmailData {
     logo_url?: string;
 }
 
-export const sendPasswordResetSuccessEmail = async (
-    email: string,
-    resetData: PasswordResetSuccessEmailData
-) => {
+export const sendPasswordResetSuccessEmail = async (email: string, resetData: PasswordResetSuccessEmailData) => {
     try {
         const contentTemplate = await fs.readFile(
-            path.join(
-                __dirname,
-                "templates",
-                "email",
-                "password-reset-success.html"
-            ),
+            path.join(__dirname, "templates", "email", "password-reset-success.html"),
             "utf8"
         );
 
         // Set default values
         const emailData = {
             ...resetData,
-            login_url:
-                resetData.login_url || "https://your-kcs-platform.com/login",
-            dashboard_url:
-                resetData.dashboard_url ||
-                "https://your-kcs-platform.com/dashboard",
-            profile_url:
-                resetData.profile_url ||
-                "https://your-kcs-platform.com/profile",
-            security_url:
-                resetData.security_url ||
-                "https://your-kcs-platform.com/security",
+            login_url: resetData.login_url || "https://your-kcs-platform.com/login",
+            dashboard_url: resetData.dashboard_url || "https://your-kcs-platform.com/dashboard",
+            profile_url: resetData.profile_url || "https://your-kcs-platform.com/profile",
+            security_url: resetData.security_url || "https://your-kcs-platform.com/security",
             support_url: resetData.support_url || "mailto:support@omyra.dev",
-            security_center_url:
-                resetData.security_center_url ||
-                "https://your-kcs-platform.com/security",
-            help_url:
-                resetData.help_url || "https://your-kcs-platform.com/help",
+            security_center_url: resetData.security_center_url || "https://your-kcs-platform.com/security",
+            help_url: resetData.help_url || "https://your-kcs-platform.com/help",
             website_url: resetData.website_url || "https://omyra.dev",
-            logo_url:
-                resetData.logo_url || "https://your-kcs-platform.com/logo.png",
+            logo_url: resetData.logo_url || "https://your-kcs-platform.com/logo.png",
         };
 
         const html = await renderMailContent(contentTemplate, emailData);

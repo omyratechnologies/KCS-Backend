@@ -30,9 +30,6 @@ const ClassNotificationSchema = new Schema({
 ClassNotificationSchema.index.findByCampusId = { by: "campus_id" };
 ClassNotificationSchema.index.findByClassId = { by: "class_id" };
 
-const ClassNotification = ottoman.model<IClassNotificationData>(
-    "class_notifications",
-    ClassNotificationSchema
-);
+const ClassNotification = ottoman.model<IClassNotificationData>("class_notifications", ClassNotificationSchema);
 
 export { ClassNotification, type IClassNotificationData };

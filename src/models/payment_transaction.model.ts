@@ -88,9 +88,6 @@ PaymentTransactionSchema.index.findByGatewayOrderId = {
 };
 PaymentTransactionSchema.index.findByReceiptNumber = { by: "receipt_number" };
 
-const PaymentTransaction = ottoman.model<IPaymentTransaction>(
-    "payment_transactions",
-    PaymentTransactionSchema
-);
+const PaymentTransaction = ottoman.model<IPaymentTransaction>("payment_transactions", PaymentTransactionSchema);
 
 export { type IPaymentTransaction, PaymentTransaction };

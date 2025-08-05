@@ -79,9 +79,6 @@ FeeCategorySchema.index.findByCampusIdAndAcademicYear = {
     by: ["campus_id", "academic_year"],
 };
 
-const FeeCategory = ottoman.model<IFeeCategory>(
-    "fee_categories",
-    FeeCategorySchema
-);
+const FeeCategory = ottoman.model<IFeeCategory>("fee_categories", FeeCategorySchema);
 
 export { FeeCategory, type IFeeCategory };

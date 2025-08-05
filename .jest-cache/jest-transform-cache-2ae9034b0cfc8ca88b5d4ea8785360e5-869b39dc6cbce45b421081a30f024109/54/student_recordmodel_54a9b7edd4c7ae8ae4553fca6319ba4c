@@ -1,0 +1,202 @@
+33e9da5f7184b76194d15f30d6131da8
+/* istanbul ignore next */
+function cov_61lrnw8a5() {
+  var path = "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/models/student_record.model.ts";
+  var hash = "3753e01d6bf19dc8fb0fdd79b9ba3eefa1a1c6b0";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/models/student_record.model.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 28
+        },
+        end: {
+          line: 9,
+          column: 2
+        }
+      },
+      "1": {
+        start: {
+          line: 7,
+          column: 45
+        },
+        end: {
+          line: 7,
+          column: 55
+        }
+      },
+      "2": {
+        start: {
+          line: 8,
+          column: 45
+        },
+        end: {
+          line: 8,
+          column: 55
+        }
+      },
+      "3": {
+        start: {
+          line: 10,
+          column: 0
+        },
+        end: {
+          line: 10,
+          column: 63
+        }
+      },
+      "4": {
+        start: {
+          line: 11,
+          column: 0
+        },
+        end: {
+          line: 11,
+          column: 65
+        }
+      },
+      "5": {
+        start: {
+          line: 12,
+          column: 22
+        },
+        end: {
+          line: 12,
+          column: 75
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 7,
+            column: 39
+          },
+          end: {
+            line: 7,
+            column: 40
+          }
+        },
+        loc: {
+          start: {
+            line: 7,
+            column: 45
+          },
+          end: {
+            line: 7,
+            column: 55
+          }
+        },
+        line: 7
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 8,
+            column: 39
+          },
+          end: {
+            line: 8,
+            column: 40
+          }
+        },
+        loc: {
+          start: {
+            line: 8,
+            column: 45
+          },
+          end: {
+            line: 8,
+            column: 55
+          }
+        },
+        line: 8
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0
+    },
+    b: {},
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "3753e01d6bf19dc8fb0fdd79b9ba3eefa1a1c6b0"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_61lrnw8a5 = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_61lrnw8a5();
+import { Schema } from "ottoman";
+import { ottoman } from "../libs/db";
+const StudentRecordSchema =
+/* istanbul ignore next */
+(cov_61lrnw8a5().s[0]++, new Schema({
+  campus_id: {
+    type: String,
+    required: true
+  },
+  student_id: {
+    type: String,
+    required: true
+  },
+  record_data: {
+    type: [Object],
+    required: true
+  },
+  created_at: {
+    type: Date,
+    default: () => {
+      /* istanbul ignore next */
+      cov_61lrnw8a5().f[0]++;
+      cov_61lrnw8a5().s[1]++;
+      return new Date();
+    }
+  },
+  updated_at: {
+    type: Date,
+    default: () => {
+      /* istanbul ignore next */
+      cov_61lrnw8a5().f[1]++;
+      cov_61lrnw8a5().s[2]++;
+      return new Date();
+    }
+  }
+}));
+/* istanbul ignore next */
+cov_61lrnw8a5().s[3]++;
+StudentRecordSchema.index.findByCampusId = {
+  by: "campus_id"
+};
+/* istanbul ignore next */
+cov_61lrnw8a5().s[4]++;
+StudentRecordSchema.index.findByStudentId = {
+  by: "student_id"
+};
+const StudentRecord =
+/* istanbul ignore next */
+(cov_61lrnw8a5().s[5]++, ottoman.model("student_records", StudentRecordSchema));
+export { StudentRecord };

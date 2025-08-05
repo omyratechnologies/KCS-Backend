@@ -34,14 +34,7 @@
 
             /* Header */
             .header {
-                background: linear-gradient(
-                    135deg,
-                    #0a0a0a 0%,
-                    #1a1a2e 25%,
-                    #16213e 50%,
-                    #0f3460 75%,
-                    #0e4b99 100%
-                );
+                background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #0e4b99 100%);
                 padding: 40px 30px;
                 text-align: center;
                 position: relative;
@@ -56,16 +49,8 @@
                 right: 0;
                 bottom: 0;
                 background-image:
-                    radial-gradient(
-                        circle at 20% 20%,
-                        rgba(255, 255, 255, 0.1) 1px,
-                        transparent 1px
-                    ),
-                    radial-gradient(
-                        circle at 80% 80%,
-                        rgba(85, 218, 215, 0.2) 1px,
-                        transparent 1px
-                    );
+                    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                    radial-gradient(circle at 80% 80%, rgba(85, 218, 215, 0.2) 1px, transparent 1px);
                 background-size:
                     50px 50px,
                     80px 80px;
@@ -476,9 +461,7 @@
                     <img src="{{LOGO_URL}}" alt="Let's Catch Up Logo" />
                 </div>
                 <div class="brand-title">Let's Catch Up</div>
-                <div class="brand-subtitle">
-                    Learning & Communication Platform
-                </div>
+                <div class="brand-subtitle">Learning & Communication Platform</div>
                 <div class="assignment-badge">Assignment Reminder</div>
             </div>
 
@@ -486,8 +469,7 @@
             <div class="content">
                 <h1 class="reminder-title">📝 Assignment Reminder</h1>
                 <p class="reminder-subtitle">
-                    {{GREETING_NAME}}, don't forget about your upcoming
-                    assignment deadline!
+                    {{GREETING_NAME}}, don't forget about your upcoming assignment deadline!
                 </p>
 
                 <!-- Assignment Details Box -->
@@ -503,52 +485,35 @@
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Due Date</span>
-                            <span
-                                class="detail-value {{#if IS_URGENT}}urgent{{/if}}"
-                                >{{DUE_DATE}}</span
-                            >
+                            <span class="detail-value {{#if IS_URGENT}}urgent{{/if}}">{{DUE_DATE}}</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Due Time</span>
-                            <span
-                                class="detail-value {{#if IS_URGENT}}urgent{{/if}}"
-                                >{{DUE_TIME}}</span
-                            >
+                            <span class="detail-value {{#if IS_URGENT}}urgent{{/if}}">{{DUE_TIME}}</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Instructor</span>
-                            <span class="detail-value"
-                                >{{INSTRUCTOR_NAME}}</span
-                            >
+                            <span class="detail-value">{{INSTRUCTOR_NAME}}</span>
                         </div>
                         <div class="detail-row">
                             <span class="detail-label">Time Remaining</span>
-                            <span
-                                class="detail-value {{#if IS_URGENT}}urgent{{/if}}"
-                                >{{TIME_REMAINING}}</span
-                            >
+                            <span class="detail-value {{#if IS_URGENT}}urgent{{/if}}">{{TIME_REMAINING}}</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Action Button -->
                 <div style="text-align: center">
-                    <a href="{{ASSIGNMENT_URL}}" class="action-button">
-                        🚀 Work on Assignment
-                    </a>
+                    <a href="{{ASSIGNMENT_URL}}" class="action-button"> 🚀 Work on Assignment </a>
                 </div>
 
                 <!-- Progress Tracker (if applicable) -->
                 {{#if SHOW_PROGRESS}}
                 <div class="progress-tracker">
-                    <div class="progress-title">
-                        📊 Your Assignment Progress
-                    </div>
+                    <div class="progress-title">📊 Your Assignment Progress</div>
                     <div class="progress-stats">
                         <div class="progress-stat">
-                            <div class="stat-number">
-                                {{COMPLETION_PERCENTAGE}}%
-                            </div>
+                            <div class="stat-number">{{COMPLETION_PERCENTAGE}}%</div>
                             <div class="stat-label">Completed</div>
                         </div>
                         <div class="progress-stat">
@@ -567,45 +532,21 @@
                 <div class="tips-box">
                     <div class="tips-title">🎓 Study Tips & Reminders</div>
                     <ul class="tips-list">
-                        <li>
-                            Review the assignment requirements carefully before
-                            starting
-                        </li>
-                        <li>
-                            Break down large assignments into smaller,
-                            manageable tasks
-                        </li>
-                        <li>
-                            Use the course materials and resources provided by
-                            your instructor
-                        </li>
-                        <li>
-                            Don't hesitate to ask questions if you need
-                            clarification
-                        </li>
-                        <li>
-                            Submit your work early to avoid last-minute
-                            technical issues
-                        </li>
-                        <li>
-                            Keep backup copies of your work in multiple
-                            locations
-                        </li>
+                        <li>Review the assignment requirements carefully before starting</li>
+                        <li>Break down large assignments into smaller, manageable tasks</li>
+                        <li>Use the course materials and resources provided by your instructor</li>
+                        <li>Don't hesitate to ask questions if you need clarification</li>
+                        <li>Submit your work early to avoid last-minute technical issues</li>
+                        <li>Keep backup copies of your work in multiple locations</li>
                     </ul>
                 </div>
 
                 <!-- Alternative Text -->
                 <div class="alternative-text">
                     Having trouble accessing the assignment?
-                    <a href="{{HELP_URL}}" class="alternative-link"
-                        >Get technical support</a
-                    >
+                    <a href="{{HELP_URL}}" class="alternative-link">Get technical support</a>
                     or
-                    <a
-                        href="{{CONTACT_INSTRUCTOR_URL}}"
-                        class="alternative-link"
-                        >contact your instructor</a
-                    >.
+                    <a href="{{CONTACT_INSTRUCTOR_URL}}" class="alternative-link">contact your instructor</a>.
                 </div>
 
                 <!-- Quick Actions -->
@@ -613,33 +554,25 @@
                     <a href="{{ASSIGNMENT_URL}}" class="quick-action">
                         <div class="quick-action-icon">📝</div>
                         <div class="quick-action-title">View Assignment</div>
-                        <div class="quick-action-desc">
-                            Access assignment details
-                        </div>
+                        <div class="quick-action-desc">Access assignment details</div>
                     </a>
 
                     <a href="{{COURSE_URL}}" class="quick-action">
                         <div class="quick-action-icon">📚</div>
                         <div class="quick-action-title">Course Materials</div>
-                        <div class="quick-action-desc">
-                            Access course resources
-                        </div>
+                        <div class="quick-action-desc">Access course resources</div>
                     </a>
 
                     <a href="{{CALENDAR_URL}}" class="quick-action">
                         <div class="quick-action-icon">📅</div>
-                        <div class="quick-action-title">
-                            Assignment Calendar
-                        </div>
+                        <div class="quick-action-title">Assignment Calendar</div>
                         <div class="quick-action-desc">View all deadlines</div>
                     </a>
 
                     <a href="{{SUPPORT_URL}}" class="quick-action">
                         <div class="quick-action-icon">💬</div>
                         <div class="quick-action-title">Get Help</div>
-                        <div class="quick-action-desc">
-                            Contact support team
-                        </div>
+                        <div class="quick-action-desc">Contact support team</div>
                     </a>
                 </div>
             </div>
@@ -648,36 +581,21 @@
             <div class="footer">
                 <div class="footer-title">Stay on Track with Your Studies</div>
                 <div class="footer-text">
-                    We're here to help you succeed! Set up assignment reminders
-                    and manage your schedule effectively with our learning
-                    platform.
+                    We're here to help you succeed! Set up assignment reminders and manage your schedule effectively
+                    with our learning platform.
                 </div>
 
                 <div class="footer-links">
-                    <a href="{{NOTIFICATION_SETTINGS_URL}}" class="footer-link"
-                        >Notification Settings</a
-                    >
-                    <a href="{{DASHBOARD_URL}}" class="footer-link"
-                        >Dashboard</a
-                    >
-                    <a href="{{SUPPORT_URL}}" class="footer-link"
-                        >Contact Support</a
-                    >
-                    <a href="{{WEBSITE_URL}}" class="footer-link"
-                        >Visit Website</a
-                    >
+                    <a href="{{NOTIFICATION_SETTINGS_URL}}" class="footer-link">Notification Settings</a>
+                    <a href="{{DASHBOARD_URL}}" class="footer-link">Dashboard</a>
+                    <a href="{{SUPPORT_URL}}" class="footer-link">Contact Support</a>
+                    <a href="{{WEBSITE_URL}}" class="footer-link">Visit Website</a>
                 </div>
 
                 <div class="footer-copy">
-                    © 2025 KANDHUGULE CONSULTANCY SERVICES PRIVATE LIMITED. All
-                    Rights Reserved.<br />
-                    This reminder was sent to {{EMAIL}}. To manage your
-                    notification preferences,
-                    <a
-                        href="{{NOTIFICATION_SETTINGS_URL}}"
-                        style="color: #55dad7"
-                        >click here</a
-                    >.
+                    © 2025 KANDHUGULE CONSULTANCY SERVICES PRIVATE LIMITED. All Rights Reserved.<br />
+                    This reminder was sent to {{EMAIL}}. To manage your notification preferences,
+                    <a href="{{NOTIFICATION_SETTINGS_URL}}" style="color: #55dad7">click here</a>.
                 </div>
             </div>
         </div>

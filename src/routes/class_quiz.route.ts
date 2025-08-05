@@ -192,8 +192,7 @@ app.get(
                 in: "query",
                 required: false,
                 schema: { type: "string" },
-                description:
-                    "Student ID (optional, uses logged-in user if not provided)",
+                description: "Student ID (optional, uses logged-in user if not provided)",
             },
         ],
         responses: {
@@ -221,20 +220,11 @@ app.get(
                                                 properties: {
                                                     status: {
                                                         type: "string",
-                                                        enum: [
-                                                            "not_attempted",
-                                                            "in_progress",
-                                                            "completed",
-                                                            "expired",
-                                                        ],
+                                                        enum: ["not_attempted", "in_progress", "completed", "expired"],
                                                     },
                                                     availability_status: {
                                                         type: "string",
-                                                        enum: [
-                                                            "available",
-                                                            "not_yet_available",
-                                                            "expired",
-                                                        ],
+                                                        enum: ["available", "not_yet_available", "expired"],
                                                     },
                                                     can_attempt: {
                                                         type: "boolean",
@@ -721,8 +711,7 @@ app.post(
     describeRoute({
         operationId: "createClassQuizSubmission",
         summary: "Create quiz submission",
-        description:
-            "Creates a final submission for a quiz, calculating the score",
+        description: "Creates a final submission for a quiz, calculating the score",
         tags: ["Class Quiz"],
         parameters: [
             {
@@ -990,8 +979,7 @@ app.get(
                                                 lowest_score: {
                                                     type: "number",
                                                 },
-                                                average_completion_time_seconds:
-                                                    { type: "number" },
+                                                average_completion_time_seconds: { type: "number" },
                                             },
                                         },
                                         top_three_students: {
@@ -1478,8 +1466,7 @@ app.post(
     describeRoute({
         operationId: "checkExpiredSessions",
         summary: "Check and process expired quiz sessions",
-        description:
-            "Checks for expired quiz sessions and auto-submits them (admin only)",
+        description: "Checks for expired quiz sessions and auto-submits them (admin only)",
         tags: ["Quiz Administration"],
         responses: {
             200: {
@@ -1527,8 +1514,7 @@ app.get(
     describeRoute({
         operationId: "getQuizSessionHistory",
         summary: "Get user's quiz session history",
-        description:
-            "Retrieves the history of quiz sessions for the current user",
+        description: "Retrieves the history of quiz sessions for the current user",
         tags: ["Quiz Sessions"],
         parameters: [
             {
@@ -1772,8 +1758,7 @@ app.get(
     describeRoute({
         operationId: "getAllQuizResultsByStudentId",
         summary: "Get all quiz results by student ID",
-        description:
-            "Retrieves all quiz results for a specific student with detailed information",
+        description: "Retrieves all quiz results for a specific student with detailed information",
         tags: ["Class Quiz"],
         parameters: [
             {
@@ -1945,8 +1930,7 @@ app.get(
     describeRoute({
         operationId: "getQuizResultsSummaryByStudentId",
         summary: "Get quiz results summary by student ID",
-        description:
-            "Retrieves a summary of all quiz results for a specific student",
+        description: "Retrieves a summary of all quiz results for a specific student",
         tags: ["Class Quiz"],
         parameters: [
             {
@@ -2055,8 +2039,7 @@ app.get(
     describeRoute({
         operationId: "getQuizResultsByStudentIdAndQuizId",
         summary: "Get quiz results by student ID and quiz ID",
-        description:
-            "Retrieves detailed quiz results for a specific student and quiz",
+        description: "Retrieves detailed quiz results for a specific student and quiz",
         tags: ["Class Quiz"],
         parameters: [
             {

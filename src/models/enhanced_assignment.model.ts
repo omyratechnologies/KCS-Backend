@@ -131,15 +131,11 @@ EnhancedAssignmentSubmissionSchema.index.findByGradeStatus = { by: "grade" };
 EnhancedAssignmentSubmissionSchema.index.findByLateStatus = { by: "is_late" };
 
 // Models
-const EnhancedAssignment = ottoman.model<IEnhancedAssignmentData>(
-    "enhanced_assignments",
-    EnhancedAssignmentSchema
-);
+const EnhancedAssignment = ottoman.model<IEnhancedAssignmentData>("enhanced_assignments", EnhancedAssignmentSchema);
 
-const EnhancedAssignmentSubmission =
-    ottoman.model<IEnhancedAssignmentSubmissionData>(
-        "enhanced_assignment_submissions",
-        EnhancedAssignmentSubmissionSchema
-    );
+const EnhancedAssignmentSubmission = ottoman.model<IEnhancedAssignmentSubmissionData>(
+    "enhanced_assignment_submissions",
+    EnhancedAssignmentSubmissionSchema
+);
 
 export { EnhancedAssignment, EnhancedAssignmentSubmission };

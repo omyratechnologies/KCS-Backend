@@ -8,9 +8,7 @@ export const teacherSchema = z
         id: z.string().openapi({ example: "teacher123" }),
         campus_id: z.string().openapi({ example: "campus123" }),
         user_id: z.string().openapi({ example: "user456" }),
-        subjects: z
-            .array(z.string())
-            .openapi({ example: ["subject1", "subject2"] }),
+        subjects: z.array(z.string()).openapi({ example: ["subject1", "subject2"] }),
         classes: z.array(z.string()).openapi({ example: ["class1", "class2"] }),
         meta_data: z.record(z.string(), z.any()).openapi({
             example: {
@@ -192,9 +190,7 @@ export const updateTeacherResponseSchema = teacherSchema.openapi({
 });
 
 // Get Teachers Response
-export const getTeachersResponseSchema = z
-    .array(teacherWithProfileSchema)
-    .openapi({ ref: "GetTeachersResponse" });
+export const getTeachersResponseSchema = z.array(teacherWithProfileSchema).openapi({ ref: "GetTeachersResponse" });
 
 // Get Teacher Classes Response
 export const getTeacherClassesResponseSchema = z

@@ -12,10 +12,7 @@ import { roleMiddleware } from "@/middlewares/role.middleware";
 const settlementRequestSchema = z
     .object({
         gateway_provider: z.enum(["razorpay", "payu", "cashfree"]),
-        settlement_date: z
-            .string()
-            .optional()
-            .describe("ISO date string for settlement date"),
+        settlement_date: z.string().optional().describe("ISO date string for settlement date"),
     })
     .openapi({ ref: "SettlementRequest" });
 
@@ -26,12 +23,7 @@ const gatewayConfigurationSchema = z
         is_primary: z.boolean().default(false),
         gateway_settings: z.object({
             auto_settlement_enabled: z.boolean(),
-            settlement_schedule: z.enum([
-                "daily",
-                "weekly",
-                "monthly",
-                "custom",
-            ]),
+            settlement_schedule: z.enum(["daily", "weekly", "monthly", "custom"]),
             custom_settlement_days: z.array(z.number()).optional(),
             minimum_settlement_amount: z.number().min(0),
             maximum_settlement_amount: z.number().min(0),
@@ -114,8 +106,7 @@ app.post(
         tags: ["Payment Settlement"],
         operationId: "triggerManualSettlement",
         summary: "Trigger manual settlement",
-        description:
-            "Manually trigger settlement for a specific payment gateway (Super Admin only)",
+        description: "Manually trigger settlement for a specific payment gateway (Super Admin only)",
         security: [{ bearerAuth: [] }],
         responses: {
             200: {
@@ -182,13 +173,7 @@ app.get(
                 required: false,
                 schema: {
                     type: "string",
-                    enum: [
-                        "pending",
-                        "processing",
-                        "completed",
-                        "failed",
-                        "cancelled",
-                    ],
+                    enum: ["pending", "processing", "completed", "failed", "cancelled"],
                 },
                 description: "Filter by settlement status",
             },
@@ -240,8 +225,7 @@ app.get(
         tags: ["Payment Settlement"],
         operationId: "getSettlementDetails",
         summary: "Get settlement details",
-        description:
-            "Retrieve detailed information about a specific settlement",
+        description: "Retrieve detailed information about a specific settlement",
         security: [{ bearerAuth: [] }],
         parameters: [
             {
@@ -324,8 +308,7 @@ app.post(
         tags: ["Payment Security"],
         operationId: "performSecurityAudit",
         summary: "Perform security audit",
-        description:
-            "Conduct comprehensive security audit of payment system (Super Admin only)",
+        description: "Conduct comprehensive security audit of payment system (Super Admin only)",
         security: [{ bearerAuth: [] }],
         responses: {
             200: {
@@ -390,12 +373,7 @@ app.get(
                 required: false,
                 schema: {
                     type: "string",
-                    enum: [
-                        "detected",
-                        "investigating",
-                        "resolved",
-                        "false_positive",
-                    ],
+                    enum: ["detected", "investigating", "resolved", "false_positive"],
                 },
                 description: "Filter by event status",
             },
@@ -451,13 +429,7 @@ app.get(
                 required: false,
                 schema: {
                     type: "string",
-                    enum: [
-                        "payment",
-                        "settlement",
-                        "security",
-                        "compliance",
-                        "configuration",
-                    ],
+                    enum: ["payment", "settlement", "security", "compliance", "configuration"],
                 },
                 description: "Filter by event category",
             },
@@ -563,8 +535,7 @@ app.post(
         tags: ["Payment Gateway Configuration"],
         operationId: "configureGateway",
         summary: "Configure payment gateway",
-        description:
-            "Configure payment gateway with enhanced security settings",
+        description: "Configure payment gateway with enhanced security settings",
         security: [{ bearerAuth: [] }],
         responses: {
             200: {
@@ -629,15 +600,7 @@ app.get(
                 required: true,
                 schema: {
                     type: "string",
-                    enum: [
-                        "financial",
-                        "security",
-                        "audit",
-                        "pci_dss",
-                        "gdpr",
-                        "rbi_compliance",
-                        "settlement",
-                    ],
+                    enum: ["financial", "security", "audit", "pci_dss", "gdpr", "rbi_compliance", "settlement"],
                 },
                 description: "Type of compliance report to generate",
             },
@@ -695,8 +658,7 @@ app.get(
         tags: ["Payment System Health"],
         operationId: "getSystemHealth",
         summary: "Get system health status",
-        description:
-            "Check overall health and status of payment settlement system",
+        description: "Check overall health and status of payment settlement system",
         responses: {
             200: {
                 description: "System health status",

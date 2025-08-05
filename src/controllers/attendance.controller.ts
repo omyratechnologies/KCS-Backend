@@ -71,10 +71,7 @@ export class AttendanceController {
             return ctx.json(
                 {
                     message: "Error in marking attendance",
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    error: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -113,10 +110,7 @@ export class AttendanceController {
             return ctx.json(
                 {
                     message: "Error in marking bulk attendance",
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    error: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -158,10 +152,7 @@ export class AttendanceController {
             return ctx.json(
                 {
                     message: "Error in marking class attendance",
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    error: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -203,10 +194,7 @@ export class AttendanceController {
             return ctx.json(
                 {
                     message: "Error in updating attendance",
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    error: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -218,10 +206,7 @@ export class AttendanceController {
 
         const { date } = ctx.req.param();
 
-        const attendance = await AttendanceService.getAttendancesByDate(
-            campus_id,
-            new Date(date)
-        );
+        const attendance = await AttendanceService.getAttendancesByDate(campus_id, new Date(date));
 
         return ctx.json(attendance);
     };
@@ -231,10 +216,7 @@ export class AttendanceController {
 
         const { user_id } = ctx.req.param();
 
-        const attendance = await AttendanceService.getAttendanceByUserId(
-            campus_id,
-            user_id
-        );
+        const attendance = await AttendanceService.getAttendanceByUserId(campus_id, user_id);
 
         return ctx.json(attendance);
     };
@@ -262,10 +244,7 @@ export class AttendanceController {
         const date = ctx.req.query("date");
 
         if (!class_id) {
-            return ctx.json(
-                { error: "class_id path parameter is required" },
-                400
-            );
+            return ctx.json({ error: "class_id path parameter is required" }, 400);
         }
 
         try {
@@ -274,18 +253,10 @@ export class AttendanceController {
             if (date) {
                 // If date is provided, filter by date
                 const parsedDate = new Date(date);
-                attendance =
-                    await AttendanceService.getAttendanceByClassIdAndDate(
-                        campus_id,
-                        class_id,
-                        parsedDate
-                    );
+                attendance = await AttendanceService.getAttendanceByClassIdAndDate(campus_id, class_id, parsedDate);
             } else {
                 // If no date provided, get all attendance for the class
-                attendance = await AttendanceService.getAttendanceByClassId(
-                    campus_id,
-                    class_id
-                );
+                attendance = await AttendanceService.getAttendanceByClassId(campus_id, class_id);
             }
 
             return ctx.json(attendance);
@@ -293,19 +264,14 @@ export class AttendanceController {
             return ctx.json(
                 {
                     message: "Error retrieving class attendance",
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    error: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
         }
     };
 
-    public static readonly getAttendanceByClassIdAndDate = async (
-        ctx: Context
-    ) => {
+    public static readonly getAttendanceByClassIdAndDate = async (ctx: Context) => {
         const campus_id = ctx.get("campus_id");
 
         // Get parameters from query string instead of request body
@@ -313,10 +279,7 @@ export class AttendanceController {
         const date = ctx.req.query("date");
 
         if (!class_id) {
-            return ctx.json(
-                { error: "class_id query parameter is required" },
-                400
-            );
+            return ctx.json({ error: "class_id query parameter is required" }, 400);
         }
 
         if (!date) {
@@ -326,22 +289,14 @@ export class AttendanceController {
         try {
             const parsedDate = new Date(date);
 
-            const attendance =
-                await AttendanceService.getAttendanceByClassIdAndDate(
-                    campus_id,
-                    class_id,
-                    parsedDate
-                );
+            const attendance = await AttendanceService.getAttendanceByClassIdAndDate(campus_id, class_id, parsedDate);
 
             return ctx.json(attendance);
         } catch (error) {
             return ctx.json(
                 {
                     message: "Error retrieving class attendance",
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    error: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -349,9 +304,7 @@ export class AttendanceController {
     };
 
     // Get attendance statistics by teacher ID
-    public static readonly getAttendanceStatsByTeacherId = async (
-        ctx: Context
-    ) => {
+    public static readonly getAttendanceStatsByTeacherId = async (ctx: Context) => {
         const campus_id = ctx.get("campus_id");
         const teacher_id = ctx.req.param("teacher_id");
         const date = ctx.req.query("date");
@@ -369,21 +322,14 @@ export class AttendanceController {
                 }
             }
 
-            const stats = await AttendanceService.getAttendanceStatsByTeacherId(
-                campus_id,
-                teacher_id,
-                parsedDate
-            );
+            const stats = await AttendanceService.getAttendanceStatsByTeacherId(campus_id, teacher_id, parsedDate);
 
             return ctx.json(stats);
         } catch (error) {
             return ctx.json(
                 {
                     message: "Error retrieving attendance statistics",
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    error: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -411,8 +357,7 @@ export class AttendanceController {
                 allClasses.rows?.filter((classData) => {
                     return (
                         classData.class_teacher_id === teacher_id ||
-                        (classData.teacher_ids &&
-                            classData.teacher_ids.includes(teacher_id))
+                        (classData.teacher_ids && classData.teacher_ids.includes(teacher_id))
                     );
                 }) || [];
 
@@ -434,10 +379,7 @@ export class AttendanceController {
             return ctx.json(
                 {
                     message: "Error retrieving classes",
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    error: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -451,10 +393,7 @@ export class AttendanceController {
             const class_id = ctx.req.param("class_id");
 
             if (!class_id) {
-                return ctx.json(
-                    { error: "class_id parameter is required" },
-                    400
-                );
+                return ctx.json({ error: "class_id parameter is required" }, 400);
             }
 
             // Get optional date range from query parameters
@@ -467,20 +406,14 @@ export class AttendanceController {
             if (from_date) {
                 parsedFromDate = new Date(from_date);
                 if (Number.isNaN(parsedFromDate.getTime())) {
-                    return ctx.json(
-                        { error: "Invalid from_date format. Use YYYY-MM-DD" },
-                        400
-                    );
+                    return ctx.json({ error: "Invalid from_date format. Use YYYY-MM-DD" }, 400);
                 }
             }
 
             if (to_date) {
                 parsedToDate = new Date(to_date);
                 if (Number.isNaN(parsedToDate.getTime())) {
-                    return ctx.json(
-                        { error: "Invalid to_date format. Use YYYY-MM-DD" },
-                        400
-                    );
+                    return ctx.json({ error: "Invalid to_date format. Use YYYY-MM-DD" }, 400);
                 }
             }
 
@@ -496,10 +429,7 @@ export class AttendanceController {
             return ctx.json(
                 {
                     message: "Error generating attendance report",
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    error: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -513,10 +443,7 @@ export class AttendanceController {
             const student_id = ctx.req.param("student_id");
 
             if (!student_id) {
-                return ctx.json(
-                    { error: "student_id parameter is required" },
-                    400
-                );
+                return ctx.json({ error: "student_id parameter is required" }, 400);
             }
 
             // Get optional date range from query parameters
@@ -529,40 +456,30 @@ export class AttendanceController {
             if (from_date) {
                 parsedFromDate = new Date(from_date);
                 if (Number.isNaN(parsedFromDate.getTime())) {
-                    return ctx.json(
-                        { error: "Invalid from_date format. Use YYYY-MM-DD" },
-                        400
-                    );
+                    return ctx.json({ error: "Invalid from_date format. Use YYYY-MM-DD" }, 400);
                 }
             }
 
             if (to_date) {
                 parsedToDate = new Date(to_date);
                 if (Number.isNaN(parsedToDate.getTime())) {
-                    return ctx.json(
-                        { error: "Invalid to_date format. Use YYYY-MM-DD" },
-                        400
-                    );
+                    return ctx.json({ error: "Invalid to_date format. Use YYYY-MM-DD" }, 400);
                 }
             }
 
-            const studentView =
-                await AttendanceService.getStudentAttendanceView(
-                    campus_id,
-                    student_id,
-                    parsedFromDate,
-                    parsedToDate
-                );
+            const studentView = await AttendanceService.getStudentAttendanceView(
+                campus_id,
+                student_id,
+                parsedFromDate,
+                parsedToDate
+            );
 
             return ctx.json(studentView);
         } catch (error) {
             return ctx.json(
                 {
                     message: "Error generating student attendance view",
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    error: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );

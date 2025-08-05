@@ -12,18 +12,10 @@ import { build } from "esbuild";
 import glob from "glob";
 
 const entryPoints = glob.sync("./src/**/*.ts", {
-    ignore: [
-        "./src/**/*.test.ts",
-        "./src/mod.ts",
-        "./src/middleware.ts",
-        "./src/deno/**/*.ts",
-    ],
+    ignore: ["./src/**/*.test.ts", "./src/mod.ts", "./src/middleware.ts", "./src/deno/**/*.ts"],
 });
 
-const addExtension = (
-    extension: string = ".js",
-    fileExtension: string = ".ts"
-): Plugin => ({
+const addExtension = (extension: string = ".js", fileExtension: string = ".ts"): Plugin => ({
     name: "add-extension",
     setup(build: PluginBuild) {
         build.onResolve({ filter: /.*/ }, (args) => {
@@ -35,11 +27,7 @@ const addExtension = (
                 if (fs.existsSync(tsPath)) {
                     importPath = args.path + extension;
                 } else {
-                    tsPath = path.join(
-                        args.resolveDir,
-                        args.path,
-                        `index${fileExtension}`
-                    );
+                    tsPath = path.join(args.resolveDir, args.path, `index${fileExtension}`);
                     if (fs.existsSync(tsPath)) {
                         importPath = `${args.path}/index${extension}`;
                     }

@@ -38,9 +38,6 @@ ClassSubjectSchema.index.findByClassIdAndSubjectId = {
     by: ["class_id", "subject_id"],
 };
 
-const ClassSubject = ottoman.model<IClassSubjectData>(
-    "class_subject",
-    ClassSubjectSchema
-);
+const ClassSubject = ottoman.model<IClassSubjectData>("class_subject", ClassSubjectSchema);
 
 export { ClassSubject, type IClassSubjectData };

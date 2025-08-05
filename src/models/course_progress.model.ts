@@ -128,9 +128,6 @@ CourseProgressSchema.index.findByUserAndLecture = {
 };
 CourseProgressSchema.index.findByStatus = { by: "progress_status" };
 
-const CourseProgress = ottoman.model<ICourseProgressData>(
-    "course_progress",
-    CourseProgressSchema
-);
+const CourseProgress = ottoman.model<ICourseProgressData>("course_progress", CourseProgressSchema);
 
 export { CourseProgress };

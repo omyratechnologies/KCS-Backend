@@ -24,8 +24,7 @@ import {
 export class WebRTCService {
     private static workers: mediasoup.types.Worker[] = [];
     private static routers: Map<string, mediasoup.types.Router> = new Map();
-    private static transports: Map<string, mediasoup.types.Transport> =
-        new Map();
+    private static transports: Map<string, mediasoup.types.Transport> = new Map();
     private static producers: Map<string, mediasoup.types.Producer> = new Map();
     private static consumers: Map<string, mediasoup.types.Consumer> = new Map();
     private static rooms: Map<string, Set<string>> = new Map(); // room -> participants
@@ -56,47 +55,46 @@ export class WebRTCService {
     }
 
     // Media server configuration
-    private static readonly MEDIA_CODECS: mediasoup.types.RtpCodecCapability[] =
-        [
-            {
-                kind: "audio",
-                mimeType: "audio/opus",
-                clockRate: 48_000,
-                channels: 2,
-                preferredPayloadType: 111,
+    private static readonly MEDIA_CODECS: mediasoup.types.RtpCodecCapability[] = [
+        {
+            kind: "audio",
+            mimeType: "audio/opus",
+            clockRate: 48_000,
+            channels: 2,
+            preferredPayloadType: 111,
+        },
+        {
+            kind: "video",
+            mimeType: "video/VP8",
+            clockRate: 90_000,
+            preferredPayloadType: 96,
+            parameters: {
+                "x-google-start-bitrate": 1000,
             },
-            {
-                kind: "video",
-                mimeType: "video/VP8",
-                clockRate: 90_000,
-                preferredPayloadType: 96,
-                parameters: {
-                    "x-google-start-bitrate": 1000,
-                },
+        },
+        {
+            kind: "video",
+            mimeType: "video/VP9",
+            clockRate: 90_000,
+            preferredPayloadType: 98,
+            parameters: {
+                "profile-id": 2,
+                "x-google-start-bitrate": 1000,
             },
-            {
-                kind: "video",
-                mimeType: "video/VP9",
-                clockRate: 90_000,
-                preferredPayloadType: 98,
-                parameters: {
-                    "profile-id": 2,
-                    "x-google-start-bitrate": 1000,
-                },
+        },
+        {
+            kind: "video",
+            mimeType: "video/h264",
+            clockRate: 90_000,
+            preferredPayloadType: 102,
+            parameters: {
+                "packetization-mode": 1,
+                "profile-level-id": "4d0032",
+                "level-asymmetry-allowed": 1,
+                "x-google-start-bitrate": 1000,
             },
-            {
-                kind: "video",
-                mimeType: "video/h264",
-                clockRate: 90_000,
-                preferredPayloadType: 102,
-                parameters: {
-                    "packetization-mode": 1,
-                    "profile-level-id": "4d0032",
-                    "level-asymmetry-allowed": 1,
-                    "x-google-start-bitrate": 1000,
-                },
-            },
-        ];
+        },
+    ];
 
     /**
      * Initialize MediaSoup workers for horizontal scaling
@@ -105,9 +103,7 @@ export class WebRTCService {
         try {
             const numWorkers = Number(process.env.MEDIASOUP_WORKERS) || 4;
 
-            console.log(
-                `🚀 Initializing ${numWorkers} MediaSoup workers for scalable video conferencing...`
-            );
+            console.log(`🚀 Initializing ${numWorkers} MediaSoup workers for scalable video conferencing...`);
 
             // Check if MediaSoup is available in the environment
             if (!mediasoup) {
@@ -127,15 +123,11 @@ export class WebRTCService {
             for (const [index, result] of workers.entries()) {
                 if (result.status === "fulfilled" && result.value) {
                     this.workers.push(result.value);
-                    console.log(
-                        `✅ MediaSoup worker ${index} initialized [pid:${result.value.pid}]`
-                    );
+                    console.log(`✅ MediaSoup worker ${index} initialized [pid:${result.value.pid}]`);
                 } else {
                     console.warn(
                         `⚠️ Failed to create MediaSoup worker ${index}:`,
-                        result.status === "rejected"
-                            ? result.reason
-                            : "Unknown error"
+                        result.status === "rejected" ? result.reason : "Unknown error"
                     );
                 }
             }
@@ -144,40 +136,27 @@ export class WebRTCService {
                 throw new Error("No MediaSoup workers could be created");
             }
 
-            console.log(
-                `✅ MediaSoup initialized with ${this.workers.length}/${numWorkers} workers`
-            );
+            console.log(`✅ MediaSoup initialized with ${this.workers.length}/${numWorkers} workers`);
         } catch (error) {
-            console.warn(
-                "⚠️ MediaSoup initialization failed, running in compatibility mode:",
-                error
-            );
+            console.warn("⚠️ MediaSoup initialization failed, running in compatibility mode:", error);
 
             // Set a flag to indicate MediaSoup is not available
             this.isMediaSoupAvailable = false;
 
             // Don't throw the error - allow the server to continue without MediaSoup
             // The participant management features will still work without WebRTC
-            console.log(
-                "📱 Participant management APIs will work without MediaSoup"
-            );
+            console.log("📱 Participant management APIs will work without MediaSoup");
         }
     }
 
     /**
      * Create a single worker with timeout
      */
-    private static async createWorkerWithTimeout(
-        index: number
-    ): Promise<mediasoup.types.Worker | null> {
+    private static async createWorkerWithTimeout(index: number): Promise<mediasoup.types.Worker | null> {
         return new Promise((resolve, reject) => {
             // Set a timeout for worker creation (5 seconds)
             const timeout = setTimeout(() => {
-                reject(
-                    new Error(
-                        `Worker ${index} creation timed out after 5 seconds`
-                    )
-                );
+                reject(new Error(`Worker ${index} creation timed out after 5 seconds`));
             }, 5000);
 
             const createWorker = async () => {
@@ -189,9 +168,7 @@ export class WebRTCService {
                     });
 
                     worker.on("died", () => {
-                        console.error(
-                            `💀 MediaSoup worker ${index} died, restarting... [pid:${worker.pid}]`
-                        );
+                        console.error(`💀 MediaSoup worker ${index} died, restarting... [pid:${worker.pid}]`);
                         // Remove the dead worker and try to restart
                         const workerIndex = this.workers.indexOf(worker);
                         if (workerIndex > -1) {
@@ -216,13 +193,9 @@ export class WebRTCService {
     /**
      * Create a router for a meeting room with load balancing
      */
-    public static async createMeetingRouter(
-        meetingId: string
-    ): Promise<mediasoup.types.Router | null> {
+    public static async createMeetingRouter(meetingId: string): Promise<mediasoup.types.Router | null> {
         if (!this.isMediaSoupAvailable || this.workers.length === 0) {
-            console.log(
-                `⚠️ MediaSoup not available - router creation skipped for meeting: ${meetingId}`
-            );
+            console.log(`⚠️ MediaSoup not available - router creation skipped for meeting: ${meetingId}`);
             return null;
         }
 
@@ -252,9 +225,7 @@ export class WebRTCService {
         params: any;
     }> {
         if (!this.isMediaSoupAvailable) {
-            console.log(
-                `⚠️ MediaSoup not available - transport creation skipped for participant: ${participantId}`
-            );
+            console.log(`⚠️ MediaSoup not available - transport creation skipped for participant: ${participantId}`);
             return {
                 transport: null,
                 params: null,
@@ -270,8 +241,7 @@ export class WebRTCService {
             listenIps: [
                 {
                     ip: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
-                    announcedIp:
-                        process.env.MEDIASOUP_ANNOUNCED_IP || "127.0.0.1",
+                    announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || "127.0.0.1",
                 },
             ],
             enableUdp: true,
@@ -321,14 +291,10 @@ export class WebRTCService {
         kind: mediasoup.types.MediaKind
     ): Promise<{ id: string }> {
         const transportId = `${meetingId}_${participantId}_send`;
-        const transport = this.transports.get(
-            transportId
-        ) as mediasoup.types.WebRtcTransport;
+        const transport = this.transports.get(transportId) as mediasoup.types.WebRtcTransport;
 
         if (!transport) {
-            throw new Error(
-                `Send transport not found for participant: ${participantId}`
-            );
+            throw new Error(`Send transport not found for participant: ${participantId}`);
         }
 
         const producer = await transport.produce({
@@ -340,12 +306,7 @@ export class WebRTCService {
         this.producers.set(producerId, producer);
 
         // Notify other participants about new producer
-        this.notifyParticipantsOfNewProducer(
-            meetingId,
-            participantId,
-            producer.id,
-            kind
-        );
+        this.notifyParticipantsOfNewProducer(meetingId, participantId, producer.id, kind);
 
         // Update analytics
         await this.updateMeetingAnalytics(meetingId, "producer_added", {
@@ -372,9 +333,7 @@ export class WebRTCService {
     }> {
         const router = this.routers.get(meetingId);
         const transportId = `${meetingId}_${consumerParticipantId}_recv`;
-        const transport = this.transports.get(
-            transportId
-        ) as mediasoup.types.WebRtcTransport;
+        const transport = this.transports.get(transportId) as mediasoup.types.WebRtcTransport;
         const producerId = `${meetingId}_${producerParticipantId}_${kind}`;
         const producer = this.producers.get(producerId);
 
@@ -434,10 +393,7 @@ export class WebRTCService {
     /**
      * Handle participant leaving the meeting
      */
-    public static async handleParticipantDisconnect(
-        meetingId: string,
-        participantId: string
-    ): Promise<void> {
+    public static async handleParticipantDisconnect(meetingId: string, participantId: string): Promise<void> {
         // Close all transports for this participant
         const sendTransportId = `${meetingId}_${participantId}_send`;
         const recvTransportId = `${meetingId}_${participantId}_recv`;
@@ -483,9 +439,7 @@ export class WebRTCService {
             participantId,
         });
 
-        console.log(
-            `👋 Participant ${participantId} disconnected from meeting ${meetingId}`
-        );
+        console.log(`👋 Participant ${participantId} disconnected from meeting ${meetingId}`);
     }
 
     /**
@@ -493,7 +447,9 @@ export class WebRTCService {
      */
     public static async closeMeetingRoom(meetingId: string): Promise<void> {
         const router = this.routers.get(meetingId);
-        if (!router) {return;}
+        if (!router) {
+            return;
+        }
 
         // Close all transports in this room
         for (const [transportId, transport] of this.transports.entries()) {
@@ -613,22 +569,18 @@ export class WebRTCService {
         kind: mediasoup.types.MediaKind
     ): void {
         // This will be implemented with Socket.IO in the next step
-        console.log(
-            `🔔 New ${kind} producer from ${producerParticipantId} in meeting ${meetingId}`
-        );
+        console.log(`🔔 New ${kind} producer from ${producerParticipantId} in meeting ${meetingId}`);
     }
 
     /**
      * Update meeting analytics
      */
-    private static async updateMeetingAnalytics(
-        meetingId: string,
-        eventType: string,
-        data: any
-    ): Promise<void> {
+    private static async updateMeetingAnalytics(meetingId: string, eventType: string, data: any): Promise<void> {
         try {
             const meeting = await Meeting.findById(meetingId);
-            if (!meeting) {return;}
+            if (!meeting) {
+                return;
+            }
 
             const analytics = meeting.analytics || {
                 total_duration_minutes: 0,
@@ -649,10 +601,7 @@ export class WebRTCService {
                     break;
                 }
                 case "producer_added": {
-                    if (
-                        data.kind === "video" &&
-                        data.participantId.includes("screen")
-                    ) {
+                    if (data.kind === "video" && data.participantId.includes("screen")) {
                         analytics.screen_shares_count++;
                     }
                     break;
@@ -681,10 +630,7 @@ export class WebRTCService {
         const timestamp = Math.floor(Date.now() / 1000) + ttl;
         const turnUsername = `${timestamp}:${username}`;
 
-        const credential = crypto
-            .createHmac("sha1", secret)
-            .update(turnUsername)
-            .digest("base64");
+        const credential = crypto.createHmac("sha1", secret).update(turnUsername).digest("base64");
 
         return {
             username: turnUsername,
@@ -706,14 +652,9 @@ export class WebRTCService {
         totalParticipants: number;
         memoryUsage: NodeJS.MemoryUsage;
     } {
-        const activeWorkers = this.workers.filter(
-            (worker) => !worker.closed
-        ).length;
+        const activeWorkers = this.workers.filter((worker) => !worker.closed).length;
         const activeRooms = this.routers.size;
-        const totalParticipants = [...this.rooms.values()].reduce(
-            (sum, participants) => sum + participants.size,
-            0
-        );
+        const totalParticipants = [...this.rooms.values()].reduce((sum, participants) => sum + participants.size, 0);
 
         let status: "healthy" | "degraded" | "unhealthy" = "healthy";
 

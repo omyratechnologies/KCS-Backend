@@ -49,10 +49,7 @@ ComplianceCheckSchema.index.findByStatus = { by: "status" };
 ComplianceCheckSchema.index.findByCheckType = { by: "check_type" };
 ComplianceCheckSchema.index.findByCheckDate = { by: "check_date" };
 
-const ComplianceCheck = ottoman.model<IComplianceCheck>(
-    "compliance_checks",
-    ComplianceCheckSchema
-);
+const ComplianceCheck = ottoman.model<IComplianceCheck>("compliance_checks", ComplianceCheckSchema);
 
 export class ComplianceCheckService {
     public static async createComplianceCheck(
@@ -65,10 +62,7 @@ export class ComplianceCheckService {
         });
     }
 
-    public static async getComplianceHistory(
-        campus_id: string,
-        limit?: number
-    ): Promise<IComplianceCheck[]> {
+    public static async getComplianceHistory(campus_id: string, limit?: number): Promise<IComplianceCheck[]> {
         const history = await ComplianceCheck.find({
             campus_id,
         });
@@ -76,11 +70,7 @@ export class ComplianceCheckService {
         let checks = history.rows || [];
 
         // Sort by check_date descending
-        checks = checks.sort(
-            (a, b) =>
-                new Date(b.check_date).getTime() -
-                new Date(a.check_date).getTime()
-        );
+        checks = checks.sort((a, b) => new Date(b.check_date).getTime() - new Date(a.check_date).getTime());
 
         if (limit) {
             checks = checks.slice(0, limit);
@@ -89,9 +79,7 @@ export class ComplianceCheckService {
         return checks;
     }
 
-    public static async getLatestComplianceCheck(
-        campus_id: string
-    ): Promise<IComplianceCheck | null> {
+    public static async getLatestComplianceCheck(campus_id: string): Promise<IComplianceCheck | null> {
         const checks = await this.getComplianceHistory(campus_id, 1);
         return checks[0] || null;
     }
@@ -150,11 +138,7 @@ export class ComplianceCheckService {
 
         const checks = (allChecks.rows || [])
             .filter((check) => new Date(check.check_date) >= since)
-            .sort(
-                (a, b) =>
-                    new Date(a.check_date).getTime() -
-                    new Date(b.check_date).getTime()
-            );
+            .sort((a, b) => new Date(a.check_date).getTime() - new Date(b.check_date).getTime());
 
         if (checks.length === 0) {
             return {
@@ -166,9 +150,7 @@ export class ComplianceCheckService {
             };
         }
 
-        const avgScore =
-            checks.reduce((sum, check) => sum + check.compliance_score, 0) /
-            checks.length;
+        const avgScore = checks.reduce((sum, check) => sum + check.compliance_score, 0) / checks.length;
 
         // Calculate trend
         let trendDirection: "improving" | "declining" | "stable" = "stable";
@@ -178,16 +160,9 @@ export class ComplianceCheckService {
             const firstHalf = checks.slice(0, Math.floor(checks.length / 2));
             const secondHalf = checks.slice(Math.floor(checks.length / 2));
 
-            const firstHalfAvg =
-                firstHalf.reduce(
-                    (sum, check) => sum + check.compliance_score,
-                    0
-                ) / firstHalf.length;
+            const firstHalfAvg = firstHalf.reduce((sum, check) => sum + check.compliance_score, 0) / firstHalf.length;
             const secondHalfAvg =
-                secondHalf.reduce(
-                    (sum, check) => sum + check.compliance_score,
-                    0
-                ) / secondHalf.length;
+                secondHalf.reduce((sum, check) => sum + check.compliance_score, 0) / secondHalf.length;
 
             scoreChange = secondHalfAvg - firstHalfAvg;
 
@@ -199,10 +174,7 @@ export class ComplianceCheckService {
         }
 
         // Aggregate recent issues
-        const issueMap = new Map<
-            string,
-            { category: string; count: number; severity: string }
-        >();
+        const issueMap = new Map<string, { category: string; count: number; severity: string }>();
 
         for (const check of checks) {
             for (const issue of check.issues) {
@@ -219,9 +191,7 @@ export class ComplianceCheckService {
             }
         }
 
-        const recentIssues = [...issueMap.values()]
-            .sort((a, b) => b.count - a.count)
-            .slice(0, 10);
+        const recentIssues = [...issueMap.values()].sort((a, b) => b.count - a.count).slice(0, 10);
 
         return {
             trend_direction: trendDirection,
@@ -253,27 +223,17 @@ export class ComplianceCheckService {
 
         const total = checks.length;
         const compliant = checks.filter((c) => c.status === "compliant").length;
-        const nonCompliant = checks.filter(
-            (c) => c.status === "non_compliant"
-        ).length;
-        const avgScore =
-            total > 0
-                ? checks.reduce((sum, c) => sum + c.compliance_score, 0) / total
-                : 0;
+        const nonCompliant = checks.filter((c) => c.status === "non_compliant").length;
+        const avgScore = total > 0 ? checks.reduce((sum, c) => sum + c.compliance_score, 0) / total : 0;
 
         const checksByType = {
-            automated: checks.filter((c) => c.check_type === "automated")
-                .length,
+            automated: checks.filter((c) => c.check_type === "automated").length,
             manual: checks.filter((c) => c.check_type === "manual").length,
-            scheduled: checks.filter((c) => c.check_type === "scheduled")
-                .length,
+            scheduled: checks.filter((c) => c.check_type === "scheduled").length,
         };
 
         // Aggregate common issues
-        const issueMap = new Map<
-            string,
-            { category: string; count: number; severity: string }
-        >();
+        const issueMap = new Map<string, { category: string; count: number; severity: string }>();
 
         for (const check of checks) {
             for (const issue of check.issues) {
@@ -290,9 +250,7 @@ export class ComplianceCheckService {
             }
         }
 
-        const commonIssues = [...issueMap.values()]
-            .sort((a, b) => b.count - a.count)
-            .slice(0, 10);
+        const commonIssues = [...issueMap.values()].sort((a, b) => b.count - a.count).slice(0, 10);
 
         return {
             total_checks: total,

@@ -5,12 +5,7 @@ import Mustache from "mustache";
 const getMailTemplate = async (): Promise<string> => {
     const htmlFiles = ["index", "header", "body", "footer"];
     const [indexHTML, headerHTML, bodyHTML, footerHTML] = await Promise.all(
-        htmlFiles.map((fileName) =>
-            fs.readFile(
-                new URL(`base/${fileName}.html`, import.meta.url),
-                "utf8"
-            )
-        )
+        htmlFiles.map((fileName) => fs.readFile(new URL(`base/${fileName}.html`, import.meta.url), "utf8"))
     );
     return await Mustache.render(indexHTML, {
         header: headerHTML,

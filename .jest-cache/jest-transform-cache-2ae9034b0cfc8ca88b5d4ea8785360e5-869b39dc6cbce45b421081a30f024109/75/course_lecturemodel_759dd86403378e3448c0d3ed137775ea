@@ -1,0 +1,300 @@
+5da65e332b900a8543f2bc0965c9113e
+/* istanbul ignore next */
+function cov_2breuz2s8() {
+  var path = "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/models/course_lecture.model.ts";
+  var hash = "20677f5f09d4ca5c2e57fdcdcc82ecaa39a78f3e";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/models/course_lecture.model.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 28
+        },
+        end: {
+          line: 33,
+          column: 2
+        }
+      },
+      "1": {
+        start: {
+          line: 31,
+          column: 45
+        },
+        end: {
+          line: 31,
+          column: 55
+        }
+      },
+      "2": {
+        start: {
+          line: 32,
+          column: 45
+        },
+        end: {
+          line: 32,
+          column: 55
+        }
+      },
+      "3": {
+        start: {
+          line: 34,
+          column: 0
+        },
+        end: {
+          line: 34,
+          column: 63
+        }
+      },
+      "4": {
+        start: {
+          line: 35,
+          column: 0
+        },
+        end: {
+          line: 35,
+          column: 65
+        }
+      },
+      "5": {
+        start: {
+          line: 36,
+          column: 0
+        },
+        end: {
+          line: 36,
+          column: 63
+        }
+      },
+      "6": {
+        start: {
+          line: 37,
+          column: 0
+        },
+        end: {
+          line: 37,
+          column: 64
+        }
+      },
+      "7": {
+        start: {
+          line: 38,
+          column: 0
+        },
+        end: {
+          line: 38,
+          column: 62
+        }
+      },
+      "8": {
+        start: {
+          line: 39,
+          column: 22
+        },
+        end: {
+          line: 39,
+          column: 75
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 31,
+            column: 39
+          },
+          end: {
+            line: 31,
+            column: 40
+          }
+        },
+        loc: {
+          start: {
+            line: 31,
+            column: 45
+          },
+          end: {
+            line: 31,
+            column: 55
+          }
+        },
+        line: 31
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 32,
+            column: 39
+          },
+          end: {
+            line: 32,
+            column: 40
+          }
+        },
+        loc: {
+          start: {
+            line: 32,
+            column: 45
+          },
+          end: {
+            line: 32,
+            column: 55
+          }
+        },
+        line: 32
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0
+    },
+    b: {},
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "20677f5f09d4ca5c2e57fdcdcc82ecaa39a78f3e"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_2breuz2s8 = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_2breuz2s8();
+import { Schema } from "ottoman";
+import { ottoman } from "../libs/db";
+const CourseLectureSchema =
+/* istanbul ignore next */
+(cov_2breuz2s8().s[0]++, new Schema({
+  course_id: {
+    type: String,
+    required: true
+  },
+  section_id: {
+    type: String,
+    required: true
+  },
+  campus_id: {
+    type: String,
+    required: true
+  },
+  title: {
+    type: String,
+    required: true
+  },
+  description: {
+    type: String
+  },
+  lecture_order: {
+    type: Number,
+    required: true
+  },
+  lecture_type: {
+    type: String,
+    enum: ["video", "resource", "quiz", "assignment", "text", "live_session"],
+    required: true
+  },
+  content_data: {
+    type: Object,
+    required: true
+  },
+  is_preview: {
+    type: Boolean,
+    default: false
+  },
+  is_mandatory: {
+    type: Boolean,
+    default: true
+  },
+  estimated_duration_minutes: {
+    type: Number,
+    default: 0
+  },
+  is_published: {
+    type: Boolean,
+    default: true
+  },
+  completion_criteria: {
+    type: Object,
+    default: {
+      auto_complete_video: true,
+      manual_mark_complete: false,
+      quiz_required: false,
+      assignment_required: false,
+      minimum_watch_percentage: 80
+    }
+  },
+  meta_data: {
+    type: Object,
+    default: {}
+  },
+  created_at: {
+    type: Date,
+    default: () => {
+      /* istanbul ignore next */
+      cov_2breuz2s8().f[0]++;
+      cov_2breuz2s8().s[1]++;
+      return new Date();
+    }
+  },
+  updated_at: {
+    type: Date,
+    default: () => {
+      /* istanbul ignore next */
+      cov_2breuz2s8().f[1]++;
+      cov_2breuz2s8().s[2]++;
+      return new Date();
+    }
+  }
+}));
+/* istanbul ignore next */
+cov_2breuz2s8().s[3]++;
+CourseLectureSchema.index.findByCourseId = {
+  by: "course_id"
+};
+/* istanbul ignore next */
+cov_2breuz2s8().s[4]++;
+CourseLectureSchema.index.findBySectionId = {
+  by: "section_id"
+};
+/* istanbul ignore next */
+cov_2breuz2s8().s[5]++;
+CourseLectureSchema.index.findByCampusId = {
+  by: "campus_id"
+};
+/* istanbul ignore next */
+cov_2breuz2s8().s[6]++;
+CourseLectureSchema.index.findByOrder = {
+  by: "lecture_order"
+};
+/* istanbul ignore next */
+cov_2breuz2s8().s[7]++;
+CourseLectureSchema.index.findByType = {
+  by: "lecture_type"
+};
+const CourseLecture =
+/* istanbul ignore next */
+(cov_2breuz2s8().s[8]++, ottoman.model("course_lectures", CourseLectureSchema));
+export { CourseLecture };

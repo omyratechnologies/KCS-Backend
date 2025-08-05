@@ -9,12 +9,7 @@ interface IClassQuizSession {
     quiz_id: string;
     user_id: string;
     session_token: string;
-    status:
-        | "not_started"
-        | "in_progress"
-        | "completed"
-        | "expired"
-        | "abandoned";
+    status: "not_started" | "in_progress" | "completed" | "expired" | "abandoned";
     started_at: Date | null;
     completed_at: Date | null;
     expires_at: Date | null;
@@ -40,13 +35,7 @@ const ClassQuizSessionSchema = new Schema({
     status: {
         type: String,
         required: true,
-        enum: [
-            "not_started",
-            "in_progress",
-            "completed",
-            "expired",
-            "abandoned",
-        ],
+        enum: ["not_started", "in_progress", "completed", "expired", "abandoned"],
     },
     started_at: { type: Date, required: false },
     completed_at: { type: Date, required: false },
@@ -76,9 +65,6 @@ ClassQuizSessionSchema.index.findByQuizAndStatus = {
     by: ["quiz_id", "status"],
 };
 
-const ClassQuizSession = ottoman.model<IClassQuizSession>(
-    "class_quiz_session",
-    ClassQuizSessionSchema
-);
+const ClassQuizSession = ottoman.model<IClassQuizSession>("class_quiz_session", ClassQuizSessionSchema);
 
 export { ClassQuizSession, type IClassQuizSession };

@@ -11,9 +11,7 @@ export const curriculumSchema = z
         description: z.string().openapi({
             example: "Comprehensive mathematics curriculum for grades 1-12",
         }),
-        meta_data: z
-            .record(z.string(), z.any())
-            .openapi({ example: { grade: "10", subject: "Mathematics" } }),
+        meta_data: z.record(z.string(), z.any()).openapi({ example: { grade: "10", subject: "Mathematics" } }),
         is_active: z.boolean().openapi({ example: true }),
         is_deleted: z.boolean().openapi({ example: false }),
         created_at: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
@@ -28,9 +26,7 @@ export const createCurriculumRequestBodySchema = z
         description: z.string().openapi({
             example: "Comprehensive mathematics curriculum for grades 1-12",
         }),
-        meta_data: z
-            .record(z.string(), z.any())
-            .openapi({ example: { grade: "10", subject: "Mathematics" } }),
+        meta_data: z.record(z.string(), z.any()).openapi({ example: { grade: "10", subject: "Mathematics" } }),
     })
     .openapi({ ref: "CreateCurriculumRequest" });
 
@@ -41,10 +37,7 @@ export const createCurriculumResponseSchema = curriculumSchema.openapi({
 // Update Curriculum Request
 export const updateCurriculumRequestBodySchema = z
     .object({
-        name: z
-            .string()
-            .optional()
-            .openapi({ example: "Updated Mathematics Curriculum" }),
+        name: z.string().optional().openapi({ example: "Updated Mathematics Curriculum" }),
         description: z.string().optional().openapi({
             example: "Updated comprehensive mathematics curriculum",
         }),
@@ -62,9 +55,7 @@ export const updateCurriculumResponseSchema = curriculumSchema.openapi({
 });
 
 // Get Curriculums Response
-export const getCurriculumsResponseSchema = z
-    .array(curriculumSchema)
-    .openapi({ ref: "GetCurriculumsResponse" });
+export const getCurriculumsResponseSchema = z.array(curriculumSchema).openapi({ ref: "GetCurriculumsResponse" });
 
 // Delete Curriculum Response
 export const deleteCurriculumResponseSchema = curriculumSchema.openapi({

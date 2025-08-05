@@ -1,10 +1,12 @@
 # 🤖 Jenkins Automated Deployment Setup Guide
 
-This guide shows you how to set up fully automated deployment using Jenkins for the KCS Backend project.
+This guide shows you how to set up fully automated deployment using Jenkins for the KCS Backend
+project.
 
 ## 🎯 Overview
 
 Your Jenkins pipeline automatically:
+
 1. **Detects** when you push to `dev` or `main` branches
 2. **Tests** your code (linting, unit tests, security scans)
 3. **Builds** Docker images
@@ -16,6 +18,7 @@ Your Jenkins pipeline automatically:
 ### 1. 📋 Prerequisites
 
 Ensure you have:
+
 - Jenkins server running (2.400+ recommended)
 - Docker installed on Jenkins server
 - Bun runtime available on Jenkins agents
@@ -49,6 +52,7 @@ Go to **Manage Jenkins → Plugins** and install:
 Go to **Manage Jenkins → Credentials → System → Global credentials**:
 
 #### GitHub Access Token
+
 ```bash
 Kind: Secret text
 ID: github-access-token
@@ -57,6 +61,7 @@ Description: GitHub access token for KCS Backend
 ```
 
 #### EC2 SSH Key
+
 ```bash
 Kind: SSH Username with private key
 ID: ec2-ssh-key
@@ -66,6 +71,7 @@ Description: SSH key for server deployment
 ```
 
 #### Teams Webhook
+
 ```bash
 Kind: Secret text
 ID: teams-webhook-url
@@ -74,6 +80,7 @@ Description: Microsoft Teams webhook for notifications
 ```
 
 #### Docker Registry (Optional)
+
 ```bash
 Kind: Username with password
 ID: docker-registry-credentials
@@ -85,6 +92,7 @@ Description: Docker Hub credentials
 ### 4. 🏗️ Create Jenkins Pipeline Job
 
 #### Option A: Pipeline from SCM (Recommended)
+
 1. **New Item** → **Pipeline** → Name: `KCS-Backend-Pipeline`
 2. **Pipeline Definition**: Pipeline script from SCM
 3. **SCM**: Git
@@ -94,6 +102,7 @@ Description: Docker Hub credentials
 7. **Script Path**: `Jenkinsfile`
 
 #### Option B: Multibranch Pipeline (Advanced)
+
 1. **New Item** → **Multibranch Pipeline** → Name: `KCS-Backend-Multibranch`
 2. **Branch Sources** → **Git**
 3. **Project Repository**: `https://github.com/omyratechnologies/KCS-Backend.git`
@@ -104,17 +113,19 @@ Description: Docker Hub credentials
 ### 5. ⚙️ Configure Build Triggers
 
 #### Webhook Trigger (Automatic on Git Push)
+
 1. In your Jenkins job → **Configure**
 2. **Build Triggers** → Check **GitHub hook trigger for GITScm polling**
 3. In GitHub repository → **Settings → Webhooks**
 4. **Add webhook**:
-   ```
-   Payload URL: http://your-jenkins-server:8080/github-webhook/
-   Content type: application/json
-   Events: Just the push event
-   ```
+    ```
+    Payload URL: http://your-jenkins-server:8080/github-webhook/
+    Content type: application/json
+    Events: Just the push event
+    ```
 
 #### Polling (Fallback option)
+
 ```groovy
 triggers {
     // Poll SCM every 5 minutes
@@ -131,7 +142,7 @@ environment {
     // Update these with your actual server IPs
     PROD_SERVER = '13.204.105.220'        // Your production server IP
     DEV_SERVER = '13.204.105.221'         // Your development server IP (change this)
-    
+
     // These are automatically set based on branch
     NODE_ENV = "${env.BRANCH_NAME == 'main' ? 'production' : 'development'}"
     DEPLOY_URL = "${env.BRANCH_NAME == 'main' ? 'api.letscatchup-kcs.com' : 'devapi.letscatchup-kcs.com'}"
@@ -141,6 +152,7 @@ environment {
 ### 7. 🖥️ Prepare Target Servers
 
 #### Development Server Setup
+
 ```bash
 # SSH to your development server
 ssh ubuntu@your-dev-server-ip
@@ -160,6 +172,7 @@ touch .env.development
 ```
 
 #### Production Server Setup
+
 ```bash
 # SSH to your production server
 ssh ubuntu@your-prod-server-ip
@@ -181,6 +194,7 @@ touch .env.production
 ## 🚀 Automated Deployment Workflow
 
 ### Development Deployment (dev branch)
+
 ```bash
 # 1. Push to dev branch
 git checkout dev
@@ -198,6 +212,7 @@ git push origin dev
 ```
 
 ### Production Deployment (main branch)
+
 ```bash
 # 1. Merge dev to main
 git checkout main
@@ -215,19 +230,25 @@ git push origin main
 ## 📊 Monitoring and Notifications
 
 ### Teams Notifications
+
 You'll receive notifications for:
+
 - 🚀 **Build Started**: "Build #123 started for dev branch"
 - ✅ **Deployment Success**: "Successfully deployed to development"
 - ❌ **Build Failed**: "Build #123 failed at stage X"
 - ⚠️ **Build Unstable**: "Tests passed but with warnings"
 
 ### Jenkins Dashboard
+
 Monitor builds at:
+
 - **Classic UI**: `http://your-jenkins-server:8080/job/KCS-Backend-Pipeline/`
 - **Blue Ocean**: `http://your-jenkins-server:8080/blue/organizations/jenkins/KCS-Backend-Pipeline/`
 
 ### Build Artifacts
+
 Jenkins automatically archives:
+
 - Built application (`dist/` folder)
 - Test coverage reports
 - Build logs and timestamps
@@ -237,6 +258,7 @@ Jenkins automatically archives:
 ### Common Issues and Solutions
 
 #### 1. Webhook Not Triggering
+
 ```bash
 # Check GitHub webhook delivery
 GitHub → Settings → Webhooks → Recent Deliveries
@@ -249,6 +271,7 @@ triggers { pollSCM('H/5 * * * *') }
 ```
 
 #### 2. SSH Connection Failed
+
 ```bash
 # Test SSH connection from Jenkins
 ssh -i /var/jenkins_home/.ssh/id_rsa ubuntu@your-server-ip
@@ -261,6 +284,7 @@ ssh-keyscan -H your-server-ip >> /var/jenkins_home/.ssh/known_hosts
 ```
 
 #### 3. Docker Build Failed
+
 ```bash
 # Check Docker service on Jenkins
 sudo systemctl status docker
@@ -273,6 +297,7 @@ docker system prune -f
 ```
 
 #### 4. Bun Installation Issues
+
 ```bash
 # Install Bun manually on Jenkins agent
 curl -fsSL https://bun.sh/install | bash
@@ -282,6 +307,7 @@ echo 'export PATH="$HOME/.bun/bin:$PATH"' >> ~/.bashrc
 ```
 
 ### Debug Commands
+
 ```bash
 # Check Jenkins job status
 curl -u username:token http://jenkins-server:8080/job/KCS-Backend-Pipeline/api/json
@@ -296,18 +322,21 @@ ssh ubuntu@server-ip "docker ps && docker logs container-name"
 ## 🔒 Security Best Practices
 
 ### Jenkins Security
+
 - Enable CSRF protection
 - Use Matrix-based security
 - Regular plugin updates
 - Restrict script execution
 
 ### Credential Management
+
 - Use Jenkins credential store
 - Rotate keys regularly
 - Limit credential scope
 - Audit credential usage
 
 ### Deployment Security
+
 - Use SSH key authentication
 - Implement firewall rules
 - Monitor deployment logs
@@ -316,6 +345,7 @@ ssh ubuntu@server-ip "docker ps && docker logs container-name"
 ## 📈 Performance Optimization
 
 ### Build Optimization
+
 ```groovy
 // Parallel execution
 parallel {
@@ -334,6 +364,7 @@ docker.withRegistry('registry-url') {
 ```
 
 ### Resource Management
+
 - Set build timeouts
 - Clean workspaces after builds
 - Limit concurrent builds
@@ -347,4 +378,5 @@ docker.withRegistry('registry-url') {
 4. **📊 Monitor First Deployments**: Check notifications and logs
 5. **🔄 Optimize**: Tune performance based on usage
 
-Your automated deployment pipeline is now ready! Every git push will trigger automatic testing, building, and deployment. 🎉
+Your automated deployment pipeline is now ready! Every git push will trigger automatic testing,
+building, and deployment. 🎉

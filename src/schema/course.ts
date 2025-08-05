@@ -6,11 +6,7 @@ import "zod-openapi/extend";
 
 export const createCourseRequestBodySchema = z
     .object({
-        title: z
-            .string()
-            .min(1)
-            .max(200)
-            .openapi({ example: "Technical Analysis Mastery" }),
+        title: z.string().min(1).max(200).openapi({ example: "Technical Analysis Mastery" }),
         description: z.string().min(10).max(5000).openapi({
             example:
                 "Complete course on technical analysis covering candlestick patterns, chart analysis, and trading strategies",
@@ -33,9 +29,7 @@ export const createCourseRequestBodySchema = z
         }),
         category: z.string().openapi({ example: "Finance" }),
         sub_category: z.string().optional().openapi({ example: "Trading" }),
-        difficulty_level: z
-            .enum(["beginner", "intermediate", "advanced"])
-            .default("beginner"),
+        difficulty_level: z.enum(["beginner", "intermediate", "advanced"]).default("beginner"),
         language: z.string().default("English"),
         estimated_duration_hours: z.number().positive().optional(),
         price: z.number().min(0).default(0),
@@ -98,9 +92,7 @@ export const createCourseRequestBodySchema = z
 export const updateCourseRequestBodySchema = createCourseRequestBodySchema
     .partial()
     .extend({
-        status: z
-            .enum(["draft", "published", "archived", "suspended"])
-            .optional(),
+        status: z.enum(["draft", "published", "archived", "suspended"]).optional(),
     })
     .openapi({ ref: "updateCourseRequestBody" });
 
@@ -186,11 +178,7 @@ export const coursesListResponseSchema = z
 
 export const createCourseSectionRequestBodySchema = z
     .object({
-        title: z
-            .string()
-            .min(1)
-            .max(200)
-            .openapi({ example: "Course Introduction" }),
+        title: z.string().min(1).max(200).openapi({ example: "Course Introduction" }),
         description: z.string().max(1000).optional().openapi({
             example: "Welcome to the course and overview of what you'll learn",
         }),
@@ -209,10 +197,9 @@ export const createCourseSectionRequestBodySchema = z
     })
     .openapi({ ref: "createCourseSectionRequestBody" });
 
-export const updateCourseSectionRequestBodySchema =
-    createCourseSectionRequestBodySchema
-        .partial()
-        .openapi({ ref: "updateCourseSectionRequestBody" });
+export const updateCourseSectionRequestBodySchema = createCourseSectionRequestBodySchema
+    .partial()
+    .openapi({ ref: "updateCourseSectionRequestBody" });
 
 export const courseSectionResponseSchema = z
     .object({
@@ -237,23 +224,12 @@ export const courseSectionResponseSchema = z
 
 export const createCourseLectureRequestBodySchema = z
     .object({
-        title: z
-            .string()
-            .min(1)
-            .max(200)
-            .openapi({ example: "What's in this course?" }),
+        title: z.string().min(1).max(200).openapi({ example: "What's in this course?" }),
         description: z.string().max(1000).optional().openapi({
             example: "Overview of course content and learning outcomes",
         }),
         lecture_order: z.number().positive(),
-        lecture_type: z.enum([
-            "video",
-            "resource",
-            "quiz",
-            "assignment",
-            "text",
-            "live_session",
-        ]),
+        lecture_type: z.enum(["video", "resource", "quiz", "assignment", "text", "live_session"]),
         content_data: z.object({
             // Video content
             video_url: z.string().url().optional(),
@@ -263,9 +239,7 @@ export const createCourseLectureRequestBodySchema = z
                 .array(
                     z.object({
                         quality: z.string().optional(),
-                        url: z
-                            .union([z.string().url(), z.literal("")])
-                            .optional(),
+                        url: z.union([z.string().url(), z.literal("")]).optional(),
                         file_size_mb: z.number().optional(),
                     })
                 )
@@ -274,9 +248,7 @@ export const createCourseLectureRequestBodySchema = z
                 .array(
                     z.object({
                         language: z.string().optional(),
-                        url: z
-                            .union([z.string().url(), z.literal("")])
-                            .optional(),
+                        url: z.union([z.string().url(), z.literal("")]).optional(),
                     })
                 )
                 .optional(),
@@ -287,20 +259,8 @@ export const createCourseLectureRequestBodySchema = z
                     z.object({
                         id: z.string().optional(),
                         name: z.string().optional(),
-                        type: z
-                            .enum([
-                                "pdf",
-                                "doc",
-                                "ppt",
-                                "excel",
-                                "image",
-                                "audio",
-                                "other",
-                            ])
-                            .optional(),
-                        url: z
-                            .union([z.string().url(), z.literal("")])
-                            .optional(),
+                        type: z.enum(["pdf", "doc", "ppt", "excel", "image", "audio", "other"]).optional(),
+                        url: z.union([z.string().url(), z.literal("")]).optional(),
                         file_size_mb: z.number().optional(),
                         is_downloadable: z.boolean().default(true),
                         description: z.string().optional(),
@@ -355,11 +315,7 @@ export const createCourseLectureRequestBodySchema = z
                 manual_mark_complete: z.boolean().default(false),
                 quiz_required: z.boolean().default(false),
                 assignment_required: z.boolean().default(false),
-                minimum_watch_percentage: z
-                    .number()
-                    .min(0)
-                    .max(100)
-                    .default(80),
+                minimum_watch_percentage: z.number().min(0).max(100).default(80),
             })
             .default({}),
         meta_data: z
@@ -383,10 +339,9 @@ export const createCourseLectureRequestBodySchema = z
     })
     .openapi({ ref: "createCourseLectureRequestBody" });
 
-export const updateCourseLectureRequestBodySchema =
-    createCourseLectureRequestBodySchema
-        .partial()
-        .openapi({ ref: "updateCourseLectureRequestBody" });
+export const updateCourseLectureRequestBodySchema = createCourseLectureRequestBodySchema
+    .partial()
+    .openapi({ ref: "updateCourseLectureRequestBody" });
 
 export const courseLectureResponseSchema = z
     .object({
@@ -397,14 +352,7 @@ export const courseLectureResponseSchema = z
         title: z.string(),
         description: z.string().optional(),
         lecture_order: z.number(),
-        lecture_type: z.enum([
-            "video",
-            "resource",
-            "quiz",
-            "assignment",
-            "text",
-            "live_session",
-        ]),
+        lecture_type: z.enum(["video", "resource", "quiz", "assignment", "text", "live_session"]),
         content_data: z.object({}),
         is_preview: z.boolean(),
         is_mandatory: z.boolean(),
@@ -414,14 +362,7 @@ export const courseLectureResponseSchema = z
         meta_data: z.object({}),
         user_progress: z
             .object({
-                progress_status: z
-                    .enum([
-                        "not_started",
-                        "in_progress",
-                        "completed",
-                        "skipped",
-                    ])
-                    .optional(),
+                progress_status: z.enum(["not_started", "in_progress", "completed", "skipped"]).optional(),
                 completion_percentage: z.number().optional(),
                 last_accessed_at: z.string().datetime().optional(),
                 resume_position_seconds: z.number().optional(),
@@ -436,14 +377,10 @@ export const courseLectureResponseSchema = z
 
 export const enrollInCourseRequestBodySchema = z
     .object({
-        enrollment_type: z
-            .enum(["free", "paid", "admin_assigned", "bulk_enrollment"])
-            .default("free"),
+        enrollment_type: z.enum(["free", "paid", "admin_assigned", "bulk_enrollment"]).default("free"),
         payment_reference: z.string().optional(),
         referral_code: z.string().optional(),
-        enrollment_source: z
-            .enum(["web", "mobile", "admin", "api", "bulk_import"])
-            .default("web"),
+        enrollment_source: z.enum(["web", "mobile", "admin", "api", "bulk_import"]).default("web"),
         meta_data: z
             .object({
                 enrollment_reason: z.string().optional(),
@@ -461,19 +398,8 @@ export const courseEnrollmentResponseSchema = z
         course_id: z.string(),
         user_id: z.string(),
         campus_id: z.string(),
-        enrollment_type: z.enum([
-            "free",
-            "paid",
-            "admin_assigned",
-            "bulk_enrollment",
-        ]),
-        enrollment_status: z.enum([
-            "active",
-            "completed",
-            "dropped",
-            "suspended",
-            "expired",
-        ]),
+        enrollment_type: z.enum(["free", "paid", "admin_assigned", "bulk_enrollment"]),
+        enrollment_status: z.enum(["active", "completed", "dropped", "suspended", "expired"]),
         progress_percentage: z.number(),
         enrollment_date: z.string().datetime(),
         completion_date: z.string().datetime().optional(),
@@ -511,9 +437,7 @@ export const courseEnrollmentResponseSchema = z
 
 export const updateProgressRequestBodySchema = z
     .object({
-        progress_status: z
-            .enum(["not_started", "in_progress", "completed", "skipped"])
-            .optional(),
+        progress_status: z.enum(["not_started", "in_progress", "completed", "skipped"]).optional(),
         watch_time_seconds: z.number().min(0).optional(),
         completion_percentage: z.number().min(0).max(100).optional(),
         resume_position_seconds: z.number().min(0).optional(),
@@ -557,12 +481,7 @@ export const courseProgressResponseSchema = z
         user_id: z.string(),
         lecture_id: z.string(),
         campus_id: z.string(),
-        progress_status: z.enum([
-            "not_started",
-            "in_progress",
-            "completed",
-            "skipped",
-        ]),
+        progress_status: z.enum(["not_started", "in_progress", "completed", "skipped"]),
         watch_time_seconds: z.number(),
         total_duration_seconds: z.number(),
         completion_percentage: z.number(),
@@ -707,8 +626,6 @@ export const updateLectureOrderRequestBodySchema = z
 export const bulkEnrollStudentsRequestBodySchema = z
     .object({
         student_ids: z.array(z.string()),
-        enrollment_type: z
-            .enum(["free", "paid", "admin_assigned", "bulk_enrollment"])
-            .default("admin_assigned"),
+        enrollment_type: z.enum(["free", "paid", "admin_assigned", "bulk_enrollment"]).default("admin_assigned"),
     })
     .openapi({ ref: "bulkEnrollStudentsRequest" });

@@ -32,9 +32,6 @@ const TeacherNotificationSchema = new Schema({
 TeacherNotificationSchema.index.findByCampusId = { by: "campus_id" };
 TeacherNotificationSchema.index.findByUserId = { by: "user_id" };
 
-const TeacherNotification = ottoman.model<ITeacherNotificationData>(
-    "teacher_notifications",
-    TeacherNotificationSchema
-);
+const TeacherNotification = ottoman.model<ITeacherNotificationData>("teacher_notifications", TeacherNotificationSchema);
 
 export { type ITeacherNotificationData, TeacherNotification };

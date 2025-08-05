@@ -15,10 +15,7 @@ export class SuperAdminController {
 
             // Only Super Admin can onboard new schools
             if (user_type !== "Super Admin") {
-                return ctx.json(
-                    { error: "Unauthorized - Super Admin access required" },
-                    403
-                );
+                return ctx.json({ error: "Unauthorized - Super Admin access required" }, 403);
             }
 
             const { campus_id, ...schoolData } = await ctx.req.json();
@@ -27,10 +24,7 @@ export class SuperAdminController {
                 return ctx.json({ error: "campus_id is required" }, 400);
             }
 
-            const result = await SuperAdminService.onboardNewSchool(
-                campus_id,
-                schoolData
-            );
+            const result = await SuperAdminService.onboardNewSchool(campus_id, schoolData);
 
             return ctx.json({
                 success: result.success,
@@ -41,10 +35,7 @@ export class SuperAdminController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -60,17 +51,13 @@ export class SuperAdminController {
 
             // Only Super Admin can monitor all schools
             if (user_type !== "Super Admin") {
-                return ctx.json(
-                    { error: "Unauthorized - Super Admin access required" },
-                    403
-                );
+                return ctx.json({ error: "Unauthorized - Super Admin access required" }, 403);
             }
 
             const { campus_ids } = ctx.req.query();
             const campusArray = campus_ids ? campus_ids.split(",") : undefined;
 
-            const healthMetrics =
-                await SuperAdminService.monitorSchoolHealth(campusArray);
+            const healthMetrics = await SuperAdminService.monitorSchoolHealth(campusArray);
 
             return ctx.json({
                 success: true,
@@ -78,27 +65,17 @@ export class SuperAdminController {
                 count: healthMetrics.length,
                 summary: {
                     total_schools: healthMetrics.length,
-                    healthy_schools: healthMetrics.filter(
-                        (h) => h.compliance_score >= 80
-                    ).length,
+                    healthy_schools: healthMetrics.filter((h) => h.compliance_score >= 80).length,
                     avg_collection_rate:
-                        healthMetrics.reduce(
-                            (sum, h) => sum + h.collection_rate,
-                            0
-                        ) / healthMetrics.length,
-                    schools_with_issues: healthMetrics.filter(
-                        (h) => h.issues.length > 0
-                    ).length,
+                        healthMetrics.reduce((sum, h) => sum + h.collection_rate, 0) / healthMetrics.length,
+                    schools_with_issues: healthMetrics.filter((h) => h.issues.length > 0).length,
                 },
             });
         } catch (error) {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -114,10 +91,7 @@ export class SuperAdminController {
 
             // Only Super Admin can view platform analytics
             if (user_type !== "Super Admin") {
-                return ctx.json(
-                    { error: "Unauthorized - Super Admin access required" },
-                    403
-                );
+                return ctx.json({ error: "Unauthorized - Super Admin access required" }, 403);
             }
 
             const analytics = await SuperAdminService.getPlatformAnalytics();
@@ -130,10 +104,7 @@ export class SuperAdminController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -143,18 +114,13 @@ export class SuperAdminController {
     /**
      * Troubleshoot payment issues for a specific school
      */
-    public static readonly troubleshootSchoolPayments = async (
-        ctx: Context
-    ) => {
+    public static readonly troubleshootSchoolPayments = async (ctx: Context) => {
         try {
             const user_type = ctx.get("user_type");
 
             // Only Super Admin can troubleshoot
             if (user_type !== "Super Admin") {
-                return ctx.json(
-                    { error: "Unauthorized - Super Admin access required" },
-                    403
-                );
+                return ctx.json({ error: "Unauthorized - Super Admin access required" }, 403);
             }
 
             const { campus_id } = ctx.req.param();
@@ -163,8 +129,7 @@ export class SuperAdminController {
                 return ctx.json({ error: "campus_id is required" }, 400);
             }
 
-            const troubleshooting =
-                await SuperAdminService.troubleshootSchoolPayments(campus_id);
+            const troubleshooting = await SuperAdminService.troubleshootSchoolPayments(campus_id);
 
             return ctx.json({
                 success: true,
@@ -174,10 +139,7 @@ export class SuperAdminController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -187,49 +149,33 @@ export class SuperAdminController {
     /**
      * Check compliance for all schools
      */
-    public static readonly checkComplianceForAllSchools = async (
-        ctx: Context
-    ) => {
+    public static readonly checkComplianceForAllSchools = async (ctx: Context) => {
         try {
             const user_type = ctx.get("user_type");
 
             // Only Super Admin can check compliance
             if (user_type !== "Super Admin") {
-                return ctx.json(
-                    { error: "Unauthorized - Super Admin access required" },
-                    403
-                );
+                return ctx.json({ error: "Unauthorized - Super Admin access required" }, 403);
             }
 
-            const compliance =
-                await SuperAdminService.checkComplianceForAllSchools();
+            const compliance = await SuperAdminService.checkComplianceForAllSchools();
 
             return ctx.json({
                 success: true,
                 data: compliance,
                 summary: {
                     total_schools: compliance.length,
-                    compliant_schools: compliance.filter(
-                        (c) => c.compliance_score >= 80
-                    ).length,
+                    compliant_schools: compliance.filter((c) => c.compliance_score >= 80).length,
                     avg_compliance_score:
-                        compliance.reduce(
-                            (sum, c) => sum + c.compliance_score,
-                            0
-                        ) / compliance.length,
-                    schools_needing_attention: compliance.filter(
-                        (c) => c.compliance_score < 60
-                    ).length,
+                        compliance.reduce((sum, c) => sum + c.compliance_score, 0) / compliance.length,
+                    schools_needing_attention: compliance.filter((c) => c.compliance_score < 60).length,
                 },
             });
         } catch (error) {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -247,14 +193,10 @@ export class SuperAdminController {
 
             // Only Super Admin can monitor system security
             if (user_type !== "Super Admin") {
-                return ctx.json(
-                    { error: "Unauthorized - Super Admin access required" },
-                    403
-                );
+                return ctx.json({ error: "Unauthorized - Super Admin access required" }, 403);
             }
 
-            const securityStatus =
-                await SuperAdminService.monitorSystemSecurity();
+            const securityStatus = await SuperAdminService.monitorSystemSecurity();
 
             return ctx.json({
                 success: true,
@@ -264,10 +206,7 @@ export class SuperAdminController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -277,18 +216,13 @@ export class SuperAdminController {
     /**
      * Update payment gateway configurations globally
      */
-    public static readonly updateGatewayConfigurations = async (
-        ctx: Context
-    ) => {
+    public static readonly updateGatewayConfigurations = async (ctx: Context) => {
         try {
             const user_type = ctx.get("user_type");
 
             // Only Super Admin can update gateway configurations
             if (user_type !== "Super Admin") {
-                return ctx.json(
-                    { error: "Unauthorized - Super Admin access required" },
-                    403
-                );
+                return ctx.json({ error: "Unauthorized - Super Admin access required" }, 403);
             }
 
             const { updates } = await ctx.req.json();
@@ -297,8 +231,7 @@ export class SuperAdminController {
                 return ctx.json({ error: "updates array is required" }, 400);
             }
 
-            const result =
-                await SuperAdminService.updateGatewayConfigurations(updates);
+            const result = await SuperAdminService.updateGatewayConfigurations(updates);
 
             return ctx.json({
                 success: result.success,
@@ -311,10 +244,7 @@ export class SuperAdminController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -324,22 +254,16 @@ export class SuperAdminController {
     /**
      * Monitor platform performance
      */
-    public static readonly monitorPlatformPerformance = async (
-        ctx: Context
-    ) => {
+    public static readonly monitorPlatformPerformance = async (ctx: Context) => {
         try {
             const user_type = ctx.get("user_type");
 
             // Only Super Admin can monitor platform performance
             if (user_type !== "Super Admin") {
-                return ctx.json(
-                    { error: "Unauthorized - Super Admin access required" },
-                    403
-                );
+                return ctx.json({ error: "Unauthorized - Super Admin access required" }, 403);
             }
 
-            const performance =
-                await SuperAdminService.monitorPlatformPerformance();
+            const performance = await SuperAdminService.monitorPlatformPerformance();
 
             return ctx.json({
                 success: true,
@@ -349,10 +273,7 @@ export class SuperAdminController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -368,10 +289,7 @@ export class SuperAdminController {
 
             // Only Super Admin can check backup status
             if (user_type !== "Super Admin") {
-                return ctx.json(
-                    { error: "Unauthorized - Super Admin access required" },
-                    403
-                );
+                return ctx.json({ error: "Unauthorized - Super Admin access required" }, 403);
             }
 
             const backupStatus = await BackupRecoveryService.getBackupStatus();
@@ -385,10 +303,7 @@ export class SuperAdminController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -404,10 +319,7 @@ export class SuperAdminController {
 
             // Only Super Admin can initiate backups
             if (user_type !== "Super Admin") {
-                return ctx.json(
-                    { error: "Unauthorized - Super Admin access required" },
-                    403
-                );
+                return ctx.json({ error: "Unauthorized - Super Admin access required" }, 403);
             }
 
             const {
@@ -419,16 +331,13 @@ export class SuperAdminController {
                 encryption = true,
             } = await ctx.req.json();
 
-            const backupJob = await BackupRecoveryService.initiateBackup(
-                backup_type,
-                {
-                    include_payment_data,
-                    include_user_data,
-                    campus_ids,
-                    compression,
-                    encryption,
-                }
-            );
+            const backupJob = await BackupRecoveryService.initiateBackup(backup_type, {
+                include_payment_data,
+                include_user_data,
+                campus_ids,
+                compression,
+                encryption,
+            });
 
             return ctx.json({
                 success: true,
@@ -439,10 +348,7 @@ export class SuperAdminController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -458,10 +364,7 @@ export class SuperAdminController {
 
             // Only Super Admin can list backups
             if (user_type !== "Super Admin") {
-                return ctx.json(
-                    { error: "Unauthorized - Super Admin access required" },
-                    403
-                );
+                return ctx.json({ error: "Unauthorized - Super Admin access required" }, 403);
             }
 
             const backups = await BackupRecoveryService.listAvailableBackups();
@@ -476,10 +379,7 @@ export class SuperAdminController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -495,10 +395,7 @@ export class SuperAdminController {
 
             // Only Super Admin can validate backups
             if (user_type !== "Super Admin") {
-                return ctx.json(
-                    { error: "Unauthorized - Super Admin access required" },
-                    403
-                );
+                return ctx.json({ error: "Unauthorized - Super Admin access required" }, 403);
             }
 
             const { backup_id } = ctx.req.param();
@@ -507,8 +404,7 @@ export class SuperAdminController {
                 return ctx.json({ error: "backup_id is required" }, 400);
             }
 
-            const validation =
-                await BackupRecoveryService.validateBackupIntegrity(backup_id);
+            const validation = await BackupRecoveryService.validateBackupIntegrity(backup_id);
 
             return ctx.json({
                 success: validation.valid,
@@ -521,10 +417,7 @@ export class SuperAdminController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -540,10 +433,7 @@ export class SuperAdminController {
 
             // Only Super Admin can initiate restore
             if (user_type !== "Super Admin") {
-                return ctx.json(
-                    { error: "Unauthorized - Super Admin access required" },
-                    403
-                );
+                return ctx.json({ error: "Unauthorized - Super Admin access required" }, 403);
             }
 
             const restoreOptions = await ctx.req.json();
@@ -552,8 +442,7 @@ export class SuperAdminController {
                 return ctx.json({ error: "backup_id is required" }, 400);
             }
 
-            const restoreJob =
-                await BackupRecoveryService.initiateRestore(restoreOptions);
+            const restoreJob = await BackupRecoveryService.initiateRestore(restoreOptions);
 
             return ctx.json({
                 success: true,
@@ -564,10 +453,7 @@ export class SuperAdminController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -583,14 +469,10 @@ export class SuperAdminController {
 
             // Only Super Admin can view disaster recovery plan
             if (user_type !== "Super Admin") {
-                return ctx.json(
-                    { error: "Unauthorized - Super Admin access required" },
-                    403
-                );
+                return ctx.json({ error: "Unauthorized - Super Admin access required" }, 403);
             }
 
-            const recoveryPlan =
-                await BackupRecoveryService.getDisasterRecoveryPlan();
+            const recoveryPlan = await BackupRecoveryService.getDisasterRecoveryPlan();
 
             return ctx.json({
                 success: true,
@@ -601,10 +483,7 @@ export class SuperAdminController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -620,17 +499,10 @@ export class SuperAdminController {
 
             // Only Super Admin can generate audit reports
             if (user_type !== "Super Admin") {
-                return ctx.json(
-                    { error: "Unauthorized - Super Admin access required" },
-                    403
-                );
+                return ctx.json({ error: "Unauthorized - Super Admin access required" }, 403);
             }
 
-            const {
-                start_date,
-                end_date,
-                include_payment_data = true,
-            } = ctx.req.query();
+            const { start_date, end_date, include_payment_data = true } = ctx.req.query();
 
             const dateRange = {
                 start_date: start_date
@@ -640,12 +512,11 @@ export class SuperAdminController {
             };
 
             // Get platform analytics and compliance data
-            const [platformAnalytics, complianceData, securityStatus] =
-                await Promise.all([
-                    SuperAdminService.getPlatformAnalytics(),
-                    SuperAdminService.checkComplianceForAllSchools(),
-                    SuperAdminService.monitorSystemSecurity(),
-                ]);
+            const [platformAnalytics, complianceData, securityStatus] = await Promise.all([
+                SuperAdminService.getPlatformAnalytics(),
+                SuperAdminService.checkComplianceForAllSchools(),
+                SuperAdminService.monitorSystemSecurity(),
+            ]);
 
             const auditReport = {
                 report_id: `audit_${Date.now()}`,
@@ -654,17 +525,10 @@ export class SuperAdminController {
                 platform_summary: platformAnalytics,
                 compliance_summary: {
                     total_schools: complianceData.length,
-                    compliant_schools: complianceData.filter(
-                        (c) => c.compliance_score >= 80
-                    ).length,
+                    compliant_schools: complianceData.filter((c) => c.compliance_score >= 80).length,
                     avg_compliance_score:
-                        complianceData.reduce(
-                            (sum, c) => sum + c.compliance_score,
-                            0
-                        ) / complianceData.length,
-                    schools_with_issues: complianceData.filter(
-                        (c) => c.issues.length > 0
-                    ),
+                        complianceData.reduce((sum, c) => sum + c.compliance_score, 0) / complianceData.length,
+                    schools_with_issues: complianceData.filter((c) => c.issues.length > 0),
                 },
                 security_summary: securityStatus,
                 recommendations: [
@@ -673,9 +537,7 @@ export class SuperAdminController {
                         ? ["Improve overall collection rates across schools"]
                         : []),
                     ...(complianceData.some((c) => c.compliance_score < 60)
-                        ? [
-                              "Address compliance issues in underperforming schools",
-                          ]
+                        ? ["Address compliance issues in underperforming schools"]
                         : []),
                 ],
             };
@@ -689,10 +551,7 @@ export class SuperAdminController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -708,16 +567,12 @@ export class SuperAdminController {
 
             // Only Super Admin can rotate encryption keys
             if (user_type !== "Super Admin") {
-                return ctx.json(
-                    { error: "Unauthorized - Super Admin access required" },
-                    403
-                );
+                return ctx.json({ error: "Unauthorized - Super Admin access required" }, 403);
             }
 
             const { campus_ids } = await ctx.req.json();
 
-            const result =
-                await SuperAdminService.rotateEncryptionKeys(campus_ids);
+            const result = await SuperAdminService.rotateEncryptionKeys(campus_ids);
 
             return ctx.json({
                 success: result.success,
@@ -730,10 +585,7 @@ export class SuperAdminController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -743,22 +595,16 @@ export class SuperAdminController {
     /**
      * Run automated compliance check with remediation suggestions
      */
-    public static readonly runAutomatedComplianceCheck = async (
-        ctx: Context
-    ) => {
+    public static readonly runAutomatedComplianceCheck = async (ctx: Context) => {
         try {
             const user_type = ctx.get("user_type");
 
             // Only Super Admin can run automated compliance checks
             if (user_type !== "Super Admin") {
-                return ctx.json(
-                    { error: "Unauthorized - Super Admin access required" },
-                    403
-                );
+                return ctx.json({ error: "Unauthorized - Super Admin access required" }, 403);
             }
 
-            const complianceResult =
-                await SuperAdminService.runAutomatedComplianceCheck();
+            const complianceResult = await SuperAdminService.runAutomatedComplianceCheck();
 
             return ctx.json({
                 success: true,
@@ -769,10 +615,7 @@ export class SuperAdminController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -782,22 +625,16 @@ export class SuperAdminController {
     /**
      * Get enhanced performance metrics with real-time data
      */
-    public static readonly getEnhancedPerformanceMetrics = async (
-        ctx: Context
-    ) => {
+    public static readonly getEnhancedPerformanceMetrics = async (ctx: Context) => {
         try {
             const user_type = ctx.get("user_type");
 
             // Only Super Admin can view enhanced performance metrics
             if (user_type !== "Super Admin") {
-                return ctx.json(
-                    { error: "Unauthorized - Super Admin access required" },
-                    403
-                );
+                return ctx.json({ error: "Unauthorized - Super Admin access required" }, 403);
             }
 
-            const performanceMetrics =
-                await SuperAdminService.getEnhancedPerformanceMetrics();
+            const performanceMetrics = await SuperAdminService.getEnhancedPerformanceMetrics();
 
             return ctx.json({
                 success: true,
@@ -808,10 +645,7 @@ export class SuperAdminController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -821,18 +655,13 @@ export class SuperAdminController {
     /**
      * Execute automated remediation actions
      */
-    public static readonly executeAutomatedRemediation = async (
-        ctx: Context
-    ) => {
+    public static readonly executeAutomatedRemediation = async (ctx: Context) => {
         try {
             const user_type = ctx.get("user_type");
 
             // Only Super Admin can execute automated remediation
             if (user_type !== "Super Admin") {
-                return ctx.json(
-                    { error: "Unauthorized - Super Admin access required" },
-                    403
-                );
+                return ctx.json({ error: "Unauthorized - Super Admin access required" }, 403);
             }
 
             const { actions, approve_all = false } = await ctx.req.json();
@@ -868,16 +697,11 @@ export class SuperAdminController {
 
                     switch (action.action) {
                         case "Configure default payment gateway": {
-                            actionResult =
-                                await this.configureDefaultPaymentGateway(
-                                    action.campus_ids
-                                );
+                            actionResult = await this.configureDefaultPaymentGateway(action.campus_ids);
                             break;
                         }
                         case "Enable automated payment reminders": {
-                            actionResult = await this.enableAutomatedReminders(
-                                action.campus_ids
-                            );
+                            actionResult = await this.enableAutomatedReminders(action.campus_ids);
                             break;
                         }
                         default: {
@@ -900,10 +724,7 @@ export class SuperAdminController {
                         action: action.action,
                         campus_ids: action.campus_ids,
                         success: false,
-                        message:
-                            error instanceof Error
-                                ? error.message
-                                : "Unknown error",
+                        message: error instanceof Error ? error.message : "Unknown error",
                         executed_at: new Date(),
                     });
                 }
@@ -928,10 +749,7 @@ export class SuperAdminController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -947,26 +765,18 @@ export class SuperAdminController {
 
             // Only Super Admin can view system health dashboard
             if (user_type !== "Super Admin") {
-                return ctx.json(
-                    { error: "Unauthorized - Super Admin access required" },
-                    403
-                );
+                return ctx.json({ error: "Unauthorized - Super Admin access required" }, 403);
             }
 
             // Get all key system metrics in parallel
-            const [
-                platformAnalytics,
-                complianceStatus,
-                securityStatus,
-                performanceMetrics,
-                schoolHealth,
-            ] = await Promise.all([
-                SuperAdminService.getPlatformAnalytics(),
-                SuperAdminService.runAutomatedComplianceCheck(),
-                SuperAdminService.monitorSystemSecurity(),
-                SuperAdminService.getEnhancedPerformanceMetrics(),
-                SuperAdminService.monitorSchoolHealth(),
-            ]);
+            const [platformAnalytics, complianceStatus, securityStatus, performanceMetrics, schoolHealth] =
+                await Promise.all([
+                    SuperAdminService.getPlatformAnalytics(),
+                    SuperAdminService.runAutomatedComplianceCheck(),
+                    SuperAdminService.monitorSystemSecurity(),
+                    SuperAdminService.getEnhancedPerformanceMetrics(),
+                    SuperAdminService.monitorSchoolHealth(),
+                ]);
 
             // Calculate overall system health score
             const healthScores = {
@@ -976,46 +786,27 @@ export class SuperAdminController {
                 collection: platformAnalytics.avg_collection_rate,
             };
 
-            const overallHealthScore =
-                Object.values(healthScores).reduce(
-                    (sum, score) => sum + score,
-                    0
-                ) / 4;
+            const overallHealthScore = Object.values(healthScores).reduce((sum, score) => sum + score, 0) / 4;
 
             // Generate system status summary
             const systemStatus = {
                 overall_health:
-                    overallHealthScore >= 80
-                        ? "healthy"
-                        : overallHealthScore >= 60
-                          ? "warning"
-                          : "critical",
+                    overallHealthScore >= 80 ? "healthy" : overallHealthScore >= 60 ? "warning" : "critical",
                 overall_score: overallHealthScore,
                 component_health: {
                     performance: performanceMetrics.current_status,
-                    security:
-                        securityStatus.overall_security_score >= 80
-                            ? "healthy"
-                            : "warning",
+                    security: securityStatus.overall_security_score >= 80 ? "healthy" : "warning",
                     compliance: complianceStatus.compliance_status,
-                    payments:
-                        platformAnalytics.avg_collection_rate >= 80
-                            ? "healthy"
-                            : "warning",
+                    payments: platformAnalytics.avg_collection_rate >= 80 ? "healthy" : "warning",
                 },
                 key_metrics: {
                     total_schools: platformAnalytics.total_schools,
                     active_schools: platformAnalytics.active_schools,
                     total_revenue: platformAnalytics.total_revenue,
                     avg_collection_rate: platformAnalytics.avg_collection_rate,
-                    current_transaction_rate:
-                        performanceMetrics.real_time_metrics
-                            .current_transaction_rate,
-                    error_rate:
-                        performanceMetrics.real_time_metrics.error_rate_percent,
-                    compliant_schools: complianceStatus.campus_results.filter(
-                        (c) => c.status === "compliant"
-                    ).length,
+                    current_transaction_rate: performanceMetrics.real_time_metrics.current_transaction_rate,
+                    error_rate: performanceMetrics.real_time_metrics.error_rate_percent,
+                    compliant_schools: complianceStatus.campus_results.filter((c) => c.status === "compliant").length,
                 },
                 alerts: [
                     ...performanceMetrics.performance_alerts.map((alert) => ({
@@ -1032,9 +823,7 @@ export class SuperAdminController {
                     })),
                 ],
                 recommendations: [
-                    ...performanceMetrics.performance_alerts.map(
-                        (alert) => alert.recommended_action
-                    ),
+                    ...performanceMetrics.performance_alerts.map((alert) => alert.recommended_action),
                     ...securityStatus.recommendations,
                     ...complianceStatus.platform_recommendations,
                 ],
@@ -1058,10 +847,7 @@ export class SuperAdminController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -1088,9 +874,7 @@ export class SuperAdminController {
                 apply_to_campuses: campus_ids,
             };
 
-            const result = await SuperAdminService.updateGatewayConfigurations([
-                defaultGatewayConfig,
-            ]);
+            const result = await SuperAdminService.updateGatewayConfigurations([defaultGatewayConfig]);
 
             return {
                 success: result.success,
@@ -1101,8 +885,7 @@ export class SuperAdminController {
         } catch (error) {
             return {
                 success: false,
-                message:
-                    error instanceof Error ? error.message : "Unknown error",
+                message: error instanceof Error ? error.message : "Unknown error",
             };
         }
     }
@@ -1126,10 +909,7 @@ export class SuperAdminController {
                     await new Promise((resolve) => setTimeout(resolve, 100)); // Simulate async operation
                     successCount++;
                 } catch (error) {
-                    console.error(
-                        `Failed to enable automated reminders for campus ${campus_id}:`,
-                        error
-                    );
+                    console.error(`Failed to enable automated reminders for campus ${campus_id}:`, error);
                 }
             }
 
@@ -1140,8 +920,7 @@ export class SuperAdminController {
         } catch (error) {
             return {
                 success: false,
-                message:
-                    error instanceof Error ? error.message : "Unknown error",
+                message: error instanceof Error ? error.message : "Unknown error",
             };
         }
     }

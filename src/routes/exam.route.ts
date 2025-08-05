@@ -27,8 +27,7 @@ app.post(
     describeRoute({
         operationId: "createExamTerm",
         summary: "Create a new exam term",
-        description:
-            "Creates a new exam term (e.g., Midterm, Final) in the system",
+        description: "Creates a new exam term (e.g., Midterm, Final) in the system",
         tags: ["Exam"],
         responses: {
             200: {

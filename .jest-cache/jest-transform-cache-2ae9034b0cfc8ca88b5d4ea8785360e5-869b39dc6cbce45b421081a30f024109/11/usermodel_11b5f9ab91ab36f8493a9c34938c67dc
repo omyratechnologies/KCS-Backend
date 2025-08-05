@@ -1,0 +1,331 @@
+e8302f66523e1c2fa1c6499b0d290c1f
+/* istanbul ignore next */
+function cov_23wa7levb1() {
+  var path = "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/models/user.model.ts";
+  var hash = "e76177678bf41e92f226a1cfc48216bea03f096a";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/models/user.model.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 19
+        },
+        end: {
+          line: 21,
+          column: 2
+        }
+      },
+      "1": {
+        start: {
+          line: 19,
+          column: 45
+        },
+        end: {
+          line: 19,
+          column: 55
+        }
+      },
+      "2": {
+        start: {
+          line: 20,
+          column: 45
+        },
+        end: {
+          line: 20,
+          column: 55
+        }
+      },
+      "3": {
+        start: {
+          line: 22,
+          column: 0
+        },
+        end: {
+          line: 22,
+          column: 50
+        }
+      },
+      "4": {
+        start: {
+          line: 23,
+          column: 0
+        },
+        end: {
+          line: 23,
+          column: 47
+        }
+      },
+      "5": {
+        start: {
+          line: 24,
+          column: 0
+        },
+        end: {
+          line: 24,
+          column: 54
+        }
+      },
+      "6": {
+        start: {
+          line: 25,
+          column: 0
+        },
+        end: {
+          line: 25,
+          column: 54
+        }
+      },
+      "7": {
+        start: {
+          line: 26,
+          column: 0
+        },
+        end: {
+          line: 26,
+          column: 80
+        }
+      },
+      "8": {
+        start: {
+          line: 27,
+          column: 0
+        },
+        end: {
+          line: 27,
+          column: 76
+        }
+      },
+      "9": {
+        start: {
+          line: 28,
+          column: 0
+        },
+        end: {
+          line: 28,
+          column: 73
+        }
+      },
+      "10": {
+        start: {
+          line: 29,
+          column: 13
+        },
+        end: {
+          line: 29,
+          column: 47
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 19,
+            column: 39
+          },
+          end: {
+            line: 19,
+            column: 40
+          }
+        },
+        loc: {
+          start: {
+            line: 19,
+            column: 45
+          },
+          end: {
+            line: 19,
+            column: 55
+          }
+        },
+        line: 19
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 20,
+            column: 39
+          },
+          end: {
+            line: 20,
+            column: 40
+          }
+        },
+        loc: {
+          start: {
+            line: 20,
+            column: 45
+          },
+          end: {
+            line: 20,
+            column: 55
+          }
+        },
+        line: 20
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0
+    },
+    b: {},
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "e76177678bf41e92f226a1cfc48216bea03f096a"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_23wa7levb1 = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_23wa7levb1();
+import { Schema } from "ottoman";
+import { ottoman } from "../libs/db";
+const UserSchema =
+/* istanbul ignore next */
+(cov_23wa7levb1().s[0]++, new Schema({
+  user_type: {
+    type: String,
+    required: true
+  },
+  user_id: {
+    type: String,
+    required: true
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  hash: {
+    type: String,
+    required: true
+  },
+  salt: {
+    type: String,
+    required: true
+  },
+  first_name: {
+    type: String,
+    required: true
+  },
+  last_name: {
+    type: String,
+    required: true
+  },
+  phone: {
+    type: String,
+    required: true
+  },
+  address: {
+    type: String,
+    required: true
+  },
+  last_login: {
+    type: Date,
+    required: false
+  },
+  last_login_ip: {
+    type: String,
+    required: false
+  },
+  campus_id: {
+    type: String,
+    required: false
+  },
+  meta_data: {
+    type: Object,
+    required: true
+  },
+  is_active: {
+    type: Boolean,
+    required: true
+  },
+  is_deleted: {
+    type: Boolean,
+    required: true
+  },
+  created_at: {
+    type: Date,
+    default: () => {
+      /* istanbul ignore next */
+      cov_23wa7levb1().f[0]++;
+      cov_23wa7levb1().s[1]++;
+      return new Date();
+    }
+  },
+  updated_at: {
+    type: Date,
+    default: () => {
+      /* istanbul ignore next */
+      cov_23wa7levb1().f[1]++;
+      cov_23wa7levb1().s[2]++;
+      return new Date();
+    }
+  }
+}));
+/* istanbul ignore next */
+cov_23wa7levb1().s[3]++;
+UserSchema.index.findByUserId = {
+  by: "user_id"
+};
+/* istanbul ignore next */
+cov_23wa7levb1().s[4]++;
+UserSchema.index.findByEmail = {
+  by: "email"
+};
+/* istanbul ignore next */
+cov_23wa7levb1().s[5]++;
+UserSchema.index.findByCampusId = {
+  by: "campus_id"
+};
+/* istanbul ignore next */
+cov_23wa7levb1().s[6]++;
+UserSchema.index.findByUserType = {
+  by: "user_type"
+};
+/* istanbul ignore next */
+cov_23wa7levb1().s[7]++;
+UserSchema.index.findByCampusIdAndUserType = {
+  by: ["campus_id", "user_type"]
+};
+/* istanbul ignore next */
+cov_23wa7levb1().s[8]++;
+UserSchema.index.findByCampusIdAndUserId = {
+  by: ["campus_id", "user_id"]
+};
+/* istanbul ignore next */
+cov_23wa7levb1().s[9]++;
+UserSchema.index.findByCampusIdAndEmail = {
+  by: ["campus_id", "email"]
+};
+const User =
+/* istanbul ignore next */
+(cov_23wa7levb1().s[10]++, ottoman.model("users", UserSchema));
+export { User };

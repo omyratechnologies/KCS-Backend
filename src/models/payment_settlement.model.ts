@@ -13,12 +13,7 @@ interface IPaymentSettlement {
     settlement_date: Date;
     settlement_period_start: Date;
     settlement_period_end: Date;
-    settlement_status:
-        | "pending"
-        | "processing"
-        | "completed"
-        | "failed"
-        | "cancelled";
+    settlement_status: "pending" | "processing" | "completed" | "failed" | "cancelled";
 
     // Financial Information
     total_transaction_amount: number;
@@ -210,12 +205,7 @@ interface IPaymentAuditLog {
         | "compliance_check"
         | "audit_review";
 
-    event_category:
-        | "payment"
-        | "settlement"
-        | "security"
-        | "compliance"
-        | "configuration";
+    event_category: "payment" | "settlement" | "security" | "compliance" | "configuration";
     severity: "low" | "medium" | "high" | "critical";
 
     // Event Details
@@ -504,13 +494,7 @@ const PaymentAuditLogSchema = new Schema({
     event_category: {
         type: String,
         required: true,
-        enum: [
-            "payment",
-            "settlement",
-            "security",
-            "compliance",
-            "configuration",
-        ],
+        enum: ["payment", "settlement", "security", "compliance", "configuration"],
     },
     severity: {
         type: String,
@@ -645,20 +629,14 @@ PaymentSecurityEventSchema.index.findByDate = { by: "created_at" };
 
 // ========================= MODELS =========================
 
-const PaymentSettlement = ottoman.model<IPaymentSettlement>(
-    "payment_settlements",
-    PaymentSettlementSchema
-);
+const PaymentSettlement = ottoman.model<IPaymentSettlement>("payment_settlements", PaymentSettlementSchema);
 
 const PaymentGatewayConfiguration = ottoman.model<IPaymentGatewayConfiguration>(
     "payment_gateway_configurations",
     PaymentGatewayConfigurationSchema
 );
 
-const PaymentAuditLog = ottoman.model<IPaymentAuditLog>(
-    "payment_audit_logs",
-    PaymentAuditLogSchema
-);
+const PaymentAuditLog = ottoman.model<IPaymentAuditLog>("payment_audit_logs", PaymentAuditLogSchema);
 
 const PaymentSecurityEvent = ottoman.model<IPaymentSecurityEvent>(
     "payment_security_events",

@@ -21,9 +21,6 @@ const LoginSessionSchema = new Schema({
 
 LoginSessionSchema.index.findByUserId = { by: "user_id" };
 
-const LoginSession = ottoman.model<ILoginSession>(
-    "login_sessions",
-    LoginSessionSchema
-);
+const LoginSession = ottoman.model<ILoginSession>("login_sessions", LoginSessionSchema);
 
 export { type ILoginSession, LoginSession };

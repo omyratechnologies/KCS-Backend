@@ -26,10 +26,7 @@ export class PaymentController {
 
             const bankData = await ctx.req.json();
 
-            const result = await PaymentService.createOrUpdateSchoolBankDetails(
-                campus_id,
-                bankData
-            );
+            const result = await PaymentService.createOrUpdateSchoolBankDetails(campus_id, bankData);
 
             return ctx.json({
                 success: true,
@@ -40,10 +37,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -63,8 +57,7 @@ export class PaymentController {
                 return ctx.json({ error: "Unauthorized" }, 403);
             }
 
-            const bankDetails =
-                await PaymentService.getSchoolBankDetails(campus_id);
+            const bankDetails = await PaymentService.getSchoolBankDetails(campus_id);
 
             return ctx.json({
                 success: true,
@@ -74,10 +67,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -100,10 +90,7 @@ export class PaymentController {
 
             const categoryData = await ctx.req.json();
 
-            const result = await PaymentService.createFeeCategory(
-                campus_id,
-                categoryData
-            );
+            const result = await PaymentService.createFeeCategory(campus_id, categoryData);
 
             return ctx.json({
                 success: true,
@@ -114,10 +101,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -132,10 +116,7 @@ export class PaymentController {
             const campus_id = ctx.get("campus_id");
             const { academic_year } = ctx.req.query();
 
-            const categories = await PaymentService.getFeeCategoriesByCampus(
-                campus_id,
-                academic_year
-            );
+            const categories = await PaymentService.getFeeCategoriesByCampus(campus_id, academic_year);
 
             return ctx.json({
                 success: true,
@@ -146,10 +127,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -182,10 +160,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -208,10 +183,7 @@ export class PaymentController {
 
             const templateData = await ctx.req.json();
 
-            const result = await PaymentService.createFeeTemplate(
-                campus_id,
-                templateData
-            );
+            const result = await PaymentService.createFeeTemplate(campus_id, templateData);
 
             return ctx.json({
                 success: true,
@@ -222,10 +194,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -240,11 +209,7 @@ export class PaymentController {
             const campus_id = ctx.get("campus_id");
             const { class_id, academic_year } = ctx.req.query();
 
-            const templates = await PaymentService.getFeeTemplatesByCampus(
-                campus_id,
-                class_id,
-                academic_year
-            );
+            const templates = await PaymentService.getFeeTemplatesByCampus(campus_id, class_id, academic_year);
 
             return ctx.json({
                 success: true,
@@ -255,10 +220,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -277,8 +239,7 @@ export class PaymentController {
                 return ctx.json({ error: "Unauthorized" }, 403);
             }
 
-            const fees =
-                await PaymentService.generateFeesFromTemplate(template_id);
+            const fees = await PaymentService.generateFeesFromTemplate(template_id);
 
             return ctx.json({
                 success: true,
@@ -290,10 +251,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -311,14 +269,7 @@ export class PaymentController {
             const user_id = ctx.get("user_id");
             const user_type = ctx.get("user_type");
 
-            const {
-                fee_id,
-                student_id,
-                gateway,
-                amount,
-                callback_url,
-                cancel_url,
-            } = await ctx.req.json();
+            const { fee_id, student_id, gateway, amount, callback_url, cancel_url } = await ctx.req.json();
 
             // Determine parent_id based on user type
             let parent_id: string | undefined;
@@ -335,8 +286,7 @@ export class PaymentController {
                     { userType: user_type, operation: "payment_initiation" },
                     "Unauthorized user type for payment initiation"
                 );
-                const errorResponse =
-                    PaymentErrorHandler.formatErrorResponse(authError);
+                const errorResponse = PaymentErrorHandler.formatErrorResponse(authError);
                 return ctx.json(errorResponse, 403 as any);
             }
 
@@ -362,9 +312,7 @@ export class PaymentController {
                 campus_id: ctx.get("campus_id"),
                 user_id: ctx.get("user_id"),
             });
-            const errorResponse = PaymentErrorHandler.formatErrorResponse(
-                errorHandling.error
-            );
+            const errorResponse = PaymentErrorHandler.formatErrorResponse(errorHandling.error);
             return ctx.json(errorResponse, errorHandling.httpStatus as any);
         }
     };
@@ -375,8 +323,7 @@ export class PaymentController {
     public static readonly verifyPayment = async (ctx: Context) => {
         try {
             const { transaction_id } = ctx.req.param();
-            const { payment_id, signature, ...additionalData } =
-                await ctx.req.json();
+            const { payment_id, signature, ...additionalData } = await ctx.req.json();
 
             // Validate required parameters
             if (!transaction_id) {
@@ -388,8 +335,7 @@ export class PaymentController {
                     },
                     "Transaction ID is required for payment verification"
                 );
-                const errorResponse =
-                    PaymentErrorHandler.formatErrorResponse(validationError);
+                const errorResponse = PaymentErrorHandler.formatErrorResponse(validationError);
                 return ctx.json(errorResponse, 400 as any);
             }
 
@@ -406,18 +352,14 @@ export class PaymentController {
                     transaction: result.transaction,
                     invoice: result.invoice,
                 },
-                message: result.success
-                    ? "Payment verified successfully"
-                    : "Payment verification failed",
+                message: result.success ? "Payment verified successfully" : "Payment verification failed",
             });
         } catch (error) {
             const errorHandling = PaymentErrorHandler.handleError(error, {
                 operation: "verify_payment",
                 transaction_id: ctx.req.param("transaction_id"),
             });
-            const errorResponse = PaymentErrorHandler.formatErrorResponse(
-                errorHandling.error
-            );
+            const errorResponse = PaymentErrorHandler.formatErrorResponse(errorHandling.error);
             return ctx.json(errorResponse, errorHandling.httpStatus as any);
         }
     };
@@ -446,12 +388,7 @@ export class PaymentController {
                 return ctx.json({ error: "Unauthorized" }, 403);
             }
 
-            const history = await PaymentService.getPaymentHistory(
-                campus_id,
-                actual_student_id,
-                parent_id,
-                status
-            );
+            const history = await PaymentService.getPaymentHistory(campus_id, actual_student_id, parent_id, status);
 
             return ctx.json({
                 success: true,
@@ -461,10 +398,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -498,25 +432,14 @@ export class PaymentController {
             }
 
             // Get fees for the student
-            const history = await PaymentService.getPaymentHistory(
-                campus_id,
-                actual_student_id,
-                undefined,
-                status
-            );
+            const history = await PaymentService.getPaymentHistory(campus_id, actual_student_id, undefined, status);
 
             // Separate fees by status for easier frontend handling
             const pendingFees = history.fees.filter(
-                (fee) =>
-                    fee.payment_status === "unpaid" ||
-                    fee.payment_status === "partial"
+                (fee) => fee.payment_status === "unpaid" || fee.payment_status === "partial"
             );
-            const paidFees = history.fees.filter(
-                (fee) => fee.payment_status === "paid"
-            );
-            const overdueFees = history.fees.filter(
-                (fee) => fee.payment_status === "overdue"
-            );
+            const paidFees = history.fees.filter((fee) => fee.payment_status === "paid");
+            const overdueFees = history.fees.filter((fee) => fee.payment_status === "overdue");
 
             return ctx.json({
                 success: true,
@@ -526,18 +449,9 @@ export class PaymentController {
                     overdue_fees: overdueFees,
                     recent_transactions: history.transactions.slice(0, 10), // Last 10 transactions
                     summary: {
-                        total_pending: pendingFees.reduce(
-                            (sum, fee) => sum + fee.due_amount,
-                            0
-                        ),
-                        total_paid: paidFees.reduce(
-                            (sum, fee) => sum + fee.paid_amount,
-                            0
-                        ),
-                        total_overdue: overdueFees.reduce(
-                            (sum, fee) => sum + fee.due_amount,
-                            0
-                        ),
+                        total_pending: pendingFees.reduce((sum, fee) => sum + fee.due_amount, 0),
+                        total_paid: paidFees.reduce((sum, fee) => sum + fee.paid_amount, 0),
+                        total_overdue: overdueFees.reduce((sum, fee) => sum + fee.due_amount, 0),
                     },
                 },
             });
@@ -545,10 +459,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -577,10 +488,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -595,15 +503,13 @@ export class PaymentController {
             const campus_id = ctx.get("campus_id");
 
             // Use the new secure service to get available gateways
-            const gatewayInfo =
-                await PaymentService.getAvailableGateways(campus_id);
+            const gatewayInfo = await PaymentService.getAvailableGateways(campus_id);
 
             if (gatewayInfo.enabled.length === 0) {
                 return ctx.json(
                     {
                         success: false,
-                        message:
-                            "No payment gateways are enabled for this school",
+                        message: "No payment gateways are enabled for this school",
                     },
                     400
                 );
@@ -621,8 +527,7 @@ export class PaymentController {
                             availableGateways.push({
                                 id: "razorpay",
                                 name: "Razorpay",
-                                description:
-                                    "Pay using Credit/Debit Card, Net Banking, UPI, Wallets",
+                                description: "Pay using Credit/Debit Card, Net Banking, UPI, Wallets",
                                 logo: "https://razorpay.com/assets/logo.png",
                                 test_status: config.test_status,
                                 last_tested: config.last_tested,
@@ -635,8 +540,7 @@ export class PaymentController {
                             availableGateways.push({
                                 id: "payu",
                                 name: "PayU",
-                                description:
-                                    "Secure payment gateway with multiple payment options",
+                                description: "Secure payment gateway with multiple payment options",
                                 logo: "https://payu.in/assets/logo.png",
                                 test_status: config.test_status,
                                 last_tested: config.last_tested,
@@ -673,10 +577,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -698,10 +599,7 @@ export class PaymentController {
                 return ctx.json({ error: "Unauthorized" }, 403);
             }
 
-            const result =
-                await PaymentNotificationService.sendBulkPaymentReminders(
-                    campus_id
-                );
+            const result = await PaymentNotificationService.sendBulkPaymentReminders(campus_id);
 
             return ctx.json({
                 success: true,
@@ -712,10 +610,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -745,24 +640,13 @@ export class PaymentController {
             }
 
             const studentData = await UserService.getUser(fee.user_id);
-            const schoolData =
-                await PaymentNotificationService.getSchoolDetails(campus_id);
+            const schoolData = await PaymentNotificationService.getSchoolDetails(campus_id);
 
             const isOverdue = fee.payment_status === "overdue";
 
             await (isOverdue
-                ? PaymentNotificationService.sendPaymentOverdueNotification(
-                      campus_id,
-                      fee,
-                      studentData,
-                      schoolData
-                  )
-                : PaymentNotificationService.sendPaymentDueReminder(
-                      campus_id,
-                      fee,
-                      studentData,
-                      schoolData
-                  ));
+                ? PaymentNotificationService.sendPaymentOverdueNotification(campus_id, fee, studentData, schoolData)
+                : PaymentNotificationService.sendPaymentDueReminder(campus_id, fee, studentData, schoolData));
 
             return ctx.json({
                 success: true,
@@ -772,10 +656,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -795,9 +676,7 @@ export class PaymentController {
                 return ctx.json({ error: "Unauthorized" }, 403);
             }
 
-            await PaymentNotificationService.schedulePaymentReminders(
-                campus_id
-            );
+            await PaymentNotificationService.schedulePaymentReminders(campus_id);
 
             return ctx.json({
                 success: true,
@@ -807,10 +686,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -842,10 +718,7 @@ export class PaymentController {
                 };
             }
 
-            const analytics = await PaymentAnalyticsService.getPaymentAnalytics(
-                campus_id,
-                dateRange
-            );
+            const analytics = await PaymentAnalyticsService.getPaymentAnalytics(campus_id, dateRange);
 
             return ctx.json({
                 success: true,
@@ -855,10 +728,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -906,10 +776,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -932,10 +799,7 @@ export class PaymentController {
             const { period } = ctx.req.query();
 
             if (!period) {
-                return ctx.json(
-                    { error: "Period is required (7d, 30d, 90d, 1y)" },
-                    400
-                );
+                return ctx.json({ error: "Period is required (7d, 30d, 90d, 1y)" }, 400);
             }
 
             const trends = await PaymentAnalyticsService.getPaymentTrends(
@@ -951,10 +815,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -977,11 +838,7 @@ export class PaymentController {
             const { limit } = ctx.req.query();
             const limitNum = limit ? Number.parseInt(limit as string) : 10;
 
-            const topStudents =
-                await PaymentAnalyticsService.getTopPayingStudents(
-                    campus_id,
-                    limitNum
-                );
+            const topStudents = await PaymentAnalyticsService.getTopPayingStudents(campus_id, limitNum);
 
             return ctx.json({
                 success: true,
@@ -992,10 +849,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -1020,14 +874,8 @@ export class PaymentController {
 
             const ruleData = await ctx.req.json();
 
-            const { DiscountService } = await import(
-                "@/services/discount.service"
-            );
-            const result = await DiscountService.createDiscountRule(
-                campus_id,
-                ruleData,
-                user_id
-            );
+            const { DiscountService } = await import("@/services/discount.service");
+            const result = await DiscountService.createDiscountRule(campus_id, ruleData, user_id);
 
             return ctx.json({
                 success: true,
@@ -1038,10 +886,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -1064,18 +909,18 @@ export class PaymentController {
             const { is_active, discount_type, academic_year } = ctx.req.query();
 
             const filters: any = {};
-            if (is_active !== undefined)
-                {filters.is_active = is_active === "true";}
-            if (discount_type) {filters.discount_type = discount_type;}
-            if (academic_year) {filters.academic_year = academic_year;}
+            if (is_active !== undefined) {
+                filters.is_active = is_active === "true";
+            }
+            if (discount_type) {
+                filters.discount_type = discount_type;
+            }
+            if (academic_year) {
+                filters.academic_year = academic_year;
+            }
 
-            const { DiscountService } = await import(
-                "@/services/discount.service"
-            );
-            const rules = await DiscountService.getDiscountRules(
-                campus_id,
-                filters
-            );
+            const { DiscountService } = await import("@/services/discount.service");
+            const rules = await DiscountService.getDiscountRules(campus_id, filters);
 
             return ctx.json({
                 success: true,
@@ -1086,10 +931,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -1105,20 +947,14 @@ export class PaymentController {
             const { fee_id, student_id } = ctx.req.param();
 
             const { Fee } = await import("@/models/fee.model");
-            const { DiscountService } = await import(
-                "@/services/discount.service"
-            );
+            const { DiscountService } = await import("@/services/discount.service");
 
             const fee = await Fee.findById(fee_id);
             if (!fee || fee.campus_id !== campus_id) {
                 return ctx.json({ error: "Fee not found" }, 404);
             }
 
-            const eligibility = await DiscountService.checkDiscountEligibility(
-                campus_id,
-                fee,
-                student_id
-            );
+            const eligibility = await DiscountService.checkDiscountEligibility(campus_id, fee, student_id);
 
             return ctx.json({
                 success: true,
@@ -1128,10 +964,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -1152,12 +985,9 @@ export class PaymentController {
                 return ctx.json({ error: "Unauthorized" }, 403);
             }
 
-            const { fee_id, student_id, discount_rule_id, reason } =
-                await ctx.req.json();
+            const { fee_id, student_id, discount_rule_id, reason } = await ctx.req.json();
 
-            const { DiscountService } = await import(
-                "@/services/discount.service"
-            );
+            const { DiscountService } = await import("@/services/discount.service");
             const application = await DiscountService.applyDiscount(
                 campus_id,
                 fee_id,
@@ -1176,10 +1006,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -1209,13 +1036,8 @@ export class PaymentController {
                 };
             }
 
-            const { DiscountService } = await import(
-                "@/services/discount.service"
-            );
-            const summary = await DiscountService.getDiscountSummary(
-                campus_id,
-                dateRange
-            );
+            const { DiscountService } = await import("@/services/discount.service");
+            const summary = await DiscountService.getDiscountSummary(campus_id, dateRange);
 
             return ctx.json({
                 success: true,
@@ -1225,10 +1047,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -1253,14 +1072,8 @@ export class PaymentController {
 
             const requestData = await ctx.req.json();
 
-            const { BulkOperationsService } = await import(
-                "@/services/bulk_operations.service"
-            );
-            const result = await BulkOperationsService.generateBulkFees(
-                campus_id,
-                requestData,
-                user_id
-            );
+            const { BulkOperationsService } = await import("@/services/bulk_operations.service");
+            const result = await BulkOperationsService.generateBulkFees(campus_id, requestData, user_id);
 
             return ctx.json({
                 success: true,
@@ -1271,10 +1084,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -1297,14 +1107,8 @@ export class PaymentController {
 
             const requestData = await ctx.req.json();
 
-            const { BulkOperationsService } = await import(
-                "@/services/bulk_operations.service"
-            );
-            const result = await BulkOperationsService.processBulkPayments(
-                campus_id,
-                requestData,
-                user_id
-            );
+            const { BulkOperationsService } = await import("@/services/bulk_operations.service");
+            const result = await BulkOperationsService.processBulkPayments(campus_id, requestData, user_id);
 
             return ctx.json({
                 success: true,
@@ -1315,10 +1119,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -1341,15 +1142,8 @@ export class PaymentController {
 
             const { fee_ids, updates } = await ctx.req.json();
 
-            const { BulkOperationsService } = await import(
-                "@/services/bulk_operations.service"
-            );
-            const result = await BulkOperationsService.updateBulkFees(
-                campus_id,
-                fee_ids,
-                updates,
-                user_id
-            );
+            const { BulkOperationsService } = await import("@/services/bulk_operations.service");
+            const result = await BulkOperationsService.updateBulkFees(campus_id, fee_ids, updates, user_id);
 
             return ctx.json({
                 success: true,
@@ -1360,10 +1154,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -1375,9 +1166,7 @@ export class PaymentController {
     /**
      * Configure secure payment gateway credentials
      */
-    public static readonly configureSecureCredentials = async (
-        ctx: Context
-    ) => {
+    public static readonly configureSecureCredentials = async (ctx: Context) => {
         try {
             const campus_id = ctx.get("campus_id");
             const user_type = ctx.get("user_type");
@@ -1387,11 +1176,7 @@ export class PaymentController {
                 return ctx.json({ error: "Unauthorized" }, 403);
             }
 
-            const {
-                gateway,
-                credentials,
-                enabled = true,
-            } = await ctx.req.json();
+            const { gateway, credentials, enabled = true } = await ctx.req.json();
 
             if (!gateway || !credentials) {
                 return ctx.json(
@@ -1402,12 +1187,7 @@ export class PaymentController {
                 );
             }
 
-            const result = await PaymentService.configurePaymentGateway(
-                campus_id,
-                gateway,
-                credentials,
-                enabled
-            );
+            const result = await PaymentService.configurePaymentGateway(campus_id, gateway, credentials, enabled);
 
             return ctx.json({
                 success: true,
@@ -1418,10 +1198,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -1465,10 +1242,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -1524,10 +1298,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -1547,10 +1318,7 @@ export class PaymentController {
                 return ctx.json({ error: "Unauthorized" }, 403);
             }
 
-            const maskedCredentials =
-                await SecurePaymentCredentialService.getMaskedCredentials(
-                    campus_id
-                );
+            const maskedCredentials = await SecurePaymentCredentialService.getMaskedCredentials(campus_id);
 
             if (!maskedCredentials) {
                 return ctx.json(
@@ -1570,10 +1338,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -1593,10 +1358,7 @@ export class PaymentController {
                 return ctx.json({ error: "Unauthorized" }, 403);
             }
 
-            const result =
-                await SecurePaymentCredentialService.migrateLegacyCredentials(
-                    campus_id
-                );
+            const result = await SecurePaymentCredentialService.migrateLegacyCredentials(campus_id);
 
             return ctx.json({
                 success: result.success,
@@ -1607,10 +1369,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -1630,10 +1389,7 @@ export class PaymentController {
                 return ctx.json({ error: "Unauthorized" }, 403);
             }
 
-            const securityStatus =
-                await SecurePaymentCredentialService.validateCredentialSecurity(
-                    campus_id
-                );
+            const securityStatus = await SecurePaymentCredentialService.validateCredentialSecurity(campus_id);
 
             return ctx.json({
                 success: securityStatus.valid,
@@ -1643,10 +1399,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -1663,10 +1416,7 @@ export class PaymentController {
 
             // Only super admin can rotate encryption
             if (user_type !== "Super Admin") {
-                return ctx.json(
-                    { error: "Unauthorized - Super Admin access required" },
-                    403
-                );
+                return ctx.json({ error: "Unauthorized - Super Admin access required" }, 403);
             }
 
             const { old_encryption_key } = await ctx.req.json();
@@ -1680,11 +1430,7 @@ export class PaymentController {
                 );
             }
 
-            const result =
-                await SecurePaymentCredentialService.rotateEncryption(
-                    campus_id,
-                    old_encryption_key
-                );
+            const result = await SecurePaymentCredentialService.rotateEncryption(campus_id, old_encryption_key);
 
             return ctx.json({
                 success: result.success,
@@ -1695,10 +1441,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -1717,11 +1460,8 @@ export class PaymentController {
                 return ctx.json({ error: "Unauthorized" }, 403);
             }
 
-            const { CredentialEncryptionService } = await import(
-                "@/services/credential_encryption.service"
-            );
-            const validation =
-                CredentialEncryptionService.validateEncryptionKey();
+            const { CredentialEncryptionService } = await import("@/services/credential_encryption.service");
+            const validation = CredentialEncryptionService.validateEncryptionKey();
 
             return ctx.json({
                 success: validation.valid,
@@ -1731,10 +1471,7 @@ export class PaymentController {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    message: error instanceof Error ? error.message : "Unknown error",
                 },
                 500
             );
@@ -1758,31 +1495,20 @@ export class PaymentController {
             }
 
             // Get security metrics from the last 24 hours
-            const securityMetrics =
-                PaymentSecurityMonitor.getSecurityMetrics(campus_id);
+            const securityMetrics = PaymentSecurityMonitor.getSecurityMetrics(campus_id);
 
             // Get recent security events (last 100)
-            const recentEvents = PaymentSecurityMonitor.getRecentSecurityEvents(
-                campus_id,
-                100
-            );
+            const recentEvents = PaymentSecurityMonitor.getRecentSecurityEvents(campus_id, 100);
 
             // Get audit logs (last 50)
-            const auditLogs = PaymentSecurityMonitor.getAuditLogs(
-                campus_id,
-                50
-            );
+            const auditLogs = PaymentSecurityMonitor.getAuditLogs(campus_id, 50);
 
             // Get gateway status
-            const gatewayStatus =
-                await PaymentService.getAvailableGateways(campus_id);
+            const gatewayStatus = await PaymentService.getAvailableGateways(campus_id);
 
             // Get encryption validation
-            const { CredentialEncryptionService } = await import(
-                "@/services/credential_encryption.service"
-            );
-            const encryptionStatus =
-                CredentialEncryptionService.validateEncryptionKey();
+            const { CredentialEncryptionService } = await import("@/services/credential_encryption.service");
+            const encryptionStatus = CredentialEncryptionService.validateEncryptionKey();
 
             return ctx.json({
                 success: true,
@@ -1799,8 +1525,7 @@ export class PaymentController {
         } catch (error) {
             const errorResponse = PaymentErrorHandler.handleError("SYS_001", {
                 operation: "security_dashboard",
-                original_error:
-                    error instanceof Error ? error.message : String(error),
+                original_error: error instanceof Error ? error.message : String(error),
             });
             return ctx.json(errorResponse, 500 as any);
         }
@@ -1828,8 +1553,7 @@ export class PaymentController {
                 return ctx.json(error, 400 as any);
             }
 
-            const eventDetails =
-                PaymentSecurityMonitor.getSecurityEventById(event_id);
+            const eventDetails = PaymentSecurityMonitor.getSecurityEventById(event_id);
 
             if (!eventDetails) {
                 const error = PaymentErrorHandler.handleError("NOT_001", {
@@ -1840,10 +1564,7 @@ export class PaymentController {
             }
 
             // Check if user has access to this campus's events
-            if (
-                eventDetails.campus_id &&
-                eventDetails.campus_id !== campus_id
-            ) {
+            if (eventDetails.campus_id && eventDetails.campus_id !== campus_id) {
                 const error = PaymentErrorHandler.handleError("AUTH_002");
                 return ctx.json(error, 403 as any);
             }
@@ -1856,8 +1577,7 @@ export class PaymentController {
             const errorResponse = PaymentErrorHandler.handleError("SYS_001", {
                 operation: "get_security_event_details",
                 event_id: ctx.req.param().event_id,
-                original_error:
-                    error instanceof Error ? error.message : String(error),
+                original_error: error instanceof Error ? error.message : String(error),
             });
             return ctx.json(errorResponse, 500 as any);
         }

@@ -9,25 +9,15 @@ export class UsersController {
             const _user_type = c.get("user_type");
             const _campus_id = c.get("campus_id");
 
-            const {
-                user_id,
-                email,
-                password,
-                first_name,
-                last_name,
-                phone,
-                address,
-                meta_data,
-                user_type,
-            } = await c.req.json();
+            const { user_id, email, password, first_name, last_name, phone, address, meta_data, user_type } =
+                await c.req.json();
 
             let { campus_id } = await c.req.json();
 
             if (_user_type !== "Super Admin" && !_campus_id) {
                 return c.json(
                     {
-                        message:
-                            "You can only add users to your assigned campus",
+                        message: "You can only add users to your assigned campus",
                     },
                     401
                 );

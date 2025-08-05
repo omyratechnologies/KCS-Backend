@@ -28,8 +28,7 @@ export class UploadController {
                 return ctx.json(
                     {
                         success: false,
-                        message:
-                            "File too large. Maximum size allowed is 100MB",
+                        message: "File too large. Maximum size allowed is 100MB",
                     },
                     400
                 );
@@ -49,11 +48,7 @@ export class UploadController {
                 meta_data: {},
             };
 
-            const upload = await UploadService.createUpload(
-                campus_id,
-                user_id,
-                fileData
-            );
+            const upload = await UploadService.createUpload(campus_id, user_id, fileData);
 
             return ctx.json(upload);
         } catch (error) {

@@ -42,9 +42,6 @@ LibraryIssueSchema.index.findByIssueDate = { by: "issue_date" };
 LibraryIssueSchema.index.findByDueDate = { by: "due_date" };
 LibraryIssueSchema.index.findByReturnDate = { by: "return_date" };
 
-const LibraryIssue = ottoman.model<ILibraryIssueData>(
-    "library_issue",
-    LibraryIssueSchema
-);
+const LibraryIssue = ottoman.model<ILibraryIssueData>("library_issue", LibraryIssueSchema);
 
 export { type ILibraryIssueData, LibraryIssue };

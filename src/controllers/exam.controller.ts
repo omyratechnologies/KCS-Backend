@@ -7,8 +7,7 @@ export class ExamController {
     public static readonly createExamTerm = async (ctx: Context) => {
         try {
             const campus_id = ctx.get("campus_id");
-            const { name, start_date, end_date, meta_data } =
-                await ctx.req.json();
+            const { name, start_date, end_date, meta_data } = await ctx.req.json();
 
             const exam_term = await ExamService.createExamTerm(campus_id, {
                 name,
@@ -74,8 +73,7 @@ export class ExamController {
     public static readonly updateExamTerm = async (ctx: Context) => {
         try {
             const id = ctx.req.param("id");
-            const { name, start_date, end_date, meta_data } =
-                await ctx.req.json();
+            const { name, start_date, end_date, meta_data } = await ctx.req.json();
 
             const exam_term = await ExamService.updateExamTerm(id, {
                 name,
@@ -161,8 +159,7 @@ export class ExamController {
     public static readonly updateExamination = async (ctx: Context) => {
         try {
             const id = ctx.req.param("id");
-            const { subject_id, date, start_time, end_time, exam_term_id } =
-                await ctx.req.json();
+            const { subject_id, date, start_time, end_time, exam_term_id } = await ctx.req.json();
 
             const examination = await ExamService.updateExamination(id, {
                 subject_id,
@@ -210,8 +207,7 @@ export class ExamController {
         try {
             const campus_id = ctx.get("campus_id");
             const exam_term_id = ctx.req.param("exam_term_id");
-            const { subject_id, date, start_time, end_time, meta_data } =
-                await ctx.req.json();
+            const { subject_id, date, start_time, end_time, meta_data } = await ctx.req.json();
 
             const examination = await ExamService.createExamination(campus_id, {
                 subject_id,
@@ -236,14 +232,11 @@ export class ExamController {
     };
 
     // getExaminationsByExamTermId
-    public static readonly getExaminationsByExamTermId = async (
-        ctx: Context
-    ) => {
+    public static readonly getExaminationsByExamTermId = async (ctx: Context) => {
         try {
             const exam_term_id = ctx.req.param("exam_term_id");
 
-            const examinations =
-                await ExamService.getExaminationsByExamTermId(exam_term_id);
+            const examinations = await ExamService.getExaminationsByExamTermId(exam_term_id);
 
             return ctx.json(examinations);
         } catch (error) {
@@ -259,14 +252,11 @@ export class ExamController {
     };
 
     // getExaminationsBySubjectId
-    public static readonly getExaminationsBySubjectId = async (
-        ctx: Context
-    ) => {
+    public static readonly getExaminationsBySubjectId = async (ctx: Context) => {
         try {
             const subject_id = ctx.req.param("subject_id");
 
-            const examinations =
-                await ExamService.getExaminationsBySubjectId(subject_id);
+            const examinations = await ExamService.getExaminationsBySubjectId(subject_id);
 
             return ctx.json(examinations);
         } catch (error) {
@@ -286,9 +276,7 @@ export class ExamController {
         try {
             const date = ctx.req.param("date");
 
-            const examinations = await ExamService.getExaminationsByDate(
-                new Date(date)
-            );
+            const examinations = await ExamService.getExaminationsByDate(new Date(date));
 
             return ctx.json(examinations);
         } catch (error) {

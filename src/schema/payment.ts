@@ -10,14 +10,10 @@ export const schoolBankDetailsSchema = z
         campus_id: z.string().openapi({ example: "campus_123" }),
         bank_name: z.string().openapi({ example: "State Bank of India" }),
         account_number: z.string().openapi({ example: "1234567890" }),
-        account_holder_name: z
-            .string()
-            .openapi({ example: "ABC School Trust" }),
+        account_holder_name: z.string().openapi({ example: "ABC School Trust" }),
         ifsc_code: z.string().openapi({ example: "SBIN0001234" }),
         branch_name: z.string().openapi({ example: "Main Branch" }),
-        account_type: z
-            .enum(["savings", "current"])
-            .openapi({ example: "current" }),
+        account_type: z.enum(["savings", "current"]).openapi({ example: "current" }),
         upi_id: z.string().optional().openapi({ example: "school@paytm" }),
         payment_gateway_credentials: z
             .object({
@@ -56,10 +52,7 @@ export const schoolBankDetailsSchema = z
             }),
         is_active: z.boolean().openapi({ example: true }),
         is_verified: z.boolean().openapi({ example: false }),
-        verified_at: z
-            .string()
-            .optional()
-            .openapi({ example: "2023-01-01T00:00:00Z" }),
+        verified_at: z.string().optional().openapi({ example: "2023-01-01T00:00:00Z" }),
         meta_data: z.record(z.string(), z.any()).openapi({ example: {} }),
         created_at: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
         updated_at: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
@@ -70,14 +63,10 @@ export const createBankDetailsRequestSchema = z
     .object({
         bank_name: z.string().openapi({ example: "State Bank of India" }),
         account_number: z.string().openapi({ example: "1234567890" }),
-        account_holder_name: z
-            .string()
-            .openapi({ example: "ABC School Trust" }),
+        account_holder_name: z.string().openapi({ example: "ABC School Trust" }),
         ifsc_code: z.string().openapi({ example: "SBIN0001234" }),
         branch_name: z.string().openapi({ example: "Main Branch" }),
-        account_type: z
-            .enum(["savings", "current"])
-            .openapi({ example: "current" }),
+        account_type: z.enum(["savings", "current"]).openapi({ example: "current" }),
         upi_id: z.string().optional().openapi({ example: "school@paytm" }),
         payment_gateway_credentials: z
             .object({
@@ -116,17 +105,11 @@ export const feeCategorySchema = z
         campus_id: z.string().openapi({ example: "campus_123" }),
         category_name: z.string().openapi({ example: "Tuition Fee" }),
         category_code: z.string().openapi({ example: "TUITION_001" }),
-        description: z
-            .string()
-            .openapi({ example: "Monthly tuition fee for academic year" }),
+        description: z.string().openapi({ example: "Monthly tuition fee for academic year" }),
         is_mandatory: z.boolean().openapi({ example: true }),
-        applicable_classes: z
-            .array(z.string())
-            .openapi({ example: ["class_1", "class_2"] }),
+        applicable_classes: z.array(z.string()).openapi({ example: ["class_1", "class_2"] }),
         academic_year: z.string().openapi({ example: "2023-24" }),
-        frequency: z
-            .enum(["monthly", "quarterly", "annually", "one-time"])
-            .openapi({ example: "monthly" }),
+        frequency: z.enum(["monthly", "quarterly", "annually", "one-time"]).openapi({ example: "monthly" }),
         due_date_config: z
             .object({
                 type: z.string(),
@@ -181,17 +164,11 @@ export const createFeeCategoryRequestSchema = z
     .object({
         category_name: z.string().openapi({ example: "Tuition Fee" }),
         category_code: z.string().openapi({ example: "TUITION_001" }),
-        description: z
-            .string()
-            .openapi({ example: "Monthly tuition fee for academic year" }),
+        description: z.string().openapi({ example: "Monthly tuition fee for academic year" }),
         is_mandatory: z.boolean().default(true).openapi({ example: true }),
-        applicable_classes: z
-            .array(z.string())
-            .openapi({ example: ["class_1", "class_2"] }),
+        applicable_classes: z.array(z.string()).openapi({ example: ["class_1", "class_2"] }),
         academic_year: z.string().openapi({ example: "2023-24" }),
-        frequency: z
-            .enum(["monthly", "quarterly", "annually", "one-time"])
-            .openapi({ example: "monthly" }),
+        frequency: z.enum(["monthly", "quarterly", "annually", "one-time"]).openapi({ example: "monthly" }),
         due_date_config: z.object({
             type: z.string(),
             value: z.union([z.string(), z.number()]),
@@ -311,46 +288,21 @@ export const paymentTransactionSchema = z
         fee_id: z.string().openapi({ example: "fee_123" }),
         student_id: z.string().openapi({ example: "student_123" }),
         parent_id: z.string().optional().openapi({ example: "parent_123" }),
-        payment_gateway: z
-            .enum(["razorpay", "payu", "cashfree"])
-            .openapi({ example: "razorpay" }),
-        gateway_transaction_id: z
-            .string()
-            .optional()
-            .openapi({ example: "pay_123" }),
-        gateway_order_id: z
-            .string()
-            .optional()
-            .openapi({ example: "order_123" }),
-        gateway_payment_id: z
-            .string()
-            .optional()
-            .openapi({ example: "payment_123" }),
+        payment_gateway: z.enum(["razorpay", "payu", "cashfree"]).openapi({ example: "razorpay" }),
+        gateway_transaction_id: z.string().optional().openapi({ example: "pay_123" }),
+        gateway_order_id: z.string().optional().openapi({ example: "order_123" }),
+        gateway_payment_id: z.string().optional().openapi({ example: "payment_123" }),
         amount: z.number().openapi({ example: 5000 }),
         currency: z.string().openapi({ example: "INR" }),
-        status: z
-            .enum(["pending", "success", "failed", "cancelled", "refunded"])
-            .openapi({ example: "success" }),
-        payment_method: z
-            .enum(["card", "netbanking", "upi", "wallet", "emi"])
-            .optional()
-            .openapi({ example: "upi" }),
+        status: z.enum(["pending", "success", "failed", "cancelled", "refunded"]).openapi({ example: "success" }),
+        payment_method: z.enum(["card", "netbanking", "upi", "wallet", "emi"]).optional().openapi({ example: "upi" }),
         payment_details: z.record(z.string(), z.any()).openapi({ example: {} }),
         initiated_at: z.string().openapi({ example: "2023-01-01T10:00:00Z" }),
-        completed_at: z
-            .string()
-            .optional()
-            .openapi({ example: "2023-01-01T10:05:00Z" }),
+        completed_at: z.string().optional().openapi({ example: "2023-01-01T10:05:00Z" }),
         webhook_verified: z.boolean().openapi({ example: true }),
         invoice_generated: z.boolean().openapi({ example: true }),
-        invoice_url: z
-            .string()
-            .optional()
-            .openapi({ example: "https://example.com/invoice.pdf" }),
-        receipt_number: z
-            .string()
-            .optional()
-            .openapi({ example: "INV-123-456" }),
+        invoice_url: z.string().optional().openapi({ example: "https://example.com/invoice.pdf" }),
+        receipt_number: z.string().optional().openapi({ example: "INV-123-456" }),
         meta_data: z.record(z.string(), z.any()).openapi({ example: {} }),
         created_at: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
         updated_at: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
@@ -361,16 +313,10 @@ export const initiatePaymentRequestSchema = z
     .object({
         fee_id: z.string().openapi({ example: "fee_123" }),
         student_id: z.string().optional().openapi({ example: "student_123" }),
-        gateway: z
-            .enum(["razorpay", "payu", "cashfree"])
-            .openapi({ example: "razorpay" }),
+        gateway: z.enum(["razorpay", "payu", "cashfree"]).openapi({ example: "razorpay" }),
         amount: z.number().openapi({ example: 5000 }),
-        callback_url: z
-            .string()
-            .openapi({ example: "https://yourapp.com/payment/callback" }),
-        cancel_url: z
-            .string()
-            .openapi({ example: "https://yourapp.com/payment/cancel" }),
+        callback_url: z.string().openapi({ example: "https://yourapp.com/payment/callback" }),
+        cancel_url: z.string().openapi({ example: "https://yourapp.com/payment/cancel" }),
     })
     .openapi({ ref: "InitiatePaymentRequest" });
 
@@ -383,10 +329,7 @@ export const verifyPaymentRequestSchema = z
         amount: z.string().optional().openapi({ example: "5000.00" }),
         productinfo: z.string().optional().openapi({ example: "Fee Payment" }),
         firstname: z.string().optional().openapi({ example: "Student Name" }),
-        email: z
-            .string()
-            .optional()
-            .openapi({ example: "student@example.com" }),
+        email: z.string().optional().openapi({ example: "student@example.com" }),
     })
     .openapi({ ref: "VerifyPaymentRequest" });
 
@@ -457,13 +400,8 @@ export const paymentInvoiceSchema = z
                 description: z.string().optional(),
             })
         ),
-        status: z
-            .enum(["generated", "sent", "paid", "overdue"])
-            .openapi({ example: "paid" }),
-        invoice_url: z
-            .string()
-            .optional()
-            .openapi({ example: "https://example.com/invoice.pdf" }),
+        status: z.enum(["generated", "sent", "paid", "overdue"]).openapi({ example: "paid" }),
+        invoice_url: z.string().optional().openapi({ example: "https://example.com/invoice.pdf" }),
         sent_notifications: z.object({
             email_sent: z.boolean(),
             sms_sent: z.boolean(),
@@ -486,10 +424,7 @@ export const enhancedFeeSchema = z
         parent_id: z.string().optional().openapi({ example: "parent_123" }),
         class_id: z.string().openapi({ example: "class_123" }),
         academic_year: z.string().openapi({ example: "2023-24" }),
-        fee_template_id: z
-            .string()
-            .optional()
-            .openapi({ example: "template_123" }),
+        fee_template_id: z.string().optional().openapi({ example: "template_123" }),
         items: z
             .array(
                 z.object({
@@ -520,14 +455,9 @@ export const enhancedFeeSchema = z
         due_amount: z.number().openapi({ example: 5000 }),
         discount_amount: z.number().openapi({ example: 0 }),
         late_fee_amount: z.number().openapi({ example: 0 }),
-        payment_status: z
-            .enum(["unpaid", "partial", "paid", "overdue"])
-            .openapi({ example: "unpaid" }),
+        payment_status: z.enum(["unpaid", "partial", "paid", "overdue"]).openapi({ example: "unpaid" }),
         is_paid: z.boolean().openapi({ example: false }),
-        payment_date: z
-            .string()
-            .optional()
-            .openapi({ example: "2023-01-15T00:00:00Z" }),
+        payment_date: z.string().optional().openapi({ example: "2023-01-15T00:00:00Z" }),
         payment_mode: z.string().optional().openapi({ example: "razorpay" }),
         installments_allowed: z.boolean().openapi({ example: false }),
         installment_plan: z
@@ -555,9 +485,7 @@ export const enhancedFeeSchema = z
 export const successResponseSchema = z
     .object({
         success: z.boolean().openapi({ example: true }),
-        message: z
-            .string()
-            .openapi({ example: "Operation completed successfully" }),
+        message: z.string().openapi({ example: "Operation completed successfully" }),
         data: z.any().optional(),
     })
     .openapi({ ref: "SuccessResponse" });
@@ -630,10 +558,7 @@ export const generateFeesRequestSchema = z
                 description: "Optional: specific students to generate fees for",
             }),
         apply_discounts: z.boolean().default(true).openapi({ example: true }),
-        installments_allowed: z
-            .boolean()
-            .default(false)
-            .openapi({ example: false }),
+        installments_allowed: z.boolean().default(false).openapi({ example: false }),
         due_date_override: z.string().optional().openapi({
             example: "2023-12-31T00:00:00Z",
             description: "Override template due dates",

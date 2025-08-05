@@ -37,18 +37,9 @@ export const createExamTermResponseSchema = examTermSchema.openapi({
 // Update Exam Term Request
 export const updateExamTermRequestBodySchema = z
     .object({
-        name: z
-            .string()
-            .optional()
-            .openapi({ example: "Updated Midterm Examination" }),
-        start_date: z
-            .string()
-            .optional()
-            .openapi({ example: "2023-03-16T00:00:00Z" }),
-        end_date: z
-            .string()
-            .optional()
-            .openapi({ example: "2023-03-26T00:00:00Z" }),
+        name: z.string().optional().openapi({ example: "Updated Midterm Examination" }),
+        start_date: z.string().optional().openapi({ example: "2023-03-16T00:00:00Z" }),
+        end_date: z.string().optional().openapi({ example: "2023-03-26T00:00:00Z" }),
         meta_data: z
             .record(z.string(), z.any())
             .optional()
@@ -67,9 +58,7 @@ export const updateExamTermResponseSchema = examTermSchema.openapi({
 });
 
 // Get Exam Terms Response
-export const getExamTermsResponseSchema = z
-    .array(examTermSchema)
-    .openapi({ ref: "GetExamTermsResponse" });
+export const getExamTermsResponseSchema = z.array(examTermSchema).openapi({ ref: "GetExamTermsResponse" });
 
 // Schema for examination data
 export const examinationSchema = z
@@ -81,9 +70,7 @@ export const examinationSchema = z
         start_date: z.string().openapi({ example: "2023-03-17T09:00:00Z" }),
         end_date: z.string().openapi({ example: "2023-03-17T11:00:00Z" }),
         exam_term_id: z.string().openapi({ example: "examterm123" }),
-        meta_data: z
-            .record(z.string(), z.any())
-            .openapi({ example: { room: "A101", supervisor: "teacher123" } }),
+        meta_data: z.record(z.string(), z.any()).openapi({ example: { room: "A101", supervisor: "teacher123" } }),
         created_at: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
         updated_at: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
     })
@@ -96,9 +83,7 @@ export const createExaminationRequestBodySchema = z
         date: z.string().openapi({ example: "2023-03-17T00:00:00Z" }),
         start_time: z.string().openapi({ example: "2023-03-17T09:00:00Z" }),
         end_time: z.string().openapi({ example: "2023-03-17T11:00:00Z" }),
-        meta_data: z
-            .record(z.string(), z.any())
-            .openapi({ example: { room: "A101", supervisor: "teacher123" } }),
+        meta_data: z.record(z.string(), z.any()).openapi({ example: { room: "A101", supervisor: "teacher123" } }),
     })
     .openapi({ ref: "CreateExaminationRequest" });
 
@@ -110,18 +95,9 @@ export const createExaminationResponseSchema = examinationSchema.openapi({
 export const updateExaminationRequestBodySchema = z
     .object({
         subject_id: z.string().optional().openapi({ example: "subject456" }),
-        date: z
-            .string()
-            .optional()
-            .openapi({ example: "2023-03-18T00:00:00Z" }),
-        start_time: z
-            .string()
-            .optional()
-            .openapi({ example: "2023-03-18T09:00:00Z" }),
-        end_time: z
-            .string()
-            .optional()
-            .openapi({ example: "2023-03-18T11:00:00Z" }),
+        date: z.string().optional().openapi({ example: "2023-03-18T00:00:00Z" }),
+        start_time: z.string().optional().openapi({ example: "2023-03-18T09:00:00Z" }),
+        end_time: z.string().optional().openapi({ example: "2023-03-18T11:00:00Z" }),
         exam_term_id: z.string().optional().openapi({ example: "examterm123" }),
     })
     .openapi({ ref: "UpdateExaminationRequest" });
@@ -131,9 +107,7 @@ export const updateExaminationResponseSchema = examinationSchema.openapi({
 });
 
 // Get Examinations Response
-export const getExaminationsResponseSchema = z
-    .array(examinationSchema)
-    .openapi({ ref: "GetExaminationsResponse" });
+export const getExaminationsResponseSchema = z.array(examinationSchema).openapi({ ref: "GetExaminationsResponse" });
 
 // Error Response
 export const errorResponseSchema = z

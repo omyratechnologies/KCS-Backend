@@ -21,14 +21,8 @@ export const userSchema = z
         last_name: z.string().openapi({ example: "Doe" }),
         phone: z.string().openapi({ example: "+1234567890" }),
         address: z.string().openapi({ example: "123 Main St, City, Country" }),
-        last_login: z
-            .string()
-            .optional()
-            .openapi({ example: "2023-05-01T00:00:00Z" }),
-        last_login_ip: z
-            .string()
-            .optional()
-            .openapi({ example: "192.168.1.1" }),
+        last_login: z.string().optional().openapi({ example: "2023-05-01T00:00:00Z" }),
+        last_login_ip: z.string().optional().openapi({ example: "192.168.1.1" }),
         campus_id: z.string().optional().openapi({ example: "campus123" }),
         meta_data: z.record(z.string(), z.any()).openapi({
             example: {

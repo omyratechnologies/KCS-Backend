@@ -51,8 +51,7 @@ app.get(
     describeRoute({
         operationId: "getAllDocumentStore",
         summary: "Get all documents",
-        description:
-            "Retrieves all documents in the document store for a campus",
+        description: "Retrieves all documents in the document store for a campus",
         tags: ["DocumentStore"],
         responses: {
             200: {

@@ -90,8 +90,7 @@ app.get(
                 in: "query",
                 required: false,
                 schema: { type: "string" },
-                description:
-                    "Filter by price range (e.g., '0-50', 'free', 'paid')",
+                description: "Filter by price range (e.g., '0-50', 'free', 'paid')",
             },
             {
                 name: "search",
@@ -120,14 +119,7 @@ app.get(
                 required: false,
                 schema: {
                     type: "string",
-                    enum: [
-                        "created_at",
-                        "updated_at",
-                        "title",
-                        "rating",
-                        "enrollment_count",
-                        "price",
-                    ],
+                    enum: ["created_at", "updated_at", "title", "rating", "enrollment_count", "price"],
                 },
                 description: "Sort by field",
             },
@@ -169,8 +161,7 @@ app.get(
     describeRoute({
         operationId: "getCourseById",
         summary: "Get course by ID",
-        description:
-            "Get detailed course information including sections, lectures, and user progress (if enrolled).",
+        description: "Get detailed course information including sections, lectures, and user progress (if enrolled).",
         tags: ["Courses"],
         parameters: [
             {
@@ -241,8 +232,7 @@ app.put(
     describeRoute({
         operationId: "updateCourse",
         summary: "Update course",
-        description:
-            "Update course details. Admin, course creator, or assigned instructor only.",
+        description: "Update course details. Admin, course creator, or assigned instructor only.",
         tags: ["Courses"],
         parameters: [
             {
@@ -304,8 +294,7 @@ app.put(
                 },
             },
             400: {
-                description:
-                    "Course cannot be published (missing required content)",
+                description: "Course cannot be published (missing required content)",
                 content: {
                     "application/json": {
                         schema: resolver(errorResponseSchema),
@@ -331,8 +320,7 @@ app.delete(
     describeRoute({
         operationId: "deleteCourse",
         summary: "Delete/Archive course",
-        description:
-            "Archive a course (soft delete). Admin or course creator only.",
+        description: "Archive a course (soft delete). Admin or course creator only.",
         tags: ["Courses"],
         parameters: [
             {
@@ -381,8 +369,7 @@ app.post(
     describeRoute({
         operationId: "createCourseSection",
         summary: "Create course section",
-        description:
-            "Create a new section in a course. Admin, course creator, or assigned instructor only.",
+        description: "Create a new section in a course. Admin, course creator, or assigned instructor only.",
         tags: ["Courses"],
         parameters: [
             {
@@ -422,8 +409,7 @@ app.post(
     describeRoute({
         operationId: "createCourseLecture",
         summary: "Create course lecture",
-        description:
-            "Create a new lecture in a course section. Admin, course creator, or assigned instructor only.",
+        description: "Create a new lecture in a course section. Admin, course creator, or assigned instructor only.",
         tags: ["Courses"],
         parameters: [
             {
@@ -463,8 +449,7 @@ app.put(
     describeRoute({
         operationId: "updateSectionOrder",
         summary: "Update section order",
-        description:
-            "Reorder sections within a course. Admin, course creator, or assigned instructor only.",
+        description: "Reorder sections within a course. Admin, course creator, or assigned instructor only.",
         tags: ["Courses"],
         parameters: [
             {
@@ -504,8 +489,7 @@ app.put(
     describeRoute({
         operationId: "updateLectureOrder",
         summary: "Update lecture order",
-        description:
-            "Reorder lectures within a section. Admin, course creator, or assigned instructor only.",
+        description: "Reorder lectures within a section. Admin, course creator, or assigned instructor only.",
         tags: ["Courses"],
         parameters: [
             {
@@ -568,8 +552,7 @@ app.post(
                 },
             },
             400: {
-                description:
-                    "Enrollment not allowed (course full, not published, etc.)",
+                description: "Enrollment not allowed (course full, not published, etc.)",
                 content: {
                     "application/json": {
                         schema: resolver(errorResponseSchema),
@@ -588,8 +571,7 @@ app.get(
     describeRoute({
         operationId: "getUserEnrolledCourses",
         summary: "Get user's enrolled courses",
-        description:
-            "Get all courses the authenticated user is enrolled in. Student only.",
+        description: "Get all courses the authenticated user is enrolled in. Student only.",
         tags: ["Courses"],
         parameters: [
             {
@@ -598,13 +580,7 @@ app.get(
                 required: false,
                 schema: {
                     type: "string",
-                    enum: [
-                        "active",
-                        "completed",
-                        "dropped",
-                        "suspended",
-                        "expired",
-                    ],
+                    enum: ["active", "completed", "dropped", "suspended", "expired"],
                 },
                 description: "Filter by enrollment status",
             },
@@ -653,8 +629,7 @@ app.put(
     describeRoute({
         operationId: "updateCourseProgress",
         summary: "Update lecture progress",
-        description:
-            "Update user's progress on a specific lecture. Student only.",
+        description: "Update user's progress on a specific lecture. Student only.",
         tags: ["Courses"],
         parameters: [
             {
@@ -743,8 +718,7 @@ app.get(
     describeRoute({
         operationId: "getCourseDashboard",
         summary: "Get course dashboard",
-        description:
-            "Get course dashboard with statistics and recent activity. Admin/Teacher only.",
+        description: "Get course dashboard with statistics and recent activity. Admin/Teacher only.",
         tags: ["Courses"],
         responses: {
             200: {
@@ -776,8 +750,7 @@ app.post(
     describeRoute({
         operationId: "bulkEnrollStudents",
         summary: "Bulk enroll students",
-        description:
-            "Enroll multiple students in a course at once. Admin only.",
+        description: "Enroll multiple students in a course at once. Admin only.",
         tags: ["Courses"],
         parameters: [
             {

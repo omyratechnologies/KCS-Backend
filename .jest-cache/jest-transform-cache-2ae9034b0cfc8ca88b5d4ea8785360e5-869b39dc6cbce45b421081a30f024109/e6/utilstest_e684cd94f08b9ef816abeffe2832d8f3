@@ -1,0 +1,163 @@
+157d695cd6244b6d12930b622d3a0a53
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const globals_1 = require("@jest/globals");
+// Test utility functions and helpers
+(0, globals_1.describe)("Utility Functions", () => {
+    (0, globals_1.describe)("Email Validation", () => {
+        const validateEmail = (email) => {
+            // More comprehensive email validation
+            const emailRegex = /^[\w!#$%&'*+/=?^`{|}~-]+(?:\.[\w!#$%&'*+/=?^`{|}~-]+)*@(?:[\da-z](?:[\da-z-]*[\da-z])?\.)+[\da-z](?:[\da-z-]*[\da-z])?$/i;
+            // Additional checks for common invalid patterns
+            if (email.includes("..") || email.includes(" ") || email.startsWith("@") || email.endsWith("@")) {
+                return false;
+            }
+            return emailRegex.test(email);
+        };
+        (0, globals_1.it)("should validate correct email formats", () => {
+            const validEmails = [
+                "user@example.com",
+                "test.user@domain.co.uk",
+                "user+tag@example.org",
+                "user123@test-domain.com",
+            ];
+            for (const email of validEmails) {
+                (0, globals_1.expect)(validateEmail(email)).toBe(true);
+            }
+        });
+        (0, globals_1.it)("should reject invalid email formats", () => {
+            const invalidEmails = [
+                "invalid-email",
+                "@example.com",
+                "user@",
+                "user space@example.com",
+                "user..double@example.com",
+            ];
+            for (const email of invalidEmails) {
+                (0, globals_1.expect)(validateEmail(email)).toBe(false);
+            }
+        });
+    });
+    (0, globals_1.describe)("Password Validation", () => {
+        const validatePassword = (password) => {
+            const errors = [];
+            if (password.length < 8) {
+                errors.push("Password must be at least 8 characters long");
+            }
+            if (!/[A-Z]/.test(password)) {
+                errors.push("Password must contain at least one uppercase letter");
+            }
+            if (!/[a-z]/.test(password)) {
+                errors.push("Password must contain at least one lowercase letter");
+            }
+            if (!/\d/.test(password)) {
+                errors.push("Password must contain at least one number");
+            }
+            return {
+                valid: errors.length === 0,
+                errors,
+            };
+        };
+        (0, globals_1.it)("should accept strong passwords", () => {
+            const strongPasswords = ["Password123", "MyStr0ngP@ss", "SecurePass1", "C0mpl3xP@ssw0rd"];
+            for (const password of strongPasswords) {
+                const result = validatePassword(password);
+                (0, globals_1.expect)(result.valid).toBe(true);
+                (0, globals_1.expect)(result.errors).toHaveLength(0);
+            }
+        });
+        (0, globals_1.it)("should reject weak passwords", () => {
+            const weakPasswords = [
+                "weak", // Too short
+                "alllowercase1", // No uppercase
+                "ALLUPPERCASE1", // No lowercase
+                "NoNumbers", // No numbers
+                "Short1", // Too short
+            ];
+            for (const password of weakPasswords) {
+                const result = validatePassword(password);
+                (0, globals_1.expect)(result.valid).toBe(false);
+                (0, globals_1.expect)(result.errors.length).toBeGreaterThan(0);
+            }
+        });
+    });
+    (0, globals_1.describe)("Date Utilities", () => {
+        const formatDate = (date) => {
+            return date.toISOString().split("T")[0];
+        };
+        const addDays = (date, days) => {
+            const result = new Date(date);
+            result.setDate(result.getDate() + days);
+            return result;
+        };
+        (0, globals_1.it)("should format dates correctly", () => {
+            const testDate = new Date("2025-08-05T10:30:00Z");
+            (0, globals_1.expect)(formatDate(testDate)).toBe("2025-08-05");
+        });
+        (0, globals_1.it)("should add days to date correctly", () => {
+            const baseDate = new Date("2025-08-05");
+            const futureDate = addDays(baseDate, 7);
+            (0, globals_1.expect)(formatDate(futureDate)).toBe("2025-08-12");
+        });
+        (0, globals_1.it)("should handle month/year transitions", () => {
+            const endOfMonth = new Date("2025-08-31");
+            const nextMonth = addDays(endOfMonth, 1);
+            (0, globals_1.expect)(formatDate(nextMonth)).toBe("2025-09-01");
+        });
+    });
+    (0, globals_1.describe)("String Utilities", () => {
+        const slugify = (text) => {
+            return text
+                .toLowerCase()
+                .trim()
+                .replaceAll(/[^\s\w-]/g, "")
+                .replaceAll(/[\s_-]+/g, "-")
+                .replaceAll(/^-+|-+$/g, "");
+        };
+        const capitalize = (text) => {
+            return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+        };
+        (0, globals_1.it)("should create valid slugs", () => {
+            (0, globals_1.expect)(slugify("Hello World")).toBe("hello-world");
+            (0, globals_1.expect)(slugify("Special Characters!@#")).toBe("special-characters");
+            (0, globals_1.expect)(slugify("  Multiple   Spaces  ")).toBe("multiple-spaces");
+            (0, globals_1.expect)(slugify("Underscores_and-dashes")).toBe("underscores-and-dashes");
+        });
+        (0, globals_1.it)("should capitalize text correctly", () => {
+            (0, globals_1.expect)(capitalize("hello")).toBe("Hello");
+            (0, globals_1.expect)(capitalize("WORLD")).toBe("World");
+            (0, globals_1.expect)(capitalize("mIxEd CaSe")).toBe("Mixed case");
+        });
+    });
+    (0, globals_1.describe)("Array Utilities", () => {
+        const chunk = (array, size) => {
+            const chunks = [];
+            for (let i = 0; i < array.length; i += size) {
+                chunks.push(array.slice(i, i + size));
+            }
+            return chunks;
+        };
+        const unique = (array) => {
+            return [...new Set(array)];
+        };
+        (0, globals_1.it)("should chunk arrays correctly", () => {
+            const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+            const chunked = chunk(numbers, 3);
+            (0, globals_1.expect)(chunked).toHaveLength(3);
+            (0, globals_1.expect)(chunked[0]).toEqual([1, 2, 3]);
+            (0, globals_1.expect)(chunked[1]).toEqual([4, 5, 6]);
+            (0, globals_1.expect)(chunked[2]).toEqual([7, 8, 9]);
+        });
+        (0, globals_1.it)("should handle uneven chunks", () => {
+            const numbers = [1, 2, 3, 4, 5];
+            const chunked = chunk(numbers, 2);
+            (0, globals_1.expect)(chunked).toHaveLength(3);
+            (0, globals_1.expect)(chunked[2]).toEqual([5]);
+        });
+        (0, globals_1.it)("should remove duplicates", () => {
+            const withDuplicates = [1, 2, 2, 3, 3, 3, 4];
+            const uniqueArray = unique(withDuplicates);
+            (0, globals_1.expect)(uniqueArray).toEqual([1, 2, 3, 4]);
+        });
+    });
+});

@@ -7,13 +7,7 @@ export interface IDiscountRule {
     campus_id: string;
     name: string;
     description: string;
-    discount_type:
-        | "percentage"
-        | "fixed_amount"
-        | "bulk_discount"
-        | "early_bird"
-        | "sibling_discount"
-        | "merit_based";
+    discount_type: "percentage" | "fixed_amount" | "bulk_discount" | "early_bird" | "sibling_discount" | "merit_based";
     conditions: {
         // Common conditions
         applicable_fee_categories?: string[]; // Fee category IDs
@@ -114,14 +108,7 @@ const DiscountRuleSchema = new Schema(
         discount_type: {
             type: String,
             required: true,
-            enum: [
-                "percentage",
-                "fixed_amount",
-                "bulk_discount",
-                "early_bird",
-                "sibling_discount",
-                "merit_based",
-            ],
+            enum: ["percentage", "fixed_amount", "bulk_discount", "early_bird", "sibling_discount", "merit_based"],
         },
         conditions: {
             applicable_fee_categories: [String],
@@ -201,10 +188,7 @@ const DiscountApplicationSchema = new Schema(
     }
 );
 
-export const DiscountRule = ottoman.model<IDiscountRule>(
-    "DiscountRule",
-    DiscountRuleSchema
-);
+export const DiscountRule = ottoman.model<IDiscountRule>("DiscountRule", DiscountRuleSchema);
 export const DiscountApplication = ottoman.model<IDiscountApplication>(
     "DiscountApplication",
     DiscountApplicationSchema

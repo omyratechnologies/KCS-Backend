@@ -34,14 +34,7 @@
 
             /* Header */
             .header {
-                background: linear-gradient(
-                    135deg,
-                    #0a0a0a 0%,
-                    #1a1a2e 25%,
-                    #16213e 50%,
-                    #0f3460 75%,
-                    #0e4b99 100%
-                );
+                background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #0e4b99 100%);
                 padding: 40px 30px;
                 text-align: center;
                 position: relative;
@@ -56,16 +49,8 @@
                 right: 0;
                 bottom: 0;
                 background-image:
-                    radial-gradient(
-                        circle at 20% 20%,
-                        rgba(255, 255, 255, 0.1) 1px,
-                        transparent 1px
-                    ),
-                    radial-gradient(
-                        circle at 80% 80%,
-                        rgba(85, 218, 215, 0.2) 1px,
-                        transparent 1px
-                    );
+                    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                    radial-gradient(circle at 80% 80%, rgba(85, 218, 215, 0.2) 1px, transparent 1px);
                 background-size:
                     50px 50px,
                     80px 80px;
@@ -411,12 +396,8 @@
                     <img src="{{LOGO_URL}}" alt="Let's Catch Up Logo" />
                 </div>
                 <div class="brand-title">Let's Catch Up</div>
-                <div class="brand-subtitle">
-                    Learning & Communication Platform
-                </div>
-                <div class="notification-badge {{PRIORITY_CLASS}}">
-                    {{NOTIFICATION_TYPE}}
-                </div>
+                <div class="brand-subtitle">Learning & Communication Platform</div>
+                <div class="notification-badge {{PRIORITY_CLASS}}">{{NOTIFICATION_TYPE}}</div>
             </div>
 
             <!-- Content -->
@@ -455,9 +436,7 @@
                 <!-- Action Button -->
                 {{#if ACTION_URL}}
                 <div style="text-align: center">
-                    <a href="{{ACTION_URL}}" class="action-button">
-                        {{ACTION_TEXT}}
-                    </a>
+                    <a href="{{ACTION_URL}}" class="action-button"> {{ACTION_TEXT}} </a>
                 </div>
                 {{/if}}
 
@@ -467,9 +446,7 @@
                     <div class="attachment-icon">📎</div>
                     <div class="attachment-name">{{ATTACHMENT_NAME}}</div>
                     <div class="attachment-size">{{ATTACHMENT_SIZE}}</div>
-                    <a href="{{ATTACHMENT_URL}}" class="attachment-download">
-                        📥 Download Attachment
-                    </a>
+                    <a href="{{ATTACHMENT_URL}}" class="attachment-download"> 📥 Download Attachment </a>
                 </div>
                 {{/if}}
 
@@ -478,33 +455,25 @@
                     <a href="{{DASHBOARD_URL}}" class="quick-action">
                         <div class="quick-action-icon">🏠</div>
                         <div class="quick-action-title">Dashboard</div>
-                        <div class="quick-action-desc">
-                            View your main dashboard
-                        </div>
+                        <div class="quick-action-desc">View your main dashboard</div>
                     </a>
 
                     <a href="{{ASSIGNMENTS_URL}}" class="quick-action">
                         <div class="quick-action-icon">📝</div>
                         <div class="quick-action-title">Assignments</div>
-                        <div class="quick-action-desc">
-                            Check pending assignments
-                        </div>
+                        <div class="quick-action-desc">Check pending assignments</div>
                     </a>
 
                     <a href="{{CALENDAR_URL}}" class="quick-action">
                         <div class="quick-action-icon">📅</div>
                         <div class="quick-action-title">Calendar</div>
-                        <div class="quick-action-desc">
-                            View upcoming events
-                        </div>
+                        <div class="quick-action-desc">View upcoming events</div>
                     </a>
 
                     <a href="{{NOTIFICATIONS_URL}}" class="quick-action">
                         <div class="quick-action-icon">🔔</div>
                         <div class="quick-action-title">Notifications</div>
-                        <div class="quick-action-desc">
-                            Manage all notifications
-                        </div>
+                        <div class="quick-action-desc">Manage all notifications</div>
                     </a>
                 </div>
             </div>
@@ -513,33 +482,21 @@
             <div class="footer">
                 <div class="footer-title">Stay Connected</div>
                 <div class="footer-text">
-                    Don't miss important updates! Make sure to check your
-                    notifications regularly and update your preferences.
+                    Don't miss important updates! Make sure to check your notifications regularly and update your
+                    preferences.
                 </div>
 
                 <div class="footer-links">
-                    <a href="{{UNSUBSCRIBE_URL}}" class="footer-link"
-                        >Unsubscribe</a
-                    >
-                    <a href="{{PREFERENCES_URL}}" class="footer-link"
-                        >Email Preferences</a
-                    >
-                    <a href="{{SUPPORT_URL}}" class="footer-link"
-                        >Contact Support</a
-                    >
-                    <a href="{{WEBSITE_URL}}" class="footer-link"
-                        >Visit Website</a
-                    >
+                    <a href="{{UNSUBSCRIBE_URL}}" class="footer-link">Unsubscribe</a>
+                    <a href="{{PREFERENCES_URL}}" class="footer-link">Email Preferences</a>
+                    <a href="{{SUPPORT_URL}}" class="footer-link">Contact Support</a>
+                    <a href="{{WEBSITE_URL}}" class="footer-link">Visit Website</a>
                 </div>
 
                 <div class="footer-copy">
-                    © 2025 KANDHUGULE CONSULTANCY SERVICES PRIVATE LIMITED. All
-                    Rights Reserved.<br />
-                    This email was sent to {{EMAIL}}. To unsubscribe or manage
-                    preferences,
-                    <a href="{{PREFERENCES_URL}}" style="color: #55dad7"
-                        >click here</a
-                    >.
+                    © 2025 KANDHUGULE CONSULTANCY SERVICES PRIVATE LIMITED. All Rights Reserved.<br />
+                    This email was sent to {{EMAIL}}. To unsubscribe or manage preferences,
+                    <a href="{{PREFERENCES_URL}}" style="color: #55dad7">click here</a>.
                 </div>
             </div>
         </div>

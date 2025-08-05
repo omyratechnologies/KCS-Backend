@@ -1,7 +1,4 @@
-import {
-    GroupMessageStore,
-    IGroupMessageStore,
-} from "../models/group_message_store.model";
+import { GroupMessageStore, IGroupMessageStore } from "../models/group_message_store.model";
 import { IMessage, Message } from "../models/message.model";
 import { IMessageGroup, MessageGroup } from "../models/message_group.model";
 
@@ -28,11 +25,7 @@ export class MessageService {
     }
 
     // Get messages between two users
-    public static async getMessages(
-        campus_id: string,
-        from_user_id: string,
-        to_user_id: string
-    ) {
+    public static async getMessages(campus_id: string, from_user_id: string, to_user_id: string) {
         const messages: {
             rows: IMessage[];
         } = await Message.find(
@@ -47,7 +40,9 @@ export class MessageService {
             }
         );
 
-        if (messages.rows.length === 0) {throw new Error("Messages not found");}
+        if (messages.rows.length === 0) {
+            throw new Error("Messages not found");
+        }
 
         return messages.rows;
     }
@@ -102,7 +97,9 @@ export class MessageService {
             }
         );
 
-        if (groups.rows.length === 0) {throw new Error("Groups not found");}
+        if (groups.rows.length === 0) {
+            throw new Error("Groups not found");
+        }
 
         return groups.rows;
     }
@@ -111,7 +108,9 @@ export class MessageService {
     public static async getGroupById(id: string) {
         const group = await MessageGroup.findById(id);
 
-        if (!group) {throw new Error("Group not found");}
+        if (!group) {
+            throw new Error("Group not found");
+        }
 
         return group;
     }
@@ -156,17 +155,15 @@ export class MessageService {
             }
         );
 
-        if (messages.rows.length === 0) {throw new Error("Messages not found");}
+        if (messages.rows.length === 0) {
+            throw new Error("Messages not found");
+        }
 
         return messages.rows;
     }
 
     // Store a message in a group
-    public static async storeMessageInGroup(
-        group_id: string,
-        user_id: string,
-        message: string
-    ) {
+    public static async storeMessageInGroup(group_id: string, user_id: string, message: string) {
         return await GroupMessageStore.create({
             group_id,
             user_id,

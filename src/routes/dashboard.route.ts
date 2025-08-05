@@ -147,8 +147,7 @@ app.get(
     describeRoute({
         operationId: "getQuickStats",
         summary: "Get quick statistics",
-        description:
-            "Retrieves essential statistics and counts for the current user",
+        description: "Retrieves essential statistics and counts for the current user",
         tags: ["Dashboard"],
         responses: {
             200: {
@@ -217,8 +216,7 @@ app.get(
     describeRoute({
         operationId: "getNotificationsSummary",
         summary: "Get notifications summary",
-        description:
-            "Retrieves notifications summary including unread count and recent notifications",
+        description: "Retrieves notifications summary including unread count and recent notifications",
         tags: ["Dashboard"],
         responses: {
             200: {
@@ -248,8 +246,7 @@ app.get(
     describeRoute({
         operationId: "getUpcomingEvents",
         summary: "Get upcoming events",
-        description:
-            "Retrieves upcoming events and deadlines for the specified number of days",
+        description: "Retrieves upcoming events and deadlines for the specified number of days",
         tags: ["Dashboard"],
         parameters: [
             {

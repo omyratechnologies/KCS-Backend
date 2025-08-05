@@ -32,17 +32,11 @@ export const markAttendanceRequestBodySchema = z
             .openapi({
                 example: ["user123", "user456", "user789"],
             }),
-        user_type: userTypeEnum
-            .optional()
-            .default("Student")
-            .openapi({ example: "Student" }),
+        user_type: userTypeEnum.optional().default("Student").openapi({ example: "Student" }),
     })
-    .refine(
-        (data) => data.user_id || (data.user_ids && data.user_ids.length > 0),
-        {
-            message: "Either user_id or user_ids must be provided",
-        }
-    )
+    .refine((data) => data.user_id || (data.user_ids && data.user_ids.length > 0), {
+        message: "Either user_id or user_ids must be provided",
+    })
     .openapi({ ref: "MarkAttendanceRequest" });
 
 // Bulk attendance response schema
@@ -76,10 +70,7 @@ export const markBulkAttendanceRequestBodySchema = z
                     status: attendanceStatusEnum.openapi({
                         example: "present",
                     }),
-                    user_type: userTypeEnum
-                        .optional()
-                        .default("Student")
-                        .openapi({ example: "Student" }),
+                    user_type: userTypeEnum.optional().default("Student").openapi({ example: "Student" }),
                 })
             )
             .min(1)
@@ -158,10 +149,7 @@ export const markClassAttendanceRequestBodySchema = z
                     status: attendanceStatusEnum.openapi({
                         example: "present",
                     }),
-                    user_type: userTypeEnum
-                        .optional()
-                        .default("Student")
-                        .openapi({ example: "Student" }),
+                    user_type: userTypeEnum.optional().default("Student").openapi({ example: "Student" }),
                 })
             )
             .min(1)
@@ -211,19 +199,12 @@ export const getAttendanceStatsByTeacherIdResponseSchema = z
             .array(
                 z.object({
                     class_id: z.string().openapi({ example: "class123" }),
-                    class_name: z
-                        .string()
-                        .openapi({ example: "Class X - Section A" }),
-                    status: z
-                        .enum(["completed", "pending", "incomplete"])
-                        .openapi({ example: "completed" }),
+                    class_name: z.string().openapi({ example: "Class X - Section A" }),
+                    status: z.enum(["completed", "pending", "incomplete"]).openapi({ example: "completed" }),
                     present_count: z.number().openapi({ example: 32 }),
                     total_students: z.number().openapi({ example: 35 }),
                     attendance_rate: z.number().openapi({ example: 91 }),
-                    last_updated: z
-                        .string()
-                        .nullable()
-                        .openapi({ example: "2023-06-23T10:30:00Z" }),
+                    last_updated: z.string().nullable().openapi({ example: "2023-06-23T10:30:00Z" }),
                     error: z.string().optional().openapi({
                         example: "Unable to fetch attendance data",
                     }),
@@ -278,21 +259,11 @@ export const getClassAttendanceReportResponseSchema = z
                     late: z.number().openapi({ example: 1 }),
                     leave: z.number().openapi({ example: 0 }),
                     percentage: z.number().openapi({ example: 83 }),
-                    status: z
-                        .enum(["excellent", "good", "average", "poor"])
-                        .openapi({ example: "good" }),
-                    last_attended: z
-                        .string()
-                        .nullable()
-                        .openapi({ example: "2024-06-30T00:00:00Z" }),
-                    email: z
-                        .string()
-                        .openapi({ example: "john.doe@example.com" }),
+                    status: z.enum(["excellent", "good", "average", "poor"]).openapi({ example: "good" }),
+                    last_attended: z.string().nullable().openapi({ example: "2024-06-30T00:00:00Z" }),
+                    email: z.string().openapi({ example: "john.doe@example.com" }),
                     phone: z.string().openapi({ example: "+1234567890" }),
-                    error: z
-                        .string()
-                        .optional()
-                        .openapi({ example: "Error fetching data" }),
+                    error: z.string().optional().openapi({ example: "Error fetching data" }),
                 })
             )
             .openapi({
@@ -326,17 +297,13 @@ export const getStudentAttendanceViewResponseSchema = z
             roll_number: z.string().openapi({ example: "ST001" }),
             class: z.string().openapi({ example: "X - A" }),
             contact: z.string().openapi({ example: "+91 9876543210" }),
-            email: z
-                .string()
-                .openapi({ example: "arjun.reddy@student.school.com" }),
+            email: z.string().openapi({ example: "arjun.reddy@student.school.com" }),
             avatar_url: z.string().nullable().openapi({ example: null }),
         }),
         date_range: z.object({
             from_date: z.string().openapi({ example: "2024-01-01" }),
             to_date: z.string().openapi({ example: "2024-12-31" }),
-            showing_records: z
-                .string()
-                .openapi({ example: "8 months with 120 attendance records" }),
+            showing_records: z.string().openapi({ example: "8 months with 120 attendance records" }),
         }),
         summary_cards: z.object({
             total_days: z.object({
@@ -354,9 +321,7 @@ export const getStudentAttendanceViewResponseSchema = z
             attendance_rate: z.object({
                 percentage: z.number().openapi({ example: 75 }),
                 label: z.string().openapi({ example: "ATTENDANCE RATE" }),
-                status: z
-                    .enum(["excellent", "good", "average", "poor"])
-                    .openapi({ example: "good" }),
+                status: z.enum(["excellent", "good", "average", "poor"]).openapi({ example: "good" }),
             }),
         }),
         additional_stats: z.object({
@@ -371,18 +336,14 @@ export const getStudentAttendanceViewResponseSchema = z
                     z.object({
                         month: z.string().openapi({ example: "June" }),
                         year: z.number().openapi({ example: 2024 }),
-                        month_year: z
-                            .string()
-                            .openapi({ example: "June 2024" }),
+                        month_year: z.string().openapi({ example: "June 2024" }),
                         present_days: z.number().openapi({ example: 12 }),
                         absent_days: z.number().openapi({ example: 2 }),
                         late_days: z.number().openapi({ example: 1 }),
                         leave_days: z.number().openapi({ example: 0 }),
                         total_days: z.number().openapi({ example: 15 }),
                         percentage: z.number().openapi({ example: 87 }),
-                        status: z
-                            .enum(["excellent", "good", "average", "poor"])
-                            .openapi({ example: "good" }),
+                        status: z.enum(["excellent", "good", "average", "poor"]).openapi({ example: "good" }),
                         performance_badge: z
                             .enum(["excellent", "good", "average", "poor"])
                             .openapi({ example: "good" }),

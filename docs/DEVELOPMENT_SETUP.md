@@ -1,6 +1,7 @@
 # 🚀 KCS Backend Development Environment Setup
 
-This guide will help you set up the KCS Backend development environment with Docker, hot reload, and proper CI/CD integration.
+This guide will help you set up the KCS Backend development environment with Docker, hot reload, and
+proper CI/CD integration.
 
 ## 📋 Prerequisites
 
@@ -141,14 +142,14 @@ docker logs kcs-api-dev -f
 
 ## 🌐 Available Services
 
-| Service | URL | Description |
-|---------|-----|-------------|
-| API | http://localhost:4500 | Main API server |
-| Health Check | http://localhost:4500/api/health | Health endpoint |
-| Socket.IO | http://localhost:4501 | WebSocket server |
-| Redis | localhost:6379 | Redis cache |
-| Nginx | http://localhost:80 | Reverse proxy |
-| Couchbase | http://localhost:8091 | Database (optional) |
+| Service      | URL                              | Description         |
+| ------------ | -------------------------------- | ------------------- |
+| API          | http://localhost:4500            | Main API server     |
+| Health Check | http://localhost:4500/api/health | Health endpoint     |
+| Socket.IO    | http://localhost:4501            | WebSocket server    |
+| Redis        | localhost:6379                   | Redis cache         |
+| Nginx        | http://localhost:80              | Reverse proxy       |
+| Couchbase    | http://localhost:8091            | Database (optional) |
 
 ## 📁 Project Structure
 
@@ -277,28 +278,30 @@ The development environment is integrated with CI/CD pipelines:
 ### Common Issues
 
 1. **Port conflicts**:
-   ```bash
-   # Check what's using the port
-   lsof -i :4500
-   
-   # Kill the process
-   kill -9 <PID>
-   ```
+
+    ```bash
+    # Check what's using the port
+    lsof -i :4500
+
+    # Kill the process
+    kill -9 <PID>
+    ```
 
 2. **Docker build issues**:
-   ```bash
-   # Clean Docker cache
-   docker system prune -a
-   
-   # Rebuild without cache
-   docker-compose -f docker-compose.dev.yml build --no-cache
-   ```
+
+    ```bash
+    # Clean Docker cache
+    docker system prune -a
+
+    # Rebuild without cache
+    docker-compose -f docker-compose.dev.yml build --no-cache
+    ```
 
 3. **Permission issues**:
-   ```bash
-   # Fix file permissions
-   sudo chown -R $USER:$USER .
-   ```
+    ```bash
+    # Fix file permissions
+    sudo chown -R $USER:$USER .
+    ```
 
 ### Debug Mode
 

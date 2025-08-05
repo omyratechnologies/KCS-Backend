@@ -34,19 +34,12 @@ async function initializeServices() {
             await WebRTCService.initialize();
             const status = WebRTCService.getStatus();
             if (status.available) {
-                console.log(
-                    `✅ WebRTC service initialized with ${status.workers} MediaSoup workers`
-                );
+                console.log(`✅ WebRTC service initialized with ${status.workers} MediaSoup workers`);
             } else {
-                console.log(
-                    "📱 WebRTC running in compatibility mode - participant management only"
-                );
+                console.log("📱 WebRTC running in compatibility mode - participant management only");
             }
         } catch (error) {
-            console.warn(
-                "⚠️ WebRTC initialization failed, continuing without video features:",
-                error
-            );
+            console.warn("⚠️ WebRTC initialization failed, continuing without video features:", error);
         }
 
         // Initialize Socket.IO service for real-time communication
@@ -55,9 +48,7 @@ async function initializeServices() {
         console.log("✅ Socket.IO service initialized");
 
         console.log("🎉 All services initialized successfully");
-        console.log(
-            "🎪 Real-time video conferencing system ready to support millions of users!"
-        );
+        console.log("🎪 Real-time video conferencing system ready to support millions of users!");
     } catch (error) {
         console.error("❌ Failed to initialize services:", error);
         process.exit(1);
@@ -69,9 +60,7 @@ initializeServices();
 
 // Start the HTTP server for Socket.IO
 server.listen(Number(config.PORT) + 1, () => {
-    console.log(
-        `🔌 Socket.IO server running on port ${Number(config.PORT) + 1}`
-    );
+    console.log(`🔌 Socket.IO server running on port ${Number(config.PORT) + 1}`);
 });
 
 export default {

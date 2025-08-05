@@ -18,9 +18,7 @@ export const assignmentSchema = z.object({
     attachment_urls: z.array(z.string()).optional(),
     meta_data: z.object({}).passthrough().optional(),
     priority: z.enum(["low", "medium", "high"]).default("medium"),
-    assignment_type: z
-        .enum(["homework", "project", "quiz", "exam", "presentation"])
-        .default("homework"),
+    assignment_type: z.enum(["homework", "project", "quiz", "exam", "presentation"]).default("homework"),
     estimated_duration_minutes: z.number().optional(),
     is_active: z.boolean().default(true),
     is_deleted: z.boolean().default(false),
@@ -78,9 +76,7 @@ export const createAssignmentRequestBodySchema = z
         allow_late_submission: z.boolean().default(false),
         attachment_urls: z.array(z.string()).optional(),
         priority: z.enum(["low", "medium", "high"]).default("medium"),
-        assignment_type: z
-            .enum(["homework", "project", "quiz", "exam", "presentation"])
-            .default("homework"),
+        assignment_type: z.enum(["homework", "project", "quiz", "exam", "presentation"]).default("homework"),
         estimated_duration_minutes: z.number().positive().optional(),
         meta_data: z.object({}).passthrough().optional(),
     })
@@ -104,9 +100,7 @@ export const updateAssignmentRequestBodySchema = z.object({
     allow_late_submission: z.boolean().optional(),
     attachment_urls: z.array(z.string()).optional(),
     priority: z.enum(["low", "medium", "high"]).optional(),
-    assignment_type: z
-        .enum(["homework", "project", "quiz", "exam", "presentation"])
-        .optional(),
+    assignment_type: z.enum(["homework", "project", "quiz", "exam", "presentation"]).optional(),
     estimated_duration_minutes: z.number().positive().optional(),
     meta_data: z.object({}).passthrough().optional(),
 });
@@ -123,15 +117,8 @@ export const deleteAssignmentResponseSchema = z.object({
 });
 
 export const bulkAssignmentOperationRequestBodySchema = z.object({
-    assignment_ids: z
-        .array(z.string())
-        .min(1, "At least one assignment ID is required"),
-    operation: z.enum([
-        "archive",
-        "delete",
-        "extend_due_date",
-        "change_priority",
-    ]),
+    assignment_ids: z.array(z.string()).min(1, "At least one assignment ID is required"),
+    operation: z.enum(["archive", "delete", "extend_due_date", "change_priority"]),
     parameters: z
         .object({
             new_due_date: z.string().datetime().optional(),
@@ -241,15 +228,9 @@ export const submitAssignmentRequestBodySchema = z
         time_spent_minutes: z.number().positive().optional(),
         meta_data: z.object({}).passthrough().optional(),
     })
-    .refine(
-        (data) =>
-            data.submission_content ||
-            (data.attachment_urls && data.attachment_urls.length > 0),
-        {
-            message:
-                "Either submission content or attachments must be provided",
-        }
-    );
+    .refine((data) => data.submission_content || (data.attachment_urls && data.attachment_urls.length > 0), {
+        message: "Either submission content or attachments must be provided",
+    });
 
 export const submitAssignmentResponseSchema = z.object({
     success: z.boolean(),
@@ -334,12 +315,7 @@ export const parentStudentAssignmentViewResponseSchema = z.object({
     }),
     alerts: z.array(
         z.object({
-            type: z.enum([
-                "overdue",
-                "due_soon",
-                "low_grade",
-                "missing_submission",
-            ]),
+            type: z.enum(["overdue", "due_soon", "low_grade", "missing_submission"]),
             message: z.string(),
             assignment_id: z.string(),
             severity: z.enum(["low", "medium", "high"]),
@@ -357,43 +333,15 @@ export const errorResponseSchema = z.object({
 });
 
 // Status enums for better type safety
-export const AssignmentStatus = z.enum([
-    "active",
-    "archived",
-    "overdue",
-    "draft",
-]);
-export const SubmissionStatus = z.enum([
-    "pending",
-    "submitted",
-    "graded",
-    "overdue",
-    "late",
-]);
-export const UserRole = z.enum([
-    "Student",
-    "Teacher",
-    "Admin",
-    "Parent",
-    "Principal",
-    "Staff",
-]);
+export const AssignmentStatus = z.enum(["active", "archived", "overdue", "draft"]);
+export const SubmissionStatus = z.enum(["pending", "submitted", "graded", "overdue", "late"]);
+export const UserRole = z.enum(["Student", "Teacher", "Admin", "Parent", "Principal", "Staff"]);
 
 // Export types for TypeScript usage
 export type Assignment = z.infer<typeof assignmentSchema>;
 export type AssignmentSubmission = z.infer<typeof assignmentSubmissionSchema>;
-export type CreateAssignmentRequest = z.infer<
-    typeof createAssignmentRequestBodySchema
->;
-export type UpdateAssignmentRequest = z.infer<
-    typeof updateAssignmentRequestBodySchema
->;
-export type SubmitAssignmentRequest = z.infer<
-    typeof submitAssignmentRequestBodySchema
->;
-export type GradeSubmissionRequest = z.infer<
-    typeof gradeSubmissionRequestBodySchema
->;
-export type BulkAssignmentOperationRequest = z.infer<
-    typeof bulkAssignmentOperationRequestBodySchema
->;
+export type CreateAssignmentRequest = z.infer<typeof createAssignmentRequestBodySchema>;
+export type UpdateAssignmentRequest = z.infer<typeof updateAssignmentRequestBodySchema>;
+export type SubmitAssignmentRequest = z.infer<typeof submitAssignmentRequestBodySchema>;
+export type GradeSubmissionRequest = z.infer<typeof gradeSubmissionRequestBodySchema>;
+export type BulkAssignmentOperationRequest = z.infer<typeof bulkAssignmentOperationRequestBodySchema>;
