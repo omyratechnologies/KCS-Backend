@@ -43,12 +43,16 @@ pipeline {
             steps {
                 script {
                     // Send Teams notification: Build started
-                    sendTeamsNotification([
-                        status: 'STARTED',
-                        title: '🚀 KCS Backend Build Started',
-                        message: "Build #${env.BUILD_NUMBER} has started",
-                        color: 'warning'
-                    ])
+                    try {
+                        sendTeamsNotification([
+                            status: 'STARTED',
+                            title: '🚀 KCS Backend Build Started',
+                            message: "Build #${env.BUILD_NUMBER} has started",
+                            color: 'warning'
+                        ])
+                    } catch (Exception e) {
+                        echo "⚠️ Teams notification failed: ${e.getMessage()}"
+                    }
                 }
                 
                 // Checkout code
@@ -283,69 +287,81 @@ EOF
     post {
         success {
             script {
-                sendTeamsNotification([
-                    status: 'SUCCESS',
-                    title: '✅ KCS Backend Build Successful',
-                    message: """
-                        **Build #${env.BUILD_NUMBER} completed successfully!**
-                        
-                        **Details:**
-                        - Branch: ${env.BRANCH_NAME}
-                        - Commit: ${env.GIT_COMMIT?.take(7)}
-                        - Duration: ${currentBuild.durationString}
-                        - Deployed to: Production
-                        
-                        **Links:**
-                        - [Application](https://devapi.letscatchup-kcs.com)
-                        - [Build Logs](${env.BUILD_URL})
-                    """,
-                    color: 'good'
-                ])
+                try {
+                    sendTeamsNotification([
+                        status: 'SUCCESS',
+                        title: '✅ KCS Backend Build Successful',
+                        message: """
+                            **Build #${env.BUILD_NUMBER} completed successfully!**
+                            
+                            **Details:**
+                            - Branch: ${env.BRANCH_NAME}
+                            - Commit: ${env.GIT_COMMIT?.take(7)}
+                            - Duration: ${currentBuild.durationString}
+                            - Deployed to: Production
+                            
+                            **Links:**
+                            - [Application](https://devapi.letscatchup-kcs.com)
+                            - [Build Logs](${env.BUILD_URL})
+                        """,
+                        color: 'good'
+                    ])
+                } catch (Exception e) {
+                    echo "⚠️ Teams notification failed: ${e.getMessage()}"
+                }
             }
         }
         
         failure {
             script {
-                sendTeamsNotification([
-                    status: 'FAILURE',
-                    title: '❌ KCS Backend Build Failed',
-                    message: """
-                        **Build #${env.BUILD_NUMBER} failed!**
-                        
-                        **Details:**
-                        - Branch: ${env.BRANCH_NAME}
-                        - Commit: ${env.GIT_COMMIT?.take(7)}
-                        - Duration: ${currentBuild.durationString}
-                        - Stage: ${env.STAGE_NAME}
-                        
-                        **Action Required:**
-                        Please check the build logs and fix the issues.
-                        
-                        **Links:**
-                        - [Build Logs](${env.BUILD_URL})
-                        - [Console Output](${env.BUILD_URL}console)
-                    """,
-                    color: 'danger'
-                ])
+                try {
+                    sendTeamsNotification([
+                        status: 'FAILURE',
+                        title: '❌ KCS Backend Build Failed',
+                        message: """
+                            **Build #${env.BUILD_NUMBER} failed!**
+                            
+                            **Details:**
+                            - Branch: ${env.BRANCH_NAME}
+                            - Commit: ${env.GIT_COMMIT?.take(7)}
+                            - Duration: ${currentBuild.durationString}
+                            - Stage: ${env.STAGE_NAME}
+                            
+                            **Action Required:**
+                            Please check the build logs and fix the issues.
+                            
+                            **Links:**
+                            - [Build Logs](${env.BUILD_URL})
+                            - [Console Output](${env.BUILD_URL}console)
+                        """,
+                        color: 'danger'
+                    ])
+                } catch (Exception e) {
+                    echo "⚠️ Teams notification failed: ${e.getMessage()}"
+                }
             }
         }
         
         unstable {
             script {
-                sendTeamsNotification([
-                    status: 'UNSTABLE',
-                    title: '⚠️ KCS Backend Build Unstable',
-                    message: """
-                        **Build #${env.BUILD_NUMBER} is unstable**
-                        
-                        Some tests failed but build completed.
-                        
-                        **Links:**
-                        - [Build Logs](${env.BUILD_URL})
-                        - [Test Results](${env.BUILD_URL}testReport/)
-                    """,
-                    color: 'warning'
-                ])
+                try {
+                    sendTeamsNotification([
+                        status: 'UNSTABLE',
+                        title: '⚠️ KCS Backend Build Unstable',
+                        message: """
+                            **Build #${env.BUILD_NUMBER} is unstable**
+                            
+                            Some tests failed but build completed.
+                            
+                            **Links:**
+                            - [Build Logs](${env.BUILD_URL})
+                            - [Test Results](${env.BUILD_URL}testReport/)
+                        """,
+                        color: 'warning'
+                    ])
+                } catch (Exception e) {
+                    echo "⚠️ Teams notification failed: ${e.getMessage()}"
+                }
             }
         }
         
@@ -375,44 +391,84 @@ def sendTeamsNotification(Map config) {
         return
     }
     
-    def payload = [
-        "@type": "MessageCard",
-        "@context": "https://schema.org/extensions",
-        "themeColor": getThemeColor(config.color),
-        "summary": config.title,
-        "sections": [
-            [
-                "activityTitle": config.title,
-                "activitySubtitle": "KCS Backend CI/CD Pipeline",
-                "activityImage": "https://jenkins.io/images/logos/jenkins/jenkins.png",
-                "facts": [
-                    ["name": "Project", "value": "KCS Backend"],
-                    ["name": "Build", "value": "#${env.BUILD_NUMBER}"],
-                    ["name": "Branch", "value": "${env.BRANCH_NAME ?: 'dev'}"],
-                    ["name": "Status", "value": config.status]
-                ],
-                "markdown": true,
-                "text": config.message
-            ]
-        ],
-        "potentialAction": [
-            [
-                "@type": "OpenUri",
-                "name": "View Build",
-                "targets": [
-                    ["os": "default", "uri": "${env.BUILD_URL}"]
+    try {
+        def payload = [
+            "@type": "MessageCard",
+            "@context": "https://schema.org/extensions",
+            "themeColor": getThemeColor(config.color),
+            "summary": config.title,
+            "sections": [
+                [
+                    "activityTitle": config.title,
+                    "activitySubtitle": "KCS Backend CI/CD Pipeline",
+                    "activityImage": "https://jenkins.io/images/logos/jenkins/jenkins.png",
+                    "facts": [
+                        ["name": "Project", "value": "KCS Backend"],
+                        ["name": "Build", "value": "#${env.BUILD_NUMBER}"],
+                        ["name": "Branch", "value": "${env.BRANCH_NAME ?: 'dev'}"],
+                        ["name": "Status", "value": config.status]
+                    ],
+                    "markdown": true,
+                    "text": config.message
+                ]
+            ],
+            "potentialAction": [
+                [
+                    "@type": "OpenUri",
+                    "name": "View Build",
+                    "targets": [
+                        ["os": "default", "uri": "${env.BUILD_URL}"]
+                    ]
                 ]
             ]
         ]
+        
+        // Create JSON payload using writeFile instead of writeJSON
+        def jsonPayload = """
+{
+    "@type": "MessageCard",
+    "@context": "https://schema.org/extensions",
+    "themeColor": "${getThemeColor(config.color)}",
+    "summary": "${config.title}",
+    "sections": [
+        {
+            "activityTitle": "${config.title}",
+            "activitySubtitle": "KCS Backend CI/CD Pipeline",
+            "activityImage": "https://jenkins.io/images/logos/jenkins/jenkins.png",
+            "facts": [
+                {"name": "Project", "value": "KCS Backend"},
+                {"name": "Build", "value": "#${env.BUILD_NUMBER}"},
+                {"name": "Branch", "value": "${env.BRANCH_NAME ?: 'dev'}"},
+                {"name": "Status", "value": "${config.status}"}
+            ],
+            "markdown": true,
+            "text": "${config.message}"
+        }
+    ],
+    "potentialAction": [
+        {
+            "@type": "OpenUri",
+            "name": "View Build",
+            "targets": [
+                {"os": "default", "uri": "${env.BUILD_URL}"}
+            ]
+        }
     ]
-    
-    writeJSON file: 'teams-payload.json', json: payload
-    
-    sh """
-        curl -X POST -H 'Content-Type: application/json' \\
-             -d @teams-payload.json \\
-             '${webhook}'
-    """
+}
+"""
+        writeFile file: 'teams-payload.json', text: jsonPayload
+        
+        sh """
+            curl -X POST -H 'Content-Type: application/json' \\
+                 -d @teams-payload.json \\
+                 '${webhook}'
+        """
+        
+        echo "✅ Teams notification sent successfully"
+    } catch (Exception e) {
+        echo "⚠️ Failed to send Teams notification: ${e.getMessage()}"
+        echo "This is not critical - build can continue"
+    }
 }
 
 def getThemeColor(color) {
