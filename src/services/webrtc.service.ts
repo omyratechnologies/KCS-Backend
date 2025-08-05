@@ -170,7 +170,7 @@ export class WebRTCService {
     private static async createWorkerWithTimeout(
         index: number
     ): Promise<mediasoup.types.Worker | null> {
-        return new Promise(async (resolve, reject) => {
+        return new Promise((resolve, reject) => {
             // Set a timeout for worker creation (5 seconds)
             const timeout = setTimeout(() => {
                 reject(
@@ -180,32 +180,36 @@ export class WebRTCService {
                 );
             }, 5000);
 
-            try {
-                const worker = await mediasoup.createWorker({
-                    logLevel: "warn",
-                    rtcMinPort: 10_000 + index * 1000,
-                    rtcMaxPort: 10_000 + index * 1000 + 999,
-                });
+            const createWorker = async () => {
+                try {
+                    const worker = await mediasoup.createWorker({
+                        logLevel: "warn",
+                        rtcMinPort: 10_000 + index * 1000,
+                        rtcMaxPort: 10_000 + index * 1000 + 999,
+                    });
 
-                worker.on("died", () => {
-                    console.error(
-                        `💀 MediaSoup worker ${index} died, restarting... [pid:${worker.pid}]`
-                    );
-                    // Remove the dead worker and try to restart
-                    const workerIndex = this.workers.indexOf(worker);
-                    if (workerIndex > -1) {
-                        this.workers.splice(workerIndex, 1);
-                    }
-                    // In production, you might want to restart the worker
-                    // For now, we'll just log the error
-                });
+                    worker.on("died", () => {
+                        console.error(
+                            `💀 MediaSoup worker ${index} died, restarting... [pid:${worker.pid}]`
+                        );
+                        // Remove the dead worker and try to restart
+                        const workerIndex = this.workers.indexOf(worker);
+                        if (workerIndex > -1) {
+                            this.workers.splice(workerIndex, 1);
+                        }
+                        // In production, you might want to restart the worker
+                        // For now, we'll just log the error
+                    });
 
-                clearTimeout(timeout);
-                resolve(worker);
-            } catch (error) {
-                clearTimeout(timeout);
-                reject(error);
-            }
+                    clearTimeout(timeout);
+                    resolve(worker);
+                } catch (error) {
+                    clearTimeout(timeout);
+                    reject(error);
+                }
+            };
+
+            createWorker();
         });
     }
 

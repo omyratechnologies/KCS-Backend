@@ -10,11 +10,11 @@ import {
 // Mock the users service and model
 jest.mock("../../src/services/users.service", () => ({
     UserService: {
-        create: jest.fn(),
-        findById: jest.fn(),
-        update: jest.fn(),
-        delete: jest.fn(),
-        findAll: jest.fn(),
+        createUsers: jest.fn(),
+        getUser: jest.fn(),
+        updateUsers: jest.fn(),
+        getUsers: jest.fn(),
+        updatePassword: jest.fn(),
     },
 }));
 
@@ -55,47 +55,56 @@ describe("UsersController", () => {
 
     describe("User CRUD Operations", () => {
         it("should create a new user successfully", async () => {
-            const { UserService } = require("../../src/services/users.service");
+            const { UserService } = await import("../../src/services/users.service");
 
             const userData = {
+                user_id: "user123",
                 name: "John Doe",
                 email: "john@example.com",
                 user_type: "student",
                 phone: "+1234567890",
+                password: "password123",
+                first_name: "John",
+                last_name: "Doe",
+                address: "123 Main St",
+                meta_data: "{}",
             };
 
             const createdUser = {
-                id: "user123",
-                ...userData,
+                id: userData.user_id,
+                name: userData.name,
+                email: userData.email,
+                user_type: userData.user_type,
                 created_at: new Date(),
-                is_deleted: false,
             };
 
-            mockReq.json.mockResolvedValue(userData);
-            UserService.create.mockResolvedValue(createdUser);
+            UserService.createUsers.mockResolvedValue(createdUser);
 
-            // Mock controller method (assuming it exists)
             const createUser = async (c: any) => {
                 try {
                     const data = await c.req.json();
-                    const user = await UserService.create(data);
+                    const user = await UserService.createUsers(data);
                     return c.json({
                         success: true,
                         message: "User created successfully",
                         data: user,
                     });
-                } catch (error: any) {
-                    return c.json({
-                        success: false,
-                        message: error.message,
-                    });
+                } catch (error) {
+                    return c.json(
+                        {
+                            success: false,
+                            message: "Failed to create user",
+                            error: error instanceof Error ? error.message : "Unknown error",
+                        },
+                        400
+                    );
                 }
             };
 
-            await createUser(mockContext);
+            const response = await createUser(mockReq);
 
-            expect(UserService.create).toHaveBeenCalledWith(userData);
-            expect(mockJson).toHaveBeenCalledWith({
+            expect(UserService.createUsers).toHaveBeenCalledWith(userData);
+            expect(response).toEqual({
                 success: true,
                 message: "User created successfully",
                 data: createdUser,
@@ -103,7 +112,7 @@ describe("UsersController", () => {
         });
 
         it("should find user by ID successfully", async () => {
-            const { UserService } = require("../../src/services/users.service");
+            const { UserService } = await import("../../src/services/users.service");
 
             const userId = "user123";
             const user = {
@@ -113,93 +122,96 @@ describe("UsersController", () => {
                 user_type: "student",
             };
 
-            mockReq.param.mockReturnValue(userId);
-            UserService.findById.mockResolvedValue(user);
+            UserService.getUser.mockResolvedValue(user);
 
             const findUserById = async (c: any) => {
                 try {
                     const id = c.req.param("id");
-                    const user = await UserService.findById(id);
+                    const user = await UserService.getUser(id);
 
                     if (!user) {
                         return c.json({
                             success: false,
                             message: "User not found",
-                        });
+                        }, 404);
                     }
 
                     return c.json({
                         success: true,
                         data: user,
                     });
-                } catch (error: any) {
+                } catch (error) {
                     return c.json({
                         success: false,
-                        message: error.message,
-                    });
+                        message: "Failed to fetch user",
+                        error: error instanceof Error ? error.message : "Unknown error",
+                    }, 500);
                 }
             };
 
-            await findUserById(mockContext);
+            mockReq.param.mockReturnValue(userId);
+            const response = await findUserById(mockReq);
 
-            expect(UserService.findById).toHaveBeenCalledWith(userId);
-            expect(mockJson).toHaveBeenCalledWith({
+            expect(UserService.getUser).toHaveBeenCalledWith(userId);
+            expect(response).toEqual({
                 success: true,
                 data: user,
             });
         });
 
         it("should return error when user not found", async () => {
-            const { UserService } = require("../../src/services/users.service");
+            const { UserService } = await import("../../src/services/users.service");
 
             const userId = "nonexistent";
             mockReq.param.mockReturnValue(userId);
-            UserService.findById.mockResolvedValue(null);
+            UserService.getUser.mockRejectedValue(new Error("User not found"));
 
             const findUserById = async (c: any) => {
                 try {
                     const id = c.req.param("id");
-                    const user = await UserService.findById(id);
+                    const user = await UserService.getUser(id);
 
                     if (!user) {
                         return c.json({
                             success: false,
                             message: "User not found",
-                        });
+                        }, 404);
                     }
 
                     return c.json({
                         success: true,
                         data: user,
                     });
-                } catch (error: any) {
+                } catch (error) {
                     return c.json({
                         success: false,
-                        message: error.message,
-                    });
+                        message: "User not found",
+                        error: error instanceof Error ? error.message : "Unknown error",
+                    }, 404);
                 }
             };
 
-            await findUserById(mockContext);
+            const response = await findUserById(mockReq);
 
-            expect(mockJson).toHaveBeenCalledWith({
+            expect(response).toEqual({
                 success: false,
                 message: "User not found",
+                error: "User not found",
             });
         });
 
         it("should update user successfully", async () => {
-            const { UserService } = require("../../src/services/users.service");
+            const { UserService } = await import("../../src/services/users.service");
 
             const userId = "user123";
             const updateData = {
-                name: "John Updated",
+                first_name: "John Updated",
                 phone: "+9876543210",
             };
 
             const updatedUser = {
                 id: userId,
-                name: "John Updated",
+                first_name: "John Updated",
                 email: "john@example.com",
                 phone: "+9876543210",
                 updated_at: new Date(),
@@ -207,13 +219,13 @@ describe("UsersController", () => {
 
             mockReq.param.mockReturnValue(userId);
             mockReq.json.mockResolvedValue(updateData);
-            UserService.update.mockResolvedValue(updatedUser);
+            UserService.updateUsers.mockResolvedValue(updatedUser);
 
             const updateUser = async (c: any) => {
                 try {
                     const id = c.req.param("id");
                     const data = await c.req.json();
-                    const user = await UserService.update(id, data);
+                    const user = await UserService.updateUsers(id, data);
 
                     return c.json({
                         success: true,
@@ -230,7 +242,7 @@ describe("UsersController", () => {
 
             await updateUser(mockContext);
 
-            expect(UserService.update).toHaveBeenCalledWith(userId, updateData);
+            expect(UserService.updateUsers).toHaveBeenCalledWith(userId, updateData);
             expect(mockJson).toHaveBeenCalledWith({
                 success: true,
                 message: "User updated successfully",

@@ -13,6 +13,7 @@ import {
     ISchoolBankDetails,
     SchoolBankDetails,
 } from "@/models/school_bank_details.model";
+import crypto from "node:crypto";
 
 import { PaymentGatewayCredentials } from "./credential_encryption.service";
 import PaymentErrorHandler from "./payment_error_handler.service";
@@ -1405,7 +1406,7 @@ export class PaymentService {
 
             // Here you would make an actual test API call to PayU
             // Test hash generation
-            const testHash = require("node:crypto")
+            const testHash = crypto
                 .createHash("sha512")
                 .update(
                     `${config.merchant_key}|test|100|test|test|test@test.com|||||||||||${config.merchant_salt}`

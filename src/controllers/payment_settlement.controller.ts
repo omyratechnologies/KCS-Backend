@@ -638,22 +638,18 @@ export class PaymentSettlementController {
             filters: any;
         }
     ) {
-        try {
-            // Implementation for exporting audit logs
-            const exportUrl = `https://your-app.com/exports/${crypto.randomUUID()}.${params.format}`;
+        // Implementation for exporting audit logs
+        const exportUrl = `https://your-app.com/exports/${crypto.randomUUID()}.${params.format}`;
 
-            return ctx.json({
-                success: true,
-                data: {
-                    export_url: exportUrl,
-                    format: params.format,
-                    expires_at: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
-                    estimated_records: 0,
-                },
-                message: `Audit logs export initiated in ${params.format} format`,
-            });
-        } catch (error) {
-            throw error;
-        }
+        return ctx.json({
+            success: true,
+            data: {
+                export_url: exportUrl,
+                format: params.format,
+                expires_at: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
+                estimated_records: 0,
+            },
+            message: `Audit logs export initiated in ${params.format} format`,
+        });
     }
 }
