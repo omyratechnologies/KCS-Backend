@@ -158,11 +158,11 @@ pipeline {
                             
                             # Check for sensitive files and patterns
                             echo "Scanning for potential security issues..."
-                            grep -r "password\|secret\|key\|token" --include="*.ts" --include="*.js" src/ | grep -v "password_resets\|api_key.*string\|secret.*string" || echo "No obvious secrets found"
+                            grep -r "password\\|secret\\|key\\|token" --include="*.ts" --include="*.js" src/ | grep -v "password_resets\\|api_key.*string\\|secret.*string" || echo "No obvious secrets found"
                             
                             # Check for common security anti-patterns
                             echo "Checking for security anti-patterns..."
-                            grep -r "eval\|innerHTML\|document.write" --include="*.ts" --include="*.js" src/ || echo "No dangerous patterns found"
+                            grep -r "eval\\|innerHTML\\|document.write" --include="*.ts" --include="*.js" src/ || echo "No dangerous patterns found"
                         '''
                     }
                 }
