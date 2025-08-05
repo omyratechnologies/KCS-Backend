@@ -103,6 +103,8 @@ pipeline {
         
         stage('🧪 Test & Quality Checks') {
             parallel {
+        stage('🧪 Test & Quality Checks') {
+            parallel {
                 stage('Unit Tests') {
                     steps {
                         sh '''
@@ -111,24 +113,28 @@ pipeline {
                             # Ensure Bun is in PATH
                             export PATH="$HOME/.bun/bin:$PATH"
                             
-                            # Verify Bun is available
-                            if ! command -v bun &> /dev/null; then
-                                echo "Bun not found, installing..."
-                                curl -fsSL https://bun.sh/install | bash
-                                export PATH="$HOME/.bun/bin:$PATH"
-                            fi
-                            
+                            # Run tests
                             bun run test:coverage
                         '''
                     }
                     post {
                         always {
-                            // Publish test results
-                            publishTestResults testResultsPattern: 'test-results.xml'
-                            publishCoverageReports([
-                                reportType: 'COBERTURA',
-                                reportFile: 'coverage/cobertura-coverage.xml'
-                            ])
+                            // Publish test results using junit
+                            script {
+                                if (fileExists('coverage/junit.xml')) {
+                                    junit testResultsPattern: 'coverage/junit.xml'
+                                }
+                                if (fileExists('coverage/cobertura-coverage.xml')) {
+                                    publishHTML([
+                                        allowMissing: false,
+                                        alwaysLinkToLastBuild: true,
+                                        keepAll: true,
+                                        reportDir: 'coverage',
+                                        reportFiles: 'index.html',
+                                        reportName: 'Coverage Report'
+                                    ])
+                                }
+                            }
                         }
                     }
                 }
@@ -140,13 +146,6 @@ pipeline {
                             
                             # Ensure Bun is in PATH
                             export PATH="$HOME/.bun/bin:$PATH"
-                            
-                            # Verify Bun is available
-                            if ! command -v bun &> /dev/null; then
-                                echo "Bun not found, installing..."
-                                curl -fsSL https://bun.sh/install | bash
-                                export PATH="$HOME/.bun/bin:$PATH"
-                            fi
                             
                             # Linting (CI mode with higher warning tolerance)
                             bun run lint:ci
@@ -167,13 +166,6 @@ pipeline {
                             
                             # Ensure Bun is in PATH
                             export PATH="$HOME/.bun/bin:$PATH"
-                            
-                            # Verify Bun is available
-                            if ! command -v bun &> /dev/null; then
-                                echo "Bun not found, installing..."
-                                curl -fsSL https://bun.sh/install | bash
-                                export PATH="$HOME/.bun/bin:$PATH"
-                            fi
                             
                             # Security scanning with Bun-compatible tools
                             echo "Checking for known vulnerabilities in dependencies..."
@@ -211,13 +203,6 @@ pipeline {
                     
                     # Ensure Bun is in PATH
                     export PATH="$HOME/.bun/bin:$PATH"
-                    
-                    # Verify Bun is available
-                    if ! command -v bun &> /dev/null; then
-                        echo "Bun not found, installing..."
-                        curl -fsSL https://bun.sh/install | bash
-                        export PATH="$HOME/.bun/bin:$PATH"
-                    fi
                     
                     # Build the application
                     bun run build
@@ -525,8 +510,8 @@ def sendTeamsNotification(Map config) {
 """
         writeFile file: 'teams-payload.json', text: jsonPayload
         
-        // Use withCredentials to safely handle the webhook URL
-        withCredentials([string(credentialsId: 'teams-webhook-url', variable: 'WEBHOOK_URL')]) {
+        // Use withCredentials to safely handle the webhook URL (username contains the URL)
+        withCredentials([usernamePassword(credentialsId: 'teams-webhook-url', usernameVariable: 'WEBHOOK_URL', passwordVariable: 'WEBHOOK_PASS')]) {
             sh '''
                 curl -X POST -H 'Content-Type: application/json' \\
                      -d @teams-payload.json \\

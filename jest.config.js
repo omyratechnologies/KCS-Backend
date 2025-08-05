@@ -25,6 +25,16 @@ export default {
         "!src/types/**/*",
         "!src/schema/**/*",
     ],
+    reporters: [
+        "default",
+        [
+            "jest-junit",
+            {
+                outputDirectory: "coverage",
+                outputName: "junit.xml",
+            },
+        ],
+    ],
     coverageDirectory: "coverage",
     coverageReporters: ["text", "lcov", "html", "cobertura"],
     setupFilesAfterEnv: ["<rootDir>/tests/setup/jest.setup.ts"],
