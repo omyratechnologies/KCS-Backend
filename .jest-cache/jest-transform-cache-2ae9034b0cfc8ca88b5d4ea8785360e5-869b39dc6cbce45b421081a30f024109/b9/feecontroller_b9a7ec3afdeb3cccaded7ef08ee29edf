@@ -1,0 +1,413 @@
+a7e62d60919a59cf1d60146f4338c1c1
+/* istanbul ignore next */
+function cov_1mj1drhm19() {
+  var path = "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/controllers/fee.controller.ts";
+  var hash = "b525d069fbfa2cc5a72700b697686fe60dd9101f";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/controllers/fee.controller.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 5,
+          column: 0
+        },
+        end: {
+          line: 5,
+          column: 19
+        }
+      },
+      "1": {
+        start: {
+          line: 7,
+          column: 0
+        },
+        end: {
+          line: 20,
+          column: 2
+        }
+      },
+      "2": {
+        start: {
+          line: 8,
+          column: 4
+        },
+        end: {
+          line: 19,
+          column: 5
+        }
+      },
+      "3": {
+        start: {
+          line: 9,
+          column: 28
+        },
+        end: {
+          line: 9,
+          column: 43
+        }
+      },
+      "4": {
+        start: {
+          line: 10,
+          column: 20
+        },
+        end: {
+          line: 10,
+          column: 60
+        }
+      },
+      "5": {
+        start: {
+          line: 11,
+          column: 8
+        },
+        end: {
+          line: 11,
+          column: 29
+        }
+      },
+      "6": {
+        start: {
+          line: 14,
+          column: 8
+        },
+        end: {
+          line: 18,
+          column: 9
+        }
+      },
+      "7": {
+        start: {
+          line: 15,
+          column: 12
+        },
+        end: {
+          line: 17,
+          column: 20
+        }
+      },
+      "8": {
+        start: {
+          line: 22,
+          column: 0
+        },
+        end: {
+          line: 36,
+          column: 2
+        }
+      },
+      "9": {
+        start: {
+          line: 23,
+          column: 4
+        },
+        end: {
+          line: 35,
+          column: 5
+        }
+      },
+      "10": {
+        start: {
+          line: 24,
+          column: 23
+        },
+        end: {
+          line: 24,
+          column: 38
+        }
+      },
+      "11": {
+        start: {
+          line: 25,
+          column: 21
+        },
+        end: {
+          line: 25,
+          column: 41
+        }
+      },
+      "12": {
+        start: {
+          line: 26,
+          column: 20
+        },
+        end: {
+          line: 26,
+          column: 56
+        }
+      },
+      "13": {
+        start: {
+          line: 27,
+          column: 8
+        },
+        end: {
+          line: 27,
+          column: 29
+        }
+      },
+      "14": {
+        start: {
+          line: 30,
+          column: 8
+        },
+        end: {
+          line: 34,
+          column: 9
+        }
+      },
+      "15": {
+        start: {
+          line: 31,
+          column: 12
+        },
+        end: {
+          line: 33,
+          column: 20
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 7,
+            column: 31
+          },
+          end: {
+            line: 7,
+            column: 32
+          }
+        },
+        loc: {
+          start: {
+            line: 7,
+            column: 46
+          },
+          end: {
+            line: 20,
+            column: 1
+          }
+        },
+        line: 7
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 22,
+            column: 26
+          },
+          end: {
+            line: 22,
+            column: 27
+          }
+        },
+        loc: {
+          start: {
+            line: 22,
+            column: 41
+          },
+          end: {
+            line: 36,
+            column: 1
+          }
+        },
+        line: 22
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 14,
+            column: 8
+          },
+          end: {
+            line: 18,
+            column: 9
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 14,
+            column: 8
+          },
+          end: {
+            line: 18,
+            column: 9
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 14
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 30,
+            column: 8
+          },
+          end: {
+            line: 34,
+            column: 9
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 30,
+            column: 8
+          },
+          end: {
+            line: 34,
+            column: 9
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 30
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0,
+      "15": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0
+    },
+    b: {
+      "0": [0, 0],
+      "1": [0, 0]
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "b525d069fbfa2cc5a72700b697686fe60dd9101f"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_1mj1drhm19 = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_1mj1drhm19();
+var _a;
+import { FeeService } from "@/services/fee.service";
+export class FeeController {}
+/* istanbul ignore next */
+cov_1mj1drhm19().s[0]++;
+_a = FeeController;
+// getFeeByUserId
+/* istanbul ignore next */
+cov_1mj1drhm19().s[1]++;
+FeeController.getFeeByUserId = async ctx => {
+  /* istanbul ignore next */
+  cov_1mj1drhm19().f[0]++;
+  cov_1mj1drhm19().s[2]++;
+  try {
+    const {
+      user_id
+    } =
+    /* istanbul ignore next */
+    (cov_1mj1drhm19().s[3]++, ctx.req.param());
+    const fee =
+    /* istanbul ignore next */
+    (cov_1mj1drhm19().s[4]++, await FeeService.getFeeByUserId(user_id));
+    /* istanbul ignore next */
+    cov_1mj1drhm19().s[5]++;
+    return ctx.json(fee);
+  } catch (error) {
+    /* istanbul ignore next */
+    cov_1mj1drhm19().s[6]++;
+    if (error instanceof Error) {
+      /* istanbul ignore next */
+      cov_1mj1drhm19().b[0][0]++;
+      cov_1mj1drhm19().s[7]++;
+      return ctx.json({
+        data: error.message
+      }, 500);
+    } else
+    /* istanbul ignore next */
+    {
+      cov_1mj1drhm19().b[0][1]++;
+    }
+  }
+};
+// update fee
+/* istanbul ignore next */
+cov_1mj1drhm19().s[8]++;
+FeeController.updateFee = async ctx => {
+  /* istanbul ignore next */
+  cov_1mj1drhm19().f[1]++;
+  cov_1mj1drhm19().s[9]++;
+  try {
+    const {
+      id
+    } =
+    /* istanbul ignore next */
+    (cov_1mj1drhm19().s[10]++, ctx.req.param());
+    const data =
+    /* istanbul ignore next */
+    (cov_1mj1drhm19().s[11]++, await ctx.req.json());
+    const fee =
+    /* istanbul ignore next */
+    (cov_1mj1drhm19().s[12]++, await FeeService.updateFee(id, data));
+    /* istanbul ignore next */
+    cov_1mj1drhm19().s[13]++;
+    return ctx.json(fee);
+  } catch (error) {
+    /* istanbul ignore next */
+    cov_1mj1drhm19().s[14]++;
+    if (error instanceof Error) {
+      /* istanbul ignore next */
+      cov_1mj1drhm19().b[1][0]++;
+      cov_1mj1drhm19().s[15]++;
+      return ctx.json({
+        data: error.message
+      }, 500);
+    } else
+    /* istanbul ignore next */
+    {
+      cov_1mj1drhm19().b[1][1]++;
+    }
+  }
+};

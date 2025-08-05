@@ -151,12 +151,19 @@ pipeline {
                     echo "📦 Installing dependencies with Bun..."
                     
                     # Enhanced Bun installation with proper error handling
+                    export PATH="$HOME/.bun/bin:/usr/local/bin:$PATH"
+                    
                     if ! command -v bun &> /dev/null; then
                         echo "Installing Bun..."
                         
                         # Multiple installation methods for better reliability
                         if curl -fsSL https://bun.sh/install | bash; then
                             echo "✅ Bun installed via curl"
+                            
+                            # Source bashrc to get updated PATH
+                            source ~/.bashrc 2>/dev/null || true
+                            export PATH="$HOME/.bun/bin:/usr/local/bin:$PATH"
+                            
                         else
                             echo "❌ Curl method failed, trying npm..."
                             if command -v npm &> /dev/null; then
@@ -170,32 +177,41 @@ pipeline {
                                 chmod +x /usr/local/bin/bun
                             fi
                         fi
-                        
-                        # Ensure Bun is in PATH
-                        export PATH="$HOME/.bun/bin:/usr/local/bin:$PATH"
-                        
-                        # Verify installation
-                        if ! command -v bun &> /dev/null; then
-                            echo "❌ Bun installation failed, using npm fallback"
-                            export USE_NPM_FALLBACK=true
-                        fi
                     else
-                        export PATH="$HOME/.bun/bin:$PATH"
+                        echo "✅ Bun already available"
+                    fi
+                    
+                    # Final verification after installation attempts
+                    if command -v bun &> /dev/null; then
+                        echo "✅ Bun is ready: $(bun --version)"
+                        export USE_NPM_FALLBACK=false
+                    else
+                        echo "❌ Bun installation failed, using npm fallback"
+                        export USE_NPM_FALLBACK=true
                     fi
                     
                     # Install dependencies with enhanced error handling
-                    if [ "$USE_NPM_FALLBACK" = "true" ] || ! command -v bun &> /dev/null; then
+                    if [ "$USE_NPM_FALLBACK" = "true" ]; then
                         echo "📦 Using npm for dependency installation..."
                         if [ -f "package-lock.json" ]; then
-                            npm ci --prefer-offline --no-audit
+                            npm ci --prefer-offline --no-audit --legacy-peer-deps
                         else
-                            npm install --prefer-offline --no-audit
+                            npm install --prefer-offline --no-audit --legacy-peer-deps
                         fi
                     else
                         echo "📦 Using Bun for dependency installation..."
                         # Ensure Bun is accessible
                         which bun || export PATH="$HOME/.bun/bin:$PATH"
-                        bun --version || { echo "❌ Bun not working properly"; exit 1; }
+                        bun --version || { 
+                            echo "❌ Bun not working properly, falling back to npm"; 
+                            export USE_NPM_FALLBACK=true
+                            if [ -f "package-lock.json" ]; then
+                                npm ci --prefer-offline --no-audit --legacy-peer-deps
+                            else
+                                npm install --prefer-offline --no-audit --legacy-peer-deps
+                            fi
+                            exit 0
+                        }
                         
                         # Install with optimized settings
                         if [ -f "bun.lockb" ]; then

@@ -1,0 +1,216 @@
+ebf2c79d2bb164a9d636ee5ba495ccc5
+/* istanbul ignore next */
+function cov_1l90l91lhk() {
+  var path = "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/libs/db/index.ts";
+  var hash = "c757045c35f831779b82aa0dc37af9344cb84d02";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/libs/db/index.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 4,
+          column: 16
+        },
+        end: {
+          line: 4,
+          column: 31
+        }
+      },
+      "1": {
+        start: {
+          line: 5,
+          column: 15
+        },
+        end: {
+          line: 24,
+          column: 1
+        }
+      },
+      "2": {
+        start: {
+          line: 6,
+          column: 4
+        },
+        end: {
+          line: 11,
+          column: 7
+        }
+      },
+      "3": {
+        start: {
+          line: 12,
+          column: 4
+        },
+        end: {
+          line: 12,
+          column: 26
+        }
+      },
+      "4": {
+        start: {
+          line: 14,
+          column: 4
+        },
+        end: {
+          line: 14,
+          column: 29
+        }
+      },
+      "5": {
+        start: {
+          line: 16,
+          column: 4
+        },
+        end: {
+          line: 22,
+          column: 5
+        }
+      },
+      "6": {
+        start: {
+          line: 17,
+          column: 8
+        },
+        end: {
+          line: 17,
+          column: 38
+        }
+      },
+      "7": {
+        start: {
+          line: 18,
+          column: 8
+        },
+        end: {
+          line: 18,
+          column: 61
+        }
+      },
+      "8": {
+        start: {
+          line: 21,
+          column: 8
+        },
+        end: {
+          line: 21,
+          column: 81
+        }
+      },
+      "9": {
+        start: {
+          line: 23,
+          column: 4
+        },
+        end: {
+          line: 23,
+          column: 48
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 5,
+            column: 15
+          },
+          end: {
+            line: 5,
+            column: 16
+          }
+        },
+        loc: {
+          start: {
+            line: 5,
+            column: 27
+          },
+          end: {
+            line: 24,
+            column: 1
+          }
+        },
+        line: 5
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0
+    },
+    f: {
+      "0": 0
+    },
+    b: {},
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "c757045c35f831779b82aa0dc37af9344cb84d02"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_1l90l91lhk = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_1l90l91lhk();
+import { Ottoman } from "ottoman";
+import log, { LogTypes } from "@/libs/logger";
+import { config } from "@/utils/env";
+const ottoman =
+/* istanbul ignore next */
+(cov_1l90l91lhk().s[0]++, new Ottoman({}));
+/* istanbul ignore next */
+cov_1l90l91lhk().s[1]++;
+const initDB = async () => {
+  /* istanbul ignore next */
+  cov_1l90l91lhk().f[0]++;
+  cov_1l90l91lhk().s[2]++;
+  await ottoman.connect({
+    bucketName: config.OTTOMAN_BUCKET_NAME,
+    connectionString: config.OTTOMAN_CONNECTION_STRING,
+    username: config.OTTOMAN_USERNAME,
+    password: config.OTTOMAN_PASSWORD
+  });
+  /* istanbul ignore next */
+  cov_1l90l91lhk().s[3]++;
+  await ottoman.start();
+  // Import all models after database connection is established
+  /* istanbul ignore next */
+  cov_1l90l91lhk().s[4]++;
+  await import("@/models");
+  // Ensure all models/collections are created
+  /* istanbul ignore next */
+  cov_1l90l91lhk().s[5]++;
+  try {
+    /* istanbul ignore next */
+    cov_1l90l91lhk().s[6]++;
+    await ottoman.ensureIndexes();
+    /* istanbul ignore next */
+    cov_1l90l91lhk().s[7]++;
+    log("Database indexes ensured", LogTypes.LOGS, "DB");
+  } catch (error) {
+    /* istanbul ignore next */
+    cov_1l90l91lhk().s[8]++;
+    log(`Warning: Could not ensure indexes: ${error}`, LogTypes.ERROR, "DB");
+  }
+  /* istanbul ignore next */
+  cov_1l90l91lhk().s[9]++;
+  log("Connected to DB", LogTypes.LOGS, "DB");
+};
+export { initDB, ottoman };

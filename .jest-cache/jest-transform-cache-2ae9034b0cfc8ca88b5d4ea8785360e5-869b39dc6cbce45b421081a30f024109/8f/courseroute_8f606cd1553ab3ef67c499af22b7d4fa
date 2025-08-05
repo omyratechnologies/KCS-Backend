@@ -1,0 +1,925 @@
+885cf2584c8b4ed87a05bed142f63be9
+/* istanbul ignore next */
+function cov_118qgjplcj() {
+  var path = "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/routes/course.route.ts";
+  var hash = "1863491f8b48c9cb18676dbe51b34d53220ca263";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/routes/course.route.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 8,
+          column: 12
+        },
+        end: {
+          line: 8,
+          column: 22
+        }
+      },
+      "1": {
+        start: {
+          line: 10,
+          column: 0
+        },
+        end: {
+          line: 10,
+          column: 31
+        }
+      },
+      "2": {
+        start: {
+          line: 12,
+          column: 0
+        },
+        end: {
+          line: 126,
+          column: 33
+        }
+      },
+      "3": {
+        start: {
+          line: 127,
+          column: 0
+        },
+        end: {
+          line: 159,
+          column: 36
+        }
+      },
+      "4": {
+        start: {
+          line: 161,
+          column: 0
+        },
+        end: {
+          line: 184,
+          column: 119
+        }
+      },
+      "5": {
+        start: {
+          line: 185,
+          column: 0
+        },
+        end: {
+          line: 217,
+          column: 119
+        }
+      },
+      "6": {
+        start: {
+          line: 218,
+          column: 0
+        },
+        end: {
+          line: 258,
+          column: 70
+        }
+      },
+      "7": {
+        start: {
+          line: 259,
+          column: 0
+        },
+        end: {
+          line: 299,
+          column: 68
+        }
+      },
+      "8": {
+        start: {
+          line: 301,
+          column: 0
+        },
+        end: {
+          line: 333,
+          column: 142
+        }
+      },
+      "9": {
+        start: {
+          line: 334,
+          column: 0
+        },
+        end: {
+          line: 366,
+          column: 142
+        }
+      },
+      "10": {
+        start: {
+          line: 367,
+          column: 0
+        },
+        end: {
+          line: 399,
+          column: 140
+        }
+      },
+      "11": {
+        start: {
+          line: 400,
+          column: 0
+        },
+        end: {
+          line: 432,
+          column: 140
+        }
+      },
+      "12": {
+        start: {
+          line: 434,
+          column: 0
+        },
+        end: {
+          line: 466,
+          column: 126
+        }
+      },
+      "13": {
+        start: {
+          line: 467,
+          column: 0
+        },
+        end: {
+          line: 518,
+          column: 86
+        }
+      },
+      "14": {
+        start: {
+          line: 519,
+          column: 0
+        },
+        end: {
+          line: 558,
+          column: 135
+        }
+      },
+      "15": {
+        start: {
+          line: 560,
+          column: 0
+        },
+        end: {
+          line: 592,
+          column: 82
+        }
+      },
+      "16": {
+        start: {
+          line: 593,
+          column: 0
+        },
+        end: {
+          line: 616,
+          column: 84
+        }
+      },
+      "17": {
+        start: {
+          line: 618,
+          column: 0
+        },
+        end: {
+          line: 650,
+          column: 138
+        }
+      }
+    },
+    fnMap: {},
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0,
+      "15": 0,
+      "16": 0,
+      "17": 0
+    },
+    f: {},
+    b: {},
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "1863491f8b48c9cb18676dbe51b34d53220ca263"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_118qgjplcj = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_118qgjplcj();
+import { Hono } from "hono";
+import { describeRoute } from "hono-openapi";
+import { resolver, validator as zValidator } from "hono-openapi/zod";
+import { CourseController } from "@/controllers/course.controller";
+import { authMiddleware } from "@/middlewares/auth.middleware";
+import { roleMiddleware } from "@/middlewares/role.middleware";
+import { bulkEnrollStudentsRequestBodySchema, courseAnalyticsResponseSchema, courseResponseSchema, coursesListResponseSchema, createCourseLectureRequestBodySchema, createCourseRequestBodySchema, createCourseSectionRequestBodySchema, enrollInCourseRequestBodySchema, errorResponseSchema, successResponseSchema, updateCourseRequestBodySchema, updateLectureOrderRequestBodySchema, updateProgressRequestBodySchema, updateSectionOrderRequestBodySchema } from "@/schema/course";
+const app =
+/* istanbul ignore next */
+(cov_118qgjplcj().s[0]++, new Hono());
+// Apply authentication to all routes
+/* istanbul ignore next */
+cov_118qgjplcj().s[1]++;
+app.use("*", authMiddleware());
+// ==================== PUBLIC COURSE DISCOVERY ====================
+/* istanbul ignore next */
+cov_118qgjplcj().s[2]++;
+app.get("/", describeRoute({
+  operationId: "getCourses",
+  summary: "Get courses with filtering",
+  description: "Get all courses with advanced filtering, search, and pagination. Returns published courses for students, all courses for admins/teachers.",
+  tags: ["Courses"],
+  parameters: [{
+    name: "page",
+    in: "query",
+    required: false,
+    schema: {
+      type: "number",
+      default: 1
+    },
+    description: "Page number for pagination"
+  }, {
+    name: "limit",
+    in: "query",
+    required: false,
+    schema: {
+      type: "number",
+      default: 20
+    },
+    description: "Number of courses per page"
+  }, {
+    name: "status",
+    in: "query",
+    required: false,
+    schema: {
+      type: "string",
+      enum: ["draft", "published", "archived", "suspended"]
+    },
+    description: "Filter by course status (Admin/Teacher only)"
+  }, {
+    name: "category",
+    in: "query",
+    required: false,
+    schema: {
+      type: "string"
+    },
+    description: "Filter by course category"
+  }, {
+    name: "difficulty_level",
+    in: "query",
+    required: false,
+    schema: {
+      type: "string",
+      enum: ["beginner", "intermediate", "advanced"]
+    },
+    description: "Filter by difficulty level"
+  }, {
+    name: "price_range",
+    in: "query",
+    required: false,
+    schema: {
+      type: "string"
+    },
+    description: "Filter by price range (e.g., '0-50', 'free', 'paid')"
+  }, {
+    name: "search",
+    in: "query",
+    required: false,
+    schema: {
+      type: "string"
+    },
+    description: "Search in title, description, and tags"
+  }, {
+    name: "class_id",
+    in: "query",
+    required: false,
+    schema: {
+      type: "string"
+    },
+    description: "Filter by target class/grade"
+  }, {
+    name: "featured",
+    in: "query",
+    required: false,
+    schema: {
+      type: "boolean"
+    },
+    description: "Show only featured courses"
+  }, {
+    name: "sort_by",
+    in: "query",
+    required: false,
+    schema: {
+      type: "string",
+      enum: ["created_at", "updated_at", "title", "rating", "enrollment_count", "price"]
+    },
+    description: "Sort by field"
+  }, {
+    name: "sort_order",
+    in: "query",
+    required: false,
+    schema: {
+      type: "string",
+      enum: ["asc", "desc"]
+    },
+    description: "Sort order"
+  }],
+  responses: {
+    200: {
+      description: "Courses retrieved successfully",
+      content: {
+        "application/json": {
+          schema: resolver(coursesListResponseSchema)
+        }
+      }
+    },
+    500: {
+      description: "Server error",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), CourseController.getCourses);
+/* istanbul ignore next */
+cov_118qgjplcj().s[3]++;
+app.get("/:id", describeRoute({
+  operationId: "getCourseById",
+  summary: "Get course by ID",
+  description: "Get detailed course information including sections, lectures, and user progress (if enrolled).",
+  tags: ["Courses"],
+  parameters: [{
+    name: "id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Course ID"
+  }],
+  responses: {
+    200: {
+      description: "Course retrieved successfully",
+      content: {
+        "application/json": {
+          schema: resolver(courseResponseSchema)
+        }
+      }
+    },
+    404: {
+      description: "Course not found",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), CourseController.getCourseById);
+// ==================== ADMIN/TEACHER COURSE MANAGEMENT ====================
+/* istanbul ignore next */
+cov_118qgjplcj().s[4]++;
+app.post("/", describeRoute({
+  operationId: "createCourse",
+  summary: "Create course",
+  description: "Create a new course. Admin or authorized teacher only.",
+  tags: ["Courses"],
+  responses: {
+    201: {
+      description: "Course created successfully",
+      content: {
+        "application/json": {
+          schema: resolver(successResponseSchema)
+        }
+      }
+    },
+    403: {
+      description: "Insufficient permissions",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), roleMiddleware("create_course"), zValidator("json", createCourseRequestBodySchema), CourseController.createCourse);
+/* istanbul ignore next */
+cov_118qgjplcj().s[5]++;
+app.put("/:id", describeRoute({
+  operationId: "updateCourse",
+  summary: "Update course",
+  description: "Update course details. Admin, course creator, or assigned instructor only.",
+  tags: ["Courses"],
+  parameters: [{
+    name: "id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Course ID"
+  }],
+  responses: {
+    200: {
+      description: "Course updated successfully",
+      content: {
+        "application/json": {
+          schema: resolver(successResponseSchema)
+        }
+      }
+    },
+    403: {
+      description: "Insufficient permissions",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), roleMiddleware("update_course"), zValidator("json", updateCourseRequestBodySchema), CourseController.updateCourse);
+/* istanbul ignore next */
+cov_118qgjplcj().s[6]++;
+app.put("/:id/publish", describeRoute({
+  operationId: "publishCourse",
+  summary: "Publish course",
+  description: "Publish a draft course to make it available for enrollment. Admin, course creator, or assigned instructor only.",
+  tags: ["Courses"],
+  parameters: [{
+    name: "id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Course ID"
+  }],
+  responses: {
+    200: {
+      description: "Course published successfully",
+      content: {
+        "application/json": {
+          schema: resolver(successResponseSchema)
+        }
+      }
+    },
+    400: {
+      description: "Course cannot be published (missing required content)",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    },
+    403: {
+      description: "Insufficient permissions",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), roleMiddleware("publish_course"), CourseController.publishCourse);
+/* istanbul ignore next */
+cov_118qgjplcj().s[7]++;
+app.delete("/:id", describeRoute({
+  operationId: "deleteCourse",
+  summary: "Delete/Archive course",
+  description: "Archive a course (soft delete). Admin or course creator only.",
+  tags: ["Courses"],
+  parameters: [{
+    name: "id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Course ID"
+  }],
+  responses: {
+    200: {
+      description: "Course archived successfully",
+      content: {
+        "application/json": {
+          schema: resolver(successResponseSchema)
+        }
+      }
+    },
+    400: {
+      description: "Cannot delete course with active enrollments",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    },
+    403: {
+      description: "Insufficient permissions",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), roleMiddleware("delete_course"), CourseController.deleteCourse);
+// ==================== COURSE CONTENT MANAGEMENT ====================
+/* istanbul ignore next */
+cov_118qgjplcj().s[8]++;
+app.post("/:course_id/sections", describeRoute({
+  operationId: "createCourseSection",
+  summary: "Create course section",
+  description: "Create a new section in a course. Admin, course creator, or assigned instructor only.",
+  tags: ["Courses"],
+  parameters: [{
+    name: "course_id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Course ID"
+  }],
+  responses: {
+    201: {
+      description: "Section created successfully",
+      content: {
+        "application/json": {
+          schema: resolver(successResponseSchema)
+        }
+      }
+    },
+    403: {
+      description: "Insufficient permissions",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), roleMiddleware("create_course_sections"), zValidator("json", createCourseSectionRequestBodySchema), CourseController.createCourseSection);
+/* istanbul ignore next */
+cov_118qgjplcj().s[9]++;
+app.post("/sections/:section_id/lectures", describeRoute({
+  operationId: "createCourseLecture",
+  summary: "Create course lecture",
+  description: "Create a new lecture in a course section. Admin, course creator, or assigned instructor only.",
+  tags: ["Courses"],
+  parameters: [{
+    name: "section_id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Section ID"
+  }],
+  responses: {
+    201: {
+      description: "Lecture created successfully",
+      content: {
+        "application/json": {
+          schema: resolver(successResponseSchema)
+        }
+      }
+    },
+    403: {
+      description: "Insufficient permissions",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), roleMiddleware("create_course_lectures"), zValidator("json", createCourseLectureRequestBodySchema), CourseController.createCourseLecture);
+/* istanbul ignore next */
+cov_118qgjplcj().s[10]++;
+app.put("/:course_id/sections/order", describeRoute({
+  operationId: "updateSectionOrder",
+  summary: "Update section order",
+  description: "Reorder sections within a course. Admin, course creator, or assigned instructor only.",
+  tags: ["Courses"],
+  parameters: [{
+    name: "course_id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Course ID"
+  }],
+  responses: {
+    200: {
+      description: "Section order updated successfully",
+      content: {
+        "application/json": {
+          schema: resolver(successResponseSchema)
+        }
+      }
+    },
+    403: {
+      description: "Insufficient permissions",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), roleMiddleware("reorder_course_content"), zValidator("json", updateSectionOrderRequestBodySchema), CourseController.updateSectionOrder);
+/* istanbul ignore next */
+cov_118qgjplcj().s[11]++;
+app.put("/sections/:section_id/lectures/order", describeRoute({
+  operationId: "updateLectureOrder",
+  summary: "Update lecture order",
+  description: "Reorder lectures within a section. Admin, course creator, or assigned instructor only.",
+  tags: ["Courses"],
+  parameters: [{
+    name: "section_id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Section ID"
+  }],
+  responses: {
+    200: {
+      description: "Lecture order updated successfully",
+      content: {
+        "application/json": {
+          schema: resolver(successResponseSchema)
+        }
+      }
+    },
+    403: {
+      description: "Insufficient permissions",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), roleMiddleware("reorder_course_content"), zValidator("json", updateLectureOrderRequestBodySchema), CourseController.updateLectureOrder);
+// ==================== STUDENT ENROLLMENT & PROGRESS ====================
+/* istanbul ignore next */
+cov_118qgjplcj().s[12]++;
+app.post("/:course_id/enroll", describeRoute({
+  operationId: "enrollInCourse",
+  summary: "Enroll in course",
+  description: "Enroll the authenticated user in a course. Student only.",
+  tags: ["Courses"],
+  parameters: [{
+    name: "course_id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Course ID"
+  }],
+  responses: {
+    201: {
+      description: "Successfully enrolled in course",
+      content: {
+        "application/json": {
+          schema: resolver(successResponseSchema)
+        }
+      }
+    },
+    400: {
+      description: "Enrollment not allowed (course full, not published, etc.)",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), roleMiddleware("enroll_in_course"), zValidator("json", enrollInCourseRequestBodySchema), CourseController.enrollInCourse);
+/* istanbul ignore next */
+cov_118qgjplcj().s[13]++;
+app.get("/my/enrolled", describeRoute({
+  operationId: "getUserEnrolledCourses",
+  summary: "Get user's enrolled courses",
+  description: "Get all courses the authenticated user is enrolled in. Student only.",
+  tags: ["Courses"],
+  parameters: [{
+    name: "status",
+    in: "query",
+    required: false,
+    schema: {
+      type: "string",
+      enum: ["active", "completed", "dropped", "suspended", "expired"]
+    },
+    description: "Filter by enrollment status"
+  }, {
+    name: "progress",
+    in: "query",
+    required: false,
+    schema: {
+      type: "string",
+      enum: ["not_started", "in_progress", "completed"]
+    },
+    description: "Filter by progress status"
+  }, {
+    name: "page",
+    in: "query",
+    required: false,
+    schema: {
+      type: "number",
+      default: 1
+    },
+    description: "Page number for pagination"
+  }, {
+    name: "limit",
+    in: "query",
+    required: false,
+    schema: {
+      type: "number",
+      default: 20
+    },
+    description: "Number of enrollments per page"
+  }],
+  responses: {
+    200: {
+      description: "Enrolled courses retrieved successfully",
+      content: {
+        "application/json": {
+          schema: resolver(successResponseSchema)
+        }
+      }
+    }
+  }
+}), roleMiddleware("view_enrolled_courses"), CourseController.getUserEnrolledCourses);
+/* istanbul ignore next */
+cov_118qgjplcj().s[14]++;
+app.put("/:course_id/lectures/:lecture_id/progress", describeRoute({
+  operationId: "updateCourseProgress",
+  summary: "Update lecture progress",
+  description: "Update user's progress on a specific lecture. Student only.",
+  tags: ["Courses"],
+  parameters: [{
+    name: "course_id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Course ID"
+  }, {
+    name: "lecture_id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Lecture ID"
+  }],
+  responses: {
+    200: {
+      description: "Progress updated successfully",
+      content: {
+        "application/json": {
+          schema: resolver(successResponseSchema)
+        }
+      }
+    },
+    400: {
+      description: "User not enrolled in course",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), roleMiddleware("track_watch_history"), zValidator("json", updateProgressRequestBodySchema), CourseController.updateCourseProgress);
+// ==================== ANALYTICS & REPORTING ====================
+/* istanbul ignore next */
+cov_118qgjplcj().s[15]++;
+app.get("/:course_id/analytics", describeRoute({
+  operationId: "getCourseAnalytics",
+  summary: "Get course analytics",
+  description: "Get detailed analytics for a course including enrollment, engagement, and performance metrics. Admin, course creator, or assigned instructor only.",
+  tags: ["Courses"],
+  parameters: [{
+    name: "course_id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Course ID"
+  }],
+  responses: {
+    200: {
+      description: "Course analytics retrieved successfully",
+      content: {
+        "application/json": {
+          schema: resolver(courseAnalyticsResponseSchema)
+        }
+      }
+    },
+    403: {
+      description: "Insufficient permissions",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), roleMiddleware("view_course_analytics"), CourseController.getCourseAnalytics);
+/* istanbul ignore next */
+cov_118qgjplcj().s[16]++;
+app.get("/dashboard", describeRoute({
+  operationId: "getCourseDashboard",
+  summary: "Get course dashboard",
+  description: "Get course dashboard with statistics and recent activity. Admin/Teacher only.",
+  tags: ["Courses"],
+  responses: {
+    200: {
+      description: "Course dashboard retrieved successfully",
+      content: {
+        "application/json": {
+          schema: resolver(successResponseSchema)
+        }
+      }
+    },
+    403: {
+      description: "Insufficient permissions",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), roleMiddleware("manage_course_analytics"), CourseController.getCourseDashboard);
+// ==================== ADMIN BULK OPERATIONS ====================
+/* istanbul ignore next */
+cov_118qgjplcj().s[17]++;
+app.post("/:course_id/enroll/bulk", describeRoute({
+  operationId: "bulkEnrollStudents",
+  summary: "Bulk enroll students",
+  description: "Enroll multiple students in a course at once. Admin only.",
+  tags: ["Courses"],
+  parameters: [{
+    name: "course_id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Course ID"
+  }],
+  responses: {
+    200: {
+      description: "Bulk enrollment completed",
+      content: {
+        "application/json": {
+          schema: resolver(successResponseSchema)
+        }
+      }
+    },
+    403: {
+      description: "Admin access required",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), roleMiddleware("bulk_enroll_students"), zValidator("json", bulkEnrollStudentsRequestBodySchema), CourseController.bulkEnrollStudents);
+export default app;

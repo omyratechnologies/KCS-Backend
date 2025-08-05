@@ -1,0 +1,2053 @@
+d7663d2e94a04e4e96190279cee57162
+/* istanbul ignore next */
+function cov_75ry0jwya() {
+  var path = "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/services/backup_recovery.service.ts";
+  var hash = "88dacbca3a053e01125d66a8860989452ba2c3f4";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/services/backup_recovery.service.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 7,
+          column: 8
+        },
+        end: {
+          line: 25,
+          column: 9
+        }
+      },
+      "1": {
+        start: {
+          line: 8,
+          column: 24
+        },
+        end: {
+          line: 17,
+          column: 13
+        }
+      },
+      "2": {
+        start: {
+          line: 20,
+          column: 12
+        },
+        end: {
+          line: 20,
+          column: 63
+        }
+      },
+      "3": {
+        start: {
+          line: 20,
+          column: 29
+        },
+        end: {
+          line: 20,
+          column: 55
+        }
+      },
+      "4": {
+        start: {
+          line: 21,
+          column: 12
+        },
+        end: {
+          line: 21,
+          column: 23
+        }
+      },
+      "5": {
+        start: {
+          line: 24,
+          column: 12
+        },
+        end: {
+          line: 24,
+          column: 67
+        }
+      },
+      "6": {
+        start: {
+          line: 31,
+          column: 8
+        },
+        end: {
+          line: 71,
+          column: 9
+        }
+      },
+      "7": {
+        start: {
+          line: 33,
+          column: 35
+        },
+        end: {
+          line: 47,
+          column: 13
+        }
+      },
+      "8": {
+        start: {
+          line: 48,
+          column: 40
+        },
+        end: {
+          line: 48,
+          column: 50
+        }
+      },
+      "9": {
+        start: {
+          line: 49,
+          column: 12
+        },
+        end: {
+          line: 49,
+          column: 53
+        }
+      },
+      "10": {
+        start: {
+          line: 50,
+          column: 12
+        },
+        end: {
+          line: 52,
+          column: 13
+        }
+      },
+      "11": {
+        start: {
+          line: 51,
+          column: 16
+        },
+        end: {
+          line: 51,
+          column: 79
+        }
+      },
+      "12": {
+        start: {
+          line: 53,
+          column: 12
+        },
+        end: {
+          line: 67,
+          column: 14
+        }
+      },
+      "13": {
+        start: {
+          line: 70,
+          column: 12
+        },
+        end: {
+          line: 70,
+          column: 69
+        }
+      },
+      "14": {
+        start: {
+          line: 77,
+          column: 8
+        },
+        end: {
+          line: 115,
+          column: 9
+        }
+      },
+      "15": {
+        start: {
+          line: 79,
+          column: 32
+        },
+        end: {
+          line: 110,
+          column: 13
+        }
+      },
+      "16": {
+        start: {
+          line: 111,
+          column: 12
+        },
+        end: {
+          line: 111,
+          column: 31
+        }
+      },
+      "17": {
+        start: {
+          line: 114,
+          column: 12
+        },
+        end: {
+          line: 114,
+          column: 74
+        }
+      },
+      "18": {
+        start: {
+          line: 122,
+          column: 8
+        },
+        end: {
+          line: 152,
+          column: 9
+        }
+      },
+      "19": {
+        start: {
+          line: 123,
+          column: 33
+        },
+        end: {
+          line: 123,
+          column: 99
+        }
+      },
+      "20": {
+        start: {
+          line: 124,
+          column: 29
+        },
+        end: {
+          line: 124,
+          column: 31
+        }
+      },
+      "21": {
+        start: {
+          line: 126,
+          column: 37
+        },
+        end: {
+          line: 126,
+          column: 70
+        }
+      },
+      "22": {
+        start: {
+          line: 127,
+          column: 27
+        },
+        end: {
+          line: 127,
+          column: 97
+        }
+      },
+      "23": {
+        start: {
+          line: 127,
+          column: 56
+        },
+        end: {
+          line: 127,
+          column: 96
+        }
+      },
+      "24": {
+        start: {
+          line: 128,
+          column: 12
+        },
+        end: {
+          line: 130,
+          column: 13
+        }
+      },
+      "25": {
+        start: {
+          line: 129,
+          column: 16
+        },
+        end: {
+          line: 129,
+          column: 80
+        }
+      },
+      "26": {
+        start: {
+          line: 131,
+          column: 12
+        },
+        end: {
+          line: 133,
+          column: 13
+        }
+      },
+      "27": {
+        start: {
+          line: 132,
+          column: 16
+        },
+        end: {
+          line: 132,
+          column: 97
+        }
+      },
+      "28": {
+        start: {
+          line: 135,
+          column: 12
+        },
+        end: {
+          line: 137,
+          column: 13
+        }
+      },
+      "29": {
+        start: {
+          line: 136,
+          column: 16
+        },
+        end: {
+          line: 136,
+          column: 132
+        }
+      },
+      "30": {
+        start: {
+          line: 138,
+          column: 12
+        },
+        end: {
+          line: 140,
+          column: 13
+        }
+      },
+      "31": {
+        start: {
+          line: 139,
+          column: 16
+        },
+        end: {
+          line: 139,
+          column: 100
+        }
+      },
+      "32": {
+        start: {
+          line: 141,
+          column: 40
+        },
+        end: {
+          line: 141,
+          column: 116
+        }
+      },
+      "33": {
+        start: {
+          line: 143,
+          column: 12
+        },
+        end: {
+          line: 148,
+          column: 14
+        }
+      },
+      "34": {
+        start: {
+          line: 151,
+          column: 12
+        },
+        end: {
+          line: 151,
+          column: 68
+        }
+      },
+      "35": {
+        start: {
+          line: 158,
+          column: 8
+        },
+        end: {
+          line: 181,
+          column: 9
+        }
+      },
+      "36": {
+        start: {
+          line: 159,
+          column: 37
+        },
+        end: {
+          line: 159,
+          column: 70
+        }
+      },
+      "37": {
+        start: {
+          line: 160,
+          column: 27
+        },
+        end: {
+          line: 160,
+          column: 82
+        }
+      },
+      "38": {
+        start: {
+          line: 160,
+          column: 56
+        },
+        end: {
+          line: 160,
+          column: 81
+        }
+      },
+      "39": {
+        start: {
+          line: 161,
+          column: 12
+        },
+        end: {
+          line: 163,
+          column: 13
+        }
+      },
+      "40": {
+        start: {
+          line: 162,
+          column: 16
+        },
+        end: {
+          line: 162,
+          column: 65
+        }
+      },
+      "41": {
+        start: {
+          line: 165,
+          column: 31
+        },
+        end: {
+          line: 172,
+          column: 13
+        }
+      },
+      "42": {
+        start: {
+          line: 174,
+          column: 12
+        },
+        end: {
+          line: 176,
+          column: 13
+        }
+      },
+      "43": {
+        start: {
+          line: 175,
+          column: 16
+        },
+        end: {
+          line: 175,
+          column: 109
+        }
+      },
+      "44": {
+        start: {
+          line: 177,
+          column: 12
+        },
+        end: {
+          line: 177,
+          column: 30
+        }
+      },
+      "45": {
+        start: {
+          line: 180,
+          column: 12
+        },
+        end: {
+          line: 180,
+          column: 77
+        }
+      },
+      "46": {
+        start: {
+          line: 188,
+          column: 8
+        },
+        end: {
+          line: 256,
+          column: 10
+        }
+      },
+      "47": {
+        start: {
+          line: 263,
+          column: 8
+        },
+        end: {
+          line: 276,
+          column: 9
+        }
+      },
+      "48": {
+        start: {
+          line: 265,
+          column: 16
+        },
+        end: {
+          line: 265,
+          column: 38
+        }
+      },
+      "49": {
+        start: {
+          line: 268,
+          column: 16
+        },
+        end: {
+          line: 268,
+          column: 38
+        }
+      },
+      "50": {
+        start: {
+          line: 271,
+          column: 16
+        },
+        end: {
+          line: 271,
+          column: 38
+        }
+      },
+      "51": {
+        start: {
+          line: 274,
+          column: 16
+        },
+        end: {
+          line: 274,
+          column: 38
+        }
+      },
+      "52": {
+        start: {
+          line: 282,
+          column: 8
+        },
+        end: {
+          line: 295,
+          column: 9
+        }
+      },
+      "53": {
+        start: {
+          line: 284,
+          column: 16
+        },
+        end: {
+          line: 284,
+          column: 38
+        }
+      },
+      "54": {
+        start: {
+          line: 287,
+          column: 16
+        },
+        end: {
+          line: 287,
+          column: 38
+        }
+      },
+      "55": {
+        start: {
+          line: 290,
+          column: 16
+        },
+        end: {
+          line: 290,
+          column: 38
+        }
+      },
+      "56": {
+        start: {
+          line: 293,
+          column: 16
+        },
+        end: {
+          line: 293,
+          column: 38
+        }
+      },
+      "57": {
+        start: {
+          line: 301,
+          column: 8
+        },
+        end: {
+          line: 318,
+          column: 9
+        }
+      },
+      "58": {
+        start: {
+          line: 303,
+          column: 12
+        },
+        end: {
+          line: 303,
+          column: 39
+        }
+      },
+      "59": {
+        start: {
+          line: 305,
+          column: 30
+        },
+        end: {
+          line: 305,
+          column: 32
+        }
+      },
+      "60": {
+        start: {
+          line: 306,
+          column: 38
+        },
+        end: {
+          line: 306,
+          column: 53
+        }
+      },
+      "61": {
+        start: {
+          line: 307,
+          column: 12
+        },
+        end: {
+          line: 310,
+          column: 13
+        }
+      },
+      "62": {
+        start: {
+          line: 307,
+          column: 25
+        },
+        end: {
+          line: 307,
+          column: 26
+        }
+      },
+      "63": {
+        start: {
+          line: 308,
+          column: 16
+        },
+        end: {
+          line: 308,
+          column: 74
+        }
+      },
+      "64": {
+        start: {
+          line: 308,
+          column: 47
+        },
+        end: {
+          line: 308,
+          column: 72
+        }
+      },
+      "65": {
+        start: {
+          line: 309,
+          column: 16
+        },
+        end: {
+          line: 309,
+          column: 74
+        }
+      },
+      "66": {
+        start: {
+          line: 311,
+          column: 12
+        },
+        end: {
+          line: 311,
+          column: 37
+        }
+      },
+      "67": {
+        start: {
+          line: 312,
+          column: 12
+        },
+        end: {
+          line: 312,
+          column: 42
+        }
+      },
+      "68": {
+        start: {
+          line: 313,
+          column: 12
+        },
+        end: {
+          line: 313,
+          column: 79
+        }
+      },
+      "69": {
+        start: {
+          line: 316,
+          column: 12
+        },
+        end: {
+          line: 316,
+          column: 34
+        }
+      },
+      "70": {
+        start: {
+          line: 317,
+          column: 12
+        },
+        end: {
+          line: 317,
+          column: 89
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 6,
+            column: 4
+          },
+          end: {
+            line: 6,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 6,
+            column: 53
+          },
+          end: {
+            line: 26,
+            column: 5
+          }
+        },
+        line: 6
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 20,
+            column: 23
+          },
+          end: {
+            line: 20,
+            column: 24
+          }
+        },
+        loc: {
+          start: {
+            line: 20,
+            column: 29
+          },
+          end: {
+            line: 20,
+            column: 55
+          }
+        },
+        line: 20
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 30,
+            column: 4
+          },
+          end: {
+            line: 30,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 30,
+            column: 35
+          },
+          end: {
+            line: 72,
+            column: 5
+          }
+        },
+        line: 30
+      },
+      "3": {
+        name: "(anonymous_3)",
+        decl: {
+          start: {
+            line: 76,
+            column: 4
+          },
+          end: {
+            line: 76,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 76,
+            column: 40
+          },
+          end: {
+            line: 116,
+            column: 5
+          }
+        },
+        line: 76
+      },
+      "4": {
+        name: "(anonymous_4)",
+        decl: {
+          start: {
+            line: 121,
+            column: 4
+          },
+          end: {
+            line: 121,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 121,
+            column: 49
+          },
+          end: {
+            line: 153,
+            column: 5
+          }
+        },
+        line: 121
+      },
+      "5": {
+        name: "(anonymous_5)",
+        decl: {
+          start: {
+            line: 127,
+            column: 49
+          },
+          end: {
+            line: 127,
+            column: 50
+          }
+        },
+        loc: {
+          start: {
+            line: 127,
+            column: 56
+          },
+          end: {
+            line: 127,
+            column: 96
+          }
+        },
+        line: 127
+      },
+      "6": {
+        name: "(anonymous_6)",
+        decl: {
+          start: {
+            line: 157,
+            column: 4
+          },
+          end: {
+            line: 157,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 157,
+            column: 52
+          },
+          end: {
+            line: 182,
+            column: 5
+          }
+        },
+        line: 157
+      },
+      "7": {
+        name: "(anonymous_7)",
+        decl: {
+          start: {
+            line: 160,
+            column: 49
+          },
+          end: {
+            line: 160,
+            column: 50
+          }
+        },
+        loc: {
+          start: {
+            line: 160,
+            column: 56
+          },
+          end: {
+            line: 160,
+            column: 81
+          }
+        },
+        line: 160
+      },
+      "8": {
+        name: "(anonymous_8)",
+        decl: {
+          start: {
+            line: 187,
+            column: 4
+          },
+          end: {
+            line: 187,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 187,
+            column: 43
+          },
+          end: {
+            line: 257,
+            column: 5
+          }
+        },
+        line: 187
+      },
+      "9": {
+        name: "(anonymous_9)",
+        decl: {
+          start: {
+            line: 262,
+            column: 4
+          },
+          end: {
+            line: 262,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 262,
+            column: 42
+          },
+          end: {
+            line: 277,
+            column: 5
+          }
+        },
+        line: 262
+      },
+      "10": {
+        name: "(anonymous_10)",
+        decl: {
+          start: {
+            line: 281,
+            column: 4
+          },
+          end: {
+            line: 281,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 281,
+            column: 44
+          },
+          end: {
+            line: 296,
+            column: 5
+          }
+        },
+        line: 281
+      },
+      "11": {
+        name: "(anonymous_11)",
+        decl: {
+          start: {
+            line: 300,
+            column: 4
+          },
+          end: {
+            line: 300,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 300,
+            column: 39
+          },
+          end: {
+            line: 319,
+            column: 5
+          }
+        },
+        line: 300
+      },
+      "12": {
+        name: "(anonymous_12)",
+        decl: {
+          start: {
+            line: 308,
+            column: 34
+          },
+          end: {
+            line: 308,
+            column: 35
+          }
+        },
+        loc: {
+          start: {
+            line: 308,
+            column: 47
+          },
+          end: {
+            line: 308,
+            column: 72
+          }
+        },
+        line: 308
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 50,
+            column: 12
+          },
+          end: {
+            line: 52,
+            column: 13
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 50,
+            column: 12
+          },
+          end: {
+            line: 52,
+            column: 13
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 50
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 128,
+            column: 12
+          },
+          end: {
+            line: 130,
+            column: 13
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 128,
+            column: 12
+          },
+          end: {
+            line: 130,
+            column: 13
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 128
+      },
+      "2": {
+        loc: {
+          start: {
+            line: 131,
+            column: 12
+          },
+          end: {
+            line: 133,
+            column: 13
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 131,
+            column: 12
+          },
+          end: {
+            line: 133,
+            column: 13
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 131
+      },
+      "3": {
+        loc: {
+          start: {
+            line: 135,
+            column: 12
+          },
+          end: {
+            line: 137,
+            column: 13
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 135,
+            column: 12
+          },
+          end: {
+            line: 137,
+            column: 13
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 135
+      },
+      "4": {
+        loc: {
+          start: {
+            line: 138,
+            column: 12
+          },
+          end: {
+            line: 140,
+            column: 13
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 138,
+            column: 12
+          },
+          end: {
+            line: 140,
+            column: 13
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 138
+      },
+      "5": {
+        loc: {
+          start: {
+            line: 161,
+            column: 12
+          },
+          end: {
+            line: 163,
+            column: 13
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 161,
+            column: 12
+          },
+          end: {
+            line: 163,
+            column: 13
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 161
+      },
+      "6": {
+        loc: {
+          start: {
+            line: 174,
+            column: 12
+          },
+          end: {
+            line: 176,
+            column: 13
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 174,
+            column: 12
+          },
+          end: {
+            line: 176,
+            column: 13
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 174
+      },
+      "7": {
+        loc: {
+          start: {
+            line: 263,
+            column: 8
+          },
+          end: {
+            line: 276,
+            column: 9
+          }
+        },
+        type: "switch",
+        locations: [{
+          start: {
+            line: 264,
+            column: 12
+          },
+          end: {
+            line: 266,
+            column: 13
+          }
+        }, {
+          start: {
+            line: 267,
+            column: 12
+          },
+          end: {
+            line: 269,
+            column: 13
+          }
+        }, {
+          start: {
+            line: 270,
+            column: 12
+          },
+          end: {
+            line: 272,
+            column: 13
+          }
+        }, {
+          start: {
+            line: 273,
+            column: 12
+          },
+          end: {
+            line: 275,
+            column: 13
+          }
+        }],
+        line: 263
+      },
+      "8": {
+        loc: {
+          start: {
+            line: 282,
+            column: 8
+          },
+          end: {
+            line: 295,
+            column: 9
+          }
+        },
+        type: "switch",
+        locations: [{
+          start: {
+            line: 283,
+            column: 12
+          },
+          end: {
+            line: 285,
+            column: 13
+          }
+        }, {
+          start: {
+            line: 286,
+            column: 12
+          },
+          end: {
+            line: 288,
+            column: 13
+          }
+        }, {
+          start: {
+            line: 289,
+            column: 12
+          },
+          end: {
+            line: 291,
+            column: 13
+          }
+        }, {
+          start: {
+            line: 292,
+            column: 12
+          },
+          end: {
+            line: 294,
+            column: 13
+          }
+        }],
+        line: 282
+      },
+      "9": {
+        loc: {
+          start: {
+            line: 317,
+            column: 32
+          },
+          end: {
+            line: 317,
+            column: 88
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 317,
+            column: 57
+          },
+          end: {
+            line: 317,
+            column: 70
+          }
+        }, {
+          start: {
+            line: 317,
+            column: 73
+          },
+          end: {
+            line: 317,
+            column: 88
+          }
+        }],
+        line: 317
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0,
+      "15": 0,
+      "16": 0,
+      "17": 0,
+      "18": 0,
+      "19": 0,
+      "20": 0,
+      "21": 0,
+      "22": 0,
+      "23": 0,
+      "24": 0,
+      "25": 0,
+      "26": 0,
+      "27": 0,
+      "28": 0,
+      "29": 0,
+      "30": 0,
+      "31": 0,
+      "32": 0,
+      "33": 0,
+      "34": 0,
+      "35": 0,
+      "36": 0,
+      "37": 0,
+      "38": 0,
+      "39": 0,
+      "40": 0,
+      "41": 0,
+      "42": 0,
+      "43": 0,
+      "44": 0,
+      "45": 0,
+      "46": 0,
+      "47": 0,
+      "48": 0,
+      "49": 0,
+      "50": 0,
+      "51": 0,
+      "52": 0,
+      "53": 0,
+      "54": 0,
+      "55": 0,
+      "56": 0,
+      "57": 0,
+      "58": 0,
+      "59": 0,
+      "60": 0,
+      "61": 0,
+      "62": 0,
+      "63": 0,
+      "64": 0,
+      "65": 0,
+      "66": 0,
+      "67": 0,
+      "68": 0,
+      "69": 0,
+      "70": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0
+    },
+    b: {
+      "0": [0, 0],
+      "1": [0, 0],
+      "2": [0, 0],
+      "3": [0, 0],
+      "4": [0, 0],
+      "5": [0, 0],
+      "6": [0, 0],
+      "7": [0, 0, 0, 0],
+      "8": [0, 0, 0, 0],
+      "9": [0, 0]
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "88dacbca3a053e01125d66a8860989452ba2c3f4"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_75ry0jwya = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_75ry0jwya();
+export class BackupRecoveryService {
+  // ========================= BACKUP OPERATIONS =========================
+  /**
+   * Initiate a backup job
+   */
+  static async initiateBackup(backupType, options) {
+    /* istanbul ignore next */
+    cov_75ry0jwya().f[0]++;
+    cov_75ry0jwya().s[0]++;
+    try {
+      const job =
+      /* istanbul ignore next */
+      (cov_75ry0jwya().s[1]++, {
+        job_id: `backup_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
+        backup_type: backupType,
+        include_payment_data: options.include_payment_data,
+        include_user_data: options.include_user_data,
+        status: "initiated",
+        started_at: new Date(),
+        progress: 0,
+        estimated_completion: new Date(Date.now() + this.estimateBackupTime(backupType))
+      });
+      // In a real implementation, this would queue the job for background processing
+      // For now, we'll simulate the backup process
+      /* istanbul ignore next */
+      cov_75ry0jwya().s[2]++;
+      setTimeout(() => {
+        /* istanbul ignore next */
+        cov_75ry0jwya().f[1]++;
+        cov_75ry0jwya().s[3]++;
+        return this.processBackupJob(job);
+      }, 1000);
+      /* istanbul ignore next */
+      cov_75ry0jwya().s[4]++;
+      return job;
+    } catch (error) {
+      /* istanbul ignore next */
+      cov_75ry0jwya().s[5]++;
+      throw new Error(`Failed to initiate backup: ${error}`);
+    }
+  }
+  /**
+   * Get backup status
+   */
+  static async getBackupStatus() {
+    /* istanbul ignore next */
+    cov_75ry0jwya().f[2]++;
+    cov_75ry0jwya().s[6]++;
+    try {
+      // In a real implementation, this would query the backup metadata database
+      const mockLastBackup =
+      /* istanbul ignore next */
+      (cov_75ry0jwya().s[7]++, {
+        backup_id: "backup_20250710_001",
+        backup_type: "full",
+        created_at: new Date(Date.now() - 24 * 60 * 60 * 1000),
+        // 24 hours ago
+        file_size: 1.2 * 1024 * 1024 * 1024,
+        // 1.2GB
+        file_path: "/backups/encrypted/backup_20250710_001.gz.enc",
+        checksum: "sha256:abc123def456...",
+        compression: "gzip",
+        encryption: true,
+        retention_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        // 30 days
+        campus_count: 5,
+        user_count: 1250,
+        transaction_count: 15000,
+        status: "completed"
+      });
+      const nextScheduledBackup =
+      /* istanbul ignore next */
+      (cov_75ry0jwya().s[8]++, new Date());
+      /* istanbul ignore next */
+      cov_75ry0jwya().s[9]++;
+      nextScheduledBackup.setHours(2, 0, 0, 0); // 2 AM tomorrow
+      /* istanbul ignore next */
+      cov_75ry0jwya().s[10]++;
+      if (nextScheduledBackup <= new Date()) {
+        /* istanbul ignore next */
+        cov_75ry0jwya().b[0][0]++;
+        cov_75ry0jwya().s[11]++;
+        nextScheduledBackup.setDate(nextScheduledBackup.getDate() + 1);
+      } else
+      /* istanbul ignore next */
+      {
+        cov_75ry0jwya().b[0][1]++;
+      }
+      cov_75ry0jwya().s[12]++;
+      return {
+        last_backup: mockLastBackup,
+        next_scheduled_backup: nextScheduledBackup,
+        backup_retention_policy: {
+          retention_period_days: 30,
+          max_backups: 10,
+          auto_cleanup: true
+        },
+        storage_info: {
+          total_space_used: "12.5GB",
+          available_space: "87.5GB",
+          backup_location: "encrypted_cloud_storage"
+        },
+        recent_backups: [mockLastBackup]
+      };
+    } catch (error) {
+      /* istanbul ignore next */
+      cov_75ry0jwya().s[13]++;
+      throw new Error(`Failed to get backup status: ${error}`);
+    }
+  }
+  /**
+   * List available backups
+   */
+  static async listAvailableBackups() {
+    /* istanbul ignore next */
+    cov_75ry0jwya().f[3]++;
+    cov_75ry0jwya().s[14]++;
+    try {
+      // In a real implementation, this would query the backup metadata database
+      const mockBackups =
+      /* istanbul ignore next */
+      (cov_75ry0jwya().s[15]++, [{
+        backup_id: "backup_20250710_001",
+        backup_type: "full",
+        created_at: new Date(Date.now() - 24 * 60 * 60 * 1000),
+        file_size: 1.2 * 1024 * 1024 * 1024,
+        file_path: "/backups/encrypted/backup_20250710_001.gz.enc",
+        checksum: "sha256:abc123def456...",
+        compression: "gzip",
+        encryption: true,
+        retention_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        campus_count: 5,
+        user_count: 1250,
+        transaction_count: 15000,
+        status: "completed"
+      }, {
+        backup_id: "backup_20250709_001",
+        backup_type: "incremental",
+        created_at: new Date(Date.now() - 48 * 60 * 60 * 1000),
+        file_size: 256 * 1024 * 1024,
+        file_path: "/backups/encrypted/backup_20250709_001.gz.enc",
+        checksum: "sha256:def456ghi789...",
+        compression: "gzip",
+        encryption: true,
+        retention_expires_at: new Date(Date.now() + 29 * 24 * 60 * 60 * 1000),
+        campus_count: 5,
+        user_count: 1245,
+        transaction_count: 14800,
+        status: "completed"
+      }]);
+      /* istanbul ignore next */
+      cov_75ry0jwya().s[16]++;
+      return mockBackups;
+    } catch (error) {
+      /* istanbul ignore next */
+      cov_75ry0jwya().s[17]++;
+      throw new Error(`Failed to list available backups: ${error}`);
+    }
+  }
+  // ========================= RECOVERY OPERATIONS =========================
+  /**
+   * Initiate data restore
+   */
+  static async initiateRestore(restoreOptions) {
+    /* istanbul ignore next */
+    cov_75ry0jwya().f[4]++;
+    cov_75ry0jwya().s[18]++;
+    try {
+      const restoreJobId =
+      /* istanbul ignore next */
+      (cov_75ry0jwya().s[19]++, `restore_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`);
+      const warnings =
+      /* istanbul ignore next */
+      (cov_75ry0jwya().s[20]++, []);
+      // Validate backup exists
+      const availableBackups =
+      /* istanbul ignore next */
+      (cov_75ry0jwya().s[21]++, await this.listAvailableBackups());
+      const backup =
+      /* istanbul ignore next */
+      (cov_75ry0jwya().s[22]++, availableBackups.find(b => {
+        /* istanbul ignore next */
+        cov_75ry0jwya().f[5]++;
+        cov_75ry0jwya().s[23]++;
+        return b.backup_id === restoreOptions.backup_id;
+      }));
+      /* istanbul ignore next */
+      cov_75ry0jwya().s[24]++;
+      if (!backup) {
+        /* istanbul ignore next */
+        cov_75ry0jwya().b[1][0]++;
+        cov_75ry0jwya().s[25]++;
+        throw new Error(`Backup ${restoreOptions.backup_id} not found`);
+      } else
+      /* istanbul ignore next */
+      {
+        cov_75ry0jwya().b[1][1]++;
+      }
+      cov_75ry0jwya().s[26]++;
+      if (backup.status !== "completed") {
+        /* istanbul ignore next */
+        cov_75ry0jwya().b[2][0]++;
+        cov_75ry0jwya().s[27]++;
+        throw new Error(`Backup ${restoreOptions.backup_id} is not in completed status`);
+      } else
+      /* istanbul ignore next */
+      {
+        cov_75ry0jwya().b[2][1]++;
+      }
+      // Add warnings for risky operations
+      cov_75ry0jwya().s[28]++;
+      if (restoreOptions.restore_type === "full") {
+        /* istanbul ignore next */
+        cov_75ry0jwya().b[3][0]++;
+        cov_75ry0jwya().s[29]++;
+        warnings.push("Full restore will overwrite all existing data", "Ensure all users are logged out before proceeding");
+      } else
+      /* istanbul ignore next */
+      {
+        cov_75ry0jwya().b[3][1]++;
+      }
+      cov_75ry0jwya().s[30]++;
+      if (!restoreOptions.create_restore_point) {
+        /* istanbul ignore next */
+        cov_75ry0jwya().b[4][0]++;
+        cov_75ry0jwya().s[31]++;
+        warnings.push("No restore point will be created - this operation cannot be undone");
+      } else
+      /* istanbul ignore next */
+      {
+        cov_75ry0jwya().b[4][1]++;
+      }
+      const estimatedCompletion =
+      /* istanbul ignore next */
+      (cov_75ry0jwya().s[32]++, new Date(Date.now() + this.estimateRestoreTime(restoreOptions.restore_type)));
+      // In a real implementation, this would queue the restore job for background processing
+      /* istanbul ignore next */
+      cov_75ry0jwya().s[33]++;
+      return {
+        restore_job_id: restoreJobId,
+        status: "initiated",
+        estimated_completion: estimatedCompletion,
+        warnings
+      };
+    } catch (error) {
+      /* istanbul ignore next */
+      cov_75ry0jwya().s[34]++;
+      throw new Error(`Failed to initiate restore: ${error}`);
+    }
+  }
+  /**
+   * Validate backup integrity
+   */
+  static async validateBackupIntegrity(backup_id) {
+    /* istanbul ignore next */
+    cov_75ry0jwya().f[6]++;
+    cov_75ry0jwya().s[35]++;
+    try {
+      const availableBackups =
+      /* istanbul ignore next */
+      (cov_75ry0jwya().s[36]++, await this.listAvailableBackups());
+      const backup =
+      /* istanbul ignore next */
+      (cov_75ry0jwya().s[37]++, availableBackups.find(b => {
+        /* istanbul ignore next */
+        cov_75ry0jwya().f[7]++;
+        cov_75ry0jwya().s[38]++;
+        return b.backup_id === backup_id;
+      }));
+      /* istanbul ignore next */
+      cov_75ry0jwya().s[39]++;
+      if (!backup) {
+        /* istanbul ignore next */
+        cov_75ry0jwya().b[5][0]++;
+        cov_75ry0jwya().s[40]++;
+        throw new Error(`Backup ${backup_id} not found`);
+      } else
+      /* istanbul ignore next */
+      {
+        cov_75ry0jwya().b[5][1]++;
+      }
+      // In a real implementation, this would actually verify the backup file
+      const validation =
+      /* istanbul ignore next */
+      (cov_75ry0jwya().s[41]++, {
+        valid: true,
+        checksum_match: true,
+        file_accessible: true,
+        encryption_status: "valid",
+        estimated_restore_size: backup.file_size,
+        issues: []
+      });
+      // Simulate some potential issues
+      /* istanbul ignore next */
+      cov_75ry0jwya().s[42]++;
+      if (backup.created_at < new Date(Date.now() - 25 * 24 * 60 * 60 * 1000)) {
+        /* istanbul ignore next */
+        cov_75ry0jwya().b[6][0]++;
+        cov_75ry0jwya().s[43]++;
+        validation.issues.push("Backup is older than 25 days - consider using a more recent backup");
+      } else
+      /* istanbul ignore next */
+      {
+        cov_75ry0jwya().b[6][1]++;
+      }
+      cov_75ry0jwya().s[44]++;
+      return validation;
+    } catch (error) {
+      /* istanbul ignore next */
+      cov_75ry0jwya().s[45]++;
+      throw new Error(`Failed to validate backup integrity: ${error}`);
+    }
+  }
+  // ========================= DISASTER RECOVERY =========================
+  /**
+   * Get disaster recovery plan
+   */
+  static async getDisasterRecoveryPlan() {
+    /* istanbul ignore next */
+    cov_75ry0jwya().f[8]++;
+    cov_75ry0jwya().s[46]++;
+    return {
+      recovery_objectives: {
+        rto: "4 hours",
+        // System must be restored within 4 hours
+        rpo: "1 hour" // Maximum 1 hour of data loss acceptable
+      },
+      backup_strategy: {
+        frequency: "Daily full backups at 2 AM, incremental every 6 hours",
+        retention: "30 days for daily backups, 90 days for weekly backups",
+        storage_locations: ["Primary encrypted cloud storage", "Secondary geo-replicated storage"]
+      },
+      escalation_procedures: [{
+        level: 1,
+        description: "Technical team response",
+        contacts: ["tech-team@company.com"],
+        estimated_time: "15 minutes"
+      }, {
+        level: 2,
+        description: "Management escalation",
+        contacts: ["management@company.com"],
+        estimated_time: "1 hour"
+      }, {
+        level: 3,
+        description: "Executive escalation",
+        contacts: ["executives@company.com"],
+        estimated_time: "2 hours"
+      }],
+      recovery_steps: [{
+        step: 1,
+        description: "Assess the scope of the disaster",
+        estimated_time: "30 minutes",
+        dependencies: []
+      }, {
+        step: 2,
+        description: "Activate disaster recovery team",
+        estimated_time: "15 minutes",
+        dependencies: ["Step 1"]
+      }, {
+        step: 3,
+        description: "Identify and validate most recent backup",
+        estimated_time: "30 minutes",
+        dependencies: ["Step 2"]
+      }, {
+        step: 4,
+        description: "Restore infrastructure and database",
+        estimated_time: "2 hours",
+        dependencies: ["Step 3"]
+      }, {
+        step: 5,
+        description: "Validate data integrity and system functionality",
+        estimated_time: "1 hour",
+        dependencies: ["Step 4"]
+      }, {
+        step: 6,
+        description: "Notify stakeholders and resume operations",
+        estimated_time: "15 minutes",
+        dependencies: ["Step 5"]
+      }]
+    };
+  }
+  // ========================= HELPER METHODS =========================
+  /**
+   * Estimate backup time based on type
+   */
+  static estimateBackupTime(backupType) {
+    /* istanbul ignore next */
+    cov_75ry0jwya().f[9]++;
+    cov_75ry0jwya().s[47]++;
+    switch (backupType) {
+      case "full":
+        /* istanbul ignore next */
+        cov_75ry0jwya().b[7][0]++;
+        {
+          /* istanbul ignore next */
+          cov_75ry0jwya().s[48]++;
+          return 45 * 60 * 1000;
+        }
+      // 45 minutes
+      case "incremental":
+        /* istanbul ignore next */
+        cov_75ry0jwya().b[7][1]++;
+        {
+          /* istanbul ignore next */
+          cov_75ry0jwya().s[49]++;
+          return 15 * 60 * 1000;
+        }
+      // 15 minutes
+      case "payment_only":
+        /* istanbul ignore next */
+        cov_75ry0jwya().b[7][2]++;
+        {
+          /* istanbul ignore next */
+          cov_75ry0jwya().s[50]++;
+          return 10 * 60 * 1000;
+        }
+      // 10 minutes
+      default:
+        /* istanbul ignore next */
+        cov_75ry0jwya().b[7][3]++;
+        {
+          /* istanbul ignore next */
+          cov_75ry0jwya().s[51]++;
+          return 30 * 60 * 1000;
+        }
+      // 30 minutes default
+    }
+  }
+  /**
+   * Estimate restore time based on type
+   */
+  static estimateRestoreTime(restoreType) {
+    /* istanbul ignore next */
+    cov_75ry0jwya().f[10]++;
+    cov_75ry0jwya().s[52]++;
+    switch (restoreType) {
+      case "full":
+        /* istanbul ignore next */
+        cov_75ry0jwya().b[8][0]++;
+        {
+          /* istanbul ignore next */
+          cov_75ry0jwya().s[53]++;
+          return 60 * 60 * 1000;
+        }
+      // 1 hour
+      case "payment_only":
+        /* istanbul ignore next */
+        cov_75ry0jwya().b[8][1]++;
+        {
+          /* istanbul ignore next */
+          cov_75ry0jwya().s[54]++;
+          return 20 * 60 * 1000;
+        }
+      // 20 minutes
+      case "specific_campus":
+        /* istanbul ignore next */
+        cov_75ry0jwya().b[8][2]++;
+        {
+          /* istanbul ignore next */
+          cov_75ry0jwya().s[55]++;
+          return 30 * 60 * 1000;
+        }
+      // 30 minutes
+      default:
+        /* istanbul ignore next */
+        cov_75ry0jwya().b[8][3]++;
+        {
+          /* istanbul ignore next */
+          cov_75ry0jwya().s[56]++;
+          return 45 * 60 * 1000;
+        }
+      // 45 minutes default
+    }
+  }
+  /**
+   * Process backup job (mock implementation)
+   */
+  static async processBackupJob(job) {
+    /* istanbul ignore next */
+    cov_75ry0jwya().f[11]++;
+    cov_75ry0jwya().s[57]++;
+    try {
+      /* istanbul ignore next */
+      cov_75ry0jwya().s[58]++;
+      // Simulate backup processing
+      job.status = "in_progress";
+      // Mock progress updates
+      const intervals =
+      /* istanbul ignore next */
+      (cov_75ry0jwya().s[59]++, 10);
+      const progressIncrement =
+      /* istanbul ignore next */
+      (cov_75ry0jwya().s[60]++, 100 / intervals);
+      /* istanbul ignore next */
+      cov_75ry0jwya().s[61]++;
+      for (let i =
+      /* istanbul ignore next */
+      (cov_75ry0jwya().s[62]++, 0); i < intervals; i++) {
+        /* istanbul ignore next */
+        cov_75ry0jwya().s[63]++;
+        await new Promise(resolve => {
+          /* istanbul ignore next */
+          cov_75ry0jwya().f[12]++;
+          cov_75ry0jwya().s[64]++;
+          return setTimeout(resolve, 1000);
+        });
+        /* istanbul ignore next */
+        cov_75ry0jwya().s[65]++;
+        job.progress = Math.min(100, (i + 1) * progressIncrement);
+      }
+      /* istanbul ignore next */
+      cov_75ry0jwya().s[66]++;
+      job.status = "completed";
+      /* istanbul ignore next */
+      cov_75ry0jwya().s[67]++;
+      job.completed_at = new Date();
+      /* istanbul ignore next */
+      cov_75ry0jwya().s[68]++;
+      job.file_size = Math.floor(Math.random() * 1000000000) + 500000000; // Random size between 500MB and 1.5GB
+    } catch (error) {
+      /* istanbul ignore next */
+      cov_75ry0jwya().s[69]++;
+      job.status = "failed";
+      /* istanbul ignore next */
+      cov_75ry0jwya().s[70]++;
+      job.error_message = error instanceof Error ?
+      /* istanbul ignore next */
+      (cov_75ry0jwya().b[9][0]++, error.message) :
+      /* istanbul ignore next */
+      (cov_75ry0jwya().b[9][1]++, "Unknown error");
+    }
+  }
+}

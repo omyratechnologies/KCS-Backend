@@ -1,0 +1,306 @@
+4a8c01901674fe12284f944137a30c6c
+/* istanbul ignore next */
+function cov_2gwt3c6gwf() {
+  var path = "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/models/student_performance.model.ts";
+  var hash = "2182f27873e6ef1b34716bcd8b57c57c683e3221";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/models/student_performance.model.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 33
+        },
+        end: {
+          line: 15,
+          column: 2
+        }
+      },
+      "1": {
+        start: {
+          line: 13,
+          column: 45
+        },
+        end: {
+          line: 13,
+          column: 55
+        }
+      },
+      "2": {
+        start: {
+          line: 14,
+          column: 45
+        },
+        end: {
+          line: 14,
+          column: 55
+        }
+      },
+      "3": {
+        start: {
+          line: 16,
+          column: 0
+        },
+        end: {
+          line: 16,
+          column: 68
+        }
+      },
+      "4": {
+        start: {
+          line: 17,
+          column: 0
+        },
+        end: {
+          line: 17,
+          column: 70
+        }
+      },
+      "5": {
+        start: {
+          line: 18,
+          column: 0
+        },
+        end: {
+          line: 18,
+          column: 76
+        }
+      },
+      "6": {
+        start: {
+          line: 19,
+          column: 0
+        },
+        end: {
+          line: 19,
+          column: 67
+        }
+      },
+      "7": {
+        start: {
+          line: 20,
+          column: 0
+        },
+        end: {
+          line: 20,
+          column: 66
+        }
+      },
+      "8": {
+        start: {
+          line: 21,
+          column: 0
+        },
+        end: {
+          line: 23,
+          column: 2
+        }
+      },
+      "9": {
+        start: {
+          line: 24,
+          column: 0
+        },
+        end: {
+          line: 26,
+          column: 2
+        }
+      },
+      "10": {
+        start: {
+          line: 27,
+          column: 27
+        },
+        end: {
+          line: 27,
+          column: 89
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 13,
+            column: 39
+          },
+          end: {
+            line: 13,
+            column: 40
+          }
+        },
+        loc: {
+          start: {
+            line: 13,
+            column: 45
+          },
+          end: {
+            line: 13,
+            column: 55
+          }
+        },
+        line: 13
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 14,
+            column: 39
+          },
+          end: {
+            line: 14,
+            column: 40
+          }
+        },
+        loc: {
+          start: {
+            line: 14,
+            column: 45
+          },
+          end: {
+            line: 14,
+            column: 55
+          }
+        },
+        line: 14
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0
+    },
+    b: {},
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "2182f27873e6ef1b34716bcd8b57c57c683e3221"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_2gwt3c6gwf = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_2gwt3c6gwf();
+import { Schema } from "ottoman";
+import { ottoman } from "../libs/db";
+const StudentPerformanceSchema =
+/* istanbul ignore next */
+(cov_2gwt3c6gwf().s[0]++, new Schema({
+  campus_id: {
+    type: String,
+    required: true
+  },
+  student_id: {
+    type: String,
+    required: true
+  },
+  academic_year: {
+    type: String,
+    required: true
+  },
+  semester: {
+    type: String,
+    required: true
+  },
+  class_id: {
+    type: String,
+    required: true
+  },
+  performance_data: {
+    type: Object,
+    required: true
+  },
+  attendance: {
+    type: Object,
+    required: true
+  },
+  quiz_performance: {
+    type: Object,
+    required: true
+  },
+  assignment_performance: {
+    type: Object,
+    required: true
+  },
+  created_at: {
+    type: Date,
+    default: () => {
+      /* istanbul ignore next */
+      cov_2gwt3c6gwf().f[0]++;
+      cov_2gwt3c6gwf().s[1]++;
+      return new Date();
+    }
+  },
+  updated_at: {
+    type: Date,
+    default: () => {
+      /* istanbul ignore next */
+      cov_2gwt3c6gwf().f[1]++;
+      cov_2gwt3c6gwf().s[2]++;
+      return new Date();
+    }
+  }
+}));
+/* istanbul ignore next */
+cov_2gwt3c6gwf().s[3]++;
+StudentPerformanceSchema.index.findByCampusId = {
+  by: "campus_id"
+};
+/* istanbul ignore next */
+cov_2gwt3c6gwf().s[4]++;
+StudentPerformanceSchema.index.findByStudentId = {
+  by: "student_id"
+};
+/* istanbul ignore next */
+cov_2gwt3c6gwf().s[5]++;
+StudentPerformanceSchema.index.findByAcademicYear = {
+  by: "academic_year"
+};
+/* istanbul ignore next */
+cov_2gwt3c6gwf().s[6]++;
+StudentPerformanceSchema.index.findBySemester = {
+  by: "semester"
+};
+/* istanbul ignore next */
+cov_2gwt3c6gwf().s[7]++;
+StudentPerformanceSchema.index.findByClassId = {
+  by: "class_id"
+};
+/* istanbul ignore next */
+cov_2gwt3c6gwf().s[8]++;
+StudentPerformanceSchema.index.findByStudentIdAndSemester = {
+  by: ["student_id", "semester"]
+};
+/* istanbul ignore next */
+cov_2gwt3c6gwf().s[9]++;
+StudentPerformanceSchema.index.findByStudentIdAndAcademicYear = {
+  by: ["student_id", "academic_year"]
+};
+const StudentPerformance =
+/* istanbul ignore next */
+(cov_2gwt3c6gwf().s[10]++, ottoman.model("student_performance", StudentPerformanceSchema));
+export { StudentPerformance };

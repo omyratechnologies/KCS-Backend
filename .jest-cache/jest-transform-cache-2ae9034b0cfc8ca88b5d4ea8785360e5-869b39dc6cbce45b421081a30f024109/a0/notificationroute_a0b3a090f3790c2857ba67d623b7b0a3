@@ -1,0 +1,1128 @@
+156a4096b389e72e9faf8a9840804020
+/* istanbul ignore next */
+function cov_12yechri7a() {
+  var path = "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/routes/notification.route.ts";
+  var hash = "2480f6d13537ee4331775a29eb537020ae51ed68";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/routes/notification.route.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 6,
+          column: 12
+        },
+        end: {
+          line: 6,
+          column: 22
+        }
+      },
+      "1": {
+        start: {
+          line: 8,
+          column: 0
+        },
+        end: {
+          line: 31,
+          column: 124
+        }
+      },
+      "2": {
+        start: {
+          line: 32,
+          column: 0
+        },
+        end: {
+          line: 55,
+          column: 55
+        }
+      },
+      "3": {
+        start: {
+          line: 56,
+          column: 0
+        },
+        end: {
+          line: 88,
+          column: 58
+        }
+      },
+      "4": {
+        start: {
+          line: 89,
+          column: 0
+        },
+        end: {
+          line: 121,
+          column: 114
+        }
+      },
+      "5": {
+        start: {
+          line: 122,
+          column: 0
+        },
+        end: {
+          line: 154,
+          column: 57
+        }
+      },
+      "6": {
+        start: {
+          line: 156,
+          column: 0
+        },
+        end: {
+          line: 179,
+          column: 114
+        }
+      },
+      "7": {
+        start: {
+          line: 180,
+          column: 0
+        },
+        end: {
+          line: 212,
+          column: 50
+        }
+      },
+      "8": {
+        start: {
+          line: 213,
+          column: 0
+        },
+        end: {
+          line: 245,
+          column: 53
+        }
+      },
+      "9": {
+        start: {
+          line: 246,
+          column: 0
+        },
+        end: {
+          line: 278,
+          column: 109
+        }
+      },
+      "10": {
+        start: {
+          line: 279,
+          column: 0
+        },
+        end: {
+          line: 311,
+          column: 52
+        }
+      },
+      "11": {
+        start: {
+          line: 313,
+          column: 0
+        },
+        end: {
+          line: 336,
+          column: 116
+        }
+      },
+      "12": {
+        start: {
+          line: 337,
+          column: 0
+        },
+        end: {
+          line: 360,
+          column: 51
+        }
+      },
+      "13": {
+        start: {
+          line: 361,
+          column: 0
+        },
+        end: {
+          line: 393,
+          column: 54
+        }
+      },
+      "14": {
+        start: {
+          line: 394,
+          column: 0
+        },
+        end: {
+          line: 426,
+          column: 110
+        }
+      },
+      "15": {
+        start: {
+          line: 427,
+          column: 0
+        },
+        end: {
+          line: 459,
+          column: 53
+        }
+      },
+      "16": {
+        start: {
+          line: 461,
+          column: 0
+        },
+        end: {
+          line: 484,
+          column: 118
+        }
+      },
+      "17": {
+        start: {
+          line: 485,
+          column: 0
+        },
+        end: {
+          line: 508,
+          column: 52
+        }
+      },
+      "18": {
+        start: {
+          line: 509,
+          column: 0
+        },
+        end: {
+          line: 541,
+          column: 55
+        }
+      },
+      "19": {
+        start: {
+          line: 542,
+          column: 0
+        },
+        end: {
+          line: 574,
+          column: 111
+        }
+      },
+      "20": {
+        start: {
+          line: 575,
+          column: 0
+        },
+        end: {
+          line: 607,
+          column: 54
+        }
+      },
+      "21": {
+        start: {
+          line: 609,
+          column: 0
+        },
+        end: {
+          line: 632,
+          column: 118
+        }
+      },
+      "22": {
+        start: {
+          line: 633,
+          column: 0
+        },
+        end: {
+          line: 656,
+          column: 52
+        }
+      },
+      "23": {
+        start: {
+          line: 657,
+          column: 0
+        },
+        end: {
+          line: 689,
+          column: 55
+        }
+      },
+      "24": {
+        start: {
+          line: 690,
+          column: 0
+        },
+        end: {
+          line: 722,
+          column: 111
+        }
+      },
+      "25": {
+        start: {
+          line: 723,
+          column: 0
+        },
+        end: {
+          line: 755,
+          column: 54
+        }
+      }
+    },
+    fnMap: {},
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0,
+      "15": 0,
+      "16": 0,
+      "17": 0,
+      "18": 0,
+      "19": 0,
+      "20": 0,
+      "21": 0,
+      "22": 0,
+      "23": 0,
+      "24": 0,
+      "25": 0
+    },
+    f: {},
+    b: {},
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "2480f6d13537ee4331775a29eb537020ae51ed68"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_12yechri7a = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_12yechri7a();
+import { Hono } from "hono";
+import { describeRoute } from "hono-openapi";
+import { resolver, validator as zValidator } from "hono-openapi/zod";
+import { NotificationController } from "@/controllers/notification.controller";
+import { campusWideNotificationSchema, classNotificationSchema, createCampusWideNotificationRequestBodySchema, createCampusWideNotificationResponseSchema, createClassNotificationRequestBodySchema, createClassNotificationResponseSchema, createParentNotificationRequestBodySchema, createParentNotificationResponseSchema, createStudentNotificationRequestBodySchema, createStudentNotificationResponseSchema, createTeacherNotificationRequestBodySchema, createTeacherNotificationResponseSchema, errorResponseSchema, getCampusWideNotificationsResponseSchema, getClassNotificationsResponseSchema, getParentNotificationsResponseSchema, getStudentNotificationsResponseSchema, getTeacherNotificationsResponseSchema, parentNotificationSchema, studentNotificationSchema, teacherNotificationSchema, updateNotificationRequestBodySchema } from "@/schema/notification";
+const app =
+/* istanbul ignore next */
+(cov_12yechri7a().s[0]++, new Hono());
+// Campus Wide Notification Routes
+/* istanbul ignore next */
+cov_12yechri7a().s[1]++;
+app.post("/campus_wide", describeRoute({
+  operationId: "createCampusWideNotification",
+  summary: "Create a campus-wide notification",
+  description: "Creates a new notification that applies to the entire campus",
+  tags: ["Notification"],
+  responses: {
+    200: {
+      description: "Campus-wide notification created successfully",
+      content: {
+        "application/json": {
+          schema: resolver(createCampusWideNotificationResponseSchema)
+        }
+      }
+    },
+    400: {
+      description: "Bad request",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), zValidator("json", createCampusWideNotificationRequestBodySchema), NotificationController.createCampusWideNotification);
+/* istanbul ignore next */
+cov_12yechri7a().s[2]++;
+app.get("/campus_wide/", describeRoute({
+  operationId: "getCampusWideNotifications",
+  summary: "Get all campus-wide notifications",
+  description: "Retrieves all campus-wide notifications for a campus",
+  tags: ["Notification"],
+  responses: {
+    200: {
+      description: "List of campus-wide notifications",
+      content: {
+        "application/json": {
+          schema: resolver(getCampusWideNotificationsResponseSchema)
+        }
+      }
+    },
+    400: {
+      description: "Bad request",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), NotificationController.getCampusWideNotifications);
+/* istanbul ignore next */
+cov_12yechri7a().s[3]++;
+app.get("/campus_wide/:id", describeRoute({
+  operationId: "getCampusWideNotificationById",
+  summary: "Get campus-wide notification by ID",
+  description: "Retrieves a specific campus-wide notification by ID",
+  tags: ["Notification"],
+  parameters: [{
+    name: "id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Notification ID"
+  }],
+  responses: {
+    200: {
+      description: "Campus-wide notification details",
+      content: {
+        "application/json": {
+          schema: resolver(campusWideNotificationSchema)
+        }
+      }
+    },
+    400: {
+      description: "Bad request",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), NotificationController.getCampusWideNotificationById);
+/* istanbul ignore next */
+cov_12yechri7a().s[4]++;
+app.put("/campus_wide/:id", describeRoute({
+  operationId: "updateCampusWideNotification",
+  summary: "Update a campus-wide notification",
+  description: "Updates a specific campus-wide notification by ID",
+  tags: ["Notification"],
+  parameters: [{
+    name: "id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Notification ID"
+  }],
+  responses: {
+    200: {
+      description: "Campus-wide notification updated successfully",
+      content: {
+        "application/json": {
+          schema: resolver(campusWideNotificationSchema)
+        }
+      }
+    },
+    400: {
+      description: "Bad request",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), zValidator("json", updateNotificationRequestBodySchema), NotificationController.updateCampusWideNotification);
+/* istanbul ignore next */
+cov_12yechri7a().s[5]++;
+app.delete("/campus_wide/:id", describeRoute({
+  operationId: "deleteCampusWideNotification",
+  summary: "Delete a campus-wide notification",
+  description: "Deletes a specific campus-wide notification by ID",
+  tags: ["Notification"],
+  parameters: [{
+    name: "id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Notification ID"
+  }],
+  responses: {
+    200: {
+      description: "Campus-wide notification deleted successfully",
+      content: {
+        "application/json": {
+          schema: resolver(campusWideNotificationSchema)
+        }
+      }
+    },
+    400: {
+      description: "Bad request",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), NotificationController.deleteCampusWideNotification);
+// Class Notification Routes
+/* istanbul ignore next */
+cov_12yechri7a().s[6]++;
+app.post("/class", describeRoute({
+  operationId: "createClassNotification",
+  summary: "Create a class notification",
+  description: "Creates a new notification for a specific class",
+  tags: ["Notification"],
+  responses: {
+    200: {
+      description: "Class notification created successfully",
+      content: {
+        "application/json": {
+          schema: resolver(createClassNotificationResponseSchema)
+        }
+      }
+    },
+    400: {
+      description: "Bad request",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), zValidator("json", createClassNotificationRequestBodySchema), NotificationController.createClassNotification);
+/* istanbul ignore next */
+cov_12yechri7a().s[7]++;
+app.get("/class/:class_id", describeRoute({
+  operationId: "getClassNotifications",
+  summary: "Get class notifications",
+  description: "Retrieves all notifications for a specific class",
+  tags: ["Notification"],
+  parameters: [{
+    name: "class_id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Class ID"
+  }],
+  responses: {
+    200: {
+      description: "List of class notifications",
+      content: {
+        "application/json": {
+          schema: resolver(getClassNotificationsResponseSchema)
+        }
+      }
+    },
+    400: {
+      description: "Bad request",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), NotificationController.getClassNotifications);
+/* istanbul ignore next */
+cov_12yechri7a().s[8]++;
+app.get("/class/:id", describeRoute({
+  operationId: "getClassNotificationById",
+  summary: "Get class notification by ID",
+  description: "Retrieves a specific class notification by ID",
+  tags: ["Notification"],
+  parameters: [{
+    name: "id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Notification ID"
+  }],
+  responses: {
+    200: {
+      description: "Class notification details",
+      content: {
+        "application/json": {
+          schema: resolver(classNotificationSchema)
+        }
+      }
+    },
+    400: {
+      description: "Bad request",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), NotificationController.getClassNotificationById);
+/* istanbul ignore next */
+cov_12yechri7a().s[9]++;
+app.put("/class/:id", describeRoute({
+  operationId: "updateClassNotification",
+  summary: "Update a class notification",
+  description: "Updates a specific class notification by ID",
+  tags: ["Notification"],
+  parameters: [{
+    name: "id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Notification ID"
+  }],
+  responses: {
+    200: {
+      description: "Class notification updated successfully",
+      content: {
+        "application/json": {
+          schema: resolver(classNotificationSchema)
+        }
+      }
+    },
+    400: {
+      description: "Bad request",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), zValidator("json", updateNotificationRequestBodySchema), NotificationController.updateClassNotification);
+/* istanbul ignore next */
+cov_12yechri7a().s[10]++;
+app.delete("/class/:id", describeRoute({
+  operationId: "deleteClassNotification",
+  summary: "Delete a class notification",
+  description: "Deletes a specific class notification by ID",
+  tags: ["Notification"],
+  parameters: [{
+    name: "id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Notification ID"
+  }],
+  responses: {
+    200: {
+      description: "Class notification deleted successfully",
+      content: {
+        "application/json": {
+          schema: resolver(classNotificationSchema)
+        }
+      }
+    },
+    400: {
+      description: "Bad request",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), NotificationController.deleteClassNotification);
+// Parent Notification Routes
+/* istanbul ignore next */
+cov_12yechri7a().s[11]++;
+app.post("/parent", describeRoute({
+  operationId: "createParentNotification",
+  summary: "Create a parent notification",
+  description: "Creates a new notification for a specific parent",
+  tags: ["Notification"],
+  responses: {
+    200: {
+      description: "Parent notification created successfully",
+      content: {
+        "application/json": {
+          schema: resolver(createParentNotificationResponseSchema)
+        }
+      }
+    },
+    400: {
+      description: "Bad request",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), zValidator("json", createParentNotificationRequestBodySchema), NotificationController.createParentNotification);
+/* istanbul ignore next */
+cov_12yechri7a().s[12]++;
+app.get("/parent", describeRoute({
+  operationId: "getParentNotifications",
+  summary: "Get parent notifications",
+  description: "Retrieves all notifications for the current parent user",
+  tags: ["Notification"],
+  responses: {
+    200: {
+      description: "List of parent notifications",
+      content: {
+        "application/json": {
+          schema: resolver(getParentNotificationsResponseSchema)
+        }
+      }
+    },
+    400: {
+      description: "Bad request",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), NotificationController.getParentNotifications);
+/* istanbul ignore next */
+cov_12yechri7a().s[13]++;
+app.get("/parent/:id", describeRoute({
+  operationId: "getParentNotificationById",
+  summary: "Get parent notification by ID",
+  description: "Retrieves a specific parent notification by ID",
+  tags: ["Notification"],
+  parameters: [{
+    name: "id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Notification ID"
+  }],
+  responses: {
+    200: {
+      description: "Parent notification details",
+      content: {
+        "application/json": {
+          schema: resolver(parentNotificationSchema)
+        }
+      }
+    },
+    400: {
+      description: "Bad request",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), NotificationController.getParentNotificationById);
+/* istanbul ignore next */
+cov_12yechri7a().s[14]++;
+app.put("/parent/:id", describeRoute({
+  operationId: "updateParentNotification",
+  summary: "Update a parent notification",
+  description: "Updates a specific parent notification by ID",
+  tags: ["Notification"],
+  parameters: [{
+    name: "id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Notification ID"
+  }],
+  responses: {
+    200: {
+      description: "Parent notification updated successfully",
+      content: {
+        "application/json": {
+          schema: resolver(parentNotificationSchema)
+        }
+      }
+    },
+    400: {
+      description: "Bad request",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), zValidator("json", updateNotificationRequestBodySchema), NotificationController.updateParentNotification);
+/* istanbul ignore next */
+cov_12yechri7a().s[15]++;
+app.delete("/parent/:id", describeRoute({
+  operationId: "deleteParentNotification",
+  summary: "Delete a parent notification",
+  description: "Deletes a specific parent notification by ID",
+  tags: ["Notification"],
+  parameters: [{
+    name: "id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Notification ID"
+  }],
+  responses: {
+    200: {
+      description: "Parent notification deleted successfully",
+      content: {
+        "application/json": {
+          schema: resolver(parentNotificationSchema)
+        }
+      }
+    },
+    400: {
+      description: "Bad request",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), NotificationController.deleteParentNotification);
+// Student Notification Routes
+/* istanbul ignore next */
+cov_12yechri7a().s[16]++;
+app.post("/student", describeRoute({
+  operationId: "createStudentNotification",
+  summary: "Create a student notification",
+  description: "Creates a new notification for a specific student",
+  tags: ["Notification"],
+  responses: {
+    200: {
+      description: "Student notification created successfully",
+      content: {
+        "application/json": {
+          schema: resolver(createStudentNotificationResponseSchema)
+        }
+      }
+    },
+    400: {
+      description: "Bad request",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), zValidator("json", createStudentNotificationRequestBodySchema), NotificationController.createStudentNotification);
+/* istanbul ignore next */
+cov_12yechri7a().s[17]++;
+app.get("/student", describeRoute({
+  operationId: "getStudentNotifications",
+  summary: "Get student notifications",
+  description: "Retrieves all notifications for the current student user",
+  tags: ["Notification"],
+  responses: {
+    200: {
+      description: "List of student notifications",
+      content: {
+        "application/json": {
+          schema: resolver(getStudentNotificationsResponseSchema)
+        }
+      }
+    },
+    400: {
+      description: "Bad request",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), NotificationController.getStudentNotifications);
+/* istanbul ignore next */
+cov_12yechri7a().s[18]++;
+app.get("/student/:id", describeRoute({
+  operationId: "getStudentNotificationById",
+  summary: "Get student notification by ID",
+  description: "Retrieves a specific student notification by ID",
+  tags: ["Notification"],
+  parameters: [{
+    name: "id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Notification ID"
+  }],
+  responses: {
+    200: {
+      description: "Student notification details",
+      content: {
+        "application/json": {
+          schema: resolver(studentNotificationSchema)
+        }
+      }
+    },
+    400: {
+      description: "Bad request",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), NotificationController.getStudentNotificationById);
+/* istanbul ignore next */
+cov_12yechri7a().s[19]++;
+app.put("/student/:id", describeRoute({
+  operationId: "updateStudentNotification",
+  summary: "Update a student notification",
+  description: "Updates a specific student notification by ID",
+  tags: ["Notification"],
+  parameters: [{
+    name: "id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Notification ID"
+  }],
+  responses: {
+    200: {
+      description: "Student notification updated successfully",
+      content: {
+        "application/json": {
+          schema: resolver(studentNotificationSchema)
+        }
+      }
+    },
+    400: {
+      description: "Bad request",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), zValidator("json", updateNotificationRequestBodySchema), NotificationController.updateStudentNotification);
+/* istanbul ignore next */
+cov_12yechri7a().s[20]++;
+app.delete("/student/:id", describeRoute({
+  operationId: "deleteStudentNotification",
+  summary: "Delete a student notification",
+  description: "Deletes a specific student notification by ID",
+  tags: ["Notification"],
+  parameters: [{
+    name: "id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Notification ID"
+  }],
+  responses: {
+    200: {
+      description: "Student notification deleted successfully",
+      content: {
+        "application/json": {
+          schema: resolver(studentNotificationSchema)
+        }
+      }
+    },
+    400: {
+      description: "Bad request",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), NotificationController.deleteStudentNotification);
+// Teacher Notification Routes
+/* istanbul ignore next */
+cov_12yechri7a().s[21]++;
+app.post("/teacher", describeRoute({
+  operationId: "createTeacherNotification",
+  summary: "Create a teacher notification",
+  description: "Creates a new notification for a specific teacher",
+  tags: ["Notification"],
+  responses: {
+    200: {
+      description: "Teacher notification created successfully",
+      content: {
+        "application/json": {
+          schema: resolver(createTeacherNotificationResponseSchema)
+        }
+      }
+    },
+    400: {
+      description: "Bad request",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), zValidator("json", createTeacherNotificationRequestBodySchema), NotificationController.createTeacherNotification);
+/* istanbul ignore next */
+cov_12yechri7a().s[22]++;
+app.get("/teacher", describeRoute({
+  operationId: "getTeacherNotifications",
+  summary: "Get teacher notifications",
+  description: "Retrieves all notifications for the current teacher user",
+  tags: ["Notification"],
+  responses: {
+    200: {
+      description: "List of teacher notifications",
+      content: {
+        "application/json": {
+          schema: resolver(getTeacherNotificationsResponseSchema)
+        }
+      }
+    },
+    400: {
+      description: "Bad request",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), NotificationController.getTeacherNotifications);
+/* istanbul ignore next */
+cov_12yechri7a().s[23]++;
+app.get("/teacher/:id", describeRoute({
+  operationId: "getTeacherNotificationById",
+  summary: "Get teacher notification by ID",
+  description: "Retrieves a specific teacher notification by ID",
+  tags: ["Notification"],
+  parameters: [{
+    name: "id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Notification ID"
+  }],
+  responses: {
+    200: {
+      description: "Teacher notification details",
+      content: {
+        "application/json": {
+          schema: resolver(teacherNotificationSchema)
+        }
+      }
+    },
+    400: {
+      description: "Bad request",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), NotificationController.getTeacherNotificationById);
+/* istanbul ignore next */
+cov_12yechri7a().s[24]++;
+app.put("/teacher/:id", describeRoute({
+  operationId: "updateTeacherNotification",
+  summary: "Update a teacher notification",
+  description: "Updates a specific teacher notification by ID",
+  tags: ["Notification"],
+  parameters: [{
+    name: "id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Notification ID"
+  }],
+  responses: {
+    200: {
+      description: "Teacher notification updated successfully",
+      content: {
+        "application/json": {
+          schema: resolver(teacherNotificationSchema)
+        }
+      }
+    },
+    400: {
+      description: "Bad request",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), zValidator("json", updateNotificationRequestBodySchema), NotificationController.updateTeacherNotification);
+/* istanbul ignore next */
+cov_12yechri7a().s[25]++;
+app.delete("/teacher/:id", describeRoute({
+  operationId: "deleteTeacherNotification",
+  summary: "Delete a teacher notification",
+  description: "Deletes a specific teacher notification by ID",
+  tags: ["Notification"],
+  parameters: [{
+    name: "id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Notification ID"
+  }],
+  responses: {
+    200: {
+      description: "Teacher notification deleted successfully",
+      content: {
+        "application/json": {
+          schema: resolver(teacherNotificationSchema)
+        }
+      }
+    },
+    400: {
+      description: "Bad request",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), NotificationController.deleteTeacherNotification);
+export default app;

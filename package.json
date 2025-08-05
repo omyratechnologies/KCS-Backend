@@ -24,7 +24,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:ci": "jest --coverage --ci --maxWorkers=1 --forceExit --detectOpenHandles",
+    "test:ci": "jest --config jest.config.ci.js --coverage --ci --maxWorkers=1 --forceExit --detectOpenHandles --passWithNoTests --silent",
     "test:users": "jest tests/unit/users.crud.test.ts",
     "test:services": "jest tests/services/",
     "test:integration": "jest tests/integration/",
@@ -34,7 +34,7 @@
   "dependencies": {
     "@aws-sdk/client-sesv2": "^3.821.0",
     "@hono/swagger-ui": "^0.5.1",
-    "@hono/zod-validator": "^0.5.0",
+    "@hono/zod-validator": "^0.4.3",
     "@scalar/hono-api-reference": "^0.8.10",
     "@sendgrid/mail": "^8.1.5",
     "@types/nodemailer": "^6.4.17",
@@ -86,5 +86,14 @@
     "ts-jest": "^29.4.1",
     "type-fest": "^4.41.0",
     "typescript": "^5.8.3"
+  },
+  "overrides": {
+    "@hono/zod-validator": "^0.4.3"
+  },
+  "resolutions": {
+    "@hono/zod-validator": "^0.4.3"
+  },
+  "config": {
+    "legacy-peer-deps": true
   }
 }

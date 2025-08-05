@@ -1,0 +1,656 @@
+60acf3c16fbbefe43fa1707f1b4feaf9
+/* istanbul ignore next */
+function cov_ihvvqzyt2() {
+  var path = "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/routes/library.route.ts";
+  var hash = "880a01c81c40829b847c2c18c5d9c80931a96205";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/routes/library.route.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 6,
+          column: 12
+        },
+        end: {
+          line: 6,
+          column: 22
+        }
+      },
+      "1": {
+        start: {
+          line: 8,
+          column: 0
+        },
+        end: {
+          line: 36,
+          column: 89
+        }
+      },
+      "2": {
+        start: {
+          line: 37,
+          column: 0
+        },
+        end: {
+          line: 65,
+          column: 39
+        }
+      },
+      "3": {
+        start: {
+          line: 66,
+          column: 0
+        },
+        end: {
+          line: 103,
+          column: 38
+        }
+      },
+      "4": {
+        start: {
+          line: 104,
+          column: 0
+        },
+        end: {
+          line: 141,
+          column: 89
+        }
+      },
+      "5": {
+        start: {
+          line: 142,
+          column: 0
+        },
+        end: {
+          line: 179,
+          column: 37
+        }
+      },
+      "6": {
+        start: {
+          line: 181,
+          column: 0
+        },
+        end: {
+          line: 209,
+          column: 99
+        }
+      },
+      "7": {
+        start: {
+          line: 210,
+          column: 0
+        },
+        end: {
+          line: 238,
+          column: 43
+        }
+      },
+      "8": {
+        start: {
+          line: 239,
+          column: 0
+        },
+        end: {
+          line: 276,
+          column: 43
+        }
+      },
+      "9": {
+        start: {
+          line: 277,
+          column: 0
+        },
+        end: {
+          line: 314,
+          column: 99
+        }
+      },
+      "10": {
+        start: {
+          line: 315,
+          column: 0
+        },
+        end: {
+          line: 352,
+          column: 42
+        }
+      },
+      "11": {
+        start: {
+          line: 353,
+          column: 0
+        },
+        end: {
+          line: 390,
+          column: 47
+        }
+      },
+      "12": {
+        start: {
+          line: 391,
+          column: 0
+        },
+        end: {
+          line: 428,
+          column: 47
+        }
+      }
+    },
+    fnMap: {},
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0
+    },
+    f: {},
+    b: {},
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "880a01c81c40829b847c2c18c5d9c80931a96205"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_ihvvqzyt2 = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_ihvvqzyt2();
+import { Hono } from "hono";
+import { describeRoute } from "hono-openapi";
+import { resolver, validator as zValidator } from "hono-openapi/zod";
+import { LibraryController } from "@/controllers/library.controller";
+import { createLibraryIssueRequestBodySchema, createLibraryIssueResponseSchema, createLibraryRequestBodySchema, createLibraryResponseSchema, deleteLibraryIssueResponseSchema, deleteLibraryResponseSchema, getLibrariesResponseSchema, getLibraryIssuesResponseSchema, libraryIssueSchema, librarySchema, updateLibraryIssueRequestBodySchema, updateLibraryIssueResponseSchema, updateLibraryRequestBodySchema, updateLibraryResponseSchema } from "@/schema/library";
+const app =
+/* istanbul ignore next */
+(cov_ihvvqzyt2().s[0]++, new Hono());
+// Library (Book) routes
+/* istanbul ignore next */
+cov_ihvvqzyt2().s[1]++;
+app.post("/", describeRoute({
+  operationId: "createLibrary",
+  summary: "Create a new book",
+  description: "Adds a new book to the library",
+  tags: ["Library"],
+  responses: {
+    200: {
+      description: "Book created successfully",
+      content: {
+        "application/json": {
+          schema: resolver(createLibraryResponseSchema)
+        }
+      }
+    },
+    500: {
+      description: "Server error",
+      content: {
+        "application/json": {
+          schema: {
+            type: "object",
+            properties: {
+              data: {
+                type: "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}), zValidator("json", createLibraryRequestBodySchema), LibraryController.createLibrary);
+/* istanbul ignore next */
+cov_ihvvqzyt2().s[2]++;
+app.get("/", describeRoute({
+  operationId: "getAllLibraries",
+  summary: "Get all books",
+  description: "Retrieves all books in the library",
+  tags: ["Library"],
+  responses: {
+    200: {
+      description: "List of books",
+      content: {
+        "application/json": {
+          schema: resolver(getLibrariesResponseSchema)
+        }
+      }
+    },
+    500: {
+      description: "Server error",
+      content: {
+        "application/json": {
+          schema: {
+            type: "object",
+            properties: {
+              data: {
+                type: "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}), LibraryController.getAllLibraries);
+/* istanbul ignore next */
+cov_ihvvqzyt2().s[3]++;
+app.get("/i/:id", describeRoute({
+  operationId: "getLibraryById",
+  summary: "Get book by ID",
+  description: "Retrieves a specific book by ID",
+  tags: ["Library"],
+  parameters: [{
+    name: "id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Book ID"
+  }],
+  responses: {
+    200: {
+      description: "Book details",
+      content: {
+        "application/json": {
+          schema: resolver(librarySchema)
+        }
+      }
+    },
+    500: {
+      description: "Server error",
+      content: {
+        "application/json": {
+          schema: {
+            type: "object",
+            properties: {
+              data: {
+                type: "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}), LibraryController.getLibraryById);
+/* istanbul ignore next */
+cov_ihvvqzyt2().s[4]++;
+app.patch("/:id", describeRoute({
+  operationId: "updateLibrary",
+  summary: "Update a book",
+  description: "Updates a specific book by ID",
+  tags: ["Library"],
+  parameters: [{
+    name: "id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Book ID"
+  }],
+  responses: {
+    200: {
+      description: "Book updated successfully",
+      content: {
+        "application/json": {
+          schema: resolver(updateLibraryResponseSchema)
+        }
+      }
+    },
+    500: {
+      description: "Server error",
+      content: {
+        "application/json": {
+          schema: {
+            type: "object",
+            properties: {
+              data: {
+                type: "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}), zValidator("json", updateLibraryRequestBodySchema), LibraryController.updateLibrary);
+/* istanbul ignore next */
+cov_ihvvqzyt2().s[5]++;
+app.delete("/:id", describeRoute({
+  operationId: "deleteLibrary",
+  summary: "Delete a book",
+  description: "Deletes a specific book by ID",
+  tags: ["Library"],
+  parameters: [{
+    name: "id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Book ID"
+  }],
+  responses: {
+    200: {
+      description: "Book deleted successfully",
+      content: {
+        "application/json": {
+          schema: resolver(deleteLibraryResponseSchema)
+        }
+      }
+    },
+    500: {
+      description: "Server error",
+      content: {
+        "application/json": {
+          schema: {
+            type: "object",
+            properties: {
+              data: {
+                type: "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}), LibraryController.deleteLibrary);
+// Library Issue routes
+/* istanbul ignore next */
+cov_ihvvqzyt2().s[6]++;
+app.post("/issue", describeRoute({
+  operationId: "createLibraryIssue",
+  summary: "Issue a book",
+  description: "Creates a new book issue record when a user borrows a book",
+  tags: ["Library"],
+  responses: {
+    200: {
+      description: "Book issued successfully",
+      content: {
+        "application/json": {
+          schema: resolver(createLibraryIssueResponseSchema)
+        }
+      }
+    },
+    500: {
+      description: "Server error",
+      content: {
+        "application/json": {
+          schema: {
+            type: "object",
+            properties: {
+              data: {
+                type: "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}), zValidator("json", createLibraryIssueRequestBodySchema), LibraryController.createLibraryIssue);
+/* istanbul ignore next */
+cov_ihvvqzyt2().s[7]++;
+app.get("/issue", describeRoute({
+  operationId: "getAllLibraryIssues",
+  summary: "Get all book issues",
+  description: "Retrieves all book issue records",
+  tags: ["Library"],
+  responses: {
+    200: {
+      description: "List of book issues",
+      content: {
+        "application/json": {
+          schema: resolver(getLibraryIssuesResponseSchema)
+        }
+      }
+    },
+    500: {
+      description: "Server error",
+      content: {
+        "application/json": {
+          schema: {
+            type: "object",
+            properties: {
+              data: {
+                type: "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}), LibraryController.getAllLibraryIssues);
+/* istanbul ignore next */
+cov_ihvvqzyt2().s[8]++;
+app.get("/issue/:id", describeRoute({
+  operationId: "getLibraryIssueById",
+  summary: "Get book issue by ID",
+  description: "Retrieves a specific book issue record by ID",
+  tags: ["Library"],
+  parameters: [{
+    name: "id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Issue ID"
+  }],
+  responses: {
+    200: {
+      description: "Book issue details",
+      content: {
+        "application/json": {
+          schema: resolver(libraryIssueSchema)
+        }
+      }
+    },
+    500: {
+      description: "Server error",
+      content: {
+        "application/json": {
+          schema: {
+            type: "object",
+            properties: {
+              data: {
+                type: "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}), LibraryController.getLibraryIssueById);
+/* istanbul ignore next */
+cov_ihvvqzyt2().s[9]++;
+app.patch("/issue/:id", describeRoute({
+  operationId: "updateLibraryIssue",
+  summary: "Update a book issue",
+  description: "Updates a specific book issue record by ID (e.g., when returning a book)",
+  tags: ["Library"],
+  parameters: [{
+    name: "id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Issue ID"
+  }],
+  responses: {
+    200: {
+      description: "Book issue updated successfully",
+      content: {
+        "application/json": {
+          schema: resolver(updateLibraryIssueResponseSchema)
+        }
+      }
+    },
+    500: {
+      description: "Server error",
+      content: {
+        "application/json": {
+          schema: {
+            type: "object",
+            properties: {
+              data: {
+                type: "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}), zValidator("json", updateLibraryIssueRequestBodySchema), LibraryController.updateLibraryIssue);
+/* istanbul ignore next */
+cov_ihvvqzyt2().s[10]++;
+app.delete("/issue/:id", describeRoute({
+  operationId: "deleteLibraryIssue",
+  summary: "Delete a book issue",
+  description: "Deletes a specific book issue record by ID",
+  tags: ["Library"],
+  parameters: [{
+    name: "id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Issue ID"
+  }],
+  responses: {
+    200: {
+      description: "Book issue deleted successfully",
+      content: {
+        "application/json": {
+          schema: resolver(deleteLibraryIssueResponseSchema)
+        }
+      }
+    },
+    500: {
+      description: "Server error",
+      content: {
+        "application/json": {
+          schema: {
+            type: "object",
+            properties: {
+              data: {
+                type: "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}), LibraryController.deleteLibraryIssue);
+/* istanbul ignore next */
+cov_ihvvqzyt2().s[11]++;
+app.get("/issue/user/:user_id", describeRoute({
+  operationId: "getLibraryIssueByUserId",
+  summary: "Get book issues by user ID",
+  description: "Retrieves all book issue records for a specific user",
+  tags: ["Library"],
+  parameters: [{
+    name: "user_id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "User ID"
+  }],
+  responses: {
+    200: {
+      description: "List of user's book issues",
+      content: {
+        "application/json": {
+          schema: resolver(getLibraryIssuesResponseSchema)
+        }
+      }
+    },
+    500: {
+      description: "Server error",
+      content: {
+        "application/json": {
+          schema: {
+            type: "object",
+            properties: {
+              data: {
+                type: "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}), LibraryController.getLibraryIssueByUserId);
+/* istanbul ignore next */
+cov_ihvvqzyt2().s[12]++;
+app.get("/issue/book/:book_id", describeRoute({
+  operationId: "getLibraryIssueByBookId",
+  summary: "Get book issues by book ID",
+  description: "Retrieves all issue records for a specific book",
+  tags: ["Library"],
+  parameters: [{
+    name: "book_id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Book ID"
+  }],
+  responses: {
+    200: {
+      description: "List of book's issue records",
+      content: {
+        "application/json": {
+          schema: resolver(getLibraryIssuesResponseSchema)
+        }
+      }
+    },
+    500: {
+      description: "Server error",
+      content: {
+        "application/json": {
+          schema: {
+            type: "object",
+            properties: {
+              data: {
+                type: "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}), LibraryController.getLibraryIssueByBookId);
+export default app;

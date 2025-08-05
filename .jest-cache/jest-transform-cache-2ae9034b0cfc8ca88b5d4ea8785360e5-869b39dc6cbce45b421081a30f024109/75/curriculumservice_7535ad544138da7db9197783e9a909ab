@@ -1,0 +1,440 @@
+c8ba1bee0bc3bb00f92ac93c7900f806
+/* istanbul ignore next */
+function cov_2mz4gm0z1c() {
+  var path = "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/services/curriculum.service.ts";
+  var hash = "0293cc8a96a46ec13bbd17f169500ce23071d87f";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/services/curriculum.service.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 5,
+          column: 0
+        },
+        end: {
+          line: 5,
+          column: 23
+        }
+      },
+      "1": {
+        start: {
+          line: 7,
+          column: 0
+        },
+        end: {
+          line: 16,
+          column: 2
+        }
+      },
+      "2": {
+        start: {
+          line: 8,
+          column: 4
+        },
+        end: {
+          line: 15,
+          column: 7
+        }
+      },
+      "3": {
+        start: {
+          line: 18,
+          column: 0
+        },
+        end: {
+          line: 20,
+          column: 2
+        }
+      },
+      "4": {
+        start: {
+          line: 19,
+          column: 4
+        },
+        end: {
+          line: 19,
+          column: 41
+        }
+      },
+      "5": {
+        start: {
+          line: 22,
+          column: 0
+        },
+        end: {
+          line: 35,
+          column: 2
+        }
+      },
+      "6": {
+        start: {
+          line: 23,
+          column: 23
+        },
+        end: {
+          line: 30,
+          column: 6
+        }
+      },
+      "7": {
+        start: {
+          line: 31,
+          column: 4
+        },
+        end: {
+          line: 33,
+          column: 5
+        }
+      },
+      "8": {
+        start: {
+          line: 32,
+          column: 8
+        },
+        end: {
+          line: 32,
+          column: 18
+        }
+      },
+      "9": {
+        start: {
+          line: 34,
+          column: 4
+        },
+        end: {
+          line: 34,
+          column: 27
+        }
+      },
+      "10": {
+        start: {
+          line: 37,
+          column: 0
+        },
+        end: {
+          line: 39,
+          column: 2
+        }
+      },
+      "11": {
+        start: {
+          line: 38,
+          column: 4
+        },
+        end: {
+          line: 38,
+          column: 111
+        }
+      },
+      "12": {
+        start: {
+          line: 41,
+          column: 0
+        },
+        end: {
+          line: 43,
+          column: 2
+        }
+      },
+      "13": {
+        start: {
+          line: 42,
+          column: 4
+        },
+        end: {
+          line: 42,
+          column: 65
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 7,
+            column: 37
+          },
+          end: {
+            line: 7,
+            column: 38
+          }
+        },
+        loc: {
+          start: {
+            line: 7,
+            column: 93
+          },
+          end: {
+            line: 16,
+            column: 1
+          }
+        },
+        line: 7
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 18,
+            column: 38
+          },
+          end: {
+            line: 18,
+            column: 39
+          }
+        },
+        loc: {
+          start: {
+            line: 18,
+            column: 52
+          },
+          end: {
+            line: 20,
+            column: 1
+          }
+        },
+        line: 18
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 22,
+            column: 45
+          },
+          end: {
+            line: 22,
+            column: 46
+          }
+        },
+        loc: {
+          start: {
+            line: 22,
+            column: 66
+          },
+          end: {
+            line: 35,
+            column: 1
+          }
+        },
+        line: 22
+      },
+      "3": {
+        name: "(anonymous_3)",
+        decl: {
+          start: {
+            line: 37,
+            column: 41
+          },
+          end: {
+            line: 37,
+            column: 42
+          }
+        },
+        loc: {
+          start: {
+            line: 37,
+            column: 61
+          },
+          end: {
+            line: 39,
+            column: 1
+          }
+        },
+        line: 37
+      },
+      "4": {
+        name: "(anonymous_4)",
+        decl: {
+          start: {
+            line: 41,
+            column: 41
+          },
+          end: {
+            line: 41,
+            column: 42
+          }
+        },
+        loc: {
+          start: {
+            line: 41,
+            column: 55
+          },
+          end: {
+            line: 43,
+            column: 1
+          }
+        },
+        line: 41
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 31,
+            column: 4
+          },
+          end: {
+            line: 33,
+            column: 5
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 31,
+            column: 4
+          },
+          end: {
+            line: 33,
+            column: 5
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 31
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0
+    },
+    b: {
+      "0": [0, 0]
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "0293cc8a96a46ec13bbd17f169500ce23071d87f"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_2mz4gm0z1c = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_2mz4gm0z1c();
+var _a;
+import { Curriculum } from "@/models/curriculum.model";
+export class CurriculumService {}
+/* istanbul ignore next */
+cov_2mz4gm0z1c().s[0]++;
+_a = CurriculumService;
+// Create
+/* istanbul ignore next */
+cov_2mz4gm0z1c().s[1]++;
+CurriculumService.createCurriculum = async ({
+  campus_id,
+  name,
+  description,
+  meta_data
+}) => {
+  /* istanbul ignore next */
+  cov_2mz4gm0z1c().f[0]++;
+  cov_2mz4gm0z1c().s[2]++;
+  return await Curriculum.create({
+    campus_id,
+    name,
+    description,
+    meta_data,
+    is_active: true,
+    is_deleted: false
+  });
+};
+// Read by ID
+/* istanbul ignore next */
+cov_2mz4gm0z1c().s[3]++;
+CurriculumService.getCurriculumById = async id => {
+  /* istanbul ignore next */
+  cov_2mz4gm0z1c().f[1]++;
+  cov_2mz4gm0z1c().s[4]++;
+  return await Curriculum.findById(id);
+};
+// Get all by campus id
+/* istanbul ignore next */
+cov_2mz4gm0z1c().s[5]++;
+CurriculumService.getCurriculumsByCampusId = async campus_id => {
+  /* istanbul ignore next */
+  cov_2mz4gm0z1c().f[2]++;
+  const curriculum =
+  /* istanbul ignore next */
+  (cov_2mz4gm0z1c().s[6]++, await Curriculum.find({
+    campus_id: campus_id,
+    is_deleted: false
+  }, {
+    sort: {
+      updated_at: "DESC"
+    }
+  }));
+  /* istanbul ignore next */
+  cov_2mz4gm0z1c().s[7]++;
+  if (curriculum.rows.length === 0) {
+    /* istanbul ignore next */
+    cov_2mz4gm0z1c().b[0][0]++;
+    cov_2mz4gm0z1c().s[8]++;
+    return [];
+  } else
+  /* istanbul ignore next */
+  {
+    cov_2mz4gm0z1c().b[0][1]++;
+  }
+  cov_2mz4gm0z1c().s[9]++;
+  return curriculum.rows;
+};
+// Update by ID
+/* istanbul ignore next */
+cov_2mz4gm0z1c().s[10]++;
+CurriculumService.updateCurriculumById = async (id, data) => {
+  /* istanbul ignore next */
+  cov_2mz4gm0z1c().f[3]++;
+  cov_2mz4gm0z1c().s[11]++;
+  return await Curriculum.updateById(id, Object.assign(Object.assign({}, data), {
+    updated_at: new Date()
+  }));
+};
+// Delete by ID
+/* istanbul ignore next */
+cov_2mz4gm0z1c().s[12]++;
+CurriculumService.deleteCurriculumById = async id => {
+  /* istanbul ignore next */
+  cov_2mz4gm0z1c().f[4]++;
+  cov_2mz4gm0z1c().s[13]++;
+  return await Curriculum.updateById(id, {
+    is_deleted: true
+  });
+};

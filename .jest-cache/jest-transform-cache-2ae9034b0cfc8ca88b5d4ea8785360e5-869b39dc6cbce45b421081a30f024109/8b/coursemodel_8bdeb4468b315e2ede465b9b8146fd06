@@ -1,0 +1,424 @@
+34c39ab2f525c3df3cf34afa61347011
+/* istanbul ignore next */
+function cov_1fooagaxzh() {
+  var path = "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/models/course.model.ts";
+  var hash = "147351cd697a20762ae97cba569136eb3f5fd7c8";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/models/course.model.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 21
+        },
+        end: {
+          line: 51,
+          column: 2
+        }
+      },
+      "1": {
+        start: {
+          line: 49,
+          column: 45
+        },
+        end: {
+          line: 49,
+          column: 55
+        }
+      },
+      "2": {
+        start: {
+          line: 50,
+          column: 45
+        },
+        end: {
+          line: 50,
+          column: 55
+        }
+      },
+      "3": {
+        start: {
+          line: 53,
+          column: 0
+        },
+        end: {
+          line: 53,
+          column: 56
+        }
+      },
+      "4": {
+        start: {
+          line: 54,
+          column: 0
+        },
+        end: {
+          line: 54,
+          column: 54
+        }
+      },
+      "5": {
+        start: {
+          line: 55,
+          column: 0
+        },
+        end: {
+          line: 55,
+          column: 58
+        }
+      },
+      "6": {
+        start: {
+          line: 56,
+          column: 0
+        },
+        end: {
+          line: 56,
+          column: 51
+        }
+      },
+      "7": {
+        start: {
+          line: 57,
+          column: 0
+        },
+        end: {
+          line: 57,
+          column: 55
+        }
+      },
+      "8": {
+        start: {
+          line: 58,
+          column: 0
+        },
+        end: {
+          line: 58,
+          column: 66
+        }
+      },
+      "9": {
+        start: {
+          line: 59,
+          column: 0
+        },
+        end: {
+          line: 59,
+          column: 58
+        }
+      },
+      "10": {
+        start: {
+          line: 60,
+          column: 0
+        },
+        end: {
+          line: 60,
+          column: 49
+        }
+      },
+      "11": {
+        start: {
+          line: 61,
+          column: 15
+        },
+        end: {
+          line: 61,
+          column: 53
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 49,
+            column: 39
+          },
+          end: {
+            line: 49,
+            column: 40
+          }
+        },
+        loc: {
+          start: {
+            line: 49,
+            column: 45
+          },
+          end: {
+            line: 49,
+            column: 55
+          }
+        },
+        line: 49
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 50,
+            column: 39
+          },
+          end: {
+            line: 50,
+            column: 40
+          }
+        },
+        loc: {
+          start: {
+            line: 50,
+            column: 45
+          },
+          end: {
+            line: 50,
+            column: 55
+          }
+        },
+        line: 50
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0
+    },
+    b: {},
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "147351cd697a20762ae97cba569136eb3f5fd7c8"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_1fooagaxzh = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_1fooagaxzh();
+import { Schema } from "ottoman";
+import { ottoman } from "../libs/db";
+const CourseSchema =
+/* istanbul ignore next */
+(cov_1fooagaxzh().s[0]++, new Schema({
+  campus_id: {
+    type: String,
+    required: true
+  },
+  title: {
+    type: String,
+    required: true
+  },
+  description: {
+    type: String,
+    required: true
+  },
+  short_description: {
+    type: String
+  },
+  class_id: {
+    type: String
+  },
+  created_by: {
+    type: String,
+    required: true
+  },
+  instructor_ids: {
+    type: [String],
+    default: []
+  },
+  thumbnail: {
+    type: String
+  },
+  preview_video: {
+    type: String
+  },
+  status: {
+    type: String,
+    enum: ["draft", "published", "archived", "suspended"],
+    default: "draft"
+  },
+  category: {
+    type: String,
+    required: true
+  },
+  sub_category: {
+    type: String
+  },
+  difficulty_level: {
+    type: String,
+    enum: ["beginner", "intermediate", "advanced"],
+    default: "beginner"
+  },
+  language: {
+    type: String,
+    default: "English"
+  },
+  estimated_duration_hours: {
+    type: Number
+  },
+  price: {
+    type: Number,
+    default: 0
+  },
+  discount_price: {
+    type: Number
+  },
+  currency: {
+    type: String,
+    default: "INR"
+  },
+  requirements: {
+    type: [String],
+    default: []
+  },
+  learning_objectives: {
+    type: [String],
+    default: []
+  },
+  target_audience: {
+    type: [String],
+    default: []
+  },
+  tags: {
+    type: [String],
+    default: []
+  },
+  rating: {
+    type: Number,
+    default: 0
+  },
+  rating_count: {
+    type: Number,
+    default: 0
+  },
+  enrollment_count: {
+    type: Number,
+    default: 0
+  },
+  completion_count: {
+    type: Number,
+    default: 0
+  },
+  is_featured: {
+    type: Boolean,
+    default: false
+  },
+  is_certificate_enabled: {
+    type: Boolean,
+    default: true
+  },
+  certificate_template_id: {
+    type: String
+  },
+  max_enrollments: {
+    type: Number
+  },
+  enrollment_start_date: {
+    type: Date
+  },
+  enrollment_end_date: {
+    type: Date
+  },
+  course_start_date: {
+    type: Date
+  },
+  course_end_date: {
+    type: Date
+  },
+  last_updated_by: {
+    type: String,
+    required: true
+  },
+  version: {
+    type: Number,
+    default: 1
+  },
+  meta_data: {
+    type: Object,
+    default: {}
+  },
+  created_at: {
+    type: Date,
+    default: () => {
+      /* istanbul ignore next */
+      cov_1fooagaxzh().f[0]++;
+      cov_1fooagaxzh().s[1]++;
+      return new Date();
+    }
+  },
+  updated_at: {
+    type: Date,
+    default: () => {
+      /* istanbul ignore next */
+      cov_1fooagaxzh().f[1]++;
+      cov_1fooagaxzh().s[2]++;
+      return new Date();
+    }
+  }
+}));
+// Indexes for efficient queries
+/* istanbul ignore next */
+cov_1fooagaxzh().s[3]++;
+CourseSchema.index.findByCampusId = {
+  by: "campus_id"
+};
+/* istanbul ignore next */
+cov_1fooagaxzh().s[4]++;
+CourseSchema.index.findByClassId = {
+  by: "class_id"
+};
+/* istanbul ignore next */
+cov_1fooagaxzh().s[5]++;
+CourseSchema.index.findByCreatedBy = {
+  by: "created_by"
+};
+/* istanbul ignore next */
+cov_1fooagaxzh().s[6]++;
+CourseSchema.index.findByStatus = {
+  by: "status"
+};
+/* istanbul ignore next */
+cov_1fooagaxzh().s[7]++;
+CourseSchema.index.findByCategory = {
+  by: "category"
+};
+/* istanbul ignore next */
+cov_1fooagaxzh().s[8]++;
+CourseSchema.index.findByInstructorIds = {
+  by: "instructor_ids"
+};
+/* istanbul ignore next */
+cov_1fooagaxzh().s[9]++;
+CourseSchema.index.findByFeatured = {
+  by: "is_featured"
+};
+/* istanbul ignore next */
+cov_1fooagaxzh().s[10]++;
+CourseSchema.index.findByPrice = {
+  by: "price"
+};
+const Course =
+/* istanbul ignore next */
+(cov_1fooagaxzh().s[11]++, ottoman.model("courses", CourseSchema));
+export { Course };
