@@ -83,7 +83,11 @@ pipeline {
                     if ! command -v bun &> /dev/null; then
                         curl -fsSL https://bun.sh/install | bash
                         export PATH="$HOME/.bun/bin:$PATH"
+                        echo 'export PATH="$HOME/.bun/bin:$PATH"' >> ~/.bashrc
                     fi
+                    
+                    # Ensure Bun is in PATH
+                    export PATH="$HOME/.bun/bin:$PATH"
                     
                     # Install dependencies
                     bun install --frozen-lockfile
@@ -103,6 +107,17 @@ pipeline {
                     steps {
                         sh '''
                             echo "🧪 Running unit tests..."
+                            
+                            # Ensure Bun is in PATH
+                            export PATH="$HOME/.bun/bin:$PATH"
+                            
+                            # Verify Bun is available
+                            if ! command -v bun &> /dev/null; then
+                                echo "Bun not found, installing..."
+                                curl -fsSL https://bun.sh/install | bash
+                                export PATH="$HOME/.bun/bin:$PATH"
+                            fi
+                            
                             bun run test:coverage
                         '''
                     }
@@ -123,6 +138,16 @@ pipeline {
                         sh '''
                             echo "🔍 Running code quality checks..."
                             
+                            # Ensure Bun is in PATH
+                            export PATH="$HOME/.bun/bin:$PATH"
+                            
+                            # Verify Bun is available
+                            if ! command -v bun &> /dev/null; then
+                                echo "Bun not found, installing..."
+                                curl -fsSL https://bun.sh/install | bash
+                                export PATH="$HOME/.bun/bin:$PATH"
+                            fi
+                            
                             # Linting (CI mode with higher warning tolerance)
                             bun run lint:ci
                             
@@ -139,6 +164,16 @@ pipeline {
                     steps {
                         sh '''
                             echo "🛡️ Running security checks..."
+                            
+                            # Ensure Bun is in PATH
+                            export PATH="$HOME/.bun/bin:$PATH"
+                            
+                            # Verify Bun is available
+                            if ! command -v bun &> /dev/null; then
+                                echo "Bun not found, installing..."
+                                curl -fsSL https://bun.sh/install | bash
+                                export PATH="$HOME/.bun/bin:$PATH"
+                            fi
                             
                             # Security scanning with Bun-compatible tools
                             echo "Checking for known vulnerabilities in dependencies..."
@@ -173,6 +208,16 @@ pipeline {
             steps {
                 sh '''
                     echo "🏗️ Building KCS Backend application..."
+                    
+                    # Ensure Bun is in PATH
+                    export PATH="$HOME/.bun/bin:$PATH"
+                    
+                    # Verify Bun is available
+                    if ! command -v bun &> /dev/null; then
+                        echo "Bun not found, installing..."
+                        curl -fsSL https://bun.sh/install | bash
+                        export PATH="$HOME/.bun/bin:$PATH"
+                    fi
                     
                     # Build the application
                     bun run build
@@ -480,11 +525,14 @@ def sendTeamsNotification(Map config) {
 """
         writeFile file: 'teams-payload.json', text: jsonPayload
         
-        sh """
-            curl -X POST -H 'Content-Type: application/json' \\
-                 -d @teams-payload.json \\
-                 '${webhook}'
-        """
+        // Use withCredentials to safely handle the webhook URL
+        withCredentials([string(credentialsId: 'teams-webhook-url', variable: 'WEBHOOK_URL')]) {
+            sh '''
+                curl -X POST -H 'Content-Type: application/json' \\
+                     -d @teams-payload.json \\
+                     "${WEBHOOK_URL}"
+            '''
+        }
         
         echo "✅ Teams notification sent successfully"
     } catch (Exception e) {
