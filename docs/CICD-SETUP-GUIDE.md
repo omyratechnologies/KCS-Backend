@@ -36,7 +36,7 @@ cd /path/to/your/kcs-backend
 
 2. **Test Teams Integration:**
     ```bash
-    export TEAMS_WEBHOOK_URL="your_webhook_url_here"
+    export TEAMS_WEBHOOK_URL="your_webhook_url_here_from_teams"
     ./.jenkins/test-teams-integration.sh
     ```
 
