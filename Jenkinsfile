@@ -442,11 +442,11 @@ def sendTeamsNotification(Map config) {
     }
     
     try {
+        // Create Office 365 connector payload (Jenkins connector format)
         def payload = [
-            "@type": "MessageCard",
-            "@context": "https://schema.org/extensions",
-            "themeColor": getThemeColor(config.color),
             "summary": config.title,
+            "text": config.message,
+            "themeColor": getThemeColor(config.color),
             "sections": [
                 [
                     "activityTitle": config.title,
@@ -456,10 +456,11 @@ def sendTeamsNotification(Map config) {
                         ["name": "Project", "value": "KCS Backend"],
                         ["name": "Build", "value": "#${env.BUILD_NUMBER}"],
                         ["name": "Branch", "value": "${env.BRANCH_NAME ?: 'dev'}"],
-                        ["name": "Status", "value": config.status]
+                        ["name": "Status", "value": config.status],
+                        ["name": "Duration", "value": "${currentBuild.durationString ?: 'N/A'}"],
+                        ["name": "Timestamp", "value": "${new Date().format('yyyy-MM-dd HH:mm:ss')}"]
                     ],
-                    "markdown": true,
-                    "text": config.message
+                    "markdown": true
                 ]
             ],
             "potentialAction": [
@@ -469,57 +470,51 @@ def sendTeamsNotification(Map config) {
                     "targets": [
                         ["os": "default", "uri": "${env.BUILD_URL}"]
                     ]
+                ],
+                [
+                    "@type": "OpenUri",
+                    "name": "Console Output", 
+                    "targets": [
+                        ["os": "default", "uri": "${env.BUILD_URL}console"]
+                    ]
                 ]
             ]
         ]
         
-        // Create JSON payload using writeFile instead of writeJSON
-        def jsonPayload = """
-{
-    "@type": "MessageCard",
-    "@context": "https://schema.org/extensions",
-    "themeColor": "${getThemeColor(config.color)}",
-    "summary": "${config.title}",
-    "sections": [
-        {
-            "activityTitle": "${config.title}",
-            "activitySubtitle": "KCS Backend CI/CD Pipeline",
-            "activityImage": "https://jenkins.io/images/logos/jenkins/jenkins.png",
-            "facts": [
-                {"name": "Project", "value": "KCS Backend"},
-                {"name": "Build", "value": "#${env.BUILD_NUMBER}"},
-                {"name": "Branch", "value": "${env.BRANCH_NAME ?: 'dev'}"},
-                {"name": "Status", "value": "${config.status}"}
-            ],
-            "markdown": true,
-            "text": "${config.message}"
-        }
-    ],
-    "potentialAction": [
-        {
-            "@type": "OpenUri",
-            "name": "View Build",
-            "targets": [
-                {"os": "default", "uri": "${env.BUILD_URL}"}
-            ]
-        }
-    ]
-}
-"""
+        // Convert to JSON and write to file
+        def jsonPayload = groovy.json.JsonOutput.toJson(payload)
         writeFile file: 'teams-payload.json', text: jsonPayload
         
-        // Use withCredentials to safely handle the webhook URL (username contains the URL)
-        withCredentials([usernamePassword(credentialsId: 'teams-webhook-url', usernameVariable: 'WEBHOOK_URL', passwordVariable: 'WEBHOOK_PASS')]) {
-            sh '''
-                curl -X POST -H 'Content-Type: application/json' \\
-                     -d @teams-payload.json \\
-                     "${WEBHOOK_URL}"
-            '''
+        echo "📤 Sending Teams notification: ${config.title}"
+        echo "🔗 Build URL: ${env.BUILD_URL}"
+        
+        // Send with proper error handling
+        withCredentials([string(credentialsId: 'teams-webhook-url', variable: 'WEBHOOK_URL')]) {
+            def result = sh(
+                script: '''
+                    curl -X POST \\
+                         -H "Content-Type: application/json" \\
+                         -d @teams-payload.json \\
+                         -w "HTTP_CODE:%{http_code}|SIZE:%{size_download}" \\
+                         -s \\
+                         "${WEBHOOK_URL}"
+                ''',
+                returnStdout: true
+            ).trim()
+            
+            echo "📨 Teams API Response: ${result}"
+            
+            if (result.contains("HTTP_CODE:2")) {
+                echo "✅ Teams notification sent successfully to KCS-Jenkins Workflow channel"
+            } else {
+                echo "⚠️ Teams notification failed - HTTP response: ${result}"
+                echo "Please check the webhook URL and Teams channel configuration"
+            }
         }
         
-        echo "✅ Teams notification sent successfully"
     } catch (Exception e) {
         echo "⚠️ Failed to send Teams notification: ${e.getMessage()}"
+        echo "Stack trace: ${e.getStackTrace()}"
         echo "This is not critical - build can continue"
     }
 }
@@ -530,5 +525,14 @@ def getThemeColor(color) {
         case 'warning': return 'FFA500'
         case 'danger': return 'FF0000'
         default: return '0078D4'
+    }
+}
+
+def getAdaptiveCardColor(color) {
+    switch(color) {
+        case 'good': return 'Good'
+        case 'warning': return 'Warning'
+        case 'danger': return 'Attention'
+        default: return 'Default'
     }
 }
