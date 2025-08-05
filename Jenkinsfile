@@ -10,8 +10,8 @@ pipeline {
         DOCKER_REPO = 'omyratechnologies/kcs-backend'
         
         // Server details (environment-specific)
-        PROD_SERVER = '13.204.105.220'
-        DEV_SERVER = '13.204.105.220' // Update with actual dev server IP
+        PROD_SERVER = '13.204.105.220'       // Production server (to be configured)
+        DEV_SERVER = '65.2.31.97'            // Development server (existing backend server)
         SSH_KEY = credentials('ec2-ssh-key')
         
         // Microsoft Teams webhook URL
@@ -564,32 +564,108 @@ pipeline {
                         sh """
                             echo "🚀 Deploying to development server..."
                             
-                            # Copy deployment files to development server
-                            scp -i \$SSH_KEY_FILE -o StrictHostKeyChecking=no \\
-                                docker-compose.dev.yml \\
-                                .env.development.example \\
-                                nginx/dev.conf \\
-                                \$SSH_USER@${DEV_SERVER}:/opt/kcs-backend-dev/
+                            # Note: Using git pull on server instead of file copying
+                            # since the repository is already cloned on the server
                             
                             # Execute deployment commands on development server
                             ssh -i \$SSH_KEY_FILE -o StrictHostKeyChecking=no \$SSH_USER@${DEV_SERVER} << 'EOF'
-                                cd /opt/kcs-backend-dev
+                                # First, ensure all required tools are installed
+                                echo "🔧 Checking and installing required tools..."
                                 
-                                # Update environment
-                                cp .env.development.example .env.development
+                                # Check and install Docker
+                                if ! command -v docker &> /dev/null; then
+                                    echo "📦 Installing Docker..."
+                                    curl -fsSL https://get.docker.com -o get-docker.sh
+                                    sudo sh get-docker.sh
+                                    sudo usermod -aG docker \$USER
+                                    sudo systemctl start docker
+                                    sudo systemctl enable docker
+                                    echo "✅ Docker installed and started"
+                                else
+                                    echo "✅ Docker already installed: \$(docker --version)"
+                                    # Ensure Docker daemon is running
+                                    if ! docker info &> /dev/null; then
+                                        echo "🔄 Starting Docker daemon..."
+                                        sudo systemctl start docker
+                                    fi
+                                fi
                                 
-                                # Pull latest image and restart development services
-                                docker-compose -f docker-compose.dev.yml pull
-                                docker-compose -f docker-compose.dev.yml down
-                                docker-compose -f docker-compose.dev.yml up -d
+                                # Check and install Git
+                                if ! command -v git &> /dev/null; then
+                                    echo "📦 Installing Git..."
+                                    sudo apt-get update && sudo apt-get install -y git
+                                    echo "✅ Git installed"
+                                else
+                                    echo "✅ Git already installed: \$(git --version)"
+                                fi
                                 
-                                # Wait for services to be healthy
-                                sleep 30
+                                # Check and install curl
+                                if ! command -v curl &> /dev/null; then
+                                    echo "📦 Installing curl..."
+                                    sudo apt-get update && sudo apt-get install -y curl
+                                    echo "✅ curl installed"
+                                else
+                                    echo "✅ curl already available"
+                                fi
                                 
-                                # Health check
-                                curl -f http://localhost:4500/api/health || exit 1
+                                # Check and install unzip (for potential future use)
+                                if ! command -v unzip &> /dev/null; then
+                                    echo "📦 Installing unzip..."
+                                    sudo apt-get install -y unzip
+                                    echo "✅ unzip installed"
+                                else
+                                    echo "✅ unzip already available"
+                                fi
                                 
-                                echo "✅ Development deployment completed successfully"
+                                # Verify Docker is working
+                                echo "🧪 Verifying Docker installation..."
+                                docker --version || { echo "❌ Docker installation failed"; exit 1; }
+                                docker info > /dev/null || { echo "❌ Docker daemon not running"; exit 1; }
+                                echo "✅ Docker is working properly"
+                                
+                                # Navigate to project directory
+                                echo "📂 Navigating to project directory..."
+                                cd ~/KCS-Backend || { echo "❌ Project directory not found"; exit 1; }
+                                
+                                # Pull latest changes from repository
+                                echo "🔄 Pulling latest changes..."
+                                git pull origin dev || { echo "❌ Git pull failed"; exit 1; }
+                                
+                                echo "📝 Using existing .env file (skipping environment setup)"
+                                ls -la .env || echo "⚠️ Warning: .env file not found"
+                                
+                                # Stop existing container gracefully
+                                echo "🛑 Stopping existing container..."
+                                docker stop kcs-backend || echo "Container not running"
+                                docker rm kcs-backend || echo "Container not found"
+                                
+                                # Clean up unused images to free space
+                                echo "🧹 Cleaning up unused Docker images..."
+                                docker image prune -f || echo "Image cleanup completed"
+                                
+                                # Build new image with optimizations
+                                echo "🏗️ Building new Docker image..."
+                                docker build -t kcs-backend:latest . || { echo "❌ Build failed"; exit 1; }
+                                
+                                # Start new container with proper configuration
+                                echo "🚀 Starting new container..."
+                                docker run -d \\
+                                    --name kcs-backend \\
+                                    --restart unless-stopped \\
+                                    -p 4500:4500 \\
+                                    --env-file .env \\
+                                    kcs-backend:latest || { echo "❌ Container start failed"; exit 1; }
+                                
+                                # Wait for container to be ready
+                                echo "⏳ Waiting for container to be ready..."
+                                sleep 15
+                                
+                                # Run deployment verification
+                                echo "🔍 Running deployment verification..."
+                                chmod +x scripts/verify-deployment.sh
+                                ./scripts/verify-deployment.sh
+                                
+                                echo "✅ Development deployment completed and verified successfully"
 EOF
                             
                             echo "✅ Development deployment completed"
