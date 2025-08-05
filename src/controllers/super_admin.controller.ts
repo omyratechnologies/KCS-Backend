@@ -987,9 +987,9 @@ export class SuperAdminController {
                 overall_health:
                     overallHealthScore >= 80
                         ? "healthy"
-                        : (overallHealthScore >= 60
+                        : overallHealthScore >= 60
                           ? "warning"
-                          : "critical"),
+                          : "critical",
                 overall_score: overallHealthScore,
                 component_health: {
                     performance: performanceMetrics.current_status,

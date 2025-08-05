@@ -3,8 +3,8 @@
 // import { userStore } from "@/store/user.store";
 import { Context } from "hono";
 
-import { Assignment } from "@/models/assignment.model";
-import { AssignmentSubmission } from "@/models/assignment_submission.model";
+// import { Assignment } from "@/models/assignment.model";
+// import { AssignmentSubmission } from "@/models/assignment_submission.model";
 import { ClassService } from "@/services/class.service";
 // import { EnhancedAssignmentService } from "@/services/enhanced_assignment.service"; // Disabled until course assignment models exist
 import { UserService } from "@/services/users.service";

@@ -265,15 +265,15 @@ export class ClassQuizService {
                         status_color:
                             status === "Published"
                                 ? "success"
-                                : (status === "Completed"
+                                : status === "Completed"
                                   ? "neutral"
-                                  : "warning"),
+                                  : "warning",
                         date_label: status === "Completed" ? "Ended" : "Due",
                         date_value:
                             status === "Completed" ? completionDate : dueDate,
                         date_display:
                             status === "Completed"
-                                ? (completionDate
+                                ? completionDate
                                     ? completionDate.toLocaleDateString(
                                           "en-US",
                                           {
@@ -282,7 +282,7 @@ export class ClassQuizService {
                                               year: "numeric",
                                           }
                                       )
-                                    : "Recently ended")
+                                    : "Recently ended"
                                 : dueDateDisplay,
                         participants_count: submissionsCount,
                         questions_count: questionsCount,

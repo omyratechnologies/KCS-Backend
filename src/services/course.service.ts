@@ -1319,9 +1319,9 @@ export class CourseService {
                                 // Status indicators
                                 status: isCompleted
                                     ? "completed"
-                                    : (watchPercentage > 0
+                                    : watchPercentage > 0
                                       ? "in_progress"
-                                      : "not_started"),
+                                      : "not_started",
                             };
                         })
                     );

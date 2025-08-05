@@ -634,9 +634,9 @@ export class PaymentSettlementService {
                 severity:
                     securityScore < 70
                         ? "high"
-                        : (securityScore < 85
+                        : securityScore < 85
                           ? "medium"
-                          : "low"),
+                          : "low",
                 event_details: {
                     operation_performed: "comprehensive_security_audit",
                     operation_result: "success",

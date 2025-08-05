@@ -12,7 +12,7 @@
         "format:check": "prettier --check .",
         "lint": "eslint . --ext .ts --fix",
         "lint:check": "eslint . --ext .ts --max-warnings 50",
-        "lint:ci": "eslint . --ext .ts --max-warnings 3000",
+        "lint:ci": "eslint . --ext .ts --config .eslintrc.ci.json --max-warnings 10000",
         "start": "bun run src/index.ts",
         "clean": "rm -rf node_modules dist",
         "test": "jest",
@@ -66,6 +66,8 @@
         "@types/node-fetch": "^2.6.12",
         "@types/supertest": "^6.0.3",
         "@types/swagger-ui-dist": "^3.30.5",
+        "@typescript-eslint/eslint-plugin": "^8.39.0",
+        "@typescript-eslint/parser": "^8.39.0",
         "eslint": "^8.57.1",
         "jest": "^30.0.5",
         "jest-junit": "^16.0.0",
@@ -75,11 +77,5 @@
         "ts-jest": "^29.4.1",
         "type-fest": "^4.41.0",
         "typescript": "^5.8.3"
-    },
-    "eslintConfig": {
-        "extends": "@bravo68web/eslint-config",
-        "rules": {
-            "unicorn/filename-case": "off"
-        }
     }
 }

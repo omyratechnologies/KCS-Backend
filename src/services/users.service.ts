@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable unicorn/no-array-method-this-argument */
 import crypto from "node:crypto";
 
 import { FindOptions } from "ottoman";

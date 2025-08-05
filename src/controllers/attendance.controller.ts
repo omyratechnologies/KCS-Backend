@@ -364,7 +364,7 @@ export class AttendanceController {
             let parsedDate: Date | undefined;
             if (date) {
                 parsedDate = new Date(date);
-                if (isNaN(parsedDate.getTime())) {
+                if (Number.isNaN(parsedDate.getTime())) {
                     return ctx.json({ error: "Invalid date format" }, 400);
                 }
             }
@@ -466,7 +466,7 @@ export class AttendanceController {
 
             if (from_date) {
                 parsedFromDate = new Date(from_date);
-                if (isNaN(parsedFromDate.getTime())) {
+                if (Number.isNaN(parsedFromDate.getTime())) {
                     return ctx.json(
                         { error: "Invalid from_date format. Use YYYY-MM-DD" },
                         400
@@ -476,7 +476,7 @@ export class AttendanceController {
 
             if (to_date) {
                 parsedToDate = new Date(to_date);
-                if (isNaN(parsedToDate.getTime())) {
+                if (Number.isNaN(parsedToDate.getTime())) {
                     return ctx.json(
                         { error: "Invalid to_date format. Use YYYY-MM-DD" },
                         400
@@ -528,7 +528,7 @@ export class AttendanceController {
 
             if (from_date) {
                 parsedFromDate = new Date(from_date);
-                if (isNaN(parsedFromDate.getTime())) {
+                if (Number.isNaN(parsedFromDate.getTime())) {
                     return ctx.json(
                         { error: "Invalid from_date format. Use YYYY-MM-DD" },
                         400
@@ -538,7 +538,7 @@ export class AttendanceController {
 
             if (to_date) {
                 parsedToDate = new Date(to_date);
-                if (isNaN(parsedToDate.getTime())) {
+                if (Number.isNaN(parsedToDate.getTime())) {
                     return ctx.json(
                         { error: "Invalid to_date format. Use YYYY-MM-DD" },
                         400

@@ -1,4 +1,3 @@
-// eslint-disable-next-line simple-import-sort/imports
 import { Context } from "hono";
 
 import { UploadFactory } from "@/libs/s3/upload.factory";
