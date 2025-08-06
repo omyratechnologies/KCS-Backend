@@ -71,7 +71,7 @@ export class TeacherService {
         );
 
         if (teachers.rows.length === 0) {
-            throw new Error("No teachers found");
+            return [];
         }
 
         const resultPromises = teachers.rows.map((teacher) => {
@@ -79,10 +79,9 @@ export class TeacherService {
         });
 
         const result = await Promise.all(resultPromises);
-        if (!result) {
-            throw new Error("No teachers found");
-        }
-        return result;
+        // Filter out null results (teachers with missing user profiles)
+        const validTeachers = result.filter((teacher) => teacher !== null);
+        return validTeachers;
     }
 
     // Get a teacher by ID
@@ -93,19 +92,20 @@ export class TeacherService {
             throw new Error("Teacher not found");
         }
 
-        const teacher_profile = await UserService.getUser(teacher.user_id);
+        let teacher_profile;
+        try {
+            teacher_profile = await UserService.getUser(teacher.user_id);
+        } catch (error) {
+            // Teacher exists but user profile is missing - skip this teacher
+            return null;
+        }
+
         if (!teacher_profile) {
-            throw new Error("Teacher profile not found");
+            return null;
         }
 
         const teacher_subjects = await this.getAllSubjectsByTeacherId(teacher.id);
-        if (!teacher_subjects) {
-            throw new Error("Teacher subjects not found");
-        }
         const teacher_classes = await this.getAllClassesByTeacherId(teacher.id);
-        if (!teacher_classes) {
-            throw new Error("Teacher classes not found");
-        }
 
         return {
             ...teacher,
@@ -185,6 +185,10 @@ export class TeacherService {
     public static async getAllClassesByTeacherId(teacherId: string): Promise<IClassData[]> {
         const teacher = await Teacher.findById(teacherId);
 
+        if (!teacher || !teacher.classes || teacher.classes.length === 0) {
+            return [];
+        }
+
         const classIds = teacher.classes;
 
         const classPromises = classIds.map(async (classId) => {
@@ -197,6 +201,10 @@ export class TeacherService {
     // Get all subjects by teacher ID
     public static async getAllSubjectsByTeacherId(teacherId: string): Promise<ISubject[]> {
         const teacher = await Teacher.findById(teacherId);
+
+        if (!teacher || !teacher.subjects || teacher.subjects.length === 0) {
+            return [];
+        }
 
         const subjectIds = teacher.subjects;
         const subjectPromises = subjectIds.map(async (subjectId) => {

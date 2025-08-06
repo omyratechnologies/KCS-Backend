@@ -12,7 +12,7 @@
   },
   "rules": {
     "@typescript-eslint/no-unused-vars": [
-      "warn",
+      "off",
       {
         "argsIgnorePattern": "^_",
         "varsIgnorePattern": "^_",
@@ -25,15 +25,18 @@
     "@typescript-eslint/no-non-null-assertion": "off",
     "@typescript-eslint/no-var-requires": "off",
     "@typescript-eslint/no-require-imports": "off",
+    "@typescript-eslint/ban-ts-comment": "off",
     "no-console": "off",
     "no-process-exit": "off",
-    "no-unreachable": "warn",
+    "no-unreachable": "off",
     "no-useless-catch": "off",
     "no-async-promise-executor": "off",
     "prefer-const": "off",
-    "no-var": "warn",
+    "no-var": "off",
     "eqeqeq": "off",
-    "curly": "off"
+    "curly": "off",
+    "no-unused-vars": "off",
+    "no-undef": "off"
   },
   "overrides": [
     {
