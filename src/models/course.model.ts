@@ -69,6 +69,16 @@ export interface ICourseData {
             drip_content: boolean;
             content_protection: boolean;
         };
+        auto_completion_config?: {
+            auto_completion_enabled: boolean;
+            minimum_engagement_percentage: number;
+            smart_detection_enabled: boolean;
+            auto_progression_enabled: boolean;
+            completion_notification_enabled: boolean;
+            analytics_tracking_level: "basic" | "detailed" | "comprehensive";
+            last_updated_by?: string;
+            last_updated_at?: Date;
+        };
     };
     created_at: Date;
     updated_at: Date;

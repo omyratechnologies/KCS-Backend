@@ -957,6 +957,361 @@ export class CourseController {
         }
     };
 
+    // ==================== REAL-TIME & AUTOMATED TRACKING ====================
+
+    /**
+     * Update real-time lecture progress
+     * Student only - for automated tracking
+     */
+    public static readonly updateRealtimeProgress = async (ctx: Context) => {
+        try {
+            const course_id = ctx.req.param("course_id");
+            const lecture_id = ctx.req.param("lecture_id");
+            const user_id = ctx.get("user_id");
+            const campus_id = ctx.get("campus_id");
+            const progressData = await ctx.req.json();
+
+            if (!course_id || !lecture_id) {
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Course ID and Lecture ID are required",
+                    },
+                    400
+                );
+            }
+
+            const result = await CourseService.updateRealtimeProgress(
+                course_id,
+                lecture_id,
+                user_id,
+                campus_id,
+                progressData
+            );
+
+            return ctx.json({
+                success: true,
+                data: result.data,
+                message: result.message,
+            });
+        } catch (error) {
+            console.error("Error updating real-time progress:", error);
+            return ctx.json(
+                {
+                    success: false,
+                    error: error instanceof Error ? error.message : "Failed to update real-time progress",
+                },
+                500
+            );
+        }
+    };
+
+    /**
+     * Update batch progress data
+     * Student only - for offline sync
+     */
+    public static readonly updateBatchProgress = async (ctx: Context) => {
+        try {
+            const course_id = ctx.req.param("course_id");
+            const user_id = ctx.get("user_id");
+            const campus_id = ctx.get("campus_id");
+            const batchData = await ctx.req.json();
+
+            if (!course_id) {
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Course ID is required",
+                    },
+                    400
+                );
+            }
+
+            const result = await CourseService.updateBatchProgress(
+                course_id,
+                user_id,
+                campus_id,
+                batchData
+            );
+
+            return ctx.json({
+                success: true,
+                data: result.data,
+                message: result.message,
+            });
+        } catch (error) {
+            console.error("Error updating batch progress:", error);
+            return ctx.json(
+                {
+                    success: false,
+                    error: error instanceof Error ? error.message : "Failed to update batch progress",
+                },
+                500
+            );
+        }
+    };
+
+    /**
+     * Get auto-completion status
+     * Public access for enrolled users
+     */
+    public static readonly getAutoCompletionStatus = async (ctx: Context) => {
+        try {
+            const course_id = ctx.req.param("course_id");
+            const campus_id = ctx.get("campus_id");
+
+            if (!course_id) {
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Course ID is required",
+                    },
+                    400
+                );
+            }
+
+            const result = await CourseService.getAutoCompletionStatus(course_id, campus_id);
+
+            return ctx.json({
+                success: true,
+                data: result.data,
+                message: result.message,
+            });
+        } catch (error) {
+            console.error("Error getting auto-completion status:", error);
+            return ctx.json(
+                {
+                    success: false,
+                    error: error instanceof Error ? error.message : "Failed to get auto-completion status",
+                },
+                500
+            );
+        }
+    };
+
+    /**
+     * Update auto-completion configuration
+     * Admin/Teacher/Instructor only
+     */
+    public static readonly updateAutoCompletionConfig = async (ctx: Context) => {
+        try {
+            const course_id = ctx.req.param("course_id");
+            const campus_id = ctx.get("campus_id");
+            const user_id = ctx.get("user_id");
+            const configData = await ctx.req.json();
+
+            if (!course_id) {
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Course ID is required",
+                    },
+                    400
+                );
+            }
+
+            const result = await CourseService.updateAutoCompletionConfig(
+                course_id,
+                campus_id,
+                user_id,
+                configData
+            );
+
+            return ctx.json({
+                success: true,
+                data: result.data,
+                message: result.message,
+            });
+        } catch (error) {
+            console.error("Error updating auto-completion config:", error);
+            return ctx.json(
+                {
+                    success: false,
+                    error: error instanceof Error ? error.message : "Failed to update auto-completion config",
+                },
+                500
+            );
+        }
+    };
+
+    /**
+     * Get personalized learning analytics
+     * Student only
+     */
+    public static readonly getLearningAnalytics = async (ctx: Context) => {
+        try {
+            const course_id = ctx.req.param("course_id");
+            const user_id = ctx.get("user_id");
+            const campus_id = ctx.get("campus_id");
+            const timeframe = ctx.req.query("timeframe") || "month";
+
+            if (!course_id) {
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Course ID is required",
+                    },
+                    400
+                );
+            }
+
+            const result = await CourseService.getLearningAnalytics(
+                course_id,
+                user_id,
+                campus_id,
+                timeframe
+            );
+
+            return ctx.json({
+                success: true,
+                data: result.data,
+                message: result.message,
+            });
+        } catch (error) {
+            console.error("Error getting learning analytics:", error);
+            return ctx.json(
+                {
+                    success: false,
+                    error: error instanceof Error ? error.message : "Failed to get learning analytics",
+                },
+                500
+            );
+        }
+    };
+
+    /**
+     * Get AI-powered learning recommendations
+     * Student only
+     */
+    public static readonly getSmartRecommendations = async (ctx: Context) => {
+        try {
+            const course_id = ctx.req.param("course_id");
+            const user_id = ctx.get("user_id");
+            const campus_id = ctx.get("campus_id");
+            const recommendationType = ctx.req.query("recommendation_type") || "all";
+
+            if (!course_id) {
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Course ID is required",
+                    },
+                    400
+                );
+            }
+
+            const result = await CourseService.getSmartRecommendations(
+                course_id,
+                user_id,
+                campus_id,
+                recommendationType
+            );
+
+            return ctx.json({
+                success: true,
+                data: result.data,
+                message: result.message,
+            });
+        } catch (error) {
+            console.error("Error getting smart recommendations:", error);
+            return ctx.json(
+                {
+                    success: false,
+                    error: error instanceof Error ? error.message : "Failed to get smart recommendations",
+                },
+                500
+            );
+        }
+    };
+
+    /**
+     * Auto-progress to next lecture
+     * Student only
+     */
+    public static readonly autoProgressToNext = async (ctx: Context) => {
+        try {
+            const course_id = ctx.req.param("course_id");
+            const user_id = ctx.get("user_id");
+            const campus_id = ctx.get("campus_id");
+
+            if (!course_id) {
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Course ID is required",
+                    },
+                    400
+                );
+            }
+
+            const result = await CourseService.autoProgressToNext(
+                course_id,
+                user_id,
+                campus_id
+            );
+
+            return ctx.json({
+                success: true,
+                data: result.data,
+                message: result.message,
+            });
+        } catch (error) {
+            console.error("Error auto-progressing to next lecture:", error);
+            return ctx.json(
+                {
+                    success: false,
+                    error: error instanceof Error ? error.message : "Failed to auto-progress to next lecture",
+                },
+                500
+            );
+        }
+    };
+
+    /**
+     * Get detailed watch time analytics
+     * Student only
+     */
+    public static readonly getWatchTimeAnalytics = async (ctx: Context) => {
+        try {
+            const course_id = ctx.req.param("course_id");
+            const user_id = ctx.get("user_id");
+            const campus_id = ctx.get("campus_id");
+            const granularity = ctx.req.query("granularity") || "daily";
+
+            if (!course_id) {
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Course ID is required",
+                    },
+                    400
+                );
+            }
+
+            const result = await CourseService.getWatchTimeAnalytics(
+                course_id,
+                user_id,
+                campus_id,
+                granularity
+            );
+
+            return ctx.json({
+                success: true,
+                data: result.data,
+                message: result.message,
+            });
+        } catch (error) {
+            console.error("Error getting watch time analytics:", error);
+            return ctx.json(
+                {
+                    success: false,
+                    error: error instanceof Error ? error.message : "Failed to get watch time analytics",
+                },
+                500
+            );
+        }
+    };
+
     // ==================== ANALYTICS ====================
 
     /**

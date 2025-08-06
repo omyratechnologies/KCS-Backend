@@ -316,6 +316,13 @@ export const createCourseLectureRequestBodySchema = z
                 quiz_required: z.boolean().default(false),
                 assignment_required: z.boolean().default(false),
                 minimum_watch_percentage: z.number().min(0).max(100).default(80),
+                skip_silence_detection: z.boolean().default(true),
+                auto_pause_detection: z.boolean().default(true),
+                engagement_threshold_seconds: z.number().default(30), // Minimum continuous watch time
+                completion_delay_seconds: z.number().default(3), // Delay before auto-marking complete
+                auto_bookmark_intervals: z.array(z.number()).default([25, 50, 75]), // Auto bookmark at percentages
+                smart_resume: z.boolean().default(true), // Resume from last meaningful position
+                adaptive_speed_tracking: z.boolean().default(true), // Account for playback speed
             })
             .default({}),
         meta_data: z
@@ -441,17 +448,35 @@ export const updateProgressRequestBodySchema = z
         watch_time_seconds: z.number().min(0).optional(),
         completion_percentage: z.number().min(0).max(100).optional(),
         resume_position_seconds: z.number().min(0).optional(),
+        playback_speed: z.number().min(0.25).max(3).default(1).optional(),
+        is_focused: z.boolean().default(true).optional(), // Is video player in focus
+        engagement_score: z.number().min(0).max(100).optional(), // Calculated engagement
+        watch_quality: z.enum(["low", "medium", "high"]).default("medium").optional(),
         interaction_data: z
             .object({
                 play_count: z.number().optional(),
                 pause_count: z.number().optional(),
                 seek_count: z.number().optional(),
+                seek_forward_count: z.number().optional(),
+                seek_backward_count: z.number().optional(),
                 speed_changes: z.number().optional(),
                 quality_changes: z.number().optional(),
                 fullscreen_toggles: z.number().optional(),
+                volume_changes: z.number().optional(),
+                replay_segments: z.array(z.object({
+                    start_time: z.number(),
+                    end_time: z.number(),
+                    replay_count: z.number()
+                })).optional(),
                 bookmarked: z.boolean().optional(),
                 liked: z.boolean().optional(),
                 difficulty_rating: z.number().min(1).max(5).optional(),
+                attention_drops: z.number().optional(), // Number of times user looked away
+                continuous_watch_segments: z.array(z.object({
+                    start_time: z.number(),
+                    end_time: z.number(),
+                    focus_percentage: z.number()
+                })).optional(),
             })
             .optional(),
         device_info: z
@@ -460,6 +485,19 @@ export const updateProgressRequestBodySchema = z
                 browser: z.string().optional(),
                 os: z.string().optional(),
                 app_version: z.string().optional(),
+                screen_resolution: z.string().optional(),
+                connection_speed: z.enum(["slow", "medium", "fast"]).optional(),
+                battery_level: z.number().min(0).max(100).optional(),
+            })
+            .optional(),
+        session_data: z
+            .object({
+                session_id: z.string(),
+                session_start: z.string().datetime(),
+                previous_lecture_id: z.string().optional(),
+                learning_path_position: z.number().optional(),
+                estimated_completion_time: z.number().optional(),
+                break_duration_seconds: z.number().optional(),
             })
             .optional(),
         notes: z
@@ -467,7 +505,9 @@ export const updateProgressRequestBodySchema = z
                 z.object({
                     timestamp_seconds: z.number().min(0),
                     note_text: z.string().min(1),
+                    note_type: z.enum(["manual", "auto_bookmark", "key_moment"]).default("manual"),
                     is_public: z.boolean().default(false),
+                    tags: z.array(z.string()).optional(),
                 })
             )
             .optional(),
@@ -629,3 +669,151 @@ export const bulkEnrollStudentsRequestBodySchema = z
         enrollment_type: z.enum(["free", "paid", "admin_assigned", "bulk_enrollment"]).default("admin_assigned"),
     })
     .openapi({ ref: "bulkEnrollStudentsRequest" });
+
+// ==================== REAL-TIME PROGRESS TRACKING SCHEMAS ====================
+
+export const realtimeProgressUpdateSchema = z
+    .object({
+        lecture_id: z.string(),
+        current_time: z.number().min(0),
+        total_duration: z.number().min(0),
+        playback_speed: z.number().min(0.25).max(3).default(1),
+        is_playing: z.boolean(),
+        is_focused: z.boolean().default(true),
+        quality: z.string().optional(),
+        buffer_health: z.number().min(0).max(100).optional(),
+        timestamp: z.string().datetime(),
+    })
+    .openapi({ ref: "realtimeProgressUpdate" });
+
+export const batchProgressUpdateSchema = z
+    .object({
+        updates: z.array(
+            z.object({
+                lecture_id: z.string(),
+                time_watched_seconds: z.number().min(0),
+                interactions: z.object({
+                    pauses: z.number().default(0),
+                    seeks: z.number().default(0),
+                    replays: z.number().default(0),
+                }).optional(),
+                quality_metrics: z.object({
+                    average_buffer_health: z.number().optional(),
+                    stalls_count: z.number().default(0),
+                    quality_switches: z.number().default(0),
+                }).optional(),
+                timestamp_start: z.string().datetime(),
+                timestamp_end: z.string().datetime(),
+            })
+        ),
+        session_id: z.string(),
+        device_info: z.object({
+            type: z.enum(["web", "mobile", "tablet"]),
+            connection: z.enum(["wifi", "cellular", "ethernet"]).optional(),
+        }).optional(),
+    })
+    .openapi({ ref: "batchProgressUpdate" });
+
+export const autoCompletionConfigSchema = z
+    .object({
+        course_id: z.string(),
+        auto_completion_enabled: z.boolean().default(true),
+        minimum_engagement_percentage: z.number().min(0).max(100).default(75),
+        smart_detection_enabled: z.boolean().default(true),
+        auto_progression_enabled: z.boolean().default(false),
+        completion_notification_enabled: z.boolean().default(true),
+        analytics_tracking_level: z.enum(["basic", "detailed", "comprehensive"]).default("detailed"),
+    })
+    .openapi({ ref: "autoCompletionConfig" });
+
+export const learningAnalyticsResponseSchema = z
+    .object({
+        success: z.boolean(),
+        data: z.object({
+            user_id: z.string(),
+            course_id: z.string(),
+            overall_progress: z.object({
+                completion_percentage: z.number(),
+                time_spent_hours: z.number(),
+                lectures_completed: z.number(),
+                total_lectures: z.number(),
+                current_streak_days: z.number(),
+                longest_streak_days: z.number(),
+                estimated_completion_date: z.string().datetime().optional(),
+            }),
+            engagement_metrics: z.object({
+                average_session_duration_minutes: z.number(),
+                total_sessions: z.number(),
+                engagement_score: z.number().min(0).max(100),
+                attention_span_score: z.number().min(0).max(100),
+                consistency_score: z.number().min(0).max(100),
+                interaction_frequency: z.number(),
+            }),
+            learning_patterns: z.object({
+                preferred_time_slots: z.array(z.string()),
+                average_playback_speed: z.number(),
+                most_replayed_sections: z.array(z.object({
+                    lecture_id: z.string(),
+                    section_start: z.number(),
+                    section_end: z.number(),
+                    replay_count: z.number(),
+                })),
+                difficulty_preferences: z.array(z.string()),
+                device_preferences: z.array(z.string()),
+            }),
+            predictions: z.object({
+                completion_likelihood: z.number().min(0).max(100),
+                at_risk_of_dropping: z.boolean(),
+                recommended_study_schedule: z.array(z.object({
+                    day: z.string(),
+                    recommended_duration_minutes: z.number(),
+                    suggested_content: z.array(z.string()),
+                })),
+                next_optimal_session_time: z.string().datetime().optional(),
+            }),
+        }),
+        message: z.string(),
+    })
+    .openapi({ ref: "learningAnalyticsResponse" });
+
+export const smartRecommendationsResponseSchema = z
+    .object({
+        success: z.boolean(),
+        data: z.object({
+            next_recommended_lectures: z.array(z.object({
+                lecture_id: z.string(),
+                title: z.string(),
+                estimated_duration_minutes: z.number(),
+                difficulty_level: z.enum(["easy", "medium", "hard"]),
+                recommendation_score: z.number().min(0).max(100),
+                reason: z.string(),
+            })),
+            optimal_study_time: z.object({
+                recommended_session_length_minutes: z.number(),
+                break_recommendations: z.array(z.object({
+                    after_minutes: z.number(),
+                    break_duration_minutes: z.number(),
+                    activity_suggestion: z.string(),
+                })),
+                best_time_to_study: z.string().optional(),
+            }),
+            personalized_tips: z.array(z.object({
+                tip_type: z.enum(["engagement", "retention", "productivity", "motivation"]),
+                message: z.string(),
+                action_items: z.array(z.string()),
+                priority: z.enum(["low", "medium", "high"]),
+            })),
+            adaptive_content: z.object({
+                suggested_playback_speed: z.number(),
+                content_difficulty_adjustment: z.enum(["easier", "same", "harder"]),
+                additional_resources: z.array(z.object({
+                    type: z.enum(["video", "article", "exercise", "quiz"]),
+                    title: z.string(),
+                    url: z.string().optional(),
+                    estimated_time_minutes: z.number(),
+                })),
+            }),
+        }),
+        message: z.string(),
+    })
+    .openapi({ ref: "smartRecommendationsResponse" });

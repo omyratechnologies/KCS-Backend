@@ -6,6 +6,8 @@ import { CourseController } from "@/controllers/course.controller";
 import { authMiddleware } from "@/middlewares/auth.middleware";
 import { roleMiddleware } from "@/middlewares/role.middleware";
 import {
+    autoCompletionConfigSchema,
+    batchProgressUpdateSchema,
     bulkEnrollStudentsRequestBodySchema,
     courseAnalyticsResponseSchema,
     courseEnrollmentResponseSchema,
@@ -19,6 +21,9 @@ import {
     createCourseSectionRequestBodySchema,
     enrollInCourseRequestBodySchema,
     errorResponseSchema,
+    learningAnalyticsResponseSchema,
+    realtimeProgressUpdateSchema,
+    smartRecommendationsResponseSchema,
     successResponseSchema,
     updateCourseLectureRequestBodySchema,
     updateCourseRequestBodySchema,
@@ -919,6 +924,350 @@ app.put(
     roleMiddleware("track_watch_history"),
     zValidator("json", updateProgressRequestBodySchema),
     CourseController.updateCourseProgress
+);
+
+// ==================== REAL-TIME & AUTOMATED TRACKING ====================
+
+app.post(
+    "/:course_id/lectures/:lecture_id/realtime-progress",
+    describeRoute({
+        operationId: "updateRealtimeProgress",
+        summary: "Update real-time lecture progress",
+        description: "Update user's real-time progress on a specific lecture for automated tracking. Student only.",
+        tags: ["Courses", "Progress Tracking"],
+        parameters: [
+            {
+                name: "course_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Course ID",
+            },
+            {
+                name: "lecture_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Lecture ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Real-time progress updated successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(successResponseSchema),
+                    },
+                },
+            },
+            400: {
+                description: "User not enrolled in course",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    roleMiddleware("track_watch_history"),
+    zValidator("json", realtimeProgressUpdateSchema),
+    CourseController.updateRealtimeProgress
+);
+
+app.post(
+    "/:course_id/batch-progress",
+    describeRoute({
+        operationId: "updateBatchProgress",
+        summary: "Update batch progress data",
+        description: "Update multiple lecture progress data in batch for offline sync. Student only.",
+        tags: ["Courses", "Progress Tracking"],
+        parameters: [
+            {
+                name: "course_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Course ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Batch progress updated successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(successResponseSchema),
+                    },
+                },
+            },
+            400: {
+                description: "User not enrolled in course",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    roleMiddleware("track_watch_history"),
+    zValidator("json", batchProgressUpdateSchema),
+    CourseController.updateBatchProgress
+);
+
+app.get(
+    "/:course_id/auto-completion-status",
+    describeRoute({
+        operationId: "getAutoCompletionStatus",
+        summary: "Get auto-completion status",
+        description: "Get the current auto-completion and tracking configuration for a course.",
+        tags: ["Courses", "Automation"],
+        parameters: [
+            {
+                name: "course_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Course ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Auto-completion status retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(successResponseSchema),
+                    },
+                },
+            },
+            404: {
+                description: "Course not found",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    CourseController.getAutoCompletionStatus
+);
+
+app.put(
+    "/:course_id/auto-completion-config",
+    describeRoute({
+        operationId: "updateAutoCompletionConfig",
+        summary: "Update auto-completion configuration",
+        description: "Update auto-completion and tracking settings for a course. Admin, course creator, or assigned instructor only.",
+        tags: ["Courses", "Automation"],
+        parameters: [
+            {
+                name: "course_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Course ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Auto-completion configuration updated successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(successResponseSchema),
+                    },
+                },
+            },
+            403: {
+                description: "Insufficient permissions",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    roleMiddleware("update_course"),
+    zValidator("json", autoCompletionConfigSchema),
+    CourseController.updateAutoCompletionConfig
+);
+
+app.get(
+    "/:course_id/learning-analytics",
+    describeRoute({
+        operationId: "getLearningAnalytics",
+        summary: "Get personalized learning analytics",
+        description: "Get detailed learning analytics and insights for the authenticated user in a course.",
+        tags: ["Courses", "Analytics"],
+        parameters: [
+            {
+                name: "course_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Course ID",
+            },
+            {
+                name: "timeframe",
+                in: "query",
+                required: false,
+                schema: { type: "string", enum: ["week", "month", "quarter", "all"], default: "month" },
+                description: "Analytics timeframe",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Learning analytics retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(learningAnalyticsResponseSchema),
+                    },
+                },
+            },
+            400: {
+                description: "User not enrolled in course",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    roleMiddleware("view_enrolled_courses"),
+    CourseController.getLearningAnalytics
+);
+
+app.get(
+    "/:course_id/smart-recommendations",
+    describeRoute({
+        operationId: "getSmartRecommendations",
+        summary: "Get AI-powered learning recommendations",
+        description: "Get personalized recommendations for optimal learning based on user behavior and progress.",
+        tags: ["Courses", "AI Recommendations"],
+        parameters: [
+            {
+                name: "course_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Course ID",
+            },
+            {
+                name: "recommendation_type",
+                in: "query",
+                required: false,
+                schema: { type: "string", enum: ["content", "schedule", "study_tips", "all"], default: "all" },
+                description: "Type of recommendations to fetch",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Smart recommendations retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(smartRecommendationsResponseSchema),
+                    },
+                },
+            },
+            400: {
+                description: "User not enrolled in course",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    roleMiddleware("view_enrolled_courses"),
+    CourseController.getSmartRecommendations
+);
+
+app.post(
+    "/:course_id/auto-progress-next",
+    describeRoute({
+        operationId: "autoProgressToNext",
+        summary: "Auto-progress to next lecture",
+        description: "Automatically progress to the next lecture when current one is completed based on smart criteria.",
+        tags: ["Courses", "Automation"],
+        parameters: [
+            {
+                name: "course_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Course ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Auto-progressed to next lecture successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(successResponseSchema),
+                    },
+                },
+            },
+            400: {
+                description: "No next lecture available or criteria not met",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    roleMiddleware("track_watch_history"),
+    CourseController.autoProgressToNext
+);
+
+app.get(
+    "/:course_id/watch-time-analytics",
+    describeRoute({
+        operationId: "getWatchTimeAnalytics",
+        summary: "Get detailed watch time analytics",
+        description: "Get comprehensive watch time analytics including engagement patterns and completion predictions.",
+        tags: ["Courses", "Analytics"],
+        parameters: [
+            {
+                name: "course_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Course ID",
+            },
+            {
+                name: "granularity",
+                in: "query",
+                required: false,
+                schema: { type: "string", enum: ["hourly", "daily", "weekly"], default: "daily" },
+                description: "Analytics granularity",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Watch time analytics retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(successResponseSchema),
+                    },
+                },
+            },
+            400: {
+                description: "User not enrolled in course",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    roleMiddleware("view_enrolled_courses"),
+    CourseController.getWatchTimeAnalytics
 );
 
 // ==================== ANALYTICS & REPORTING ====================
