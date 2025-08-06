@@ -100,9 +100,7 @@ export class PaymentAnalyticsService {
     ): Promise<PaymentAnalytics> {
         try {
             const { Fee } = await import("@/models/fee.model");
-            const { PaymentTransaction } = await import(
-                "@/models/payment_transaction.model"
-            );
+            const { PaymentTransaction } = await import("@/models/payment_transaction.model");
             const { FeeCategory } = await import("@/models/fee_category.model");
             const { UserService } = await import("@/services/users.service");
             const { Class } = await import("@/models/class.model");
@@ -132,36 +130,22 @@ export class PaymentAnalyticsService {
             const overview = await this.calculateOverview(fees, transactions);
 
             // Calculate monthly trends
-            const monthlyTrends = await this.calculateMonthlyTrends(
-                campus_id,
-                range
-            );
+            const monthlyTrends = await this.calculateMonthlyTrends(campus_id, range);
 
             // Calculate fee category breakdown
-            const feeCategoryBreakdown =
-                await this.calculateFeeCategoryBreakdown(campus_id, fees);
+            const feeCategoryBreakdown = await this.calculateFeeCategoryBreakdown(campus_id, fees);
 
             // Calculate payment method stats
-            const paymentMethodStats =
-                await this.calculatePaymentMethodStats(transactions);
+            const paymentMethodStats = await this.calculatePaymentMethodStats(transactions);
 
             // Calculate class-wise collection
-            const classWiseCollection = await this.calculateClassWiseCollection(
-                campus_id,
-                fees
-            );
+            const classWiseCollection = await this.calculateClassWiseCollection(campus_id, fees);
 
             // Calculate overdue analysis
-            const overdueAnalysis = await this.calculateOverdueAnalysis(
-                campus_id,
-                fees
-            );
+            const overdueAnalysis = await this.calculateOverdueAnalysis(campus_id, fees);
 
             // Get recent transactions
-            const recentTransactions = await this.getRecentTransactions(
-                campus_id,
-                10
-            );
+            const recentTransactions = await this.getRecentTransactions(campus_id, 10);
 
             return {
                 overview,
@@ -187,15 +171,10 @@ export class PaymentAnalyticsService {
     ): Promise<PaymentReport> {
         try {
             // Calculate date range based on report type
-            const range = this.getDateRangeForReportType(
-                report_type,
-                date_range
-            );
+            const range = this.getDateRangeForReportType(report_type, date_range);
 
             // Get transactions for the period
-            const { PaymentTransaction } = await import(
-                "@/models/payment_transaction.model"
-            );
+            const { PaymentTransaction } = await import("@/models/payment_transaction.model");
             const allTransactions = await PaymentTransaction.find({
                 campus_id,
                 initiated_at: {
@@ -209,17 +188,10 @@ export class PaymentAnalyticsService {
             const summary = this.calculateReportSummary(transactions);
 
             // Get detailed transactions with student and fee info
-            const detailedTransactions = await this.getDetailedTransactions(
-                campus_id,
-                transactions
-            );
+            const detailedTransactions = await this.getDetailedTransactions(campus_id, transactions);
 
             // Generate charts data
-            const chartsData = await this.generateChartsData(
-                campus_id,
-                transactions,
-                range
-            );
+            const chartsData = await this.generateChartsData(campus_id, transactions, range);
 
             return {
                 report_type,
@@ -241,18 +213,9 @@ export class PaymentAnalyticsService {
         period: "7d" | "30d" | "90d" | "1y"
     ): Promise<Array<{ date: string; amount: number; transactions: number }>> {
         try {
-            const { PaymentTransaction } = await import(
-                "@/models/payment_transaction.model"
-            );
+            const { PaymentTransaction } = await import("@/models/payment_transaction.model");
 
-            const days =
-                period === "7d"
-                    ? 7
-                    : period === "30d"
-                      ? 30
-                      : period === "90d"
-                        ? 90
-                        : 365;
+            const days = period === "7d" ? 7 : period === "30d" ? 30 : period === "90d" ? 90 : 365;
             const startDate = new Date();
             startDate.setDate(startDate.getDate() - days);
 
@@ -266,14 +229,10 @@ export class PaymentAnalyticsService {
             });
 
             // Group by date
-            const trendsMap = new Map<
-                string,
-                { amount: number; transactions: number }
-            >();
+            const trendsMap = new Map<string, { amount: number; transactions: number }>();
 
             for (const transaction of transactions.rows || []) {
-                const date =
-                    transaction.completed_at?.toISOString().split("T")[0] || "";
+                const date = transaction.completed_at?.toISOString().split("T")[0] || "";
                 const existing = trendsMap.get(date) || {
                     amount: 0,
                     transactions: 0,
@@ -323,10 +282,7 @@ export class PaymentAnalyticsService {
             });
 
             // Group by student and calculate totals
-            const studentPayments = new Map<
-                string,
-                { total_paid: number; transaction_count: number }
-            >();
+            const studentPayments = new Map<string, { total_paid: number; transaction_count: number }>();
 
             for (const fee of fees.rows || []) {
                 const existing = studentPayments.get(fee.user_id) || {
@@ -348,10 +304,7 @@ export class PaymentAnalyticsService {
                 transaction_count: number;
             }> = [];
 
-            for (const [
-                student_id,
-                payment_data,
-            ] of studentPayments.entries()) {
+            for (const [student_id, payment_data] of studentPayments.entries()) {
                 try {
                     const student = await UserService.getUser(student_id);
 
@@ -359,9 +312,7 @@ export class PaymentAnalyticsService {
                     const { Class } = await import("@/models/class.model");
                     const classesResult = await Class.find({ campus_id });
                     const studentClass = (classesResult.rows || []).find(
-                        (cls) =>
-                            cls.student_ids &&
-                            cls.student_ids.includes(student_id)
+                        (cls) => cls.student_ids && cls.student_ids.includes(student_id)
                     );
 
                     topStudents.push({
@@ -373,15 +324,11 @@ export class PaymentAnalyticsService {
                     });
                 } catch {
                     // Skip if student data not found
-                    console.warn(
-                        `Student data not found for ID: ${student_id}`
-                    );
+                    console.warn(`Student data not found for ID: ${student_id}`);
                 }
             }
 
-            return topStudents
-                .sort((a, b) => b.total_paid - a.total_paid)
-                .slice(0, limit);
+            return topStudents.sort((a, b) => b.total_paid - a.total_paid).slice(0, limit);
         } catch (error) {
             throw new Error(`Failed to get top paying students: ${error}`);
         }
@@ -389,13 +336,8 @@ export class PaymentAnalyticsService {
 
     // ========================= HELPER METHODS =========================
 
-    private static async calculateOverview(
-        fees: any[],
-        transactions: any[]
-    ): Promise<any> {
-        const totalRevenue = transactions
-            .filter((t) => t.status === "success")
-            .reduce((sum, t) => sum + t.amount, 0);
+    private static async calculateOverview(fees: any[], transactions: any[]): Promise<any> {
+        const totalRevenue = transactions.filter((t) => t.status === "success").reduce((sum, t) => sum + t.amount, 0);
 
         const pendingAmount = fees
             .filter((f) => f.payment_status === "unpaid")
@@ -406,18 +348,11 @@ export class PaymentAnalyticsService {
             .reduce((sum, f) => sum + f.due_amount, 0);
 
         const totalFeeAmount = fees.reduce((sum, f) => sum + f.total_amount, 0);
-        const collectionRate =
-            totalFeeAmount > 0 ? (totalRevenue / totalFeeAmount) * 100 : 0;
+        const collectionRate = totalFeeAmount > 0 ? (totalRevenue / totalFeeAmount) * 100 : 0;
 
-        const failedTransactions = transactions.filter(
-            (t) => t.status === "failed"
-        ).length;
+        const failedTransactions = transactions.filter((t) => t.status === "failed").length;
         const successRate =
-            transactions.length > 0
-                ? ((transactions.length - failedTransactions) /
-                      transactions.length) *
-                  100
-                : 0;
+            transactions.length > 0 ? ((transactions.length - failedTransactions) / transactions.length) * 100 : 0;
 
         return {
             total_revenue: totalRevenue,
@@ -430,14 +365,9 @@ export class PaymentAnalyticsService {
         };
     }
 
-    private static async calculateMonthlyTrends(
-        campus_id: string,
-        range: any
-    ): Promise<any[]> {
+    private static async calculateMonthlyTrends(campus_id: string, range: any): Promise<any[]> {
         try {
-            const { PaymentTransaction } = await import(
-                "@/models/payment_transaction.model"
-            );
+            const { PaymentTransaction } = await import("@/models/payment_transaction.model");
 
             const trends: Array<{
                 month: string;
@@ -449,16 +379,8 @@ export class PaymentAnalyticsService {
             const currentDate = new Date(range.start_date);
 
             while (currentDate <= range.end_date) {
-                const monthStart = new Date(
-                    currentDate.getFullYear(),
-                    currentDate.getMonth(),
-                    1
-                );
-                const monthEnd = new Date(
-                    currentDate.getFullYear(),
-                    currentDate.getMonth() + 1,
-                    0
-                );
+                const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+                const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
 
                 const monthTransactions = await PaymentTransaction.find({
                     campus_id,
@@ -469,10 +391,7 @@ export class PaymentAnalyticsService {
                     },
                 });
 
-                const revenue = (monthTransactions.rows || []).reduce(
-                    (sum, t) => sum + t.amount,
-                    0
-                );
+                const revenue = (monthTransactions.rows || []).reduce((sum, t) => sum + t.amount, 0);
                 const transactionCount = monthTransactions.rows?.length || 0;
 
                 trends.push({
@@ -495,10 +414,7 @@ export class PaymentAnalyticsService {
         }
     }
 
-    private static async calculateFeeCategoryBreakdown(
-        campus_id: string,
-        fees: any[]
-    ): Promise<any[]> {
+    private static async calculateFeeCategoryBreakdown(campus_id: string, fees: any[]): Promise<any[]> {
         try {
             const { FeeCategory } = await import("@/models/fee_category.model");
 
@@ -516,10 +432,7 @@ export class PaymentAnalyticsService {
                 let collectedAmount = 0;
 
                 for (const fee of fees) {
-                    const categoryItems =
-                        fee.items?.filter(
-                            (item: any) => item.category_id === category.id
-                        ) || [];
+                    const categoryItems = fee.items?.filter((item: any) => item.category_id === category.id) || [];
                     for (const item of categoryItems) {
                         totalAmount += item.amount;
                         if (fee.payment_status === "paid") {
@@ -529,8 +442,7 @@ export class PaymentAnalyticsService {
                 }
 
                 const pendingAmount = totalAmount - collectedAmount;
-                const percentage =
-                    totalAmount > 0 ? (collectedAmount / totalAmount) * 100 : 0;
+                const percentage = totalAmount > 0 ? (collectedAmount / totalAmount) * 100 : 0;
 
                 breakdown.push({
                     category_name: category.name,
@@ -549,10 +461,7 @@ export class PaymentAnalyticsService {
     }
 
     private static calculatePaymentMethodStats(transactions: any[]): any[] {
-        const methodStats = new Map<
-            string,
-            { count: number; amount: number }
-        >();
+        const methodStats = new Map<string, { count: number; amount: number }>();
 
         for (const transaction of transactions) {
             if (transaction.status === "success") {
@@ -568,26 +477,17 @@ export class PaymentAnalyticsService {
             }
         }
 
-        const totalAmount = [...methodStats.values()].reduce(
-            (sum, stat) => sum + stat.amount,
-            0
-        );
+        const totalAmount = [...methodStats.values()].reduce((sum, stat) => sum + stat.amount, 0);
 
         return [...methodStats.entries()].map(([method, stats]) => ({
             method,
             count: stats.count,
             amount: stats.amount,
-            percentage:
-                totalAmount > 0
-                    ? Math.round((stats.amount / totalAmount) * 10_000) / 100
-                    : 0,
+            percentage: totalAmount > 0 ? Math.round((stats.amount / totalAmount) * 10_000) / 100 : 0,
         }));
     }
 
-    private static async calculateClassWiseCollection(
-        campus_id: string,
-        fees: any[]
-    ): Promise<any[]> {
+    private static async calculateClassWiseCollection(campus_id: string, fees: any[]): Promise<any[]> {
         try {
             const { Class } = await import("@/models/class.model");
 
@@ -603,14 +503,10 @@ export class PaymentAnalyticsService {
             }> = [];
 
             for (const classData of classes.rows || []) {
-                const classFees = fees.filter(
-                    (f) => f.class_id === classData.id
-                );
+                const classFees = fees.filter((f) => f.class_id === classData.id);
 
                 const totalStudents = classData.student_ids?.length || 0;
-                const paidStudents = classFees.filter(
-                    (f) => f.payment_status === "paid"
-                ).length;
+                const paidStudents = classFees.filter((f) => f.payment_status === "paid").length;
                 const pendingStudents = totalStudents - paidStudents;
 
                 const amountCollected = classFees
@@ -621,18 +517,14 @@ export class PaymentAnalyticsService {
                     .filter((f) => f.payment_status !== "paid")
                     .reduce((sum, f) => sum + f.due_amount, 0);
 
-                const collectionPercentage =
-                    totalStudents > 0
-                        ? (paidStudents / totalStudents) * 100
-                        : 0;
+                const collectionPercentage = totalStudents > 0 ? (paidStudents / totalStudents) * 100 : 0;
 
                 collection.push({
                     class_name: classData.name,
                     total_students: totalStudents,
                     paid_students: paidStudents,
                     pending_students: pendingStudents,
-                    collection_percentage:
-                        Math.round(collectionPercentage * 100) / 100,
+                    collection_percentage: Math.round(collectionPercentage * 100) / 100,
                     amount_collected: amountCollected,
                     amount_pending: amountPending,
                 });
@@ -645,17 +537,11 @@ export class PaymentAnalyticsService {
         }
     }
 
-    private static async calculateOverdueAnalysis(
-        campus_id: string,
-        fees: any[]
-    ): Promise<any> {
+    private static async calculateOverdueAnalysis(campus_id: string, fees: any[]): Promise<any> {
         const overdueFees = fees.filter((f) => f.payment_status === "overdue");
 
         const totalOverdueFees = overdueFees.length;
-        const totalOverdueAmount = overdueFees.reduce(
-            (sum, f) => sum + f.due_amount,
-            0
-        );
+        const totalOverdueAmount = overdueFees.reduce((sum, f) => sum + f.due_amount, 0);
 
         // Calculate average overdue days
         const today = new Date();
@@ -663,20 +549,14 @@ export class PaymentAnalyticsService {
 
         for (const fee of overdueFees) {
             const dueDate = new Date(fee.items[0]?.due_date || today);
-            const daysDiff = Math.floor(
-                (today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)
-            );
+            const daysDiff = Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
             totalOverdueDays += Math.max(0, daysDiff);
         }
 
-        const averageOverdueDays =
-            totalOverdueFees > 0 ? totalOverdueDays / totalOverdueFees : 0;
+        const averageOverdueDays = totalOverdueFees > 0 ? totalOverdueDays / totalOverdueFees : 0;
 
         // Group overdue by class
-        const overdueByClass = new Map<
-            string,
-            { count: number; amount: number }
-        >();
+        const overdueByClass = new Map<string, { count: number; amount: number }>();
 
         for (const fee of overdueFees) {
             const existing = overdueByClass.get(fee.class_id) || {
@@ -689,13 +569,11 @@ export class PaymentAnalyticsService {
             });
         }
 
-        const overdueByClassArray = [...overdueByClass.entries()].map(
-            ([classId, data]) => ({
-                class_name: classId, // You might want to resolve class name
-                overdue_count: data.count,
-                overdue_amount: data.amount,
-            })
-        );
+        const overdueByClassArray = [...overdueByClass.entries()].map(([classId, data]) => ({
+            class_name: classId, // You might want to resolve class name
+            overdue_count: data.count,
+            overdue_amount: data.amount,
+        }));
 
         return {
             total_overdue_fees: totalOverdueFees,
@@ -705,14 +583,9 @@ export class PaymentAnalyticsService {
         };
     }
 
-    private static async getRecentTransactions(
-        campus_id: string,
-        limit: number
-    ): Promise<any[]> {
+    private static async getRecentTransactions(campus_id: string, limit: number): Promise<any[]> {
         try {
-            const { PaymentTransaction } = await import(
-                "@/models/payment_transaction.model"
-            );
+            const { PaymentTransaction } = await import("@/models/payment_transaction.model");
             const { UserService } = await import("@/services/users.service");
 
             const transactions = await PaymentTransaction.find(
@@ -734,9 +607,7 @@ export class PaymentAnalyticsService {
 
             for (const transaction of transactions.rows || []) {
                 try {
-                    const student = await UserService.getUser(
-                        transaction.student_id
-                    );
+                    const student = await UserService.getUser(transaction.student_id);
                     recentTransactions.push({
                         id: transaction.id,
                         student_name: `${student.first_name} ${student.last_name}`,
@@ -747,9 +618,7 @@ export class PaymentAnalyticsService {
                     });
                 } catch {
                     // Skip if student not found
-                    console.warn(
-                        `Student not found for transaction: ${transaction.id}`
-                    );
+                    console.warn(`Student not found for transaction: ${transaction.id}`);
                 }
             }
 
@@ -769,11 +638,7 @@ export class PaymentAnalyticsService {
         switch (type) {
             case "daily": {
                 return {
-                    start_date: new Date(
-                        today.getFullYear(),
-                        today.getMonth(),
-                        today.getDate()
-                    ),
+                    start_date: new Date(today.getFullYear(), today.getMonth(), today.getDate()),
                     end_date: today,
                 };
             }
@@ -787,11 +652,7 @@ export class PaymentAnalyticsService {
             }
             case "monthly": {
                 return {
-                    start_date: new Date(
-                        today.getFullYear(),
-                        today.getMonth(),
-                        1
-                    ),
+                    start_date: new Date(today.getFullYear(), today.getMonth(), 1),
                     end_date: today,
                 };
             }
@@ -805,21 +666,10 @@ export class PaymentAnalyticsService {
     }
 
     private static calculateReportSummary(transactions: any[]): any {
-        const successfulTransactions = transactions.filter(
-            (t) => t.status === "success"
-        );
-        const totalCollections = successfulTransactions.reduce(
-            (sum, t) => sum + t.amount,
-            0
-        );
-        const averageAmount =
-            successfulTransactions.length > 0
-                ? totalCollections / successfulTransactions.length
-                : 0;
-        const successRate =
-            transactions.length > 0
-                ? (successfulTransactions.length / transactions.length) * 100
-                : 0;
+        const successfulTransactions = transactions.filter((t) => t.status === "success");
+        const totalCollections = successfulTransactions.reduce((sum, t) => sum + t.amount, 0);
+        const averageAmount = successfulTransactions.length > 0 ? totalCollections / successfulTransactions.length : 0;
+        const successRate = transactions.length > 0 ? (successfulTransactions.length / transactions.length) * 100 : 0;
 
         return {
             total_collections: totalCollections,
@@ -829,10 +679,7 @@ export class PaymentAnalyticsService {
         };
     }
 
-    private static async getDetailedTransactions(
-        campus_id: string,
-        transactions: any[]
-    ): Promise<any[]> {
+    private static async getDetailedTransactions(campus_id: string, transactions: any[]): Promise<any[]> {
         const detailed: Array<{
             transaction_id: string;
             student_name: string;
@@ -847,15 +694,11 @@ export class PaymentAnalyticsService {
 
         for (const transaction of transactions) {
             try {
-                const { UserService } = await import(
-                    "@/services/users.service"
-                );
+                const { UserService } = await import("@/services/users.service");
                 const { Fee } = await import("@/models/fee.model");
                 const { Class } = await import("@/models/class.model");
 
-                const student = await UserService.getUser(
-                    transaction.student_id
-                );
+                const student = await UserService.getUser(transaction.student_id);
                 const fee = await Fee.findById(transaction.fee_id);
                 const classData = await Class.findById(fee?.class_id || "");
 
@@ -872,32 +715,20 @@ export class PaymentAnalyticsService {
                 });
             } catch {
                 // Skip if data not found
-                console.warn(
-                    `Error getting details for transaction: ${transaction.id}`
-                );
+                console.warn(`Error getting details for transaction: ${transaction.id}`);
             }
         }
 
         return detailed;
     }
 
-    private static async generateChartsData(
-        campus_id: string,
-        transactions: any[],
-        range: any
-    ): Promise<any> {
+    private static async generateChartsData(campus_id: string, transactions: any[], range: any): Promise<any> {
         // Daily collections chart
         const dailyCollections = new Map<string, number>();
 
-        for (const transaction of transactions.filter(
-            (t) => t.status === "success"
-        )) {
-            const date =
-                transaction.completed_at?.toISOString().split("T")[0] || "";
-            dailyCollections.set(
-                date,
-                (dailyCollections.get(date) || 0) + transaction.amount
-            );
+        for (const transaction of transactions.filter((t) => t.status === "success")) {
+            const date = transaction.completed_at?.toISOString().split("T")[0] || "";
+            dailyCollections.set(date, (dailyCollections.get(date) || 0) + transaction.amount);
         }
 
         const dailyCollectionsArray = [...dailyCollections.entries()]

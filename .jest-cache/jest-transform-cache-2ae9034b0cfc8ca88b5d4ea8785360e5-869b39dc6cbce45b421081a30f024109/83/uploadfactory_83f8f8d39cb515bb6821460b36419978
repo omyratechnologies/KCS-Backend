@@ -1,0 +1,501 @@
+c76961e484cb1bfddbe5c84d4153a89f
+/* istanbul ignore next */
+function cov_13yxmxgwec() {
+  var path = "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/libs/s3/upload.factory.ts";
+  var hash = "04614a669d76895685e6484f44a92579e222033d";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/libs/s3/upload.factory.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 8,
+          column: 8
+        },
+        end: {
+          line: 10,
+          column: 9
+        }
+      },
+      "1": {
+        start: {
+          line: 9,
+          column: 12
+        },
+        end: {
+          line: 9,
+          column: 35
+        }
+      },
+      "2": {
+        start: {
+          line: 11,
+          column: 8
+        },
+        end: {
+          line: 11,
+          column: 27
+        }
+      },
+      "3": {
+        start: {
+          line: 14,
+          column: 8
+        },
+        end: {
+          line: 23,
+          column: 9
+        }
+      },
+      "4": {
+        start: {
+          line: 15,
+          column: 12
+        },
+        end: {
+          line: 21,
+          column: 15
+        }
+      },
+      "5": {
+        start: {
+          line: 22,
+          column: 12
+        },
+        end: {
+          line: 22,
+          column: 67
+        }
+      },
+      "6": {
+        start: {
+          line: 26,
+          column: 0
+        },
+        end: {
+          line: 26,
+          column: 19
+        }
+      },
+      "7": {
+        start: {
+          line: 27,
+          column: 0
+        },
+        end: {
+          line: 49,
+          column: 2
+        }
+      },
+      "8": {
+        start: {
+          line: 28,
+          column: 4
+        },
+        end: {
+          line: 48,
+          column: 5
+        }
+      },
+      "9": {
+        start: {
+          line: 29,
+          column: 8
+        },
+        end: {
+          line: 29,
+          column: 100
+        }
+      },
+      "10": {
+        start: {
+          line: 30,
+          column: 26
+        },
+        end: {
+          line: 30,
+          column: 52
+        }
+      },
+      "11": {
+        start: {
+          line: 31,
+          column: 26
+        },
+        end: {
+          line: 31,
+          column: 51
+        }
+      },
+      "12": {
+        start: {
+          line: 32,
+          column: 23
+        },
+        end: {
+          line: 32,
+          column: 47
+        }
+      },
+      "13": {
+        start: {
+          line: 33,
+          column: 8
+        },
+        end: {
+          line: 33,
+          column: 90
+        }
+      },
+      "14": {
+        start: {
+          line: 34,
+          column: 8
+        },
+        end: {
+          line: 37,
+          column: 11
+        }
+      },
+      "15": {
+        start: {
+          line: 38,
+          column: 20
+        },
+        end: {
+          line: 38,
+          column: 52
+        }
+      },
+      "16": {
+        start: {
+          line: 39,
+          column: 8
+        },
+        end: {
+          line: 39,
+          column: 80
+        }
+      },
+      "17": {
+        start: {
+          line: 40,
+          column: 8
+        },
+        end: {
+          line: 43,
+          column: 10
+        }
+      },
+      "18": {
+        start: {
+          line: 46,
+          column: 8
+        },
+        end: {
+          line: 46,
+          column: 83
+        }
+      },
+      "19": {
+        start: {
+          line: 47,
+          column: 8
+        },
+        end: {
+          line: 47,
+          column: 20
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 7,
+            column: 4
+          },
+          end: {
+            line: 7,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 7,
+            column: 25
+          },
+          end: {
+            line: 12,
+            column: 5
+          }
+        },
+        line: 7
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 13,
+            column: 4
+          },
+          end: {
+            line: 13,
+            column: 5
+          }
+        },
+        loc: {
+          start: {
+            line: 13,
+            column: 32
+          },
+          end: {
+            line: 24,
+            column: 5
+          }
+        },
+        line: 13
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 27,
+            column: 23
+          },
+          end: {
+            line: 27,
+            column: 24
+          }
+        },
+        loc: {
+          start: {
+            line: 27,
+            column: 39
+          },
+          end: {
+            line: 49,
+            column: 1
+          }
+        },
+        line: 27
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 8,
+            column: 8
+          },
+          end: {
+            line: 10,
+            column: 9
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 8,
+            column: 8
+          },
+          end: {
+            line: 10,
+            column: 9
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 8
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 14,
+            column: 8
+          },
+          end: {
+            line: 23,
+            column: 9
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 14,
+            column: 8
+          },
+          end: {
+            line: 23,
+            column: 9
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 14
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0,
+      "15": 0,
+      "16": 0,
+      "17": 0,
+      "18": 0,
+      "19": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0
+    },
+    b: {
+      "0": [0, 0],
+      "1": [0, 0]
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "04614a669d76895685e6484f44a92579e222033d"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_13yxmxgwec = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_13yxmxgwec();
+var _a;
+import { S3Client } from "bun";
+import { nanoid } from "napi-nanoid";
+import log, { LogTypes } from "@/libs/logger";
+import { config } from "@/utils/env";
+export class UploadFactory {
+  static getInstance() {
+    /* istanbul ignore next */
+    cov_13yxmxgwec().f[0]++;
+    cov_13yxmxgwec().s[0]++;
+    if (!_a.instance) {
+      /* istanbul ignore next */
+      cov_13yxmxgwec().b[0][0]++;
+      cov_13yxmxgwec().s[1]++;
+      _a.instance = new _a();
+    } else
+    /* istanbul ignore next */
+    {
+      cov_13yxmxgwec().b[0][1]++;
+    }
+    cov_13yxmxgwec().s[2]++;
+    return _a.instance;
+  }
+  static createUploadClient() {
+    /* istanbul ignore next */
+    cov_13yxmxgwec().f[1]++;
+    cov_13yxmxgwec().s[3]++;
+    if (!_a.client) {
+      /* istanbul ignore next */
+      cov_13yxmxgwec().b[1][0]++;
+      cov_13yxmxgwec().s[4]++;
+      _a.client = new S3Client({
+        accessKeyId: config.R2_ACCESS_KEY_ID,
+        secretAccessKey: config.R2_SECRET_ACCESS_KEY,
+        region: config.R2_REGION,
+        bucket: config.R2_BUCKET,
+        endpoint: config.R2_ENDPOINT
+      });
+      /* istanbul ignore next */
+      cov_13yxmxgwec().s[5]++;
+      log("R2 Client created", LogTypes.LOGS, "S3 Uploader");
+    } else
+    /* istanbul ignore next */
+    {
+      cov_13yxmxgwec().b[1][1]++;
+    }
+  }
+}
+/* istanbul ignore next */
+cov_13yxmxgwec().s[6]++;
+_a = UploadFactory;
+/* istanbul ignore next */
+cov_13yxmxgwec().s[7]++;
+UploadFactory.upload = async file => {
+  /* istanbul ignore next */
+  cov_13yxmxgwec().f[2]++;
+  cov_13yxmxgwec().s[8]++;
+  try {
+    /* istanbul ignore next */
+    cov_13yxmxgwec().s[9]++;
+    log(`Starting file upload: ${file.name}, size: ${file.size}`, LogTypes.LOGS, "S3 Uploader");
+    const file_name =
+    /* istanbul ignore next */
+    (cov_13yxmxgwec().s[10]++, `${nanoid()}-${file.name}`);
+    const file_data =
+    /* istanbul ignore next */
+    (cov_13yxmxgwec().s[11]++, _a.client.file(file_name));
+    const buffer =
+    /* istanbul ignore next */
+    (cov_13yxmxgwec().s[12]++, await file.arrayBuffer());
+    /* istanbul ignore next */
+    cov_13yxmxgwec().s[13]++;
+    log("File converted to buffer, uploading to S3...", LogTypes.LOGS, "S3 Uploader");
+    /* istanbul ignore next */
+    cov_13yxmxgwec().s[14]++;
+    await file_data.write(buffer, {
+      acl: "public-read",
+      type: file.type
+    });
+    const url =
+    /* istanbul ignore next */
+    (cov_13yxmxgwec().s[15]++, config.R2_BUCKET_URL + file_name);
+    /* istanbul ignore next */
+    cov_13yxmxgwec().s[16]++;
+    log(`File uploaded successfully: ${url}`, LogTypes.LOGS, "S3 Uploader");
+    /* istanbul ignore next */
+    cov_13yxmxgwec().s[17]++;
+    return {
+      file_name,
+      url
+    };
+  } catch (error) {
+    /* istanbul ignore next */
+    cov_13yxmxgwec().s[18]++;
+    log(`Error uploading file to S3: ${error}`, LogTypes.ERROR, "S3 Uploader");
+    /* istanbul ignore next */
+    cov_13yxmxgwec().s[19]++;
+    throw error;
+  }
+};

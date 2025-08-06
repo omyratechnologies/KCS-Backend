@@ -8,11 +8,7 @@ export class MeetingErrorMonitor {
     /**
      * Log and monitor meeting errors
      */
-    public static logError(
-        operation: string,
-        error: Error,
-        context?: any
-    ): void {
+    public static logError(operation: string, error: Error, context?: any): void {
         const errorKey = `${operation}:${error.name}`;
         const currentCount = this.errorCounts.get(errorKey) || 0;
 
@@ -45,10 +41,7 @@ export class MeetingErrorMonitor {
         errorsByType: Record<string, number>;
         recentErrors: Record<string, Date>;
     } {
-        const totalErrors = [...this.errorCounts.values()].reduce(
-            (sum, count) => sum + count,
-            0
-        );
+        const totalErrors = [...this.errorCounts.values()].reduce((sum, count) => sum + count, 0);
         const errorsByType = Object.fromEntries(this.errorCounts);
         const recentErrors = Object.fromEntries(this.lastErrors);
 
@@ -62,15 +55,9 @@ export class MeetingErrorMonitor {
     /**
      * Send alert for critical errors
      */
-    private static sendAlert(
-        operation: string,
-        error: Error,
-        count: number
-    ): void {
+    private static sendAlert(operation: string, error: Error, count: number): void {
         // In production, integrate with alerting system (e.g., Slack, PagerDuty)
-        console.warn(
-            `[MEETING_ALERT] High error rate detected: ${operation} - ${count} errors`
-        );
+        console.warn(`[MEETING_ALERT] High error rate detected: ${operation} - ${count} errors`);
     }
 
     /**

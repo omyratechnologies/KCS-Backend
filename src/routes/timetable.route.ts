@@ -49,8 +49,7 @@ app.get(
     describeRoute({
         operationId: "getTimetableByCampusAndClass",
         summary: "Get timetable by class ID",
-        description:
-            "Retrieves all timetable entries for a specific class in a campus",
+        description: "Retrieves all timetable entries for a specific class in a campus",
         tags: ["Timetable"],
         parameters: [
             {
@@ -88,8 +87,7 @@ app.get(
     describeRoute({
         operationId: "getTimetableByCampusAndTeacher",
         summary: "Get timetable by teacher ID",
-        description:
-            "Retrieves all timetable entries for a specific teacher in a campus",
+        description: "Retrieves all timetable entries for a specific teacher in a campus",
         tags: ["Timetable"],
         parameters: [
             {

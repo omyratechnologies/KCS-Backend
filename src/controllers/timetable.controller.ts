@@ -11,11 +11,7 @@ export class TimetableController {
 
             const { class_id, timetableData } = await ctx.req.json();
 
-            const timetable = await TimetableService.createTimetableBulk(
-                campus_id,
-                class_id,
-                timetableData
-            );
+            const timetable = await TimetableService.createTimetableBulk(campus_id, class_id, timetableData);
 
             return ctx.json(timetable);
         } catch (error) {
@@ -29,19 +25,13 @@ export class TimetableController {
     };
 
     // Read by Campus ID and Class ID
-    public static readonly getTimetableByCampusAndClass = async (
-        ctx: Context
-    ) => {
+    public static readonly getTimetableByCampusAndClass = async (ctx: Context) => {
         try {
             const campus_id = ctx.get("campus_id");
 
             const { class_id } = ctx.req.param();
 
-            const timetable =
-                await TimetableService.getTimetableByCampusAndClass(
-                    campus_id,
-                    class_id
-                );
+            const timetable = await TimetableService.getTimetableByCampusAndClass(campus_id, class_id);
 
             return ctx.json(timetable);
         } catch (error) {
@@ -55,19 +45,13 @@ export class TimetableController {
     };
 
     // Read by Campus ID and Teacher ID
-    public static readonly getTimetableByCampusAndTeacher = async (
-        ctx: Context
-    ) => {
+    public static readonly getTimetableByCampusAndTeacher = async (ctx: Context) => {
         try {
             const campus_id = ctx.get("campus_id");
 
             const { teacher_id } = ctx.req.param();
 
-            const timetable =
-                await TimetableService.getTimetableByCampusAndTeacher(
-                    campus_id,
-                    teacher_id
-                );
+            const timetable = await TimetableService.getTimetableByCampusAndTeacher(campus_id, teacher_id);
 
             return ctx.json(timetable);
         } catch (error) {
@@ -87,10 +71,7 @@ export class TimetableController {
 
             const data: Partial<ITimetable> = await ctx.req.json();
 
-            const timetable = await TimetableService.updateTimetableById(
-                id,
-                data
-            );
+            const timetable = await TimetableService.updateTimetableById(id, data);
 
             return ctx.json(timetable);
         } catch (error) {

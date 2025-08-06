@@ -31,9 +31,6 @@ const MessageGroupSchema = new Schema({
 
 MessageGroupSchema.index.findByCampusId = { by: "campus_id" };
 
-const MessageGroup = ottoman.model<IMessageGroup>(
-    "message_groups",
-    MessageGroupSchema
-);
+const MessageGroup = ottoman.model<IMessageGroup>("message_groups", MessageGroupSchema);
 
 export { type IMessageGroup, MessageGroup };

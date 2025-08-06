@@ -5,6 +5,7 @@ import { ottoman } from "../libs/db";
 interface ILoginSession {
     id: string;
     user_id: string;
+    campus_id?: string;
     session_id: string;
     refresh_token: string;
     created_at: Date;
@@ -13,6 +14,7 @@ interface ILoginSession {
 
 const LoginSessionSchema = new Schema({
     user_id: { type: String, required: true },
+    campus_id: { type: String, required: false },
     session_id: { type: String, required: true },
     refresh_token: { type: String, required: true },
     created_at: { type: Date, default: () => new Date() },
@@ -21,9 +23,6 @@ const LoginSessionSchema = new Schema({
 
 LoginSessionSchema.index.findByUserId = { by: "user_id" };
 
-const LoginSession = ottoman.model<ILoginSession>(
-    "login_sessions",
-    LoginSessionSchema
-);
+const LoginSession = ottoman.model<ILoginSession>("login_sessions", LoginSessionSchema);
 
 export { type ILoginSession, LoginSession };

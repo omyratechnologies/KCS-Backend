@@ -1,0 +1,944 @@
+26a5071d54e5397e916682914af21e40
+/* istanbul ignore next */
+function cov_11j3bu687z() {
+  var path = "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/models/meeting.model.ts";
+  var hash = "58bd43b3e4d714de9a491b54cc8e4f26f63def04";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/models/meeting.model.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 4,
+          column: 22
+        },
+        end: {
+          line: 96,
+          column: 2
+        }
+      },
+      "1": {
+        start: {
+          line: 94,
+          column: 45
+        },
+        end: {
+          line: 94,
+          column: 55
+        }
+      },
+      "2": {
+        start: {
+          line: 95,
+          column: 45
+        },
+        end: {
+          line: 95,
+          column: 55
+        }
+      },
+      "3": {
+        start: {
+          line: 97,
+          column: 33
+        },
+        end: {
+          line: 144,
+          column: 2
+        }
+      },
+      "4": {
+        start: {
+          line: 113,
+          column: 44
+        },
+        end: {
+          line: 113,
+          column: 54
+        }
+      },
+      "5": {
+        start: {
+          line: 142,
+          column: 45
+        },
+        end: {
+          line: 142,
+          column: 55
+        }
+      },
+      "6": {
+        start: {
+          line: 143,
+          column: 45
+        },
+        end: {
+          line: 143,
+          column: 55
+        }
+      },
+      "7": {
+        start: {
+          line: 145,
+          column: 26
+        },
+        end: {
+          line: 164,
+          column: 2
+        }
+      },
+      "8": {
+        start: {
+          line: 161,
+          column: 44
+        },
+        end: {
+          line: 161,
+          column: 54
+        }
+      },
+      "9": {
+        start: {
+          line: 165,
+          column: 31
+        },
+        end: {
+          line: 183,
+          column: 2
+        }
+      },
+      "10": {
+        start: {
+          line: 182,
+          column: 45
+        },
+        end: {
+          line: 182,
+          column: 55
+        }
+      },
+      "11": {
+        start: {
+          line: 185,
+          column: 0
+        },
+        end: {
+          line: 185,
+          column: 57
+        }
+      },
+      "12": {
+        start: {
+          line: 186,
+          column: 0
+        },
+        end: {
+          line: 186,
+          column: 59
+        }
+      },
+      "13": {
+        start: {
+          line: 187,
+          column: 0
+        },
+        end: {
+          line: 187,
+          column: 60
+        }
+      },
+      "14": {
+        start: {
+          line: 188,
+          column: 0
+        },
+        end: {
+          line: 188,
+          column: 61
+        }
+      },
+      "15": {
+        start: {
+          line: 189,
+          column: 0
+        },
+        end: {
+          line: 189,
+          column: 70
+        }
+      },
+      "16": {
+        start: {
+          line: 190,
+          column: 0
+        },
+        end: {
+          line: 190,
+          column: 64
+        }
+      },
+      "17": {
+        start: {
+          line: 191,
+          column: 0
+        },
+        end: {
+          line: 193,
+          column: 2
+        }
+      },
+      "18": {
+        start: {
+          line: 194,
+          column: 0
+        },
+        end: {
+          line: 194,
+          column: 63
+        }
+      },
+      "19": {
+        start: {
+          line: 195,
+          column: 0
+        },
+        end: {
+          line: 195,
+          column: 62
+        }
+      },
+      "20": {
+        start: {
+          line: 196,
+          column: 0
+        },
+        end: {
+          line: 196,
+          column: 68
+        }
+      },
+      "21": {
+        start: {
+          line: 197,
+          column: 0
+        },
+        end: {
+          line: 197,
+          column: 67
+        }
+      },
+      "22": {
+        start: {
+          line: 198,
+          column: 16
+        },
+        end: {
+          line: 198,
+          column: 55
+        }
+      },
+      "23": {
+        start: {
+          line: 199,
+          column: 27
+        },
+        end: {
+          line: 199,
+          column: 89
+        }
+      },
+      "24": {
+        start: {
+          line: 200,
+          column: 20
+        },
+        end: {
+          line: 200,
+          column: 68
+        }
+      },
+      "25": {
+        start: {
+          line: 201,
+          column: 25
+        },
+        end: {
+          line: 201,
+          column: 83
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 94,
+            column: 39
+          },
+          end: {
+            line: 94,
+            column: 40
+          }
+        },
+        loc: {
+          start: {
+            line: 94,
+            column: 45
+          },
+          end: {
+            line: 94,
+            column: 55
+          }
+        },
+        line: 94
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 95,
+            column: 39
+          },
+          end: {
+            line: 95,
+            column: 40
+          }
+        },
+        loc: {
+          start: {
+            line: 95,
+            column: 45
+          },
+          end: {
+            line: 95,
+            column: 55
+          }
+        },
+        line: 95
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 113,
+            column: 38
+          },
+          end: {
+            line: 113,
+            column: 39
+          }
+        },
+        loc: {
+          start: {
+            line: 113,
+            column: 44
+          },
+          end: {
+            line: 113,
+            column: 54
+          }
+        },
+        line: 113
+      },
+      "3": {
+        name: "(anonymous_3)",
+        decl: {
+          start: {
+            line: 142,
+            column: 39
+          },
+          end: {
+            line: 142,
+            column: 40
+          }
+        },
+        loc: {
+          start: {
+            line: 142,
+            column: 45
+          },
+          end: {
+            line: 142,
+            column: 55
+          }
+        },
+        line: 142
+      },
+      "4": {
+        name: "(anonymous_4)",
+        decl: {
+          start: {
+            line: 143,
+            column: 39
+          },
+          end: {
+            line: 143,
+            column: 40
+          }
+        },
+        loc: {
+          start: {
+            line: 143,
+            column: 45
+          },
+          end: {
+            line: 143,
+            column: 55
+          }
+        },
+        line: 143
+      },
+      "5": {
+        name: "(anonymous_5)",
+        decl: {
+          start: {
+            line: 161,
+            column: 38
+          },
+          end: {
+            line: 161,
+            column: 39
+          }
+        },
+        loc: {
+          start: {
+            line: 161,
+            column: 44
+          },
+          end: {
+            line: 161,
+            column: 54
+          }
+        },
+        line: 161
+      },
+      "6": {
+        name: "(anonymous_6)",
+        decl: {
+          start: {
+            line: 182,
+            column: 39
+          },
+          end: {
+            line: 182,
+            column: 40
+          }
+        },
+        loc: {
+          start: {
+            line: 182,
+            column: 45
+          },
+          end: {
+            line: 182,
+            column: 55
+          }
+        },
+        line: 182
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0,
+      "15": 0,
+      "16": 0,
+      "17": 0,
+      "18": 0,
+      "19": 0,
+      "20": 0,
+      "21": 0,
+      "22": 0,
+      "23": 0,
+      "24": 0,
+      "25": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0
+    },
+    b: {},
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "58bd43b3e4d714de9a491b54cc8e4f26f63def04"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_11j3bu687z = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_11j3bu687z();
+import { Schema } from "ottoman";
+import { ottoman } from "../libs/db";
+// Enhanced Schemas for Real-time Video Conferencing
+const MeetingSchema =
+/* istanbul ignore next */
+(cov_11j3bu687z().s[0]++, new Schema({
+  campus_id: {
+    type: String,
+    required: true
+  },
+  creator_id: {
+    type: String,
+    required: true
+  },
+  participants: {
+    type: [String],
+    required: true
+  },
+  meeting_name: {
+    type: String,
+    required: true
+  },
+  meeting_description: {
+    type: String,
+    required: true
+  },
+  meeting_start_time: {
+    type: Date,
+    required: true
+  },
+  meeting_end_time: {
+    type: Date,
+    required: true
+  },
+  meeting_location: {
+    type: String,
+    required: true
+  },
+  meeting_meta_data: {
+    type: Object,
+    required: true
+  },
+  // Real-time meeting features
+  meeting_room_id: {
+    type: String,
+    required: true
+  },
+  meeting_type: {
+    type: String,
+    enum: ["scheduled", "instant", "recurring"],
+    default: "scheduled"
+  },
+  meeting_status: {
+    type: String,
+    enum: ["scheduled", "live", "ended", "cancelled"],
+    default: "scheduled"
+  },
+  max_participants: {
+    type: Number,
+    default: 100
+  },
+  current_participants: {
+    type: [String],
+    default: []
+  },
+  // Security & Access Control
+  meeting_password: {
+    type: String
+  },
+  waiting_room_enabled: {
+    type: Boolean,
+    default: false
+  },
+  require_host_approval: {
+    type: Boolean,
+    default: false
+  },
+  allow_guests: {
+    type: Boolean,
+    default: true
+  },
+  // Meeting Features
+  features: {
+    type: Object,
+    default: {
+      video_enabled: true,
+      audio_enabled: true,
+      screen_sharing_enabled: true,
+      chat_enabled: true,
+      recording_enabled: false,
+      breakout_rooms_enabled: false,
+      whiteboard_enabled: false,
+      hand_raise_enabled: true
+    }
+  },
+  // Recording & Storage
+  recording_config: {
+    type: Object,
+    default: {
+      auto_record: false,
+      record_video: true,
+      record_audio: true,
+      record_chat: false,
+      storage_location: "cloud",
+      retention_days: 30
+    }
+  },
+  // WebRTC Configuration
+  webrtc_config: {
+    type: Object,
+    default: {
+      ice_servers: [{
+        urls: ["stun:stun.l.google.com:19302"]
+      }, {
+        urls: ["stun:stun1.l.google.com:19302"]
+      }],
+      media_constraints: {
+        video: {
+          enabled: true,
+          quality: "medium",
+          frameRate: 30
+        },
+        audio: {
+          enabled: true,
+          noise_suppression: true,
+          echo_cancellation: true
+        }
+      }
+    }
+  },
+  // Analytics & Monitoring
+  analytics: {
+    type: Object,
+    default: {
+      total_duration_minutes: 0,
+      peak_participants: 0,
+      total_participants_joined: 0,
+      connection_quality_avg: 0,
+      chat_messages_count: 0,
+      screen_shares_count: 0
+    }
+  },
+  // Compliance & Audit
+  audit_trail: {
+    type: [Object],
+    default: []
+  },
+  is_active: {
+    type: Boolean,
+    required: true
+  },
+  is_deleted: {
+    type: Boolean,
+    required: true
+  },
+  created_at: {
+    type: Date,
+    default: () => {
+      /* istanbul ignore next */
+      cov_11j3bu687z().f[0]++;
+      cov_11j3bu687z().s[1]++;
+      return new Date();
+    }
+  },
+  updated_at: {
+    type: Date,
+    default: () => {
+      /* istanbul ignore next */
+      cov_11j3bu687z().f[1]++;
+      cov_11j3bu687z().s[2]++;
+      return new Date();
+    }
+  }
+}));
+const MeetingParticipantSchema =
+/* istanbul ignore next */
+(cov_11j3bu687z().s[3]++, new Schema({
+  meeting_id: {
+    type: String,
+    required: true
+  },
+  user_id: {
+    type: String,
+    required: true
+  },
+  participant_name: {
+    type: String,
+    required: true
+  },
+  participant_email: {
+    type: String
+  },
+  // Connection Status
+  connection_status: {
+    type: String,
+    enum: ["connecting", "connected", "reconnecting", "disconnected"],
+    default: "connecting"
+  },
+  connection_quality: {
+    type: String,
+    enum: ["poor", "fair", "good", "excellent"],
+    default: "good"
+  },
+  joined_at: {
+    type: Date,
+    default: () => {
+      /* istanbul ignore next */
+      cov_11j3bu687z().f[2]++;
+      cov_11j3bu687z().s[4]++;
+      return new Date();
+    }
+  },
+  left_at: {
+    type: Date
+  },
+  // Media Status
+  media_status: {
+    type: Object,
+    default: {
+      video_enabled: true,
+      audio_enabled: true,
+      screen_sharing: false,
+      is_speaking: false,
+      is_muted_by_host: false
+    }
+  },
+  // Permissions
+  permissions: {
+    type: Object,
+    default: {
+      can_share_screen: true,
+      can_use_chat: true,
+      can_use_whiteboard: true,
+      is_moderator: false,
+      is_host: false
+    }
+  },
+  // Technical Details
+  peer_connection_id: {
+    type: String,
+    required: true
+  },
+  socket_id: {
+    type: String,
+    required: true
+  },
+  ip_address: {
+    type: String
+  },
+  user_agent: {
+    type: String
+  },
+  created_at: {
+    type: Date,
+    default: () => {
+      /* istanbul ignore next */
+      cov_11j3bu687z().f[3]++;
+      cov_11j3bu687z().s[5]++;
+      return new Date();
+    }
+  },
+  updated_at: {
+    type: Date,
+    default: () => {
+      /* istanbul ignore next */
+      cov_11j3bu687z().f[4]++;
+      cov_11j3bu687z().s[6]++;
+      return new Date();
+    }
+  }
+}));
+const MeetingChatSchema =
+/* istanbul ignore next */
+(cov_11j3bu687z().s[7]++, new Schema({
+  meeting_id: {
+    type: String,
+    required: true
+  },
+  sender_id: {
+    type: String,
+    required: true
+  },
+  sender_name: {
+    type: String,
+    required: true
+  },
+  message: {
+    type: String,
+    required: true
+  },
+  message_type: {
+    type: String,
+    enum: ["text", "file", "poll", "announcement"],
+    default: "text"
+  },
+  recipient_type: {
+    type: String,
+    enum: ["all", "private", "host"],
+    default: "all"
+  },
+  recipient_id: {
+    type: String
+  },
+  timestamp: {
+    type: Date,
+    default: () => {
+      /* istanbul ignore next */
+      cov_11j3bu687z().f[5]++;
+      cov_11j3bu687z().s[8]++;
+      return new Date();
+    }
+  },
+  edited_at: {
+    type: Date
+  },
+  is_deleted: {
+    type: Boolean,
+    default: false
+  }
+}));
+const MeetingRecordingSchema =
+/* istanbul ignore next */
+(cov_11j3bu687z().s[9]++, new Schema({
+  meeting_id: {
+    type: String,
+    required: true
+  },
+  recording_type: {
+    type: String,
+    enum: ["video", "audio", "screen", "chat"],
+    required: true
+  },
+  file_path: {
+    type: String,
+    required: true
+  },
+  file_size_bytes: {
+    type: Number,
+    default: 0
+  },
+  duration_seconds: {
+    type: Number,
+    default: 0
+  },
+  format: {
+    type: String
+  },
+  quality: {
+    type: String
+  },
+  started_at: {
+    type: Date,
+    required: true
+  },
+  ended_at: {
+    type: Date
+  },
+  processed_at: {
+    type: Date
+  },
+  is_available: {
+    type: Boolean,
+    default: false
+  },
+  download_count: {
+    type: Number,
+    default: 0
+  },
+  created_at: {
+    type: Date,
+    default: () => {
+      /* istanbul ignore next */
+      cov_11j3bu687z().f[6]++;
+      cov_11j3bu687z().s[10]++;
+      return new Date();
+    }
+  }
+}));
+// Indexes for performance
+/* istanbul ignore next */
+cov_11j3bu687z().s[11]++;
+MeetingSchema.index.findByCampusId = {
+  by: "campus_id"
+};
+/* istanbul ignore next */
+cov_11j3bu687z().s[12]++;
+MeetingSchema.index.findByCreatorId = {
+  by: "creator_id"
+};
+/* istanbul ignore next */
+cov_11j3bu687z().s[13]++;
+MeetingSchema.index.findByStatus = {
+  by: "meeting_status"
+};
+/* istanbul ignore next */
+cov_11j3bu687z().s[14]++;
+MeetingSchema.index.findByRoomId = {
+  by: "meeting_room_id"
+};
+/* istanbul ignore next */
+cov_11j3bu687z().s[15]++;
+MeetingParticipantSchema.index.findByMeetingId = {
+  by: "meeting_id"
+};
+/* istanbul ignore next */
+cov_11j3bu687z().s[16]++;
+MeetingParticipantSchema.index.findByUserId = {
+  by: "user_id"
+};
+/* istanbul ignore next */
+cov_11j3bu687z().s[17]++;
+MeetingParticipantSchema.index.findByConnectionStatus = {
+  by: "connection_status"
+};
+/* istanbul ignore next */
+cov_11j3bu687z().s[18]++;
+MeetingChatSchema.index.findByMeetingId = {
+  by: "meeting_id"
+};
+/* istanbul ignore next */
+cov_11j3bu687z().s[19]++;
+MeetingChatSchema.index.findByTimestamp = {
+  by: "timestamp"
+};
+/* istanbul ignore next */
+cov_11j3bu687z().s[20]++;
+MeetingRecordingSchema.index.findByMeetingId = {
+  by: "meeting_id"
+};
+/* istanbul ignore next */
+cov_11j3bu687z().s[21]++;
+MeetingRecordingSchema.index.findByType = {
+  by: "recording_type"
+};
+const Meeting =
+/* istanbul ignore next */
+(cov_11j3bu687z().s[22]++, ottoman.model("meeting", MeetingSchema));
+const MeetingParticipant =
+/* istanbul ignore next */
+(cov_11j3bu687z().s[23]++, ottoman.model("meeting_participant", MeetingParticipantSchema));
+const MeetingChat =
+/* istanbul ignore next */
+(cov_11j3bu687z().s[24]++, ottoman.model("meeting_chat", MeetingChatSchema));
+const MeetingRecording =
+/* istanbul ignore next */
+(cov_11j3bu687z().s[25]++, ottoman.model("meeting_recording", MeetingRecordingSchema));
+export { Meeting, MeetingChat, MeetingParticipant, MeetingRecording };

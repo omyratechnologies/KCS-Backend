@@ -1,0 +1,186 @@
+edad161be12c2a1bb16ee5aded0f5b2c
+/* istanbul ignore next */
+function cov_ib8mr0hc3() {
+  var path = "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/models/login_session.model.ts";
+  var hash = "627a98fe951f3a5bce731e15d06c67de111ce231";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/models/login_session.model.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 27
+        },
+        end: {
+          line: 9,
+          column: 2
+        }
+      },
+      "1": {
+        start: {
+          line: 7,
+          column: 45
+        },
+        end: {
+          line: 7,
+          column: 55
+        }
+      },
+      "2": {
+        start: {
+          line: 8,
+          column: 45
+        },
+        end: {
+          line: 8,
+          column: 55
+        }
+      },
+      "3": {
+        start: {
+          line: 10,
+          column: 0
+        },
+        end: {
+          line: 10,
+          column: 58
+        }
+      },
+      "4": {
+        start: {
+          line: 11,
+          column: 21
+        },
+        end: {
+          line: 11,
+          column: 72
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 7,
+            column: 39
+          },
+          end: {
+            line: 7,
+            column: 40
+          }
+        },
+        loc: {
+          start: {
+            line: 7,
+            column: 45
+          },
+          end: {
+            line: 7,
+            column: 55
+          }
+        },
+        line: 7
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 8,
+            column: 39
+          },
+          end: {
+            line: 8,
+            column: 40
+          }
+        },
+        loc: {
+          start: {
+            line: 8,
+            column: 45
+          },
+          end: {
+            line: 8,
+            column: 55
+          }
+        },
+        line: 8
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0
+    },
+    b: {},
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "627a98fe951f3a5bce731e15d06c67de111ce231"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_ib8mr0hc3 = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_ib8mr0hc3();
+import { Schema } from "ottoman";
+import { ottoman } from "../libs/db";
+const LoginSessionSchema =
+/* istanbul ignore next */
+(cov_ib8mr0hc3().s[0]++, new Schema({
+  user_id: {
+    type: String,
+    required: true
+  },
+  session_id: {
+    type: String,
+    required: true
+  },
+  refresh_token: {
+    type: String,
+    required: true
+  },
+  created_at: {
+    type: Date,
+    default: () => {
+      /* istanbul ignore next */
+      cov_ib8mr0hc3().f[0]++;
+      cov_ib8mr0hc3().s[1]++;
+      return new Date();
+    }
+  },
+  updated_at: {
+    type: Date,
+    default: () => {
+      /* istanbul ignore next */
+      cov_ib8mr0hc3().f[1]++;
+      cov_ib8mr0hc3().s[2]++;
+      return new Date();
+    }
+  }
+}));
+/* istanbul ignore next */
+cov_ib8mr0hc3().s[3]++;
+LoginSessionSchema.index.findByUserId = {
+  by: "user_id"
+};
+const LoginSession =
+/* istanbul ignore next */
+(cov_ib8mr0hc3().s[4]++, ottoman.model("login_sessions", LoginSessionSchema));
+export { LoginSession };

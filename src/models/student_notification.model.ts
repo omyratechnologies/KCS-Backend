@@ -32,9 +32,6 @@ const StudentNotificationSchema = new Schema({
 StudentNotificationSchema.index.findByCampusId = { by: "campus_id" };
 StudentNotificationSchema.index.findByUserId = { by: "user_id" };
 
-const StudentNotification = ottoman.model<IStudentNotificationData>(
-    "student_notifications",
-    StudentNotificationSchema
-);
+const StudentNotification = ottoman.model<IStudentNotificationData>("student_notifications", StudentNotificationSchema);
 
 export { type IStudentNotificationData, StudentNotification };

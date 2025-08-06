@@ -10,14 +10,8 @@ import {
     PaymentSecurityEvent,
     PaymentSettlement,
 } from "@/models/payment_settlement.model";
-import {
-    IPaymentTransaction,
-    PaymentTransaction,
-} from "@/models/payment_transaction.model";
-import {
-    ISchoolBankDetails,
-    SchoolBankDetails,
-} from "@/models/school_bank_details.model";
+import { IPaymentTransaction, PaymentTransaction } from "@/models/payment_transaction.model";
+import { ISchoolBankDetails, SchoolBankDetails } from "@/models/school_bank_details.model";
 
 import PaymentErrorHandler from "./payment_error_handler.service";
 import PaymentSecurityMonitor from "./payment_security_monitor.service";
@@ -74,10 +68,7 @@ export class PaymentSettlementService {
 
         try {
             // 1. Validate gateway configuration
-            const gatewayConfig = await this.getGatewayConfiguration(
-                campus_id,
-                gateway_provider
-            );
+            const gatewayConfig = await this.getGatewayConfiguration(campus_id, gateway_provider);
             if (!gatewayConfig || gatewayConfig.status !== "active") {
                 throw PaymentErrorHandler.createError("GATEWAY_001", {
                     campus_id,
@@ -101,9 +92,7 @@ export class PaymentSettlementService {
             );
 
             if (eligibleTransactions.length === 0) {
-                throw new Error(
-                    "No eligible transactions found for settlement"
-                );
+                throw new Error("No eligible transactions found for settlement");
             }
 
             // 4. Calculate settlement amounts
@@ -114,8 +103,7 @@ export class PaymentSettlementService {
 
             // 5. Validate minimum settlement amount
             if (
-                settlementCalculations.net_settlement_amount <
-                gatewayConfig.gateway_settings.minimum_settlement_amount
+                settlementCalculations.net_settlement_amount < gatewayConfig.gateway_settings.minimum_settlement_amount
             ) {
                 throw new Error(
                     `Settlement amount ${settlementCalculations.net_settlement_amount} is below minimum threshold`
@@ -123,8 +111,7 @@ export class PaymentSettlementService {
             }
 
             // 6. Get school bank details
-            const schoolBankDetails =
-                await this.getSchoolBankDetails(campus_id);
+            const schoolBankDetails = await this.getSchoolBankDetails(campus_id);
 
             // 7. Create settlement record
             const settlement = await this.createSettlementRecord({
@@ -139,26 +126,20 @@ export class PaymentSettlementService {
             });
 
             // 8. Process settlement with gateway
-            const gatewaySettlement = await this.processGatewaySettlement(
-                settlement,
-                gatewayConfig
-            );
+            const gatewaySettlement = await this.processGatewaySettlement(settlement, gatewayConfig);
 
             // 9. Update settlement with gateway response
-            const updatedSettlement = await PaymentSettlement.updateById(
-                settlement.id,
-                {
-                    gateway_settlement_id: gatewaySettlement.settlement_id,
-                    gateway_settlement_reference: gatewaySettlement.reference,
-                    settlement_status: "processing",
-                    processing_details: {
-                        ...settlement.processing_details,
-                        processed_at: new Date(),
-                        processing_duration_ms: Date.now() - startTime,
-                    },
-                    updated_at: new Date(),
-                }
-            );
+            const updatedSettlement = await PaymentSettlement.updateById(settlement.id, {
+                gateway_settlement_id: gatewaySettlement.settlement_id,
+                gateway_settlement_reference: gatewaySettlement.reference,
+                settlement_status: "processing",
+                processing_details: {
+                    ...settlement.processing_details,
+                    processed_at: new Date(),
+                    processing_duration_ms: Date.now() - startTime,
+                },
+                updated_at: new Date(),
+            });
 
             // 10. Send notifications
             await this.sendSettlementNotifications(updatedSettlement);
@@ -190,12 +171,7 @@ export class PaymentSettlementService {
                     system_version: "1.0.0",
                     environment: (process.env.NODE_ENV as any) || "production",
                 },
-                compliance_tags: [
-                    "settlement",
-                    "automatic",
-                    "financial",
-                    "completed",
-                ],
+                compliance_tags: ["settlement", "automatic", "financial", "completed"],
                 is_sensitive_data: true,
                 data_classification: "confidential",
             });
@@ -227,17 +203,11 @@ export class PaymentSettlementService {
                     request_id: crypto.randomUUID(),
                     response_status: 500,
                     error_code: "SETTLEMENT_FAILED",
-                    error_message:
-                        error instanceof Error ? error.message : String(error),
+                    error_message: error instanceof Error ? error.message : String(error),
                     system_version: "1.0.0",
                     environment: (process.env.NODE_ENV as any) || "production",
                 },
-                compliance_tags: [
-                    "settlement",
-                    "automatic",
-                    "financial",
-                    "failed",
-                ],
+                compliance_tags: ["settlement", "automatic", "financial", "failed"],
                 is_sensitive_data: true,
                 data_classification: "confidential",
             });
@@ -263,11 +233,7 @@ export class PaymentSettlementService {
 
         try {
             // 1. Verify webhook signature
-            const isValidSignature = await this.verifyWebhookSignature(
-                gateway_provider,
-                webhook_data,
-                signature
-            );
+            const isValidSignature = await this.verifyWebhookSignature(gateway_provider, webhook_data, signature);
 
             if (!isValidSignature) {
                 await this.createSecurityEvent({
@@ -276,10 +242,7 @@ export class PaymentSettlementService {
                     severity: "critical",
                     threat_details: {
                         attack_vector: "webhook_signature_mismatch",
-                        threat_indicators: [
-                            "invalid_signature",
-                            "potential_tampering",
-                        ],
+                        threat_indicators: ["invalid_signature", "potential_tampering"],
                         impact_assessment: "high",
                         data_compromised: false,
                         systems_affected: ["webhook_endpoint"],
@@ -303,20 +266,14 @@ export class PaymentSettlementService {
             }
 
             // 2. Find settlement by gateway settlement ID
-            const settlement = await this.findSettlementByGatewayId(
-                webhook_data.settlement_id || webhook_data.id
-            );
+            const settlement = await this.findSettlementByGatewayId(webhook_data.settlement_id || webhook_data.id);
 
             if (!settlement) {
                 throw new Error("Settlement not found for webhook data");
             }
 
             // 3. Update settlement status based on webhook data
-            const updatedSettlement = await this.updateSettlementFromWebhook(
-                settlement,
-                webhook_data,
-                request_context
-            );
+            const updatedSettlement = await this.updateSettlementFromWebhook(settlement, webhook_data, request_context);
 
             // 4. Handle settlement completion
             if (updatedSettlement.settlement_status === "completed") {
@@ -381,8 +338,7 @@ export class PaymentSettlementService {
                     request_id: request_context.request_id,
                     response_status: 500,
                     error_code: "WEBHOOK_PROCESSING_FAILED",
-                    error_message:
-                        error instanceof Error ? error.message : String(error),
+                    error_message: error instanceof Error ? error.message : String(error),
                     system_version: "1.0.0",
                     environment: (process.env.NODE_ENV as any) || "production",
                 },
@@ -410,56 +366,40 @@ export class PaymentSettlementService {
 
         try {
             // 1. Validate configuration
-            await this.validateGatewayConfiguration(
-                gateway_provider,
-                configuration
-            );
+            await this.validateGatewayConfiguration(gateway_provider, configuration);
 
             // 2. Test gateway connectivity
-            const testResult = await this.testGatewayConnectivity(
-                campus_id,
-                gateway_provider,
-                configuration
-            );
+            const testResult = await this.testGatewayConnectivity(campus_id, gateway_provider, configuration);
 
             if (!testResult.success) {
-                throw new Error(
-                    `Gateway configuration test failed: ${testResult.error}`
-                );
+                throw new Error(`Gateway configuration test failed: ${testResult.error}`);
             }
 
             // 3. Check for existing configuration
-            const existingConfig = await this.getGatewayConfiguration(
-                campus_id,
-                gateway_provider
-            );
+            const existingConfig = await this.getGatewayConfiguration(campus_id, gateway_provider);
 
             let gatewayConfig: IPaymentGatewayConfiguration;
 
             if (existingConfig) {
                 // Update existing configuration
-                gatewayConfig = await PaymentGatewayConfiguration.updateById(
-                    existingConfig.id,
-                    {
-                        ...configuration,
-                        configuration_details: {
-                            ...existingConfig.configuration_details,
-                            last_updated_at: new Date(),
-                            last_updated_by: configured_by,
-                            configuration_version:
-                                this.generateConfigurationVersion(),
-                        },
-                        testing_details: {
-                            ...existingConfig.testing_details,
-                            last_test_date: new Date(),
-                            last_test_status: "success",
-                            connectivity_status: "connected",
-                            health_check_status: "healthy",
-                            last_health_check: new Date(),
-                        },
-                        updated_at: new Date(),
-                    }
-                );
+                gatewayConfig = await PaymentGatewayConfiguration.updateById(existingConfig.id, {
+                    ...configuration,
+                    configuration_details: {
+                        ...existingConfig.configuration_details,
+                        last_updated_at: new Date(),
+                        last_updated_by: configured_by,
+                        configuration_version: this.generateConfigurationVersion(),
+                    },
+                    testing_details: {
+                        ...existingConfig.testing_details,
+                        last_test_date: new Date(),
+                        last_test_status: "success",
+                        connectivity_status: "connected",
+                        health_check_status: "healthy",
+                        last_health_check: new Date(),
+                    },
+                    updated_at: new Date(),
+                });
             } else {
                 // Create new configuration
                 gatewayConfig = await PaymentGatewayConfiguration.create({
@@ -471,8 +411,7 @@ export class PaymentSettlementService {
                         configured_by,
                         last_updated_at: new Date(),
                         last_updated_by: configured_by,
-                        configuration_version:
-                            this.generateConfigurationVersion(),
+                        configuration_version: this.generateConfigurationVersion(),
                     },
                     testing_details: {
                         last_test_date: new Date(),
@@ -499,9 +438,7 @@ export class PaymentSettlementService {
                 severity: "medium",
                 event_details: {
                     gateway_provider,
-                    operation_performed: existingConfig
-                        ? "gateway_update"
-                        : "gateway_create",
+                    operation_performed: existingConfig ? "gateway_update" : "gateway_create",
                     operation_result: "success",
                     execution_time_ms: Date.now() - startTime,
                 },
@@ -558,8 +495,7 @@ export class PaymentSettlementService {
                     request_id: crypto.randomUUID(),
                     response_status: 500,
                     error_code: "GATEWAY_CONFIG_FAILED",
-                    error_message:
-                        error instanceof Error ? error.message : String(error),
+                    error_message: error instanceof Error ? error.message : String(error),
                     system_version: "1.0.0",
                     environment: (process.env.NODE_ENV as any) || "production",
                 },
@@ -589,26 +525,17 @@ export class PaymentSettlementService {
 
         try {
             // 1. Check gateway configurations
-            const gatewayConfigs =
-                await this.getAllGatewayConfigurations(campus_id);
-            const gatewaySecurityIssues =
-                await this.auditGatewayConfigurations(gatewayConfigs);
+            const gatewayConfigs = await this.getAllGatewayConfigurations(campus_id);
+            const gatewaySecurityIssues = await this.auditGatewayConfigurations(gatewayConfigs);
 
             // 2. Check credential security
-            const credentialSecurityResult =
-                await SecurePaymentCredentialService.validateCredentialSecurity(
-                    campus_id
-                );
+            const credentialSecurityResult = await SecurePaymentCredentialService.validateCredentialSecurity(campus_id);
 
             // 3. Check recent security events
-            const recentSecurityEvents = await this.getRecentSecurityEvents(
-                campus_id,
-                30
-            ); // Last 30 days
+            const recentSecurityEvents = await this.getRecentSecurityEvents(campus_id, 30); // Last 30 days
 
             // 4. Check compliance status
-            const complianceStatus =
-                await this.checkComplianceStatus(campus_id);
+            const complianceStatus = await this.checkComplianceStatus(campus_id);
 
             // 5. Calculate overall security score
             const securityScore = this.calculateSecurityScore({
@@ -631,12 +558,7 @@ export class PaymentSettlementService {
                 campus_id,
                 event_type: "audit_review",
                 event_category: "security",
-                severity:
-                    securityScore < 70
-                        ? "high"
-                        : securityScore < 85
-                          ? "medium"
-                          : "low",
+                severity: securityScore < 70 ? "high" : securityScore < 85 ? "medium" : "low",
                 event_details: {
                     operation_performed: "comprehensive_security_audit",
                     operation_result: "success",
@@ -662,10 +584,7 @@ export class PaymentSettlementService {
 
             return {
                 overall_score: securityScore,
-                security_issues: [
-                    ...gatewaySecurityIssues,
-                    ...credentialSecurityResult.issues,
-                ],
+                security_issues: [...gatewaySecurityIssues, ...credentialSecurityResult.issues],
                 compliance_status: complianceStatus.overall_status,
                 recommendations,
                 audit_report_id: auditId,
@@ -673,8 +592,7 @@ export class PaymentSettlementService {
         } catch (error) {
             throw PaymentErrorHandler.createError("SYS_001", {
                 operation: "security_audit",
-                original_error:
-                    error instanceof Error ? error.message : String(error),
+                original_error: error instanceof Error ? error.message : String(error),
             });
         }
     }
@@ -748,31 +666,21 @@ export class PaymentSettlementService {
         total_taxes: number;
         net_settlement_amount: number;
     }> {
-        const total_transaction_amount = transactions.reduce(
-            (sum, txn) => sum + txn.amount,
-            0
-        );
+        const total_transaction_amount = transactions.reduce((sum, txn) => sum + txn.amount, 0);
 
         const total_gateway_fees = transactions.reduce((sum, txn) => {
-            const fee =
-                (txn.amount * fee_structure.gateway_fee_percentage) / 100 +
-                fee_structure.gateway_fee_fixed;
+            const fee = (txn.amount * fee_structure.gateway_fee_percentage) / 100 + fee_structure.gateway_fee_fixed;
             return sum + fee;
         }, 0);
 
         const total_platform_fees = transactions.reduce((sum, txn) => {
             const fee =
-                (txn.amount * fee_structure.transaction_fee_percentage) / 100 +
-                fee_structure.transaction_fee_fixed;
+                (txn.amount * fee_structure.transaction_fee_percentage) / 100 + fee_structure.transaction_fee_fixed;
             return sum + fee;
         }, 0);
 
         const total_taxes = (total_gateway_fees + total_platform_fees) * 0.18; // 18% GST
-        const net_settlement_amount =
-            total_transaction_amount -
-            total_gateway_fees -
-            total_platform_fees -
-            total_taxes;
+        const net_settlement_amount = total_transaction_amount - total_gateway_fees - total_platform_fees - total_taxes;
 
         return {
             total_transaction_amount,
@@ -807,7 +715,9 @@ export class PaymentSettlementService {
     }
 
     private static maskAccountNumber(accountNumber: string): string {
-        if (accountNumber.length <= 4) return accountNumber;
+        if (accountNumber.length <= 4) {
+            return accountNumber;
+        }
         const visibleDigits = 4;
         const maskedDigits = accountNumber.length - visibleDigits;
         return "*".repeat(maskedDigits) + accountNumber.slice(-visibleDigits);
@@ -833,8 +743,7 @@ export class PaymentSettlementService {
             settlement_period_start: params.settlement_period.start,
             settlement_period_end: params.settlement_period.end,
             settlement_status: "pending",
-            total_transaction_amount:
-                params.calculations.total_transaction_amount,
+            total_transaction_amount: params.calculations.total_transaction_amount,
             total_gateway_fees: params.calculations.total_gateway_fees,
             total_platform_fees: params.calculations.total_platform_fees,
             total_taxes: params.calculations.total_taxes,
@@ -844,13 +753,9 @@ export class PaymentSettlementService {
             school_bank_details: params.school_bank_details,
             transaction_summary: {
                 total_transactions: params.transactions.length,
-                successful_transactions: params.transactions.filter(
-                    (t) => t.status === "success"
-                ).length,
+                successful_transactions: params.transactions.filter((t) => t.status === "success").length,
                 failed_transactions: 0,
-                refunded_transactions: params.transactions.filter(
-                    (t) => t.status === "refunded"
-                ).length,
+                refunded_transactions: params.transactions.filter((t) => t.status === "refunded").length,
                 transaction_ids: params.transactions.map((t) => t.id),
             },
             processing_details: {
@@ -902,9 +807,7 @@ export class PaymentSettlementService {
         };
     }
 
-    private static async sendSettlementNotifications(
-        settlement: IPaymentSettlement
-    ): Promise<void> {
+    private static async sendSettlementNotifications(settlement: IPaymentSettlement): Promise<void> {
         // Implementation for sending notifications
         // Email, SMS, Webhook notifications to school
         console.log(`Sending settlement notifications for ${settlement.id}`);
@@ -922,9 +825,7 @@ export class PaymentSettlementService {
         return configs.rows && configs.rows.length > 0 ? configs.rows[0] : null;
     }
 
-    private static async createAuditLog(
-        auditData: Partial<IPaymentAuditLog>
-    ): Promise<IPaymentAuditLog> {
+    private static async createAuditLog(auditData: Partial<IPaymentAuditLog>): Promise<IPaymentAuditLog> {
         return await PaymentAuditLog.create({
             ...auditData,
             created_at: new Date(),
@@ -946,10 +847,7 @@ export class PaymentSettlementService {
         return `v${Date.now()}`;
     }
 
-    private static async validateGatewayConfiguration(
-        gateway_provider: string,
-        configuration: any
-    ): Promise<void> {
+    private static async validateGatewayConfiguration(gateway_provider: string, configuration: any): Promise<void> {
         // Implementation for validating gateway configuration
     }
 
@@ -962,10 +860,7 @@ export class PaymentSettlementService {
         return { success: true };
     }
 
-    private static async updatePrimaryGateway(
-        campus_id: string,
-        new_primary_gateway: string
-    ): Promise<void> {
+    private static async updatePrimaryGateway(campus_id: string, new_primary_gateway: string): Promise<void> {
         // Implementation for updating primary gateway
     }
 
@@ -978,16 +873,12 @@ export class PaymentSettlementService {
         return true;
     }
 
-    private static async findSettlementByGatewayId(
-        gateway_settlement_id: string
-    ): Promise<IPaymentSettlement | null> {
+    private static async findSettlementByGatewayId(gateway_settlement_id: string): Promise<IPaymentSettlement | null> {
         const settlements = await PaymentSettlement.find({
             gateway_settlement_id,
         });
 
-        return settlements.rows && settlements.rows.length > 0
-            ? settlements.rows[0]
-            : null;
+        return settlements.rows && settlements.rows.length > 0 ? settlements.rows[0] : null;
     }
 
     private static async updateSettlementFromWebhook(
@@ -999,30 +890,21 @@ export class PaymentSettlementService {
         return settlement;
     }
 
-    private static async handleSettlementCompletion(
-        settlement: IPaymentSettlement
-    ): Promise<void> {
+    private static async handleSettlementCompletion(settlement: IPaymentSettlement): Promise<void> {
         // Implementation for handling settlement completion
     }
 
-    private static async getAllGatewayConfigurations(
-        campus_id: string
-    ): Promise<IPaymentGatewayConfiguration[]> {
+    private static async getAllGatewayConfigurations(campus_id: string): Promise<IPaymentGatewayConfiguration[]> {
         const configs = await PaymentGatewayConfiguration.find({ campus_id });
         return configs.rows || [];
     }
 
-    private static async auditGatewayConfigurations(
-        configs: IPaymentGatewayConfiguration[]
-    ): Promise<string[]> {
+    private static async auditGatewayConfigurations(configs: IPaymentGatewayConfiguration[]): Promise<string[]> {
         // Implementation for auditing gateway configurations
         return [];
     }
 
-    private static async getRecentSecurityEvents(
-        campus_id: string,
-        days: number
-    ): Promise<IPaymentSecurityEvent[]> {
+    private static async getRecentSecurityEvents(campus_id: string, days: number): Promise<IPaymentSecurityEvent[]> {
         const cutoffDate = new Date();
         cutoffDate.setDate(cutoffDate.getDate() - days);
 
@@ -1034,9 +916,7 @@ export class PaymentSettlementService {
         return events.rows || [];
     }
 
-    private static async checkComplianceStatus(
-        campus_id: string
-    ): Promise<any> {
+    private static async checkComplianceStatus(campus_id: string): Promise<any> {
         // Implementation for checking compliance status
         return { overall_status: "compliant" };
     }

@@ -18,9 +18,7 @@ export class QuizBackgroundService {
 
         const intervalMs = intervalMinutes * 60 * 1000;
 
-        console.log(
-            `Starting quiz background service - checking every ${intervalMinutes} minute(s)`
-        );
+        console.log(`Starting quiz background service - checking every ${intervalMinutes} minute(s)`);
 
         // Run immediately on start
         this.checkExpiredSessions();
@@ -47,13 +45,10 @@ export class QuizBackgroundService {
      */
     private static async checkExpiredSessions(): Promise<void> {
         try {
-            const results =
-                await ClassQuizService.checkAndHandleExpiredSessions();
+            const results = await ClassQuizService.checkAndHandleExpiredSessions();
 
             if (results.length > 0) {
-                console.log(
-                    `[${new Date().toISOString()}] Auto-submitted ${results.length} expired quiz sessions`
-                );
+                console.log(`[${new Date().toISOString()}] Auto-submitted ${results.length} expired quiz sessions`);
 
                 // Log each auto-submission for audit purposes
                 for (const result of results) {
@@ -63,10 +58,7 @@ export class QuizBackgroundService {
                 }
             }
         } catch (error) {
-            console.error(
-                "[Quiz Background Service] Error checking expired sessions:",
-                error
-            );
+            console.error("[Quiz Background Service] Error checking expired sessions:", error);
         }
     }
 
@@ -114,7 +106,9 @@ export class QuizTimeUtils {
      * Check if a session is expired
      */
     public static isSessionExpired(expiresAt: Date | null): boolean {
-        if (!expiresAt) return false;
+        if (!expiresAt) {
+            return false;
+        }
         return new Date() > new Date(expiresAt);
     }
 
@@ -122,7 +116,9 @@ export class QuizTimeUtils {
      * Calculate remaining time in seconds
      */
     public static getRemainingTimeSeconds(expiresAt: Date | null): number {
-        if (!expiresAt) return -1; // No time limit
+        if (!expiresAt) {
+            return -1;
+        } // No time limit
 
         const now = new Date();
         const expires = new Date(expiresAt);
@@ -138,8 +134,7 @@ export class QuizTimeUtils {
         const now = new Date();
         const lastActivity = new Date(lastActivityAt);
         const inactiveMs = now.getTime() - lastActivity.getTime();
-        const maxInactiveMs =
-            QUIZ_TIMEOUT_CONFIG.MAX_INACTIVE_MINUTES * 60 * 1000;
+        const maxInactiveMs = QUIZ_TIMEOUT_CONFIG.MAX_INACTIVE_MINUTES * 60 * 1000;
 
         return inactiveMs > maxInactiveMs;
     }
@@ -148,7 +143,9 @@ export class QuizTimeUtils {
      * Format time remaining for display
      */
     public static formatTimeRemaining(seconds: number): string {
-        if (seconds < 0) return "No time limit";
+        if (seconds < 0) {
+            return "No time limit";
+        }
 
         const hours = Math.floor(seconds / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);

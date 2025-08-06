@@ -1,0 +1,229 @@
+cd3d7c074ab8220551c99b6f510067c8
+/* istanbul ignore next */
+function cov_gtqh2rv0l() {
+  var path = "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/routes/timetable.route.ts";
+  var hash = "3e1db3f59267aac7bb48020016f4e14583c70aa6";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/routes/timetable.route.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 6,
+          column: 12
+        },
+        end: {
+          line: 6,
+          column: 22
+        }
+      },
+      "1": {
+        start: {
+          line: 7,
+          column: 0
+        },
+        end: {
+          line: 30,
+          column: 103
+        }
+      },
+      "2": {
+        start: {
+          line: 31,
+          column: 0
+        },
+        end: {
+          line: 63,
+          column: 54
+        }
+      },
+      "3": {
+        start: {
+          line: 64,
+          column: 0
+        },
+        end: {
+          line: 96,
+          column: 56
+        }
+      },
+      "4": {
+        start: {
+          line: 97,
+          column: 0
+        },
+        end: {
+          line: 129,
+          column: 99
+        }
+      }
+    },
+    fnMap: {},
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0
+    },
+    f: {},
+    b: {},
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "3e1db3f59267aac7bb48020016f4e14583c70aa6"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_gtqh2rv0l = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_gtqh2rv0l();
+import { Hono } from "hono";
+import { describeRoute } from "hono-openapi";
+import { resolver, validator as zValidator } from "hono-openapi/zod";
+import { TimetableController } from "@/controllers/timetable.controller";
+import { createTimetableBulkRequestBodySchema, createTimetableBulkResponseSchema, errorResponseSchema, getTimetablesResponseSchema, updateTimetableRequestBodySchema, updateTimetableResponseSchema } from "@/schema/timetable";
+const app =
+/* istanbul ignore next */
+(cov_gtqh2rv0l().s[0]++, new Hono());
+/* istanbul ignore next */
+cov_gtqh2rv0l().s[1]++;
+app.post("/", describeRoute({
+  operationId: "createTimetableBulk",
+  summary: "Create timetable entries in bulk",
+  description: "Creates multiple timetable entries for a class",
+  tags: ["Timetable"],
+  responses: {
+    200: {
+      description: "Timetable entries created successfully",
+      content: {
+        "application/json": {
+          schema: resolver(createTimetableBulkResponseSchema)
+        }
+      }
+    },
+    400: {
+      description: "Bad request",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), zValidator("json", createTimetableBulkRequestBodySchema), TimetableController.createTimetableBulk);
+/* istanbul ignore next */
+cov_gtqh2rv0l().s[2]++;
+app.get("/:class_id", describeRoute({
+  operationId: "getTimetableByCampusAndClass",
+  summary: "Get timetable by class ID",
+  description: "Retrieves all timetable entries for a specific class in a campus",
+  tags: ["Timetable"],
+  parameters: [{
+    name: "class_id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Class ID"
+  }],
+  responses: {
+    200: {
+      description: "List of timetable entries",
+      content: {
+        "application/json": {
+          schema: resolver(getTimetablesResponseSchema)
+        }
+      }
+    },
+    400: {
+      description: "Bad request",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), TimetableController.getTimetableByCampusAndClass);
+/* istanbul ignore next */
+cov_gtqh2rv0l().s[3]++;
+app.get("/teacher/:teacher_id", describeRoute({
+  operationId: "getTimetableByCampusAndTeacher",
+  summary: "Get timetable by teacher ID",
+  description: "Retrieves all timetable entries for a specific teacher in a campus",
+  tags: ["Timetable"],
+  parameters: [{
+    name: "teacher_id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Teacher ID"
+  }],
+  responses: {
+    200: {
+      description: "List of timetable entries for the teacher",
+      content: {
+        "application/json": {
+          schema: resolver(getTimetablesResponseSchema)
+        }
+      }
+    },
+    400: {
+      description: "Bad request",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), TimetableController.getTimetableByCampusAndTeacher);
+/* istanbul ignore next */
+cov_gtqh2rv0l().s[4]++;
+app.put("/:id", describeRoute({
+  operationId: "updateTimetableById",
+  summary: "Update a timetable entry",
+  description: "Updates a specific timetable entry by ID",
+  tags: ["Timetable"],
+  parameters: [{
+    name: "id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Timetable entry ID"
+  }],
+  responses: {
+    200: {
+      description: "Timetable entry updated successfully",
+      content: {
+        "application/json": {
+          schema: resolver(updateTimetableResponseSchema)
+        }
+      }
+    },
+    400: {
+      description: "Bad request",
+      content: {
+        "application/json": {
+          schema: resolver(errorResponseSchema)
+        }
+      }
+    }
+  }
+}), zValidator("json", updateTimetableRequestBodySchema), TimetableController.updateTimetableById);
+export default app;

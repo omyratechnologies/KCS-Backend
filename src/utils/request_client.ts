@@ -6,10 +6,7 @@ import fetch, { Headers, RequestInit } from "node-fetch";
  * @param options Options to pass to the fetch function
  * @returns The response from the request
  */
-export const request = async (
-    url: string,
-    options: RequestInit
-): Promise<unknown> => {
+export const request = async (url: string, options: RequestInit): Promise<unknown> => {
     try {
         const response = await fetch(url, options);
         return await response.json();

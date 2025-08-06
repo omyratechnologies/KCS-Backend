@@ -10,24 +10,16 @@ export const librarySchema = z
         book_name: z.string().openapi({ example: "The Great Gatsby" }),
         author_name: z.string().openapi({ example: "F. Scott Fitzgerald" }),
         book_code: z.string().openapi({ example: "LIB-001" }),
-        book_cover: z
-            .string()
-            .openapi({ example: "https://example.com/book-cover.jpg" }),
-        book_description: z
-            .string()
-            .openapi({ example: "A novel about the American Dream" }),
+        book_cover: z.string().openapi({ example: "https://example.com/book-cover.jpg" }),
+        book_description: z.string().openapi({ example: "A novel about the American Dream" }),
         book_quantity: z.number().openapi({ example: 5 }),
         book_available: z.number().openapi({ example: 3 }),
         book_issued: z.number().openapi({ example: 2 }),
         book_fine: z.number().openapi({ example: 10 }),
         book_status: z.string().openapi({ example: "available" }),
         book_location: z.string().openapi({ example: "Shelf A-12" }),
-        book_tags: z
-            .array(z.string())
-            .openapi({ example: ["fiction", "classic", "american"] }),
-        book_meta_data: z
-            .record(z.string(), z.any())
-            .openapi({ example: { publisher: "Scribner", year: 1925 } }),
+        book_tags: z.array(z.string()).openapi({ example: ["fiction", "classic", "american"] }),
+        book_meta_data: z.record(z.string(), z.any()).openapi({ example: { publisher: "Scribner", year: 1925 } }),
         is_active: z.boolean().openapi({ example: true }),
         is_deleted: z.boolean().openapi({ example: false }),
         created_at: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
@@ -41,25 +33,17 @@ export const createLibraryRequestBodySchema = z
         bookData: z
             .object({
                 book_name: z.string().openapi({ example: "The Great Gatsby" }),
-                author_name: z
-                    .string()
-                    .openapi({ example: "F. Scott Fitzgerald" }),
+                author_name: z.string().openapi({ example: "F. Scott Fitzgerald" }),
                 book_code: z.string().openapi({ example: "LIB-001" }),
-                book_cover: z
-                    .string()
-                    .openapi({ example: "https://example.com/book-cover.jpg" }),
-                book_description: z
-                    .string()
-                    .openapi({ example: "A novel about the American Dream" }),
+                book_cover: z.string().openapi({ example: "https://example.com/book-cover.jpg" }),
+                book_description: z.string().openapi({ example: "A novel about the American Dream" }),
                 book_quantity: z.number().openapi({ example: 5 }),
                 book_available: z.number().openapi({ example: 5 }),
                 book_issued: z.number().openapi({ example: 0 }),
                 book_fine: z.number().openapi({ example: 10 }),
                 book_status: z.string().openapi({ example: "available" }),
                 book_location: z.string().openapi({ example: "Shelf A-12" }),
-                book_tags: z
-                    .array(z.string())
-                    .openapi({ example: ["fiction", "classic", "american"] }),
+                book_tags: z.array(z.string()).openapi({ example: ["fiction", "classic", "american"] }),
                 book_meta_data: z.record(z.string(), z.any()).openapi({
                     example: { publisher: "Scribner", year: 1925 },
                 }),
@@ -91,23 +75,11 @@ export const createLibraryResponseSchema = librarySchema.openapi({
 // Update Library (Book) Request
 export const updateLibraryRequestBodySchema = z
     .object({
-        book_name: z
-            .string()
-            .optional()
-            .openapi({ example: "The Great Gatsby (Revised Edition)" }),
-        author_name: z
-            .string()
-            .optional()
-            .openapi({ example: "F. Scott Fitzgerald" }),
+        book_name: z.string().optional().openapi({ example: "The Great Gatsby (Revised Edition)" }),
+        author_name: z.string().optional().openapi({ example: "F. Scott Fitzgerald" }),
         book_code: z.string().optional().openapi({ example: "LIB-001-R" }),
-        book_cover: z
-            .string()
-            .optional()
-            .openapi({ example: "https://example.com/book-cover-revised.jpg" }),
-        book_description: z
-            .string()
-            .optional()
-            .openapi({ example: "Revised edition of the classic novel" }),
+        book_cover: z.string().optional().openapi({ example: "https://example.com/book-cover-revised.jpg" }),
+        book_description: z.string().optional().openapi({ example: "Revised edition of the classic novel" }),
         book_quantity: z.number().optional().openapi({ example: 7 }),
         book_available: z.number().optional().openapi({ example: 4 }),
         book_issued: z.number().optional().openapi({ example: 3 }),
@@ -139,9 +111,7 @@ export const updateLibraryResponseSchema = librarySchema.openapi({
 });
 
 // Get Libraries Response
-export const getLibrariesResponseSchema = z
-    .array(librarySchema)
-    .openapi({ ref: "GetLibrariesResponse" });
+export const getLibrariesResponseSchema = z.array(librarySchema).openapi({ ref: "GetLibrariesResponse" });
 
 // Delete Library Response
 export const deleteLibraryResponseSchema = librarySchema.openapi({
@@ -159,9 +129,7 @@ export const libraryIssueSchema = z
         due_date: z.string().openapi({ example: "2023-01-29T00:00:00Z" }),
         return_date: z.string().nullable().openapi({ example: null }),
         fine_amount: z.number().openapi({ example: 0 }),
-        meta_data: z
-            .record(z.string(), z.any())
-            .openapi({ example: { condition: "good" } }),
+        meta_data: z.record(z.string(), z.any()).openapi({ example: { condition: "good" } }),
         is_active: z.boolean().openapi({ example: true }),
         is_returned: z.boolean().openapi({ example: false }),
         is_deleted: z.boolean().openapi({ example: false }),
@@ -179,9 +147,7 @@ export const createLibraryIssueRequestBodySchema = z
         due_date: z.string().openapi({ example: "2023-01-29T00:00:00Z" }),
         return_date: z.string().nullable().openapi({ example: null }),
         fine_amount: z.number().openapi({ example: 0 }),
-        meta_data: z
-            .record(z.string(), z.any())
-            .openapi({ example: { condition: "good" } }),
+        meta_data: z.record(z.string(), z.any()).openapi({ example: { condition: "good" } }),
     })
     .openapi({ ref: "CreateLibraryIssueRequest" });
 
@@ -192,10 +158,7 @@ export const createLibraryIssueResponseSchema = libraryIssueSchema.openapi({
 // Update Library Issue Request
 export const updateLibraryIssueRequestBodySchema = z
     .object({
-        return_date: z
-            .string()
-            .optional()
-            .openapi({ example: "2023-01-25T00:00:00Z" }),
+        return_date: z.string().optional().openapi({ example: "2023-01-25T00:00:00Z" }),
         fine_amount: z.number().optional().openapi({ example: 0 }),
         is_returned: z.boolean().optional().openapi({ example: true }),
         meta_data: z
@@ -212,9 +175,7 @@ export const updateLibraryIssueResponseSchema = libraryIssueSchema.openapi({
 });
 
 // Get Library Issues Response
-export const getLibraryIssuesResponseSchema = z
-    .array(libraryIssueSchema)
-    .openapi({ ref: "GetLibraryIssuesResponse" });
+export const getLibraryIssuesResponseSchema = z.array(libraryIssueSchema).openapi({ ref: "GetLibraryIssuesResponse" });
 
 // Delete Library Issue Response
 export const deleteLibraryIssueResponseSchema = libraryIssueSchema.openapi({

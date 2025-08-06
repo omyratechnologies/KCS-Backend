@@ -12,9 +12,7 @@ export const subjectSchema = z
         description: z.string().openapi({
             example: "Introduction to basic mathematical concepts",
         }),
-        meta_data: z
-            .record(z.string(), z.any())
-            .openapi({ example: { level: "Beginner", credits: 3 } }),
+        meta_data: z.record(z.string(), z.any()).openapi({ example: { level: "Beginner", credits: 3 } }),
         is_active: z.boolean().openapi({ example: true }),
         is_deleted: z.boolean().openapi({ example: false }),
         created_at: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
@@ -32,9 +30,7 @@ export const createSubjectRequestBodySchema = z
                 description: z.string().openapi({
                     example: "Introduction to basic mathematical concepts",
                 }),
-                meta_data: z
-                    .record(z.string(), z.any())
-                    .openapi({ example: { level: "Beginner", credits: 3 } }),
+                meta_data: z.record(z.string(), z.any()).openapi({ example: { level: "Beginner", credits: 3 } }),
             })
             .openapi({
                 example: {
@@ -54,10 +50,7 @@ export const createSubjectResponseSchema = subjectSchema.openapi({
 // Update Subject Request
 export const updateSubjectRequestBodySchema = z
     .object({
-        name: z
-            .string()
-            .optional()
-            .openapi({ example: "Advanced Mathematics" }),
+        name: z.string().optional().openapi({ example: "Advanced Mathematics" }),
         code: z.string().optional().openapi({ example: "MATH201" }),
         description: z.string().optional().openapi({
             example: "Advanced mathematical concepts and applications",
@@ -75,9 +68,7 @@ export const updateSubjectResponseSchema = subjectSchema.openapi({
 });
 
 // Get Subjects Response
-export const getSubjectsResponseSchema = z
-    .array(subjectSchema)
-    .openapi({ ref: "GetSubjectsResponse" });
+export const getSubjectsResponseSchema = z.array(subjectSchema).openapi({ ref: "GetSubjectsResponse" });
 
 // Delete Subject Response
 export const deleteSubjectResponseSchema = subjectSchema.openapi({

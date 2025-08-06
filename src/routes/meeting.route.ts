@@ -5,14 +5,8 @@ import { z } from "zod";
 
 // Removed compress import due to CompressionStream compatibility issues
 import { MeetingController } from "@/controllers/meeting.controller";
-import {
-    meetingAccessControl,
-    meetingSecurityMiddleware,
-} from "@/middlewares/meeting_security.middleware";
-import {
-    meetingRateLimit,
-    strictMeetingRateLimit,
-} from "@/middlewares/rate_limiting.middleware";
+import { meetingAccessControl, meetingSecurityMiddleware } from "@/middlewares/meeting_security.middleware";
+import { meetingRateLimit, strictMeetingRateLimit } from "@/middlewares/rate_limiting.middleware";
 import {
     createMeetingRequestBodySchema,
     createMeetingResponseSchema,
@@ -73,10 +67,7 @@ const enhancedCreateMeetingSchema = createMeetingRequestBodySchema
     .refine(
         (data) => {
             if (data.meeting_start_time && data.meeting_end_time) {
-                return (
-                    new Date(data.meeting_start_time) <
-                    new Date(data.meeting_end_time)
-                );
+                return new Date(data.meeting_start_time) < new Date(data.meeting_end_time);
             }
             return true;
         },
@@ -111,9 +102,7 @@ const participantManagementSchema = z
                         .optional()
                         .transform((val) => val?.trim()),
                     phone: z.string().optional(),
-                    role: z
-                        .enum(["host", "co_host", "presenter", "attendee"])
-                        .optional(),
+                    role: z.enum(["host", "co_host", "presenter", "attendee"]).optional(),
                 })
             )
             .min(1, "At least one participant is required"),
@@ -123,9 +112,7 @@ const participantManagementSchema = z
             .max(500)
             .optional()
             .transform((val) => val?.trim()),
-        participant_role: z
-            .enum(["host", "co_host", "presenter", "attendee"])
-            .optional(),
+        participant_role: z.enum(["host", "co_host", "presenter", "attendee"]).optional(),
         notify_existing_participants: z.boolean().optional(),
     })
     .refine(
@@ -147,8 +134,7 @@ app.post(
     describeRoute({
         operationId: "createMeeting",
         summary: "Create a new meeting with enhanced features",
-        description:
-            "Creates a meeting with real-time video conferencing capabilities",
+        description: "Creates a meeting with real-time video conferencing capabilities",
         tags: ["Meeting"],
         responses: {
             200: {
@@ -499,8 +485,7 @@ app.post(
     describeRoute({
         operationId: "addParticipants",
         summary: "Add participants to meeting",
-        description:
-            "Add people to meeting like Microsoft Teams - works for both scheduled and live meetings",
+        description: "Add people to meeting like Microsoft Teams - works for both scheduled and live meetings",
         tags: ["Meeting", "Participants"],
         responses: {
             200: {
@@ -512,8 +497,7 @@ app.post(
                 },
             },
             403: {
-                description:
-                    "Access denied - only hosts/co-hosts can add participants",
+                description: "Access denied - only hosts/co-hosts can add participants",
                 content: {
                     "application/json": {
                         schema: resolver(errorResponseSchema),
@@ -531,16 +515,12 @@ app.post(
                     email: z.string().email().optional(),
                     name: z.string().optional(),
                     phone: z.string().optional(),
-                    role: z
-                        .enum(["host", "co_host", "presenter", "attendee"])
-                        .optional(),
+                    role: z.enum(["host", "co_host", "presenter", "attendee"]).optional(),
                 })
             ),
             send_invitation: z.boolean().optional(),
             invitation_message: z.string().optional(),
-            participant_role: z
-                .enum(["host", "co_host", "presenter", "attendee"])
-                .optional(),
+            participant_role: z.enum(["host", "co_host", "presenter", "attendee"]).optional(),
             notify_existing_participants: z.boolean().optional(),
         })
     ),
@@ -565,8 +545,7 @@ app.delete(
                 },
             },
             403: {
-                description:
-                    "Access denied - only hosts/co-hosts can remove participants",
+                description: "Access denied - only hosts/co-hosts can remove participants",
                 content: {
                     "application/json": {
                         schema: resolver(errorResponseSchema),
@@ -593,8 +572,7 @@ app.patch(
     describeRoute({
         operationId: "updateParticipantRole",
         summary: "Update participant role",
-        description:
-            "Change participant role and permissions like Microsoft Teams",
+        description: "Change participant role and permissions like Microsoft Teams",
         tags: ["Meeting", "Participants"],
         responses: {
             200: {
@@ -641,8 +619,7 @@ app.post(
     describeRoute({
         operationId: "searchUsersToAdd",
         summary: "Search users to add to meeting",
-        description:
-            "Search campus directory to find people to add like Microsoft Teams",
+        description: "Search campus directory to find people to add like Microsoft Teams",
         tags: ["Meeting", "Participants", "Search"],
         responses: {
             200: {

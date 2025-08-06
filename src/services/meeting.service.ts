@@ -21,22 +21,9 @@ import { WebRTCService } from "./webrtc.service";
 /**
  * Handle Couchbase DocumentNotFoundError consistently
  */
-const handleDocumentNotFoundError = (
-    error: any,
-    context: string,
-    additionalContext?: any
-): Error => {
-    if (
-        error &&
-        typeof error === "object" &&
-        "name" in error &&
-        error.name === "DocumentNotFoundError"
-    ) {
-        MeetingErrorMonitor.logError(
-            `${context}:documentNotFound`,
-            error as Error,
-            additionalContext
-        );
+const handleDocumentNotFoundError = (error: any, context: string, additionalContext?: any): Error => {
+    if (error && typeof error === "object" && "name" in error && error.name === "DocumentNotFoundError") {
+        MeetingErrorMonitor.logError(`${context}:documentNotFound`, error as Error, additionalContext);
         const notFoundError = new Error("document not found");
         (notFoundError as any).code = "DOCUMENT_NOT_FOUND";
         return notFoundError;
@@ -134,8 +121,7 @@ export class MeetingService {
                 // Enhanced real-time features
                 meeting_room_id,
                 meeting_type: data.meeting_type || "scheduled",
-                meeting_status:
-                    data.meeting_type === "instant" ? "live" : "scheduled",
+                meeting_status: data.meeting_type === "instant" ? "live" : "scheduled",
                 max_participants: data.max_participants || 100,
                 current_participants: [],
 
@@ -149,17 +135,12 @@ export class MeetingService {
                 features: {
                     video_enabled: data.features?.video_enabled ?? true,
                     audio_enabled: data.features?.audio_enabled ?? true,
-                    screen_sharing_enabled:
-                        data.features?.screen_sharing_enabled ?? true,
+                    screen_sharing_enabled: data.features?.screen_sharing_enabled ?? true,
                     chat_enabled: data.features?.chat_enabled ?? true,
-                    recording_enabled:
-                        data.features?.recording_enabled ?? false,
-                    breakout_rooms_enabled:
-                        data.features?.breakout_rooms_enabled ?? false,
-                    whiteboard_enabled:
-                        data.features?.whiteboard_enabled ?? false,
-                    hand_raise_enabled:
-                        data.features?.hand_raise_enabled ?? true,
+                    recording_enabled: data.features?.recording_enabled ?? false,
+                    breakout_rooms_enabled: data.features?.breakout_rooms_enabled ?? false,
+                    whiteboard_enabled: data.features?.whiteboard_enabled ?? false,
+                    hand_raise_enabled: data.features?.hand_raise_enabled ?? true,
                 },
 
                 // Recording Configuration
@@ -168,8 +149,7 @@ export class MeetingService {
                     record_video: data.recording_config?.record_video ?? true,
                     record_audio: data.recording_config?.record_audio ?? true,
                     record_chat: data.recording_config?.record_chat ?? false,
-                    storage_location:
-                        data.recording_config?.storage_location || "cloud",
+                    storage_location: data.recording_config?.storage_location || "cloud",
                     retention_days: data.recording_config?.retention_days || 30,
                 },
 
@@ -220,11 +200,9 @@ export class MeetingService {
                 try {
                     await WebRTCService.createMeetingRouter(meeting.id);
                 } catch (webrtcError) {
-                    MeetingErrorMonitor.logError(
-                        "createMeeting:webrtc",
-                        webrtcError as Error,
-                        { meeting_id: meeting.id }
-                    );
+                    MeetingErrorMonitor.logError("createMeeting:webrtc", webrtcError as Error, {
+                        meeting_id: meeting.id,
+                    });
                     // Continue without failing the meeting creation
                 }
             }
@@ -243,10 +221,7 @@ export class MeetingService {
     /**
      * Get all meetings by campus and creator with real-time status
      */
-    public static readonly getAllMeetings = async (
-        campus_id: string,
-        creator_id: string
-    ): Promise<IMeetingData[]> => {
+    public static readonly getAllMeetings = async (campus_id: string, creator_id: string): Promise<IMeetingData[]> => {
         try {
             const meetings = await Meeting.find(
                 { campus_id, creator_id, is_deleted: false },
@@ -265,22 +240,17 @@ export class MeetingService {
                 meetings.rows.map(async (meeting) => {
                     try {
                         if (meeting.meeting_status === "live") {
-                            const liveParticipants =
-                                await MeetingParticipant.find({
-                                    meeting_id: meeting.id,
-                                    connection_status: "connected",
-                                });
-                            meeting.current_participants =
-                                liveParticipants.rows?.map((p) => p.user_id) ||
-                                [];
+                            const liveParticipants = await MeetingParticipant.find({
+                                meeting_id: meeting.id,
+                                connection_status: "connected",
+                            });
+                            meeting.current_participants = liveParticipants.rows?.map((p) => p.user_id) || [];
                         }
                         return meeting;
                     } catch (participantError) {
-                        MeetingErrorMonitor.logError(
-                            "getAllMeetings:participants",
-                            participantError as Error,
-                            { meeting_id: meeting.id }
-                        );
+                        MeetingErrorMonitor.logError("getAllMeetings:participants", participantError as Error, {
+                            meeting_id: meeting.id,
+                        });
                         // Return meeting without live participant data
                         return meeting;
                     }
@@ -298,9 +268,7 @@ export class MeetingService {
     /**
      * Get meeting by ID with full real-time details
      */
-    public static readonly getMeetingById = async (
-        id: string
-    ): Promise<IMeetingData> => {
+    public static readonly getMeetingById = async (id: string): Promise<IMeetingData> => {
         try {
             const meeting = await Meeting.findById(id);
             if (!meeting) {
@@ -318,14 +286,11 @@ export class MeetingService {
                         meeting_id: id,
                         connection_status: "connected",
                     });
-                    meeting.current_participants =
-                        liveParticipants.rows?.map((p) => p.user_id) || [];
+                    meeting.current_participants = liveParticipants.rows?.map((p) => p.user_id) || [];
                 } catch (participantError) {
-                    MeetingErrorMonitor.logError(
-                        "getMeetingById:participants",
-                        participantError as Error,
-                        { meeting_id: id }
-                    );
+                    MeetingErrorMonitor.logError("getMeetingById:participants", participantError as Error, {
+                        meeting_id: id,
+                    });
                     // Continue without live participant data
                 }
             }
@@ -333,11 +298,7 @@ export class MeetingService {
             return meeting;
         } catch (error) {
             // Handle Couchbase DocumentNotFoundError specifically
-            const handledError = handleDocumentNotFoundError(
-                error,
-                "getMeetingById",
-                { meeting_id: id }
-            );
+            const handledError = handleDocumentNotFoundError(error, "getMeetingById", { meeting_id: id });
             if (handledError !== error) {
                 throw handledError;
             }
@@ -352,9 +313,7 @@ export class MeetingService {
     /**
      * Get meetings where user is a participant
      */
-    public static readonly getMeetingByParticipantId = async (
-        participant_id: string
-    ): Promise<IMeetingData[]> => {
+    public static readonly getMeetingByParticipantId = async (participant_id: string): Promise<IMeetingData[]> => {
         const meetings = await Meeting.find(
             {
                 participants: participant_id,
@@ -365,7 +324,9 @@ export class MeetingService {
             }
         );
 
-        if (meetings.rows.length === 0) throw new Error("Meetings not found");
+        if (meetings.rows.length === 0) {
+            throw new Error("Meetings not found");
+        }
 
         return meetings.rows;
     };
@@ -382,11 +343,7 @@ export class MeetingService {
             const meeting = await Meeting.findById(id);
             if (!meeting) {
                 const error = new Error("Meeting not found");
-                MeetingErrorMonitor.logError(
-                    "updateMeeting:meetingNotFound",
-                    error,
-                    { meeting_id: id }
-                );
+                MeetingErrorMonitor.logError("updateMeeting:meetingNotFound", error, { meeting_id: id });
                 throw error;
             }
 
@@ -407,59 +364,39 @@ export class MeetingService {
 
                 if (!updatedMeeting) {
                     const error = new Error("Meeting not updated");
-                    MeetingErrorMonitor.logError(
-                        "updateMeeting:updateFailed",
-                        error,
-                        { meeting_id: id }
-                    );
+                    MeetingErrorMonitor.logError("updateMeeting:updateFailed", error, { meeting_id: id });
                     throw error;
                 }
 
                 // Notify participants if meeting is live
                 if (meeting.meeting_status === "live") {
                     try {
-                        SocketService.sendToMeeting(
-                            id,
-                            "meeting-updated",
-                            updatedMeeting
-                        );
+                        SocketService.sendToMeeting(id, "meeting-updated", updatedMeeting);
                     } catch (socketError) {
-                        MeetingErrorMonitor.logError(
-                            "updateMeeting:socket",
-                            socketError as Error,
-                            {
-                                meeting_id: id,
-                                meeting_status: meeting.meeting_status,
-                            }
-                        );
+                        MeetingErrorMonitor.logError("updateMeeting:socket", socketError as Error, {
+                            meeting_id: id,
+                            meeting_status: meeting.meeting_status,
+                        });
                         // Don't fail the update if socket notification fails
                     }
                 }
 
                 return updatedMeeting;
             } catch (dbError) {
-                MeetingErrorMonitor.logError(
-                    "updateMeeting:database",
-                    dbError as Error,
-                    {
-                        meeting_id: id,
-                        updated_by: updated_by || "system",
-                        update_fields: Object.keys(data),
-                    }
-                );
+                MeetingErrorMonitor.logError("updateMeeting:database", dbError as Error, {
+                    meeting_id: id,
+                    updated_by: updated_by || "system",
+                    update_fields: Object.keys(data),
+                });
                 throw dbError;
             }
         } catch (error) {
             // Handle Couchbase DocumentNotFoundError specifically
-            const handledError = handleDocumentNotFoundError(
-                error,
-                "updateMeeting",
-                {
-                    meeting_id: id,
-                    updated_by: updated_by || "system",
-                    update_fields: Object.keys(data),
-                }
-            );
+            const handledError = handleDocumentNotFoundError(error, "updateMeeting", {
+                meeting_id: id,
+                updated_by: updated_by || "system",
+                update_fields: Object.keys(data),
+            });
             if (handledError !== error) {
                 throw handledError;
             }
@@ -476,19 +413,12 @@ export class MeetingService {
     /**
      * Delete meeting (soft delete)
      */
-    public static readonly deleteMeeting = async (
-        id: string,
-        deleted_by?: string
-    ): Promise<IMeetingData> => {
+    public static readonly deleteMeeting = async (id: string, deleted_by?: string): Promise<IMeetingData> => {
         try {
             const meeting = await Meeting.findById(id);
             if (!meeting) {
                 const error = new Error("Meeting not found");
-                MeetingErrorMonitor.logError(
-                    "deleteMeeting:meetingNotFound",
-                    error,
-                    { meeting_id: id }
-                );
+                MeetingErrorMonitor.logError("deleteMeeting:meetingNotFound", error, { meeting_id: id });
                 throw error;
             }
 
@@ -497,14 +427,10 @@ export class MeetingService {
                 try {
                     await MeetingService.endMeeting(id, deleted_by || "system");
                 } catch (endError) {
-                    MeetingErrorMonitor.logError(
-                        "deleteMeeting:endMeeting",
-                        endError as Error,
-                        {
-                            meeting_id: id,
-                            meeting_status: meeting.meeting_status,
-                        }
-                    );
+                    MeetingErrorMonitor.logError("deleteMeeting:endMeeting", endError as Error, {
+                        meeting_id: id,
+                        meeting_status: meeting.meeting_status,
+                    });
                     // Continue with deletion even if ending fails
                 }
             }
@@ -514,11 +440,7 @@ export class MeetingService {
                 const meeting = await Meeting.findById(id);
                 if (!meeting) {
                     const error = new Error("Meeting not found for deletion");
-                    MeetingErrorMonitor.logError(
-                        "deleteMeeting:notFound",
-                        error,
-                        { meeting_id: id }
-                    );
+                    MeetingErrorMonitor.logError("deleteMeeting:notFound", error, { meeting_id: id });
                     throw error;
                 }
 
@@ -534,24 +456,16 @@ export class MeetingService {
 
                 if (!deletedMeeting) {
                     const error = new Error("Meeting not deleted");
-                    MeetingErrorMonitor.logError(
-                        "deleteMeeting:deleteFailed",
-                        error,
-                        { meeting_id: id }
-                    );
+                    MeetingErrorMonitor.logError("deleteMeeting:deleteFailed", error, { meeting_id: id });
                     throw error;
                 }
 
                 return deletedMeeting;
             } catch (dbError) {
-                MeetingErrorMonitor.logError(
-                    "deleteMeeting:database",
-                    dbError as Error,
-                    {
-                        meeting_id: id,
-                        deleted_by: deleted_by || "system",
-                    }
-                );
+                MeetingErrorMonitor.logError("deleteMeeting:database", dbError as Error, {
+                    meeting_id: id,
+                    deleted_by: deleted_by || "system",
+                });
                 throw dbError;
             }
         } catch (error) {
@@ -564,10 +478,7 @@ export class MeetingService {
     }; /**
      * Start a scheduled meeting
      */
-    public static readonly startMeeting = async (
-        meetingId: string,
-        started_by: string
-    ): Promise<IMeetingData> => {
+    public static readonly startMeeting = async (meetingId: string, started_by: string): Promise<IMeetingData> => {
         try {
             const meeting = await Meeting.findById(meetingId);
             if (!meeting) {
@@ -581,15 +492,11 @@ export class MeetingService {
 
             if (meeting.meeting_status !== "scheduled") {
                 const error = new Error("Meeting cannot be started");
-                MeetingErrorMonitor.logError(
-                    "startMeeting:invalidStatus",
-                    error,
-                    {
-                        meeting_id: meetingId,
-                        current_status: meeting.meeting_status,
-                        started_by,
-                    }
-                );
+                MeetingErrorMonitor.logError("startMeeting:invalidStatus", error, {
+                    meeting_id: meetingId,
+                    current_status: meeting.meeting_status,
+                    started_by,
+                });
                 throw error;
             }
 
@@ -597,11 +504,7 @@ export class MeetingService {
             try {
                 await WebRTCService.createMeetingRouter(meetingId);
             } catch (webrtcError) {
-                MeetingErrorMonitor.logError(
-                    "startMeeting:webrtc",
-                    webrtcError as Error,
-                    { meeting_id: meetingId }
-                );
+                MeetingErrorMonitor.logError("startMeeting:webrtc", webrtcError as Error, { meeting_id: meetingId });
                 // Continue without failing the meeting start
             }
 
@@ -621,38 +524,27 @@ export class MeetingService {
 
             if (!updatedMeeting) {
                 const error = new Error("Failed to start meeting");
-                MeetingErrorMonitor.logError(
-                    "startMeeting:updateFailed",
-                    error,
-                    { meeting_id: meetingId, started_by }
-                );
+                MeetingErrorMonitor.logError("startMeeting:updateFailed", error, { meeting_id: meetingId, started_by });
                 throw error;
             }
 
             // Notify participants
             try {
-                SocketService.sendToMeeting(
-                    meetingId,
-                    "meeting-started",
-                    updatedMeeting
-                );
+                SocketService.sendToMeeting(meetingId, "meeting-started", updatedMeeting);
             } catch (socketError) {
-                MeetingErrorMonitor.logError(
-                    "startMeeting:notification",
-                    socketError as Error,
-                    { meeting_id: meetingId }
-                );
+                MeetingErrorMonitor.logError("startMeeting:notification", socketError as Error, {
+                    meeting_id: meetingId,
+                });
                 // Continue without failing the meeting start
             }
 
             return updatedMeeting;
         } catch (error) {
             // Handle Couchbase DocumentNotFoundError specifically
-            const handledError = handleDocumentNotFoundError(
-                error,
-                "startMeeting",
-                { meeting_id: meetingId, started_by }
-            );
+            const handledError = handleDocumentNotFoundError(error, "startMeeting", {
+                meeting_id: meetingId,
+                started_by,
+            });
             if (handledError !== error) {
                 throw handledError;
             }
@@ -668,19 +560,12 @@ export class MeetingService {
     /**
      * End a live meeting
      */
-    public static readonly endMeeting = async (
-        meetingId: string,
-        ended_by?: string
-    ): Promise<IMeetingData> => {
+    public static readonly endMeeting = async (meetingId: string, ended_by?: string): Promise<IMeetingData> => {
         try {
             const meeting = await Meeting.findById(meetingId);
             if (!meeting) {
                 const error = new Error("Meeting not found");
-                MeetingErrorMonitor.logError(
-                    "endMeeting:meetingNotFound",
-                    error,
-                    { meeting_id: meetingId }
-                );
+                MeetingErrorMonitor.logError("endMeeting:meetingNotFound", error, { meeting_id: meetingId });
                 throw error;
             }
 
@@ -697,23 +582,16 @@ export class MeetingService {
                     ...meeting.analytics,
                     total_participants_joined: participants.rows?.length || 0,
                     chat_messages_count: chatMessages.rows?.length || 0,
-                    total_duration_minutes: Math.floor(
-                        (Date.now() - meeting.created_at.getTime()) /
-                            (1000 * 60)
-                    ),
+                    total_duration_minutes: Math.floor((Date.now() - meeting.created_at.getTime()) / (1000 * 60)),
                 };
 
                 // Clean up WebRTC resources
                 try {
                     await WebRTCService.closeMeetingRoom(meetingId);
                 } catch (webrtcError) {
-                    MeetingErrorMonitor.logError(
-                        "endMeeting:webrtc",
-                        webrtcError as Error,
-                        {
-                            meeting_id: meetingId,
-                        }
-                    );
+                    MeetingErrorMonitor.logError("endMeeting:webrtc", webrtcError as Error, {
+                        meeting_id: meetingId,
+                    });
                     // Continue even if WebRTC cleanup fails
                 }
 
@@ -737,11 +615,7 @@ export class MeetingService {
 
                 if (!updatedMeeting) {
                     const error = new Error("Failed to end meeting");
-                    MeetingErrorMonitor.logError(
-                        "endMeeting:updateFailed",
-                        error,
-                        { meeting_id: meetingId }
-                    );
+                    MeetingErrorMonitor.logError("endMeeting:updateFailed", error, { meeting_id: meetingId });
                     throw error;
                 }
 
@@ -752,38 +626,26 @@ export class MeetingService {
                         analytics,
                     });
                 } catch (socketError) {
-                    MeetingErrorMonitor.logError(
-                        "endMeeting:socket",
-                        socketError as Error,
-                        {
-                            meeting_id: meetingId,
-                        }
-                    );
+                    MeetingErrorMonitor.logError("endMeeting:socket", socketError as Error, {
+                        meeting_id: meetingId,
+                    });
                     // Don't fail if notification fails
                 }
 
                 return updatedMeeting;
             } catch (processError) {
-                MeetingErrorMonitor.logError(
-                    "endMeeting:process",
-                    processError as Error,
-                    {
-                        meeting_id: meetingId,
-                        ended_by: ended_by || "system",
-                    }
-                );
+                MeetingErrorMonitor.logError("endMeeting:process", processError as Error, {
+                    meeting_id: meetingId,
+                    ended_by: ended_by || "system",
+                });
                 throw processError;
             }
         } catch (error) {
             // Handle Couchbase DocumentNotFoundError specifically
-            const handledError = handleDocumentNotFoundError(
-                error,
-                "endMeeting",
-                {
-                    meeting_id: meetingId,
-                    ended_by: ended_by || "system",
-                }
-            );
+            const handledError = handleDocumentNotFoundError(error, "endMeeting", {
+                meeting_id: meetingId,
+                ended_by: ended_by || "system",
+            });
             if (handledError !== error) {
                 throw handledError;
             }
@@ -799,9 +661,7 @@ export class MeetingService {
     /**
      * Get meeting participants with real-time status
      */
-    public static readonly getMeetingParticipants = async (
-        meetingId: string
-    ): Promise<IMeetingParticipant[]> => {
+    public static readonly getMeetingParticipants = async (meetingId: string): Promise<IMeetingParticipant[]> => {
         const participants = await MeetingParticipant.find({
             meeting_id: meetingId,
         });
@@ -811,10 +671,7 @@ export class MeetingService {
     /**
      * Get meeting chat history
      */
-    public static readonly getMeetingChat = async (
-        meetingId: string,
-        limit = 100
-    ): Promise<IMeetingChat[]> => {
+    public static readonly getMeetingChat = async (meetingId: string, limit = 100): Promise<IMeetingChat[]> => {
         const messages = await MeetingChat.find(
             { meeting_id: meetingId, is_deleted: false },
             {
@@ -828,9 +685,7 @@ export class MeetingService {
     /**
      * Get meeting recordings
      */
-    public static readonly getMeetingRecordings = async (
-        meetingId: string
-    ): Promise<IMeetingRecording[]> => {
+    public static readonly getMeetingRecordings = async (meetingId: string): Promise<IMeetingRecording[]> => {
         const recordings = await MeetingRecording.find({
             meeting_id: meetingId,
         });
@@ -850,7 +705,9 @@ export class MeetingService {
         engagementMetrics: any;
     }> => {
         const meeting = await Meeting.findById(meetingId);
-        if (!meeting) throw new Error("Meeting not found");
+        if (!meeting) {
+            throw new Error("Meeting not found");
+        }
 
         const participants = await MeetingParticipant.find({
             meeting_id: meetingId,
@@ -872,9 +729,7 @@ export class MeetingService {
 
         const chatParticipationRate =
             totalParticipants > 0
-                ? (new Set(chatMessages.rows?.map((m) => m.sender_id)).size /
-                      totalParticipants) *
-                  100
+                ? (new Set(chatMessages.rows?.map((m) => m.sender_id)).size / totalParticipants) * 100
                 : 0;
 
         return {
@@ -882,37 +737,20 @@ export class MeetingService {
             participants: participants.rows || [],
             chatStats: {
                 totalMessages: chatMessages.rows?.length || 0,
-                uniqueParticipants: new Set(
-                    chatMessages.rows?.map((m) => m.sender_id)
-                ).size,
+                uniqueParticipants: new Set(chatMessages.rows?.map((m) => m.sender_id)).size,
                 participationRate: chatParticipationRate,
             },
             connectionQuality: {
                 averageQuality:
                     participants.rows?.reduce((sum, p) => {
-                        const qualityScore =
-                            { poor: 1, fair: 2, good: 3, excellent: 4 }[
-                                p.connection_quality
-                            ] || 2;
+                        const qualityScore = { poor: 1, fair: 2, good: 3, excellent: 4 }[p.connection_quality] || 2;
                         return sum + qualityScore;
                     }, 0) / Math.max(totalParticipants, 1),
                 distribution: {
-                    poor:
-                        participants.rows?.filter(
-                            (p) => p.connection_quality === "poor"
-                        ).length || 0,
-                    fair:
-                        participants.rows?.filter(
-                            (p) => p.connection_quality === "fair"
-                        ).length || 0,
-                    good:
-                        participants.rows?.filter(
-                            (p) => p.connection_quality === "good"
-                        ).length || 0,
-                    excellent:
-                        participants.rows?.filter(
-                            (p) => p.connection_quality === "excellent"
-                        ).length || 0,
+                    poor: participants.rows?.filter((p) => p.connection_quality === "poor").length || 0,
+                    fair: participants.rows?.filter((p) => p.connection_quality === "fair").length || 0,
+                    good: participants.rows?.filter((p) => p.connection_quality === "good").length || 0,
+                    excellent: participants.rows?.filter((p) => p.connection_quality === "excellent").length || 0,
                 },
             },
             engagementMetrics: {
@@ -936,9 +774,7 @@ export class MeetingService {
         popularFeatures: any;
         serverHealth: any;
     }> => {
-        const query = campus_id
-            ? { campus_id, meeting_status: "live" }
-            : { meeting_status: "live" };
+        const query = campus_id ? { campus_id, meeting_status: "live" } : { meeting_status: "live" };
 
         const activeMeetings = await Meeting.find(query);
 
@@ -990,11 +826,7 @@ export class MeetingService {
             const meeting = await Meeting.findById(meeting_id);
             if (!meeting) {
                 const error = new Error("Meeting not found");
-                MeetingErrorMonitor.logError(
-                    "addParticipants:meetingNotFound",
-                    error,
-                    { meeting_id }
-                );
+                MeetingErrorMonitor.logError("addParticipants:meetingNotFound", error, { meeting_id });
                 throw error;
             }
 
@@ -1004,16 +836,12 @@ export class MeetingService {
                 const error = new Error(
                     `Adding ${participants.length} participants would exceed maximum limit of ${meeting.max_participants}`
                 );
-                MeetingErrorMonitor.logError(
-                    "addParticipants:limitExceeded",
-                    error,
-                    {
-                        meeting_id,
-                        current_count: currentCount,
-                        trying_to_add: participants.length,
-                        max_limit: meeting.max_participants,
-                    }
-                );
+                MeetingErrorMonitor.logError("addParticipants:limitExceeded", error, {
+                    meeting_id,
+                    current_count: currentCount,
+                    trying_to_add: participants.length,
+                    max_limit: meeting.max_participants,
+                });
                 throw error;
             }
 
@@ -1022,12 +850,9 @@ export class MeetingService {
             for (const participantData of participants) {
                 try {
                     // Check if participant is already in the meeting
-                    const existingParticipant =
-                        meeting.current_participants?.find(
-                            (p: any) =>
-                                p.user_id === participantData.user_id ||
-                                p.email === participantData.email
-                        );
+                    const existingParticipant = meeting.current_participants?.find(
+                        (p: any) => p.user_id === participantData.user_id || p.email === participantData.email
+                    );
 
                     if (existingParticipant) {
                         continue; // Skip if already a participant
@@ -1045,9 +870,7 @@ export class MeetingService {
                             }
                         } catch {
                             // Continue without actual user_id - will create as guest
-                            console.log(
-                                `Could not find user with email: ${participantData.email}`
-                            );
+                            console.log(`Could not find user with email: ${participantData.email}`);
                         }
                     }
 
@@ -1073,13 +896,10 @@ export class MeetingService {
                             is_muted_by_host: false,
                         },
                         permissions: {
-                            can_share_screen:
-                                participantData.role !== "attendee",
+                            can_share_screen: participantData.role !== "attendee",
                             can_use_chat: true,
                             can_use_whiteboard: true,
-                            is_moderator: ["host", "co_host"].includes(
-                                participantData.role || "attendee"
-                            ),
+                            is_moderator: ["host", "co_host"].includes(participantData.role || "attendee"),
                             is_host: participantData.role === "host",
                         },
                         peer_connection_id: `peer_${participantId}`, // Generate valid peer connection ID
@@ -1095,8 +915,7 @@ export class MeetingService {
                     await participantDoc.save();
 
                     // Add to meeting's current_participants array - using Ottoman updateById
-                    const currentParticipants =
-                        meeting.current_participants || [];
+                    const currentParticipants = meeting.current_participants || [];
                     currentParticipants.push(participantId);
 
                     await Meeting.updateById(meeting_id, {
@@ -1106,15 +925,11 @@ export class MeetingService {
 
                     addedParticipants.push(participant);
                 } catch (participantError) {
-                    MeetingErrorMonitor.logError(
-                        "addParticipants:individual",
-                        participantError as Error,
-                        {
-                            meeting_id,
-                            participant_email: participantData.email,
-                            participant_user_id: participantData.user_id,
-                        }
-                    );
+                    MeetingErrorMonitor.logError("addParticipants:individual", participantError as Error, {
+                        meeting_id,
+                        participant_email: participantData.email,
+                        participant_user_id: participantData.user_id,
+                    });
                     // Continue with other participants
                 }
             }
@@ -1145,11 +960,7 @@ export class MeetingService {
             const meeting = await Meeting.findById(meeting_id);
             if (!meeting) {
                 const error = new Error("Meeting not found");
-                MeetingErrorMonitor.logError(
-                    "removeParticipants:meetingNotFound",
-                    error,
-                    { meeting_id }
-                );
+                MeetingErrorMonitor.logError("removeParticipants:meetingNotFound", error, { meeting_id });
                 throw error;
             }
 
@@ -1184,29 +995,19 @@ export class MeetingService {
                     if (meeting.meeting_status === "live") {
                         try {
                             // SocketService will handle disconnecting the participant
-                            console.log(
-                                `Participant ${participantId} removed from live meeting ${meeting_id}`
-                            );
+                            console.log(`Participant ${participantId} removed from live meeting ${meeting_id}`);
                         } catch (socketError) {
-                            MeetingErrorMonitor.logError(
-                                "removeParticipants:socket",
-                                socketError as Error,
-                                {
-                                    meeting_id,
-                                    participant_id: participantId,
-                                }
-                            );
+                            MeetingErrorMonitor.logError("removeParticipants:socket", socketError as Error, {
+                                meeting_id,
+                                participant_id: participantId,
+                            });
                         }
                     }
                 } catch (participantError) {
-                    MeetingErrorMonitor.logError(
-                        "removeParticipants:individual",
-                        participantError as Error,
-                        {
-                            meeting_id,
-                            participant_id: participantId,
-                        }
-                    );
+                    MeetingErrorMonitor.logError("removeParticipants:individual", participantError as Error, {
+                        meeting_id,
+                        participant_id: participantId,
+                    });
                     // Continue with other participants
                 }
             }
@@ -1257,15 +1058,14 @@ export class MeetingService {
             };
 
             // Update participant record
-            const updatedParticipant =
-                await MeetingParticipant.findOneAndUpdate(
-                    { id: participant_id },
-                    {
-                        permissions: finalPermissions,
-                        updated_at: new Date(),
-                    },
-                    { new: true }
-                );
+            const updatedParticipant = await MeetingParticipant.findOneAndUpdate(
+                { id: participant_id },
+                {
+                    permissions: finalPermissions,
+                    updated_at: new Date(),
+                },
+                { new: true }
+            );
 
             if (!updatedParticipant) {
                 throw new Error("Participant not found");
@@ -1348,11 +1148,8 @@ export class MeetingService {
                 .filter(
                     (user) =>
                         !excludeIds.includes(user.id) &&
-                        (user.full_name.match(searchRegex) ||
-                            user.email.match(searchRegex)) &&
-                        (options.user_types?.length
-                            ? options.user_types.includes(user.role)
-                            : true)
+                        (user.full_name.match(searchRegex) || user.email.match(searchRegex)) &&
+                        (options.user_types?.length ? options.user_types.includes(user.role) : true)
                 )
                 .slice(0, limit);
         } catch (error) {

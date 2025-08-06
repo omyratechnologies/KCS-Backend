@@ -32,9 +32,6 @@ const ParentNotificationSchema = new Schema({
 ParentNotificationSchema.index.findByCampusId = { by: "campus_id" };
 ParentNotificationSchema.index.findByUserId = { by: "user_id" };
 
-const ParentNotification = ottoman.model<IParentNotificationData>(
-    "parent_notifications",
-    ParentNotificationSchema
-);
+const ParentNotification = ottoman.model<IParentNotificationData>("parent_notifications", ParentNotificationSchema);
 
 export { type IParentNotificationData, ParentNotification };

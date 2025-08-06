@@ -10,13 +10,7 @@ export interface ICourseLectureData {
     title: string;
     description?: string;
     lecture_order: number;
-    lecture_type:
-        | "video"
-        | "resource"
-        | "quiz"
-        | "assignment"
-        | "text"
-        | "live_session";
+    lecture_type: "video" | "resource" | "quiz" | "assignment" | "text" | "live_session";
     content_data: {
         // For videos
         video_url?: string;
@@ -116,14 +110,7 @@ const CourseLectureSchema = new Schema({
     lecture_order: { type: Number, required: true },
     lecture_type: {
         type: String,
-        enum: [
-            "video",
-            "resource",
-            "quiz",
-            "assignment",
-            "text",
-            "live_session",
-        ],
+        enum: ["video", "resource", "quiz", "assignment", "text", "live_session"],
         required: true,
     },
     content_data: { type: Object, required: true },
@@ -152,9 +139,6 @@ CourseLectureSchema.index.findByCampusId = { by: "campus_id" };
 CourseLectureSchema.index.findByOrder = { by: "lecture_order" };
 CourseLectureSchema.index.findByType = { by: "lecture_type" };
 
-const CourseLecture = ottoman.model<ICourseLectureData>(
-    "course_lectures",
-    CourseLectureSchema
-);
+const CourseLecture = ottoman.model<ICourseLectureData>("course_lectures", CourseLectureSchema);
 
 export { CourseLecture };

@@ -42,10 +42,7 @@ describe("HealthController", () => {
                     return {
                         success: false,
                         message: "Health check failed",
-                        error:
-                            error instanceof Error
-                                ? error.message
-                                : String(error),
+                        error: error instanceof Error ? error.message : String(error),
                         timestamp: new Date().toISOString(),
                     };
                 }
@@ -82,10 +79,7 @@ describe("HealthController", () => {
                     return {
                         success: false,
                         message: "Database connection failed",
-                        error:
-                            error instanceof Error
-                                ? error.message
-                                : String(error),
+                        error: error instanceof Error ? error.message : String(error),
                         timestamp: new Date().toISOString(),
                         service: "Ottoman/Couchbase",
                         suggestions: [

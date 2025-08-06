@@ -8,10 +8,7 @@ export class StudyHoursAnalyticsHelper {
     /**
      * Calculate comprehensive study hours analytics
      */
-    static async calculateStudyHours(
-        user_id: string,
-        campus_id: string
-    ): Promise<StudyHoursData> {
+    static async calculateStudyHours(user_id: string, campus_id: string): Promise<StudyHoursData> {
         try {
             // Get quiz attempts (to estimate time spent)
             const quizAttempts = await ClassQuizAttempt.find({
@@ -38,16 +35,10 @@ export class StudyHoursAnalyticsHelper {
             const avgDaily = thisWeek / 7;
 
             // Calculate subject-wise hours
-            const subjectWise = await this.calculateSubjectWiseHours(
-                attempts,
-                campus_id
-            );
+            const subjectWise = await this.calculateSubjectWiseHours(attempts, campus_id);
 
             // Calculate weekly trend (last 8 weeks)
-            const weeklyTrend = this.calculateWeeklyTrend(
-                attempts,
-                submissions
-            );
+            const weeklyTrend = this.calculateWeeklyTrend(attempts, submissions);
 
             return {
                 thisWeek,
@@ -65,20 +56,13 @@ export class StudyHoursAnalyticsHelper {
     /**
      * Calculate hours spent this week
      */
-    private static calculateWeeklyHours(
-        attempts: any[],
-        submissions: any[]
-    ): number {
+    private static calculateWeeklyHours(attempts: any[], submissions: any[]): number {
         const weekAgo = new Date();
         weekAgo.setDate(weekAgo.getDate() - 7);
 
-        const recentAttempts = attempts.filter(
-            (attempt) => new Date(attempt.created_at) >= weekAgo
-        );
+        const recentAttempts = attempts.filter((attempt) => new Date(attempt.created_at) >= weekAgo);
 
-        const recentSubmissions = submissions.filter(
-            (submission) => new Date(submission.created_at) >= weekAgo
-        );
+        const recentSubmissions = submissions.filter((submission) => new Date(submission.created_at) >= weekAgo);
 
         // Estimation:
         // - Each quiz attempt = 30 minutes of study
@@ -92,20 +76,13 @@ export class StudyHoursAnalyticsHelper {
     /**
      * Calculate hours spent this month
      */
-    private static calculateMonthlyHours(
-        attempts: any[],
-        submissions: any[]
-    ): number {
+    private static calculateMonthlyHours(attempts: any[], submissions: any[]): number {
         const monthAgo = new Date();
         monthAgo.setDate(monthAgo.getDate() - 30);
 
-        const recentAttempts = attempts.filter(
-            (attempt) => new Date(attempt.created_at) >= monthAgo
-        );
+        const recentAttempts = attempts.filter((attempt) => new Date(attempt.created_at) >= monthAgo);
 
-        const recentSubmissions = submissions.filter(
-            (submission) => new Date(submission.created_at) >= monthAgo
-        );
+        const recentSubmissions = submissions.filter((submission) => new Date(submission.created_at) >= monthAgo);
 
         // Same estimation as weekly but for month
         const attemptHours = recentAttempts.length * 0.5;
@@ -117,18 +94,13 @@ export class StudyHoursAnalyticsHelper {
     /**
      * Calculate subject-wise study hours
      */
-    private static async calculateSubjectWiseHours(
-        attempts: any[],
-        campus_id: string
-    ): Promise<SubjectHours[]> {
+    private static async calculateSubjectWiseHours(attempts: any[], campus_id: string): Promise<SubjectHours[]> {
         const subjectHoursMap = new Map<string, number>();
         const quizSubjectMap = new Map<string, string>();
 
         // First, map quiz IDs to subjects
         try {
-            const quizIds = [
-                ...new Set(attempts.map((attempt) => attempt.quiz_id)),
-            ];
+            const quizIds = [...new Set(attempts.map((attempt) => attempt.quiz_id))];
 
             if (quizIds.length > 0) {
                 const quizResults = await ClassQuiz.find({
@@ -159,10 +131,7 @@ export class StudyHoursAnalyticsHelper {
         }
 
         // Get subject names
-        const subjectNames = await this.getSubjectNames(
-            [...subjectHoursMap.keys()],
-            campus_id
-        );
+        const subjectNames = await this.getSubjectNames([...subjectHoursMap.keys()], campus_id);
 
         // Convert to result array
         return [...subjectHoursMap.entries()].map(([subjectId, hours]) => ({
@@ -175,10 +144,7 @@ export class StudyHoursAnalyticsHelper {
     /**
      * Calculate weekly trend over last 8 weeks
      */
-    private static calculateWeeklyTrend(
-        attempts: any[],
-        submissions: any[]
-    ): WeeklyHoursData[] {
+    private static calculateWeeklyTrend(attempts: any[], submissions: any[]): WeeklyHoursData[] {
         const weeks: WeeklyHoursData[] = [];
         const currentDate = new Date();
 
@@ -215,10 +181,7 @@ export class StudyHoursAnalyticsHelper {
     /**
      * Get subject names mapping
      */
-    private static async getSubjectNames(
-        subjectIds: string[],
-        campus_id: string
-    ): Promise<{ [key: string]: string }> {
+    private static async getSubjectNames(subjectIds: string[], campus_id: string): Promise<{ [key: string]: string }> {
         const subjectNames: { [key: string]: string } = {};
 
         if (subjectIds.length > 0) {
@@ -258,9 +221,7 @@ export class StudyHoursAnalyticsHelper {
     /**
      * Estimate study time based on activity type
      */
-    static estimateActivityTime(
-        activityType: "quiz" | "assignment" | "exam"
-    ): number {
+    static estimateActivityTime(activityType: "quiz" | "assignment" | "exam"): number {
         switch (activityType) {
             case "quiz": {
                 return 0.5;
@@ -280,11 +241,10 @@ export class StudyHoursAnalyticsHelper {
     /**
      * Calculate productivity score based on time spent vs outcomes
      */
-    static calculateProductivityScore(
-        hoursSpent: number,
-        averageScore: number
-    ): number {
-        if (hoursSpent === 0) return 0;
+    static calculateProductivityScore(hoursSpent: number, averageScore: number): number {
+        if (hoursSpent === 0) {
+            return 0;
+        }
 
         // Productivity = (Score / 100) / (Hours / optimal_hours)
         // Optimal hours per week for a student might be 20-25
@@ -292,9 +252,6 @@ export class StudyHoursAnalyticsHelper {
         const timeEfficiency = optimalHoursPerWeek / Math.max(hoursSpent, 1);
         const scoreEfficiency = averageScore / 100;
 
-        return Math.min(
-            Math.round(timeEfficiency * scoreEfficiency * 100),
-            100
-        );
+        return Math.min(Math.round(timeEfficiency * scoreEfficiency * 100), 100);
     }
 }

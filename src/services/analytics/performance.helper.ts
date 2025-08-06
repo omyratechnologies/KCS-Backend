@@ -3,12 +3,7 @@ import { Class } from "@/models/class.model";
 import { ClassQuizSubmission } from "@/models/class_quiz_submission.model";
 import { StudentRecord } from "@/models/student_record.model";
 import { Subject } from "@/models/subject.model";
-import {
-    ClassRankData,
-    MonthlyTrendData,
-    PerformanceMetrics,
-    SubjectPerformance,
-} from "@/types";
+import { ClassRankData, MonthlyTrendData, PerformanceMetrics, SubjectPerformance } from "@/types";
 
 export class PerformanceAnalyticsHelper {
     /**
@@ -45,11 +40,7 @@ export class PerformanceAnalyticsHelper {
             const examRecords = studentRecords.rows || [];
 
             // Calculate overall performance
-            const overallMetrics = this.calculateOverallPerformance(
-                submissions,
-                quizResults,
-                examRecords
-            );
+            const overallMetrics = this.calculateOverallPerformance(submissions, quizResults, examRecords);
 
             // Calculate subject-wise performance
             const subjectPerformance = await this.calculateSubjectPerformance(
@@ -60,10 +51,7 @@ export class PerformanceAnalyticsHelper {
             );
 
             // Calculate monthly trend (last 6 months)
-            const monthlyTrend = await this.calculateMonthlyTrend(
-                user_id,
-                campus_id
-            );
+            const monthlyTrend = await this.calculateMonthlyTrend(user_id, campus_id);
 
             // Get class rank
             const rankData = await this.calculateClassRank(
@@ -91,11 +79,7 @@ export class PerformanceAnalyticsHelper {
     /**
      * Calculate overall performance from all assessment types
      */
-    private static calculateOverallPerformance(
-        submissions: any[],
-        quizResults: any[],
-        examRecords: any[]
-    ) {
+    private static calculateOverallPerformance(submissions: any[], quizResults: any[], examRecords: any[]) {
         let totalScore = 0;
         let maxScore = 0;
         let gradePoints = 0;
@@ -128,12 +112,10 @@ export class PerformanceAnalyticsHelper {
                     if (termData.marks && Array.isArray(termData.marks)) {
                         termData.marks.forEach((mark: any) => {
                             if (mark.mark_gained && mark.total_marks) {
-                                const percentage =
-                                    (mark.mark_gained / mark.total_marks) * 100;
+                                const percentage = (mark.mark_gained / mark.total_marks) * 100;
                                 totalScore += percentage;
                                 maxScore += 100;
-                                gradePoints +=
-                                    this.convertGradeToPoints(percentage);
+                                gradePoints += this.convertGradeToPoints(percentage);
                                 totalItems++;
                             }
                         });
@@ -142,8 +124,7 @@ export class PerformanceAnalyticsHelper {
             }
         }
 
-        const percentageScore =
-            maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
+        const percentageScore = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
         const averageGradePoint = totalItems > 0 ? gradePoints / totalItems : 0;
         const overallGrade = this.convertPointsToGrade(averageGradePoint);
 
@@ -183,14 +164,9 @@ export class PerformanceAnalyticsHelper {
                 record.record_data.forEach((termData: any) => {
                     if (termData.marks && Array.isArray(termData.marks)) {
                         termData.marks.forEach((mark: any) => {
-                            if (
-                                mark.subject_id &&
-                                mark.mark_gained &&
-                                mark.total_marks
-                            ) {
+                            if (mark.subject_id && mark.mark_gained && mark.total_marks) {
                                 const subjectId = mark.subject_id;
-                                const percentage =
-                                    (mark.mark_gained / mark.total_marks) * 100;
+                                const percentage = (mark.mark_gained / mark.total_marks) * 100;
 
                                 subjectIds.add(subjectId);
 
@@ -240,10 +216,7 @@ export class PerformanceAnalyticsHelper {
         return [...subjectMap.entries()].map(([subjectId, data]) => ({
             subjectId,
             subjectName: subjectNames[subjectId] || "Unknown Subject",
-            averageScore:
-                data.count > 0
-                    ? Math.round((data.totalScore / data.count) * 100) / 100
-                    : 0,
+            averageScore: data.count > 0 ? Math.round((data.totalScore / data.count) * 100) / 100 : 0,
             totalAssessments: data.count,
             trend: this.calculateSubjectTrend(data.scores),
         }));
@@ -252,24 +225,13 @@ export class PerformanceAnalyticsHelper {
     /**
      * Calculate monthly performance trend
      */
-    private static async calculateMonthlyTrend(
-        user_id: string,
-        campus_id: string
-    ): Promise<MonthlyTrendData[]> {
+    private static async calculateMonthlyTrend(user_id: string, campus_id: string): Promise<MonthlyTrendData[]> {
         const months: MonthlyTrendData[] = [];
         const currentDate = new Date();
 
         for (let i = 5; i >= 0; i--) {
-            const monthDate = new Date(
-                currentDate.getFullYear(),
-                currentDate.getMonth() - i,
-                1
-            );
-            const nextMonth = new Date(
-                currentDate.getFullYear(),
-                currentDate.getMonth() - i + 1,
-                1
-            );
+            const monthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+            const nextMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - i + 1, 1);
 
             try {
                 // Get submissions for this month
@@ -282,10 +244,7 @@ export class PerformanceAnalyticsHelper {
                 const submissions = monthSubmissions.rows || [];
                 const avgScore =
                     submissions.length > 0
-                        ? submissions.reduce(
-                              (sum, sub) => sum + (sub.grade || 0),
-                              0
-                          ) / submissions.length
+                        ? submissions.reduce((sum, sub) => sum + (sub.grade || 0), 0) / submissions.length
                         : 0;
 
                 months.push({
@@ -322,7 +281,9 @@ export class PerformanceAnalyticsHelper {
         userScore: number
     ): Promise<ClassRankData> {
         try {
-            if (classIds.length === 0) return { rank: 0, totalStudents: 0 };
+            if (classIds.length === 0) {
+                return { rank: 0, totalStudents: 0 };
+            }
 
             // Get all students in the same classes
             const classResults = await Class.find({
@@ -337,9 +298,7 @@ export class PerformanceAnalyticsHelper {
 
             for (const cls of classes) {
                 if (cls.student_ids && Array.isArray(cls.student_ids)) {
-                    cls.student_ids.forEach((id: string) =>
-                        allStudentIds.add(id)
-                    );
+                    cls.student_ids.forEach((id: string) => allStudentIds.add(id));
                 }
             }
 
@@ -347,10 +306,7 @@ export class PerformanceAnalyticsHelper {
 
             // Simplified ranking calculation - in practice, you'd calculate scores for all students
             // For now, assume a normal distribution
-            const rank = Math.max(
-                1,
-                Math.ceil((totalStudents * (100 - userScore)) / 100)
-            );
+            const rank = Math.max(1, Math.ceil((totalStudents * (100 - userScore)) / 100));
 
             return {
                 rank: Math.min(rank, totalStudents),
@@ -365,25 +321,25 @@ export class PerformanceAnalyticsHelper {
     /**
      * Calculate trend for a subject based on recent scores
      */
-    private static calculateSubjectTrend(
-        scores: number[]
-    ): "improving" | "declining" | "stable" | "insufficient_data" {
-        if (scores.length < 3) return "insufficient_data";
+    private static calculateSubjectTrend(scores: number[]): "improving" | "declining" | "stable" | "insufficient_data" {
+        if (scores.length < 3) {
+            return "insufficient_data";
+        }
 
         const recentScores = scores.slice(-3); // Last 3 scores
         const earlyScores = scores.slice(0, 3); // First 3 scores
 
-        const recentAvg =
-            recentScores.reduce((sum, score) => sum + score, 0) /
-            recentScores.length;
-        const earlyAvg =
-            earlyScores.reduce((sum, score) => sum + score, 0) /
-            earlyScores.length;
+        const recentAvg = recentScores.reduce((sum, score) => sum + score, 0) / recentScores.length;
+        const earlyAvg = earlyScores.reduce((sum, score) => sum + score, 0) / earlyScores.length;
 
         const difference = recentAvg - earlyAvg;
 
-        if (difference > 5) return "improving";
-        if (difference < -5) return "declining";
+        if (difference > 5) {
+            return "improving";
+        }
+        if (difference < -5) {
+            return "declining";
+        }
         return "stable";
     }
 
@@ -391,10 +347,18 @@ export class PerformanceAnalyticsHelper {
      * Convert score to grade points (4.0 scale)
      */
     private static convertGradeToPoints(score: number): number {
-        if (score >= 90) return 4;
-        if (score >= 80) return 3;
-        if (score >= 70) return 2;
-        if (score >= 60) return 1;
+        if (score >= 90) {
+            return 4;
+        }
+        if (score >= 80) {
+            return 3;
+        }
+        if (score >= 70) {
+            return 2;
+        }
+        if (score >= 60) {
+            return 1;
+        }
         return 0;
     }
 
@@ -402,10 +366,18 @@ export class PerformanceAnalyticsHelper {
      * Convert grade points to letter grade
      */
     private static convertPointsToGrade(points: number): string {
-        if (points >= 3.5) return "A";
-        if (points >= 2.5) return "B";
-        if (points >= 1.5) return "C";
-        if (points >= 0.5) return "D";
+        if (points >= 3.5) {
+            return "A";
+        }
+        if (points >= 2.5) {
+            return "B";
+        }
+        if (points >= 1.5) {
+            return "C";
+        }
+        if (points >= 0.5) {
+            return "D";
+        }
         return "F";
     }
 

@@ -11,22 +11,13 @@ androidApkRoute.post("/upload", AndroidApkController.uploadApk);
 androidApkRoute.get("/", AndroidApkController.getAllApks);
 
 // Get APKs by package name
-androidApkRoute.get(
-    "/package/:packageName",
-    AndroidApkController.getApkByPackageName
-);
+androidApkRoute.get("/package/:packageName", AndroidApkController.getApkByPackageName);
 
 // Get latest APK by package name
-androidApkRoute.get(
-    "/package/:packageName/latest",
-    AndroidApkController.getLatestApkByPackageName
-);
+androidApkRoute.get("/package/:packageName/latest", AndroidApkController.getLatestApkByPackageName);
 
 // Get specific APK by package name and version
-androidApkRoute.get(
-    "/package/:packageName/version/:version",
-    AndroidApkController.getApkByPackageAndVersion
-);
+androidApkRoute.get("/package/:packageName/version/:version", AndroidApkController.getApkByPackageAndVersion);
 
 // Download APK by ID
 androidApkRoute.get("/download/:id", AndroidApkController.downloadApk);

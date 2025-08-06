@@ -83,9 +83,6 @@ StudentPerformanceSchema.index.findByStudentIdAndAcademicYear = {
     by: ["student_id", "academic_year"],
 };
 
-const StudentPerformance = ottoman.model<IStudentPerformanceData>(
-    "student_performance",
-    StudentPerformanceSchema
-);
+const StudentPerformance = ottoman.model<IStudentPerformanceData>("student_performance", StudentPerformanceSchema);
 
 export { type IStudentPerformanceData, StudentPerformance };

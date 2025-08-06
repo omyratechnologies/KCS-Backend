@@ -15,11 +15,7 @@ export class CourseController {
             const user_id = ctx.get("user_id");
             const courseData = await ctx.req.json();
 
-            const result = await CourseService.createCourse(
-                campus_id,
-                user_id,
-                courseData
-            );
+            const result = await CourseService.createCourse(campus_id, user_id, courseData);
 
             return ctx.json(
                 {
@@ -34,10 +30,7 @@ export class CourseController {
             return ctx.json(
                 {
                     success: false,
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Failed to create course",
+                    error: error instanceof Error ? error.message : "Failed to create course",
                 },
                 500
             );
@@ -56,9 +49,7 @@ export class CourseController {
             const query = ctx.req.query();
             const filters = {
                 page: query.page ? Number.parseInt(query.page as string) : 1,
-                limit: query.limit
-                    ? Number.parseInt(query.limit as string)
-                    : 20,
+                limit: query.limit ? Number.parseInt(query.limit as string) : 20,
                 status: query.status as string,
                 category: query.category as string,
                 difficulty_level: query.difficulty_level as string,
@@ -66,9 +57,7 @@ export class CourseController {
                 search_query: query.search as string,
                 instructor_id: query.instructor_id as string,
                 class_id: query.class_id as string,
-                is_featured: query.featured
-                    ? query.featured === "true"
-                    : undefined,
+                is_featured: query.featured ? query.featured === "true" : undefined,
                 sort_by: (query.sort_by as string) || "created_at",
                 sort_order: (query.sort_order as "asc" | "desc") || "desc",
             };
@@ -90,10 +79,7 @@ export class CourseController {
             return ctx.json(
                 {
                     success: false,
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Failed to get courses",
+                    error: error instanceof Error ? error.message : "Failed to get courses",
                 },
                 500
             );
@@ -120,11 +106,7 @@ export class CourseController {
                 );
             }
 
-            const result = await CourseService.getCourseById(
-                course_id,
-                campus_id,
-                user_id
-            );
+            const result = await CourseService.getCourseById(course_id, campus_id, user_id);
 
             // Check if user can access this course
             if (
@@ -151,10 +133,7 @@ export class CourseController {
             return ctx.json(
                 {
                     success: false,
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Failed to get course",
+                    error: error instanceof Error ? error.message : "Failed to get course",
                 },
                 500
             );
@@ -184,10 +163,7 @@ export class CourseController {
             }
 
             // Check permissions
-            const courseResult = await CourseService.getCourseById(
-                course_id,
-                campus_id
-            );
+            const courseResult = await CourseService.getCourseById(course_id, campus_id);
             const course = courseResult.data;
 
             const canUpdate =
@@ -205,12 +181,7 @@ export class CourseController {
                 );
             }
 
-            const result = await CourseService.updateCourse(
-                course_id,
-                campus_id,
-                user_id,
-                updateData
-            );
+            const result = await CourseService.updateCourse(course_id, campus_id, user_id, updateData);
 
             return ctx.json({
                 success: true,
@@ -222,10 +193,7 @@ export class CourseController {
             return ctx.json(
                 {
                     success: false,
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Failed to update course",
+                    error: error instanceof Error ? error.message : "Failed to update course",
                 },
                 500
             );
@@ -254,10 +222,7 @@ export class CourseController {
             }
 
             // Check permissions
-            const courseResult = await CourseService.getCourseById(
-                course_id,
-                campus_id
-            );
+            const courseResult = await CourseService.getCourseById(course_id, campus_id);
             const course = courseResult.data;
 
             const canPublish =
@@ -275,11 +240,7 @@ export class CourseController {
                 );
             }
 
-            const result = await CourseService.publishCourse(
-                course_id,
-                campus_id,
-                user_id
-            );
+            const result = await CourseService.publishCourse(course_id, campus_id, user_id);
 
             return ctx.json({
                 success: true,
@@ -291,10 +252,7 @@ export class CourseController {
             return ctx.json(
                 {
                     success: false,
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Failed to publish course",
+                    error: error instanceof Error ? error.message : "Failed to publish course",
                 },
                 500
             );
@@ -323,15 +281,10 @@ export class CourseController {
             }
 
             // Check permissions
-            const courseResult = await CourseService.getCourseById(
-                course_id,
-                campus_id
-            );
+            const courseResult = await CourseService.getCourseById(course_id, campus_id);
             const course = courseResult.data;
 
-            const canDelete =
-                ["Admin", "Super Admin"].includes(user_type) ||
-                course.created_by === user_id;
+            const canDelete = ["Admin", "Super Admin"].includes(user_type) || course.created_by === user_id;
 
             if (!canDelete) {
                 return ctx.json(
@@ -343,11 +296,7 @@ export class CourseController {
                 );
             }
 
-            const result = await CourseService.deleteCourse(
-                course_id,
-                campus_id,
-                user_id
-            );
+            const result = await CourseService.deleteCourse(course_id, campus_id, user_id);
 
             return ctx.json({
                 success: true,
@@ -358,10 +307,7 @@ export class CourseController {
             return ctx.json(
                 {
                     success: false,
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Failed to delete course",
+                    error: error instanceof Error ? error.message : "Failed to delete course",
                 },
                 500
             );
@@ -392,10 +338,7 @@ export class CourseController {
             }
 
             // Check permissions
-            const courseResult = await CourseService.getCourseById(
-                course_id,
-                campus_id
-            );
+            const courseResult = await CourseService.getCourseById(course_id, campus_id);
             const course = courseResult.data;
 
             const canCreateSection =
@@ -413,11 +356,7 @@ export class CourseController {
                 );
             }
 
-            const result = await CourseService.createCourseSection(
-                course_id,
-                campus_id,
-                sectionData
-            );
+            const result = await CourseService.createCourseSection(course_id, campus_id, sectionData);
 
             return ctx.json(
                 {
@@ -432,10 +371,7 @@ export class CourseController {
             return ctx.json(
                 {
                     success: false,
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Failed to create course section",
+                    error: error instanceof Error ? error.message : "Failed to create course section",
                 },
                 500
             );
@@ -465,11 +401,7 @@ export class CourseController {
 
             // TODO: Add permission check for section/course access
 
-            const result = await CourseService.createCourseLecture(
-                section_id,
-                campus_id,
-                lectureData
-            );
+            const result = await CourseService.createCourseLecture(section_id, campus_id, lectureData);
 
             return ctx.json(
                 {
@@ -484,10 +416,7 @@ export class CourseController {
             return ctx.json(
                 {
                     success: false,
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Failed to create course lecture",
+                    error: error instanceof Error ? error.message : "Failed to create course lecture",
                 },
                 500
             );
@@ -505,11 +434,7 @@ export class CourseController {
             const user_type = ctx.get("user_type");
             const { section_orders } = await ctx.req.json();
 
-            if (
-                !course_id ||
-                !section_orders ||
-                !Array.isArray(section_orders)
-            ) {
+            if (!course_id || !section_orders || !Array.isArray(section_orders)) {
                 return ctx.json(
                     {
                         success: false,
@@ -520,10 +445,7 @@ export class CourseController {
             }
 
             // Check permissions
-            const courseResult = await CourseService.getCourseById(
-                course_id,
-                campus_id
-            );
+            const courseResult = await CourseService.getCourseById(course_id, campus_id);
             const course = courseResult.data;
 
             const canReorder =
@@ -541,11 +463,7 @@ export class CourseController {
                 );
             }
 
-            const result = await CourseService.updateSectionOrder(
-                course_id,
-                campus_id,
-                section_orders
-            );
+            const result = await CourseService.updateSectionOrder(course_id, campus_id, section_orders);
 
             return ctx.json({
                 success: true,
@@ -556,10 +474,7 @@ export class CourseController {
             return ctx.json(
                 {
                     success: false,
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Failed to update section order",
+                    error: error instanceof Error ? error.message : "Failed to update section order",
                 },
                 500
             );
@@ -575,11 +490,7 @@ export class CourseController {
             const campus_id = ctx.get("campus_id");
             const { lecture_orders } = await ctx.req.json();
 
-            if (
-                !section_id ||
-                !lecture_orders ||
-                !Array.isArray(lecture_orders)
-            ) {
+            if (!section_id || !lecture_orders || !Array.isArray(lecture_orders)) {
                 return ctx.json(
                     {
                         success: false,
@@ -591,11 +502,7 @@ export class CourseController {
 
             // TODO: Add permission check
 
-            const result = await CourseService.updateLectureOrder(
-                section_id,
-                campus_id,
-                lecture_orders
-            );
+            const result = await CourseService.updateLectureOrder(section_id, campus_id, lecture_orders);
 
             return ctx.json({
                 success: true,
@@ -606,10 +513,7 @@ export class CourseController {
             return ctx.json(
                 {
                     success: false,
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Failed to update lecture order",
+                    error: error instanceof Error ? error.message : "Failed to update lecture order",
                 },
                 500
             );
@@ -638,12 +542,7 @@ export class CourseController {
                 );
             }
 
-            const result = await CourseService.enrollInCourse(
-                course_id,
-                user_id,
-                campus_id,
-                enrollmentData
-            );
+            const result = await CourseService.enrollInCourse(course_id, user_id, campus_id, enrollmentData);
 
             return ctx.json(
                 {
@@ -658,10 +557,7 @@ export class CourseController {
             return ctx.json(
                 {
                     success: false,
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Failed to enroll in course",
+                    error: error instanceof Error ? error.message : "Failed to enroll in course",
                 },
                 500
             );
@@ -681,16 +577,10 @@ export class CourseController {
                 status: query.status as string,
                 progress: query.progress as string,
                 page: query.page ? Number.parseInt(query.page as string) : 1,
-                limit: query.limit
-                    ? Number.parseInt(query.limit as string)
-                    : 20,
+                limit: query.limit ? Number.parseInt(query.limit as string) : 20,
             };
 
-            const result = await CourseService.getUserEnrolledCourses(
-                user_id,
-                campus_id,
-                filters
-            );
+            const result = await CourseService.getUserEnrolledCourses(user_id, campus_id, filters);
 
             return ctx.json({
                 success: true,
@@ -702,10 +592,7 @@ export class CourseController {
             return ctx.json(
                 {
                     success: false,
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Failed to get enrolled courses",
+                    error: error instanceof Error ? error.message : "Failed to get enrolled courses",
                 },
                 500
             );
@@ -751,10 +638,7 @@ export class CourseController {
             return ctx.json(
                 {
                     success: false,
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Failed to update course progress",
+                    error: error instanceof Error ? error.message : "Failed to update course progress",
                 },
                 500
             );
@@ -785,10 +669,7 @@ export class CourseController {
             }
 
             // Check permissions
-            const courseResult = await CourseService.getCourseById(
-                course_id,
-                campus_id
-            );
+            const courseResult = await CourseService.getCourseById(course_id, campus_id);
             const course = courseResult.data;
 
             const canViewAnalytics =
@@ -806,10 +687,7 @@ export class CourseController {
                 );
             }
 
-            const result = await CourseService.getCourseAnalytics(
-                course_id,
-                campus_id
-            );
+            const result = await CourseService.getCourseAnalytics(course_id, campus_id);
 
             return ctx.json({
                 success: true,
@@ -821,10 +699,7 @@ export class CourseController {
             return ctx.json(
                 {
                     success: false,
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Failed to get course analytics",
+                    error: error instanceof Error ? error.message : "Failed to get course analytics",
                 },
                 500
             );
@@ -843,8 +718,7 @@ export class CourseController {
             const campus_id = ctx.get("campus_id");
             const user_id = ctx.get("user_id");
             const user_type = ctx.get("user_type");
-            const { student_ids, enrollment_type = "admin_assigned" } =
-                await ctx.req.json();
+            const { student_ids, enrollment_type = "admin_assigned" } = await ctx.req.json();
 
             if (!["Admin", "Super Admin"].includes(user_type)) {
                 return ctx.json(
@@ -879,21 +753,16 @@ export class CourseController {
 
             for (const student_id of student_ids) {
                 try {
-                    const result = await CourseService.enrollInCourse(
-                        course_id,
-                        student_id,
-                        campus_id,
-                        {
-                            enrollment_type,
-                            enrollment_source: "admin",
-                            meta_data: {
-                                custom_fields: {
-                                    enrolled_by: user_id,
-                                    bulk_enrollment: true,
-                                },
+                    const result = await CourseService.enrollInCourse(course_id, student_id, campus_id, {
+                        enrollment_type,
+                        enrollment_source: "admin",
+                        meta_data: {
+                            custom_fields: {
+                                enrolled_by: user_id,
+                                bulk_enrollment: true,
                             },
-                        }
-                    );
+                        },
+                    });
                     results.push({
                         student_id,
                         success: true,
@@ -903,10 +772,7 @@ export class CourseController {
                     errors.push({
                         student_id,
                         success: false,
-                        error:
-                            error instanceof Error
-                                ? error.message
-                                : "Unknown error",
+                        error: error instanceof Error ? error.message : "Unknown error",
                     });
                 }
             }
@@ -926,10 +792,7 @@ export class CourseController {
             return ctx.json(
                 {
                     success: false,
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Failed to perform bulk enrollment",
+                    error: error instanceof Error ? error.message : "Failed to perform bulk enrollment",
                 },
                 500
             );
@@ -960,29 +823,19 @@ export class CourseController {
             const stats = await CourseService.getCourseStatistics(campus_id);
 
             // Get recent courses
-            const recentCoursesResult = await CourseService.getCourses(
-                campus_id,
-                {
-                    limit: 10,
-                    sort_by: "updated_at",
-                    sort_order: "desc",
-                    ...(user_type === "Teacher"
-                        ? { instructor_id: user_id }
-                        : {}),
-                }
-            );
+            const recentCoursesResult = await CourseService.getCourses(campus_id, {
+                limit: 10,
+                sort_by: "updated_at",
+                sort_order: "desc",
+                ...(user_type === "Teacher" ? { instructor_id: user_id } : {}),
+            });
 
             return ctx.json({
                 success: true,
                 data: {
                     statistics: stats,
                     recent_courses: recentCoursesResult.data.courses,
-                    quick_actions: [
-                        "create_course",
-                        "manage_enrollments",
-                        "view_analytics",
-                        "export_reports",
-                    ],
+                    quick_actions: ["create_course", "manage_enrollments", "view_analytics", "export_reports"],
                 },
                 message: "Course dashboard data retrieved successfully",
             });
@@ -991,10 +844,7 @@ export class CourseController {
             return ctx.json(
                 {
                     success: false,
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Failed to get course dashboard",
+                    error: error instanceof Error ? error.message : "Failed to get course dashboard",
                 },
                 500
             );

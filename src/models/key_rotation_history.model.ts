@@ -9,11 +9,7 @@ export interface IKeyRotationHistory {
     old_key_id: string;
     new_key_id: string;
     key_type: "payment_credentials" | "encryption_master" | "signing_key";
-    rotation_reason:
-        | "scheduled"
-        | "security_incident"
-        | "compliance_requirement"
-        | "manual";
+    rotation_reason: "scheduled" | "security_incident" | "compliance_requirement" | "manual";
     rotated_by: string;
     rotation_status: "completed" | "failed" | "pending";
     backup_location: string;
@@ -44,10 +40,7 @@ KeyRotationHistorySchema.index.findByCampusIdAndKeyType = {
     by: ["campus_id", "key_type"],
 };
 
-const KeyRotationHistory = ottoman.model<IKeyRotationHistory>(
-    "key_rotation_history",
-    KeyRotationHistorySchema
-);
+const KeyRotationHistory = ottoman.model<IKeyRotationHistory>("key_rotation_history", KeyRotationHistorySchema);
 
 export class KeyRotationHistoryService {
     public static async createRotationRecord(
@@ -60,19 +53,14 @@ export class KeyRotationHistoryService {
         });
     }
 
-    public static async getRotationHistory(
-        campus_id: string
-    ): Promise<IKeyRotationHistory[]> {
+    public static async getRotationHistory(campus_id: string): Promise<IKeyRotationHistory[]> {
         const history = await KeyRotationHistory.find({
             campus_id,
         });
         return history.rows || [];
     }
 
-    public static async getLastRotationDate(
-        campus_id: string,
-        key_type: string
-    ): Promise<Date | null> {
+    public static async getLastRotationDate(campus_id: string, key_type: string): Promise<Date | null> {
         const lastRotation = await KeyRotationHistory.find({
             campus_id,
             key_type,
@@ -80,12 +68,12 @@ export class KeyRotationHistoryService {
         });
 
         const rotations = lastRotation.rows || [];
-        if (rotations.length === 0) return null;
+        if (rotations.length === 0) {
+            return null;
+        }
 
         const sortedRotations = rotations.sort(
-            (a, b) =>
-                new Date(b.created_at).getTime() -
-                new Date(a.created_at).getTime()
+            (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
 
         return sortedRotations[0]?.rotation_date || null;
@@ -120,33 +108,19 @@ export class KeyRotationHistoryService {
         const rotations = allRotations.rows || [];
 
         const total = rotations.length;
-        const successful = rotations.filter(
-            (r) => r.rotation_status === "completed"
-        ).length;
-        const failed = rotations.filter(
-            (r) => r.rotation_status === "failed"
-        ).length;
-        const pending = rotations.filter(
-            (r) => r.rotation_status === "pending"
-        ).length;
+        const successful = rotations.filter((r) => r.rotation_status === "completed").length;
+        const failed = rotations.filter((r) => r.rotation_status === "failed").length;
+        const pending = rotations.filter((r) => r.rotation_status === "pending").length;
 
         const lastRotation =
             rotations.length > 0
-                ? rotations.sort(
-                      (a, b) =>
-                          new Date(b.created_at).getTime() -
-                          new Date(a.created_at).getTime()
-                  )[0]
+                ? rotations.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
                 : null;
 
         // Calculate average rotation interval
         const completedRotations = rotations
             .filter((r) => r.rotation_status === "completed")
-            .sort(
-                (a, b) =>
-                    new Date(a.created_at).getTime() -
-                    new Date(b.created_at).getTime()
-            );
+            .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
         let avgIntervalDays = 0;
         if (completedRotations.length > 1) {
@@ -154,14 +128,10 @@ export class KeyRotationHistoryService {
             for (let i = 1; i < completedRotations.length; i++) {
                 const prevDate = new Date(completedRotations[i - 1].created_at);
                 const currentDate = new Date(completedRotations[i].created_at);
-                const intervalDays =
-                    (currentDate.getTime() - prevDate.getTime()) /
-                    (1000 * 60 * 60 * 24);
+                const intervalDays = (currentDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24);
                 intervals.push(intervalDays);
             }
-            avgIntervalDays =
-                intervals.reduce((sum, interval) => sum + interval, 0) /
-                intervals.length;
+            avgIntervalDays = intervals.reduce((sum, interval) => sum + interval, 0) / intervals.length;
         }
 
         return {

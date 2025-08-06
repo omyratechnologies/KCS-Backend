@@ -30,9 +30,7 @@ export const meetingRateLimit = () => {
                 {
                     success: false,
                     message: "Rate limit exceeded. Too many requests.",
-                    retryAfter: Math.ceil(
-                        (userRequests.resetTime - now) / 1000
-                    ),
+                    retryAfter: Math.ceil((userRequests.resetTime - now) / 1000),
                 },
                 429
             );
@@ -73,11 +71,8 @@ export const strictMeetingRateLimit = () => {
             return ctx.json(
                 {
                     success: false,
-                    message:
-                        "Rate limit exceeded for resource-intensive operations.",
-                    retryAfter: Math.ceil(
-                        (userRequests.resetTime - now) / 1000
-                    ),
+                    message: "Rate limit exceeded for resource-intensive operations.",
+                    retryAfter: Math.ceil((userRequests.resetTime - now) / 1000),
                 },
                 429
             );

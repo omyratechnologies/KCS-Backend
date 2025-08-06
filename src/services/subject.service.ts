@@ -8,10 +8,7 @@ const classService = new ClassService();
 
 export class SubjectService {
     // Create a new subject
-    public static async createSubject(
-        campusId: string,
-        subjectData: Partial<ISubject>
-    ): Promise<ISubject> {
+    public static async createSubject(campusId: string, subjectData: Partial<ISubject>): Promise<ISubject> {
         const subject = await Subject.create({
             campus_id: campusId,
             ...subjectData,
@@ -58,10 +55,7 @@ export class SubjectService {
     }
 
     // Update a subject
-    public static async updateSubject(
-        id: string,
-        subjectData: Partial<ISubject>
-    ) {
+    public static async updateSubject(id: string, subjectData: Partial<ISubject>) {
         const subject = await Subject.updateById(id, {
             ...subjectData,
             updated_at: new Date(),

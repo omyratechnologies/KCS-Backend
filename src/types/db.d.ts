@@ -33,6 +33,7 @@ interface CampusesData {
 interface LoginSessionsData {
     id: string;
     user_id: string;
+    campus_id?: string;
     session_id: string;
     refresh_token: string;
     created_at: Date;

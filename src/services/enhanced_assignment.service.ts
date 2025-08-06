@@ -1,14 +1,8 @@
 import { Assignment, IAssignmentData } from "@/models/assignment.model";
-import {
-    AssignmentSubmission,
-    IAssignmentSubmission,
-} from "@/models/assignment_submission.model";
+import { AssignmentSubmission, IAssignmentSubmission } from "@/models/assignment_submission.model";
 import { Class, IClassData } from "@/models/class.model";
 import { Course } from "@/models/course.model";
-import {
-    CourseAssignment,
-    ICourseAssignmentData,
-} from "@/models/course_assignment.model";
+import { CourseAssignment, ICourseAssignmentData } from "@/models/course_assignment.model";
 import {
     CourseAssignmentSubmission,
     ICourseAssignmentSubmissionData,
@@ -121,13 +115,7 @@ export class EnhancedAssignmentService {
         student_id: string,
         campus_id: string,
         filters?: {
-            status?:
-                | "pending"
-                | "submitted"
-                | "graded"
-                | "overdue"
-                | "due_soon"
-                | "all";
+            status?: "pending" | "submitted" | "graded" | "overdue" | "due_soon" | "all";
             subject_id?: string;
             due_in_days?: number;
             assignment_type?: string;
@@ -168,10 +156,7 @@ export class EnhancedAssignmentService {
                 // Filter classes where the student is enrolled
                 const filteredRows = result.rows.filter((classData) => {
                     // Safety check for student_ids field
-                    if (
-                        !classData.student_ids ||
-                        !Array.isArray(classData.student_ids)
-                    ) {
+                    if (!classData.student_ids || !Array.isArray(classData.student_ids)) {
                         return false;
                     }
 
@@ -182,36 +167,29 @@ export class EnhancedAssignmentService {
             });
 
             // Get student's course enrollments
-            const courseEnrollments: { rows: any[] } =
-                await CourseEnrollment.find({
-                    campus_id,
-                    user_id: student_id,
-                    is_active: true,
-                    is_deleted: false,
-                });
+            const courseEnrollments: { rows: any[] } = await CourseEnrollment.find({
+                campus_id,
+                user_id: student_id,
+                is_active: true,
+                is_deleted: false,
+            });
 
-            const enrolledCourseIds = courseEnrollments.rows.map(
-                (enrollment) => enrollment.course_id
-            );
+            const enrolledCourseIds = courseEnrollments.rows.map((enrollment) => enrollment.course_id);
 
             let allAssignments: IUnifiedAssignmentView[] = [];
 
             // Get class assignments
             for (const classData of studentClasses.rows) {
                 try {
-                    const classAssignments =
-                        await this.getClassAssignmentsForStudent(
-                            student_id,
-                            classData.id,
-                            campus_id,
-                            filters
-                        );
+                    const classAssignments = await this.getClassAssignmentsForStudent(
+                        student_id,
+                        classData.id,
+                        campus_id,
+                        filters
+                    );
                     allAssignments = allAssignments.concat(classAssignments);
                 } catch (error) {
-                    console.error(
-                        `Error getting assignments for class ${classData.id}:`,
-                        error
-                    );
+                    console.error(`Error getting assignments for class ${classData.id}:`, error);
                     // Continue with other classes instead of failing completely
                 }
             }
@@ -219,19 +197,15 @@ export class EnhancedAssignmentService {
             // Get course assignments
             for (const courseId of enrolledCourseIds) {
                 try {
-                    const courseAssignments =
-                        await this.getCourseAssignmentsForStudent(
-                            student_id,
-                            courseId,
-                            campus_id,
-                            filters
-                        );
+                    const courseAssignments = await this.getCourseAssignmentsForStudent(
+                        student_id,
+                        courseId,
+                        campus_id,
+                        filters
+                    );
                     allAssignments = allAssignments.concat(courseAssignments);
                 } catch (error) {
-                    console.error(
-                        `Error getting assignments for course ${courseId}:`,
-                        error
-                    );
+                    console.error(`Error getting assignments for course ${courseId}:`, error);
                     // Continue with other courses instead of failing completely
                 }
             }
@@ -240,9 +214,7 @@ export class EnhancedAssignmentService {
             let filteredAssignments = allAssignments;
 
             if (filters?.status && filters.status !== "all") {
-                filteredAssignments = filteredAssignments.filter(
-                    (assignment) => assignment.status === filters.status
-                );
+                filteredAssignments = filteredAssignments.filter((assignment) => assignment.status === filters.status);
             }
 
             if (filters?.subject_id) {
@@ -255,35 +227,25 @@ export class EnhancedAssignmentService {
                 const futureDate = new Date();
                 futureDate.setDate(futureDate.getDate() + filters.due_in_days);
                 filteredAssignments = filteredAssignments.filter(
-                    (assignment) =>
-                        assignment.due_date <= futureDate &&
-                        assignment.due_date >= new Date()
+                    (assignment) => assignment.due_date <= futureDate && assignment.due_date >= new Date()
                 );
             }
 
             if (filters?.assignment_type) {
                 filteredAssignments = filteredAssignments.filter(
-                    (assignment) =>
-                        assignment.assignment_type === filters.assignment_type
+                    (assignment) => assignment.assignment_type === filters.assignment_type
                 );
             }
 
             // Sort assignments
-            this.sortAssignments(
-                filteredAssignments,
-                filters?.sort_by,
-                filters?.sort_order
-            );
+            this.sortAssignments(filteredAssignments, filters?.sort_by, filters?.sort_order);
 
             // Calculate summary statistics
             const summary = this.calculateAssignmentSummary(allAssignments);
 
             // Apply pagination
             const total = filteredAssignments.length;
-            const paginatedAssignments = filteredAssignments.slice(
-                offset,
-                offset + limit
-            );
+            const paginatedAssignments = filteredAssignments.slice(offset, offset + limit);
 
             return {
                 assignments: paginatedAssignments,
@@ -348,31 +310,20 @@ export class EnhancedAssignmentService {
 
             // Categorize assignments
             const upcomingAssignments = assignments
-                .filter(
-                    (a) => a.status === "pending" && a.due_date > currentDate
-                )
+                .filter((a) => a.status === "pending" && a.due_date > currentDate)
                 .slice(0, 10)
                 .map((assignment) => ({
                     assignment,
-                    urgency: this.calculateUrgency(assignment) as
-                        | "critical"
-                        | "high"
-                        | "medium"
-                        | "low",
+                    urgency: this.calculateUrgency(assignment) as "critical" | "high" | "medium" | "low",
                 }));
 
-            const overdueAssignments = assignments
-                .filter((a) => a.status === "overdue")
-                .slice(0, 10);
+            const overdueAssignments = assignments.filter((a) => a.status === "overdue").slice(0, 10);
 
             const recentGrades = assignments
-                .filter(
-                    (a) => a.status === "graded" && a.submission?.graded_date
-                )
+                .filter((a) => a.status === "graded" && a.submission?.graded_date)
                 .sort(
                     (a, b) =>
-                        new Date(b.submission!.graded_date!).getTime() -
-                        new Date(a.submission!.graded_date!).getTime()
+                        new Date(b.submission!.graded_date!).getTime() - new Date(a.submission!.graded_date!).getTime()
                 )
                 .slice(0, 5)
                 .map((assignment) => ({
@@ -383,34 +334,30 @@ export class EnhancedAssignmentService {
                 }));
 
             const dueToday = assignments.filter(
-                (a) =>
-                    a.status === "pending" &&
-                    a.due_date >= currentDate &&
-                    a.due_date <= todayEnd
+                (a) => a.status === "pending" && a.due_date >= currentDate && a.due_date <= todayEnd
             );
 
             const dueThisWeek = assignments.filter(
-                (a) =>
-                    a.status === "pending" &&
-                    a.due_date > todayEnd &&
-                    a.due_date <= weekEnd
+                (a) => a.status === "pending" && a.due_date > todayEnd && a.due_date <= weekEnd
             );
 
             // Get submitted assignments (assignments that have been submitted, including graded ones)
             const submittedAssignments = assignments
-                .filter(
-                    (a) => a.status === "submitted" || a.status === "graded"
-                )
+                .filter((a) => a.status === "submitted" || a.status === "graded")
                 .sort((a, b) => {
                     // Sort by submission date descending
                     const aDate = a.submission?.submission_date;
                     const bDate = b.submission?.submission_date;
-                    if (!aDate && !bDate) return 0;
-                    if (!aDate) return 1;
-                    if (!bDate) return -1;
-                    return (
-                        new Date(bDate).getTime() - new Date(aDate).getTime()
-                    );
+                    if (!aDate && !bDate) {
+                        return 0;
+                    }
+                    if (!aDate) {
+                        return 1;
+                    }
+                    if (!bDate) {
+                        return -1;
+                    }
+                    return new Date(bDate).getTime() - new Date(aDate).getTime();
                 })
                 .slice(0, 20); // Show latest 20 submitted assignments
 
@@ -418,8 +365,7 @@ export class EnhancedAssignmentService {
             const statistics = this.calculateDetailedStatistics(assignments);
 
             // Calculate performance by subject
-            const performanceBySubject =
-                this.calculatePerformanceBySubject(assignments);
+            const performanceBySubject = this.calculatePerformanceBySubject(assignments);
 
             return {
                 upcoming_assignments: upcomingAssignments,
@@ -432,10 +378,7 @@ export class EnhancedAssignmentService {
                 performance_by_subject: performanceBySubject,
             };
         } catch (error) {
-            console.error(
-                "Error fetching student assignment dashboard:",
-                error
-            );
+            console.error("Error fetching student assignment dashboard:", error);
             throw error;
         }
     }
@@ -451,39 +394,32 @@ export class EnhancedAssignmentService {
     ): Promise<IUnifiedAssignmentView[]> {
         try {
             // Get class assignments (both legacy and enhanced)
-            const [legacyAssignments, enhancedAssignments, classData] =
-                await Promise.all([
-                    Assignment.find({
-                        campus_id,
-                        class_id,
-                    }).catch((error) => {
-                        console.warn(
-                            "Legacy assignments fetch failed for class:",
-                            class_id
-                        );
-                        return { rows: [] };
-                    }),
-                    EnhancedAssignment.find({
-                        campus_id,
-                        class_id,
-                        is_active: true,
-                        is_deleted: false,
-                    }).catch((error) => {
-                        console.warn(
-                            "Enhanced assignments fetch failed for class:",
-                            class_id
-                        );
-                        return { rows: [] };
-                    }),
-                    Class.findById(class_id).catch((error) => {
-                        // Only log once per class_id to avoid spam
-                        if (!this.loggedMissingClasses.has(class_id)) {
-                            this.loggedMissingClasses.add(class_id);
-                            console.warn(`Class not found: ${class_id}`);
-                        }
-                        return null;
-                    }),
-                ]);
+            const [legacyAssignments, enhancedAssignments, classData] = await Promise.all([
+                Assignment.find({
+                    campus_id,
+                    class_id,
+                }).catch((error) => {
+                    console.warn("Legacy assignments fetch failed for class:", class_id);
+                    return { rows: [] };
+                }),
+                EnhancedAssignment.find({
+                    campus_id,
+                    class_id,
+                    is_active: true,
+                    is_deleted: false,
+                }).catch((error) => {
+                    console.warn("Enhanced assignments fetch failed for class:", class_id);
+                    return { rows: [] };
+                }),
+                Class.findById(class_id).catch((error) => {
+                    // Only log once per class_id to avoid spam
+                    if (!this.loggedMissingClasses.has(class_id)) {
+                        this.loggedMissingClasses.add(class_id);
+                        console.warn(`Class not found: ${class_id}`);
+                    }
+                    return null;
+                }),
+            ]);
 
             if (!classData) {
                 console.warn(`Class not found for ID: ${class_id}`);
@@ -495,13 +431,12 @@ export class EnhancedAssignmentService {
             // Process legacy assignments
             for (const assignment of legacyAssignments.rows) {
                 try {
-                    const unifiedAssignment =
-                        await this.convertLegacyClassAssignmentToUnified(
-                            assignment,
-                            student_id,
-                            classData,
-                            "class"
-                        );
+                    const unifiedAssignment = await this.convertLegacyClassAssignmentToUnified(
+                        assignment,
+                        student_id,
+                        classData,
+                        "class"
+                    );
                     if (unifiedAssignment) {
                         unifiedAssignments.push(unifiedAssignment);
                     }
@@ -513,13 +448,12 @@ export class EnhancedAssignmentService {
             // Process enhanced assignments
             for (const assignment of enhancedAssignments.rows) {
                 try {
-                    const unifiedAssignment =
-                        await this.convertEnhancedAssignmentToUnified(
-                            assignment,
-                            student_id,
-                            classData,
-                            "class"
-                        );
+                    const unifiedAssignment = await this.convertEnhancedAssignmentToUnified(
+                        assignment,
+                        student_id,
+                        classData,
+                        "class"
+                    );
                     if (unifiedAssignment) {
                         unifiedAssignments.push(unifiedAssignment);
                     }
@@ -530,10 +464,7 @@ export class EnhancedAssignmentService {
 
             return unifiedAssignments;
         } catch (error) {
-            console.error(
-                "Error fetching class assignments for student:",
-                error
-            );
+            console.error("Error fetching class assignments for student:", error);
             return [];
         }
     }
@@ -549,39 +480,32 @@ export class EnhancedAssignmentService {
     ): Promise<IUnifiedAssignmentView[]> {
         try {
             // Get course assignments (both legacy and enhanced)
-            const [legacyAssignments, enhancedAssignments, courseData] =
-                await Promise.all([
-                    CourseAssignment.find({
-                        campus_id,
-                        course_id,
-                    }).catch((error) => {
-                        console.warn(
-                            "Legacy course assignments fetch failed for course:",
-                            course_id
-                        );
-                        return { rows: [] };
-                    }),
-                    EnhancedAssignment.find({
-                        campus_id,
-                        course_id,
-                        is_active: true,
-                        is_deleted: false,
-                    }).catch((error) => {
-                        console.warn(
-                            "Enhanced course assignments fetch failed for course:",
-                            course_id
-                        );
-                        return { rows: [] };
-                    }),
-                    Course.findById(course_id).catch((error) => {
-                        // Only log once per course_id to avoid spam
-                        if (!this.loggedMissingCourses.has(course_id)) {
-                            this.loggedMissingCourses.add(course_id);
-                            console.warn(`Course not found: ${course_id}`);
-                        }
-                        return null;
-                    }),
-                ]);
+            const [legacyAssignments, enhancedAssignments, courseData] = await Promise.all([
+                CourseAssignment.find({
+                    campus_id,
+                    course_id,
+                }).catch((error) => {
+                    console.warn("Legacy course assignments fetch failed for course:", course_id);
+                    return { rows: [] };
+                }),
+                EnhancedAssignment.find({
+                    campus_id,
+                    course_id,
+                    is_active: true,
+                    is_deleted: false,
+                }).catch((error) => {
+                    console.warn("Enhanced course assignments fetch failed for course:", course_id);
+                    return { rows: [] };
+                }),
+                Course.findById(course_id).catch((error) => {
+                    // Only log once per course_id to avoid spam
+                    if (!this.loggedMissingCourses.has(course_id)) {
+                        this.loggedMissingCourses.add(course_id);
+                        console.warn(`Course not found: ${course_id}`);
+                    }
+                    return null;
+                }),
+            ]);
 
             if (!courseData) {
                 console.warn(`Course not found for ID: ${course_id}`);
@@ -593,13 +517,12 @@ export class EnhancedAssignmentService {
             // Process legacy course assignments
             for (const assignment of legacyAssignments.rows) {
                 try {
-                    const unifiedAssignment =
-                        await this.convertLegacyCourseAssignmentToUnified(
-                            assignment,
-                            student_id,
-                            courseData,
-                            "course"
-                        );
+                    const unifiedAssignment = await this.convertLegacyCourseAssignmentToUnified(
+                        assignment,
+                        student_id,
+                        courseData,
+                        "course"
+                    );
                     if (unifiedAssignment) {
                         unifiedAssignments.push(unifiedAssignment);
                     }
@@ -611,13 +534,12 @@ export class EnhancedAssignmentService {
             // Process enhanced assignments
             for (const assignment of enhancedAssignments.rows) {
                 try {
-                    const unifiedAssignment =
-                        await this.convertEnhancedAssignmentToUnified(
-                            assignment,
-                            student_id,
-                            courseData,
-                            "course"
-                        );
+                    const unifiedAssignment = await this.convertEnhancedAssignmentToUnified(
+                        assignment,
+                        student_id,
+                        courseData,
+                        "course"
+                    );
                     if (unifiedAssignment) {
                         unifiedAssignments.push(unifiedAssignment);
                     }
@@ -628,10 +550,7 @@ export class EnhancedAssignmentService {
 
             return unifiedAssignments;
         } catch (error) {
-            console.error(
-                "Error fetching course assignments for student:",
-                error
-            );
+            console.error("Error fetching course assignments for student:", error);
             return [];
         }
     }
@@ -647,11 +566,10 @@ export class EnhancedAssignmentService {
     ): Promise<IUnifiedAssignmentView | null> {
         try {
             // Get submission if exists
-            const submissions: { rows: IAssignmentSubmission[] } =
-                await AssignmentSubmission.find({
-                    assignment_id: assignment.id,
-                    user_id: student_id,
-                });
+            const submissions: { rows: IAssignmentSubmission[] } = await AssignmentSubmission.find({
+                assignment_id: assignment.id,
+                user_id: student_id,
+            });
 
             const submission = submissions.rows[0];
 
@@ -659,39 +577,24 @@ export class EnhancedAssignmentService {
             const [subjectData, teacherData] = await Promise.all([
                 Subject.findById(assignment.subject_id).catch((error) => {
                     // Only log once per subject_id to avoid spam
-                    if (
-                        !this.loggedMissingSubjects.has(assignment.subject_id)
-                    ) {
+                    if (!this.loggedMissingSubjects.has(assignment.subject_id)) {
                         this.loggedMissingSubjects.add(assignment.subject_id);
-                        console.warn(
-                            `Subject not found: ${assignment.subject_id}`
-                        );
+                        console.warn(`Subject not found: ${assignment.subject_id}`);
                     }
                     return null;
                 }),
-                TeacherService.getTeacherById(assignment.user_id).catch(
-                    (error) => {
-                        // Only log once per user_id to avoid spam
-                        if (
-                            !this.loggedMissingTeachers.has(assignment.user_id)
-                        ) {
-                            this.loggedMissingTeachers.add(assignment.user_id);
-                            console.warn(
-                                `Teacher not found: ${assignment.user_id}`
-                            );
-                        }
-                        return null;
+                TeacherService.getTeacherById(assignment.user_id).catch((error) => {
+                    // Only log once per user_id to avoid spam
+                    if (!this.loggedMissingTeachers.has(assignment.user_id)) {
+                        this.loggedMissingTeachers.add(assignment.user_id);
+                        console.warn(`Teacher not found: ${assignment.user_id}`);
                     }
-                ),
+                    return null;
+                }),
             ]);
 
-            const status = this.calculateAssignmentStatus(
-                assignment.due_date,
-                submission
-            );
-            const daysUntilDue = this.calculateDaysUntilDue(
-                assignment.due_date
-            );
+            const status = this.calculateAssignmentStatus(assignment.due_date, submission);
+            const daysUntilDue = this.calculateDaysUntilDue(assignment.due_date);
 
             return {
                 id: assignment.id,
@@ -717,16 +620,10 @@ export class EnhancedAssignmentService {
                     ? `${teacherData.teacher_profile.first_name} ${teacherData.teacher_profile.last_name}`
                     : "Unknown Teacher",
 
-                submission: submission
-                    ? this.convertLegacySubmissionToUnified(submission)
-                    : undefined,
+                submission: submission ? this.convertLegacySubmissionToUnified(submission) : undefined,
                 status,
                 days_until_due: daysUntilDue,
-                priority_score: this.calculatePriorityScore(
-                    assignment.due_date,
-                    "medium",
-                    status
-                ),
+                priority_score: this.calculatePriorityScore(assignment.due_date, "medium", status),
 
                 created_at: assignment.created_at,
                 updated_at: assignment.updated_at,
@@ -748,21 +645,15 @@ export class EnhancedAssignmentService {
     ): Promise<IUnifiedAssignmentView | null> {
         try {
             // Get submission if exists
-            const submissions: { rows: ICourseAssignmentSubmissionData[] } =
-                await CourseAssignmentSubmission.find({
-                    assignment_id: assignment.id,
-                    user_id: student_id,
-                });
+            const submissions: { rows: ICourseAssignmentSubmissionData[] } = await CourseAssignmentSubmission.find({
+                assignment_id: assignment.id,
+                user_id: student_id,
+            });
 
             const submission = submissions.rows[0];
 
-            const status = this.calculateAssignmentStatus(
-                assignment.due_date,
-                submission
-            );
-            const daysUntilDue = this.calculateDaysUntilDue(
-                assignment.due_date
-            );
+            const status = this.calculateAssignmentStatus(assignment.due_date, submission);
+            const daysUntilDue = this.calculateDaysUntilDue(assignment.due_date);
 
             return {
                 id: assignment.id,
@@ -786,16 +677,10 @@ export class EnhancedAssignmentService {
                 teacher_id: "unknown",
                 teacher_name: "Course Instructor",
 
-                submission: submission
-                    ? this.convertLegacyCourseSubmissionToUnified(submission)
-                    : undefined,
+                submission: submission ? this.convertLegacyCourseSubmissionToUnified(submission) : undefined,
                 status,
                 days_until_due: daysUntilDue,
-                priority_score: this.calculatePriorityScore(
-                    assignment.due_date,
-                    "medium",
-                    status
-                ),
+                priority_score: this.calculatePriorityScore(assignment.due_date, "medium", status),
 
                 created_at: assignment.created_at,
                 updated_at: assignment.updated_at,
@@ -817,11 +702,10 @@ export class EnhancedAssignmentService {
     ): Promise<IUnifiedAssignmentView | null> {
         try {
             // Get submission if exists
-            const submissions: { rows: IEnhancedAssignmentSubmissionData[] } =
-                await EnhancedAssignmentSubmission.find({
-                    assignment_id: assignment.id,
-                    user_id: student_id,
-                });
+            const submissions: { rows: IEnhancedAssignmentSubmissionData[] } = await EnhancedAssignmentSubmission.find({
+                assignment_id: assignment.id,
+                user_id: student_id,
+            });
 
             const submission = submissions.rows[0];
 
@@ -829,39 +713,24 @@ export class EnhancedAssignmentService {
             const [subjectData, teacherData] = await Promise.all([
                 Subject.findById(assignment.subject_id).catch((error) => {
                     // Only log once per subject_id to avoid spam
-                    if (
-                        !this.loggedMissingSubjects.has(assignment.subject_id)
-                    ) {
+                    if (!this.loggedMissingSubjects.has(assignment.subject_id)) {
                         this.loggedMissingSubjects.add(assignment.subject_id);
-                        console.warn(
-                            `Subject not found: ${assignment.subject_id}`
-                        );
+                        console.warn(`Subject not found: ${assignment.subject_id}`);
                     }
                     return null;
                 }),
-                TeacherService.getTeacherById(assignment.user_id).catch(
-                    (error) => {
-                        // Only log once per user_id to avoid spam
-                        if (
-                            !this.loggedMissingTeachers.has(assignment.user_id)
-                        ) {
-                            this.loggedMissingTeachers.add(assignment.user_id);
-                            console.warn(
-                                `Teacher not found: ${assignment.user_id}`
-                            );
-                        }
-                        return null;
+                TeacherService.getTeacherById(assignment.user_id).catch((error) => {
+                    // Only log once per user_id to avoid spam
+                    if (!this.loggedMissingTeachers.has(assignment.user_id)) {
+                        this.loggedMissingTeachers.add(assignment.user_id);
+                        console.warn(`Teacher not found: ${assignment.user_id}`);
                     }
-                ),
+                    return null;
+                }),
             ]);
 
-            const status = this.calculateAssignmentStatus(
-                assignment.due_date,
-                submission
-            );
-            const daysUntilDue = this.calculateDaysUntilDue(
-                assignment.due_date
-            );
+            const status = this.calculateAssignmentStatus(assignment.due_date, submission);
+            const daysUntilDue = this.calculateDaysUntilDue(assignment.due_date);
 
             return {
                 id: assignment.id,
@@ -874,15 +743,11 @@ export class EnhancedAssignmentService {
                 allow_late_submission: assignment.allow_late_submission,
                 priority: assignment.priority,
                 assignment_type: assignment.assignment_type,
-                estimated_duration_minutes:
-                    assignment.estimated_duration_minutes,
+                estimated_duration_minutes: assignment.estimated_duration_minutes,
                 attachment_urls: assignment.attachment_urls,
 
                 source_type,
-                source_id:
-                    source_type === "class"
-                        ? assignment.class_id!
-                        : assignment.course_id!,
+                source_id: source_type === "class" ? assignment.class_id! : assignment.course_id!,
                 source_name: sourceData?.name || sourceData?.title || "Unknown",
                 subject_id: assignment.subject_id,
                 subject_name: subjectData?.name || "Unknown Subject",
@@ -891,16 +756,10 @@ export class EnhancedAssignmentService {
                     ? `${teacherData.teacher_profile.first_name} ${teacherData.teacher_profile.last_name}`
                     : "Unknown Teacher",
 
-                submission: submission
-                    ? this.convertEnhancedSubmissionToUnified(submission)
-                    : undefined,
+                submission: submission ? this.convertEnhancedSubmissionToUnified(submission) : undefined,
                 status,
                 days_until_due: daysUntilDue,
-                priority_score: this.calculatePriorityScore(
-                    assignment.due_date,
-                    assignment.priority,
-                    status
-                ),
+                priority_score: this.calculatePriorityScore(assignment.due_date, assignment.priority, status),
 
                 created_at: assignment.created_at,
                 updated_at: assignment.updated_at,
@@ -914,15 +773,11 @@ export class EnhancedAssignmentService {
     /**
      * Convert legacy submission to unified format
      */
-    private convertLegacySubmissionToUnified(
-        submission: IAssignmentSubmission
-    ): IUnifiedSubmissionView {
+    private convertLegacySubmissionToUnified(submission: IAssignmentSubmission): IUnifiedSubmissionView {
         return {
             id: submission.id,
             submission_date: submission.submission_date,
-            submission_content: submission.meta_data
-                ? JSON.stringify(submission.meta_data)
-                : undefined,
+            submission_content: submission.meta_data ? JSON.stringify(submission.meta_data) : undefined,
             attachment_urls: [],
             grade: submission.grade,
             feedback: submission.feedback,
@@ -943,9 +798,7 @@ export class EnhancedAssignmentService {
         return {
             id: submission.id,
             submission_date: submission.submission_date,
-            submission_content: submission.meta_data
-                ? JSON.stringify(submission.meta_data)
-                : undefined,
+            submission_content: submission.meta_data ? JSON.stringify(submission.meta_data) : undefined,
             attachment_urls: [],
             grade: submission.grade,
             feedback: submission.feedback,
@@ -960,9 +813,7 @@ export class EnhancedAssignmentService {
     /**
      * Convert enhanced submission to unified format
      */
-    private convertEnhancedSubmissionToUnified(
-        submission: IEnhancedAssignmentSubmissionData
-    ): IUnifiedSubmissionView {
+    private convertEnhancedSubmissionToUnified(submission: IEnhancedAssignmentSubmissionData): IUnifiedSubmissionView {
         return {
             id: submission.id,
             submission_date: submission.submission_date,
@@ -999,10 +850,7 @@ export class EnhancedAssignmentService {
             return "overdue";
         }
 
-        const daysUntilDue = Math.ceil(
-            (dueDateObj.getTime() - currentDate.getTime()) /
-                (1000 * 60 * 60 * 24)
-        );
+        const daysUntilDue = Math.ceil((dueDateObj.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
         if (daysUntilDue <= 2) {
             return "due_soon";
         }
@@ -1016,20 +864,13 @@ export class EnhancedAssignmentService {
     private calculateDaysUntilDue(dueDate: Date): number {
         const currentDate = new Date();
         const dueDateObj = new Date(dueDate);
-        return Math.ceil(
-            (dueDateObj.getTime() - currentDate.getTime()) /
-                (1000 * 60 * 60 * 24)
-        );
+        return Math.ceil((dueDateObj.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
     }
 
     /**
      * Calculate priority score for sorting
      */
-    private calculatePriorityScore(
-        dueDate: Date,
-        priority: "low" | "medium" | "high",
-        status: string
-    ): number {
+    private calculatePriorityScore(dueDate: Date, priority: "low" | "medium" | "high", status: string): number {
         let score = 0;
 
         // Priority weight
@@ -1038,17 +879,25 @@ export class EnhancedAssignmentService {
 
         // Days until due weight (more urgent = higher score)
         const daysUntilDue = this.calculateDaysUntilDue(dueDate);
-        if (daysUntilDue <= 0)
-            score += 1000; // Overdue
-        else if (daysUntilDue <= 1)
-            score += 500; // Due today/tomorrow
-        else if (daysUntilDue <= 3)
-            score += 200; // Due soon
-        else if (daysUntilDue <= 7) score += 100; // Due this week
+        if (daysUntilDue <= 0) {
+            score += 1000;
+        } // Overdue
+        else if (daysUntilDue <= 1) {
+            score += 500;
+        } // Due today/tomorrow
+        else if (daysUntilDue <= 3) {
+            score += 200;
+        } // Due soon
+        else if (daysUntilDue <= 7) {
+            score += 100;
+        } // Due this week
 
         // Status weight
-        if (status === "overdue") score += 2000;
-        else if (status === "due_soon") score += 800;
+        if (status === "overdue") {
+            score += 2000;
+        } else if (status === "due_soon") {
+            score += 800;
+        }
 
         return score;
     }
@@ -1074,8 +923,7 @@ export class EnhancedAssignmentService {
                     break;
                 }
                 case "created_date": {
-                    comparison =
-                        a.created_at.getTime() - b.created_at.getTime();
+                    comparison = a.created_at.getTime() - b.created_at.getTime();
                     break;
                 }
                 case "subject": {
@@ -1107,21 +955,14 @@ export class EnhancedAssignmentService {
         return {
             total_assignments: assignments.length,
             pending: assignments.filter((a) => a.status === "pending").length,
-            submitted: assignments.filter((a) => a.status === "submitted")
-                .length,
+            submitted: assignments.filter((a) => a.status === "submitted").length,
             graded: assignments.filter((a) => a.status === "graded").length,
             overdue: assignments.filter((a) => a.status === "overdue").length,
             due_today: assignments.filter(
-                (a) =>
-                    a.status === "pending" &&
-                    a.due_date >= currentDate &&
-                    a.due_date <= todayEnd
+                (a) => a.status === "pending" && a.due_date >= currentDate && a.due_date <= todayEnd
             ).length,
             due_this_week: assignments.filter(
-                (a) =>
-                    a.status === "pending" &&
-                    a.due_date > todayEnd &&
-                    a.due_date <= weekEnd
+                (a) => a.status === "pending" && a.due_date > todayEnd && a.due_date <= weekEnd
             ).length,
         };
     }
@@ -1133,31 +974,19 @@ export class EnhancedAssignmentService {
         const total = assignments.length;
         const submitted = assignments.filter((a) => a.submission).length;
         const graded = assignments.filter((a) => a.status === "graded").length;
-        const overdue = assignments.filter(
-            (a) => a.status === "overdue"
-        ).length;
-        const pending = assignments.filter(
-            (a) => a.status === "pending"
-        ).length;
+        const overdue = assignments.filter((a) => a.status === "overdue").length;
+        const pending = assignments.filter((a) => a.status === "pending").length;
 
-        const gradedAssignments = assignments.filter(
-            (a) => a.submission?.grade !== undefined
-        );
+        const gradedAssignments = assignments.filter((a) => a.submission?.grade !== undefined);
         const averageGrade =
             gradedAssignments.length > 0
-                ? gradedAssignments.reduce(
-                      (sum, a) => sum + (a.submission!.grade || 0),
-                      0
-                  ) / gradedAssignments.length
+                ? gradedAssignments.reduce((sum, a) => sum + (a.submission!.grade || 0), 0) / gradedAssignments.length
                 : undefined;
 
         const completionRate = total > 0 ? (submitted / total) * 100 : 0;
 
-        const onTimeSubmissions = assignments.filter(
-            (a) => a.submission && !a.submission.is_late
-        ).length;
-        const onTimeSubmissionRate =
-            submitted > 0 ? (onTimeSubmissions / submitted) * 100 : 0;
+        const onTimeSubmissions = assignments.filter((a) => a.submission && !a.submission.is_late).length;
+        const onTimeSubmissionRate = submitted > 0 ? (onTimeSubmissions / submitted) * 100 : 0;
 
         return {
             total_assignments: total,
@@ -1167,17 +996,14 @@ export class EnhancedAssignmentService {
             graded,
             average_grade: averageGrade,
             completion_rate: Math.round(completionRate * 100) / 100,
-            on_time_submission_rate:
-                Math.round(onTimeSubmissionRate * 100) / 100,
+            on_time_submission_rate: Math.round(onTimeSubmissionRate * 100) / 100,
         };
     }
 
     /**
      * Calculate performance by subject
      */
-    private calculatePerformanceBySubject(
-        assignments: IUnifiedAssignmentView[]
-    ) {
+    private calculatePerformanceBySubject(assignments: IUnifiedAssignmentView[]) {
         const subjectMap = new Map<
             string,
             {
@@ -1202,22 +1028,14 @@ export class EnhancedAssignmentService {
         // Calculate performance for each subject
         return [...subjectMap.values()].map((subject) => {
             const total = subject.assignments.length;
-            const submitted = subject.assignments.filter(
-                (a) => a.submission
-            ).length;
-            const graded = subject.assignments.filter(
-                (a) => a.status === "graded"
-            ).length;
+            const submitted = subject.assignments.filter((a) => a.submission).length;
+            const graded = subject.assignments.filter((a) => a.status === "graded").length;
 
-            const gradedAssignments = subject.assignments.filter(
-                (a) => a.submission?.grade !== undefined
-            );
+            const gradedAssignments = subject.assignments.filter((a) => a.submission?.grade !== undefined);
             const averageGrade =
                 gradedAssignments.length > 0
-                    ? gradedAssignments.reduce(
-                          (sum, a) => sum + (a.submission!.grade || 0),
-                          0
-                      ) / gradedAssignments.length
+                    ? gradedAssignments.reduce((sum, a) => sum + (a.submission!.grade || 0), 0) /
+                      gradedAssignments.length
                     : undefined;
 
             const completionRate = total > 0 ? (submitted / total) * 100 : 0;
@@ -1235,8 +1053,11 @@ export class EnhancedAssignmentService {
             if (recentGrades.length >= 2) {
                 const latestGrade = recentGrades[0].submission!.grade!;
                 const previousGrade = recentGrades[1].submission!.grade!;
-                if (latestGrade > previousGrade + 5) trend = "improving";
-                else if (latestGrade < previousGrade - 5) trend = "declining";
+                if (latestGrade > previousGrade + 5) {
+                    trend = "improving";
+                } else if (latestGrade < previousGrade - 5) {
+                    trend = "declining";
+                }
             }
 
             return {
@@ -1257,11 +1078,21 @@ export class EnhancedAssignmentService {
         const daysUntilDue = assignment.days_until_due;
         const priority = assignment.priority;
 
-        if (daysUntilDue <= 0) return "critical";
-        if (daysUntilDue <= 1 && priority === "high") return "critical";
-        if (daysUntilDue <= 1) return "high";
-        if (daysUntilDue <= 3 && priority === "high") return "high";
-        if (daysUntilDue <= 3) return "medium";
+        if (daysUntilDue <= 0) {
+            return "critical";
+        }
+        if (daysUntilDue <= 1 && priority === "high") {
+            return "critical";
+        }
+        if (daysUntilDue <= 1) {
+            return "high";
+        }
+        if (daysUntilDue <= 3 && priority === "high") {
+            return "high";
+        }
+        if (daysUntilDue <= 3) {
+            return "medium";
+        }
         return "low";
     }
 }

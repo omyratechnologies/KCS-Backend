@@ -21,8 +21,7 @@ export class HealthController {
         } catch (error) {
             console.error("Database health check failed:", error);
 
-            const errorMessage =
-                error instanceof Error ? error.message : String(error);
+            const errorMessage = error instanceof Error ? error.message : String(error);
 
             return c.json(
                 {
@@ -87,9 +86,7 @@ export class HealthController {
 
             return c.json({
                 success: true,
-                message: status.available
-                    ? "WebRTC service healthy"
-                    : "WebRTC in compatibility mode",
+                message: status.available ? "WebRTC service healthy" : "WebRTC in compatibility mode",
                 timestamp: new Date().toISOString(),
                 service: "MediaSoup WebRTC",
                 status: {
@@ -97,16 +94,13 @@ export class HealthController {
                     workers: status.workers,
                     activeRouters: status.routers,
                     activeRooms: status.activeRooms,
-                    mode: status.available
-                        ? "Full WebRTC"
-                        : "Participant Management Only",
+                    mode: status.available ? "Full WebRTC" : "Participant Management Only",
                 },
             });
         } catch (error) {
             console.error("WebRTC health check failed:", error);
 
-            const errorMessage =
-                error instanceof Error ? error.message : String(error);
+            const errorMessage = error instanceof Error ? error.message : String(error);
 
             return c.json(
                 {

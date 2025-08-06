@@ -19,9 +19,6 @@ const PasswordResetSchema = new Schema({
 
 PasswordResetSchema.index.findByUserId = { by: "user_id" };
 
-const PasswordResets = ottoman.model<IPasswordResetsData>(
-    "password_reset",
-    PasswordResetSchema
-);
+const PasswordResets = ottoman.model<IPasswordResetsData>("password_reset", PasswordResetSchema);
 
 export { type IPasswordResetsData, PasswordResets };

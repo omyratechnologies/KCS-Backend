@@ -1,7 +1,4 @@
-import {
-    IStudentRecordData,
-    StudentRecord,
-} from "@/models/student_record.model";
+import { IStudentRecordData, StudentRecord } from "@/models/student_record.model";
 
 export class StudentRecordService {
     // create student record
@@ -20,9 +17,7 @@ export class StudentRecordService {
     };
 
     // get student record by student id
-    public static readonly getStudentRecordByStudentId = async (
-        student_id: string
-    ) => {
+    public static readonly getStudentRecordByStudentId = async (student_id: string) => {
         const studentRecords: {
             rows: IStudentRecordData[];
         } = await StudentRecord.find(
@@ -45,9 +40,7 @@ export class StudentRecordService {
     };
 
     // get student record by campus id
-    public static readonly getStudentRecordByCampusId = async (
-        campus_id: string
-    ) => {
+    public static readonly getStudentRecordByCampusId = async (campus_id: string) => {
         const studentRecords: {
             rows: IStudentRecordData[];
         } = await StudentRecord.find(
@@ -75,10 +68,7 @@ export class StudentRecordService {
     };
 
     // update student record by id
-    public static readonly updateStudentRecordById = async (
-        id: string,
-        data: Partial<IStudentRecordData>
-    ) => {
+    public static readonly updateStudentRecordById = async (id: string, data: Partial<IStudentRecordData>) => {
         const studentRecord = await StudentRecord.updateById(id, {
             ...data,
             updated_at: new Date(),

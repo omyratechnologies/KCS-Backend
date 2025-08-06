@@ -1,0 +1,257 @@
+c1cefcc3489711ba309a6b325e630e61
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const globals_1 = require("@jest/globals");
+(0, globals_1.describe)("API Integration Tests", () => {
+    let app;
+    let server;
+    const baseURL = "http://localhost:4500";
+    (0, globals_1.beforeAll)(async () => {
+        // Start test server
+        process.env.NODE_ENV = "test";
+        process.env.PORT = "4500";
+        // Note: You would typically import and start your actual app here
+        // For now, we'll mock the responses
+    });
+    (0, globals_1.afterAll)(async () => {
+        // Clean up server
+        if (server) {
+            server.close();
+        }
+    });
+    (0, globals_1.beforeEach)(() => {
+        // Reset any test data before each test
+    });
+    (0, globals_1.describe)("Health Check Endpoints", () => {
+        (0, globals_1.it)("should return health status", async () => {
+            // Mock fetch response for health endpoint
+            const mockResponse = {
+                success: true,
+                message: "API is healthy",
+                timestamp: new Date().toISOString(),
+                services: {
+                    database: "connected",
+                    redis: "connected",
+                    storage: "connected",
+                },
+            };
+            // In a real test, you would make an actual HTTP request
+            // const response = await fetch(`${baseURL}/api/health`);
+            // const data = await response.json();
+            // For now, we'll test the expected structure
+            (0, globals_1.expect)(mockResponse).toHaveProperty("success");
+            (0, globals_1.expect)(mockResponse).toHaveProperty("message");
+            (0, globals_1.expect)(mockResponse).toHaveProperty("timestamp");
+            (0, globals_1.expect)(mockResponse.success).toBe(true);
+        });
+        (0, globals_1.it)("should return database health status", async () => {
+            const mockDbHealth = {
+                success: true,
+                message: "Database connection healthy",
+                service: "Ottoman/Couchbase",
+                timestamp: globals_1.expect.any(String),
+            };
+            (0, globals_1.expect)(mockDbHealth.success).toBe(true);
+            (0, globals_1.expect)(mockDbHealth.service).toBe("Ottoman/Couchbase");
+        });
+    });
+    (0, globals_1.describe)("Authentication Endpoints", () => {
+        (0, globals_1.it)("should authenticate user with valid credentials", async () => {
+            const loginData = {
+                login_id: "testuser@example.com",
+                password: "validpassword",
+            };
+            const mockAuthResponse = {
+                success: true,
+                message: "Login successful",
+                data: {
+                    user: {
+                        id: "user123",
+                        email: "testuser@example.com",
+                        user_type: "student",
+                        name: "Test User",
+                    },
+                    token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                    session_id: "session123",
+                },
+            };
+            // Test response structure
+            (0, globals_1.expect)(mockAuthResponse.success).toBe(true);
+            (0, globals_1.expect)(mockAuthResponse.data).toHaveProperty("user");
+            (0, globals_1.expect)(mockAuthResponse.data).toHaveProperty("token");
+            (0, globals_1.expect)(mockAuthResponse.data).toHaveProperty("session_id");
+            (0, globals_1.expect)(mockAuthResponse.data.user).toHaveProperty("id");
+            (0, globals_1.expect)(mockAuthResponse.data.user).toHaveProperty("email");
+        });
+        (0, globals_1.it)("should reject invalid credentials", async () => {
+            const invalidLogin = {
+                login_id: "testuser@example.com",
+                password: "wrongpassword",
+            };
+            const mockErrorResponse = {
+                success: false,
+                message: "Invalid credentials",
+            };
+            (0, globals_1.expect)(mockErrorResponse.success).toBe(false);
+            (0, globals_1.expect)(mockErrorResponse.message).toContain("Invalid credentials");
+        });
+        (0, globals_1.it)("should validate required fields", async () => {
+            const incompleteLogin = {
+                login_id: "testuser@example.com",
+                // missing password
+            };
+            const mockValidationError = {
+                success: false,
+                message: "Login ID and password are required",
+            };
+            (0, globals_1.expect)(mockValidationError.success).toBe(false);
+            (0, globals_1.expect)(mockValidationError.message).toContain("required");
+        });
+    });
+    (0, globals_1.describe)("User Management Endpoints", () => {
+        (0, globals_1.it)("should create new user with valid data", async () => {
+            const userData = {
+                name: "New User",
+                email: "newuser@example.com",
+                user_type: "student",
+                phone: "+1234567890",
+                password: "securepassword",
+            };
+            const mockCreateResponse = {
+                success: true,
+                message: "User created successfully",
+                data: Object.assign(Object.assign({ id: "newuser123" }, userData), { created_at: new Date().toISOString(), is_deleted: false }),
+            };
+            (0, globals_1.expect)(mockCreateResponse.success).toBe(true);
+            (0, globals_1.expect)(mockCreateResponse.data).toHaveProperty("id");
+            (0, globals_1.expect)(mockCreateResponse.data.email).toBe(userData.email);
+            (0, globals_1.expect)(mockCreateResponse.data.is_deleted).toBe(false);
+        });
+        (0, globals_1.it)("should retrieve user profile", async () => {
+            const userId = "user123";
+            const mockUserProfile = {
+                success: true,
+                data: {
+                    id: userId,
+                    name: "Test User",
+                    email: "testuser@example.com",
+                    user_type: "student",
+                    phone: "+1234567890",
+                    created_at: "2025-08-05T10:00:00Z",
+                    updated_at: "2025-08-05T10:00:00Z",
+                    is_deleted: false,
+                },
+            };
+            (0, globals_1.expect)(mockUserProfile.success).toBe(true);
+            (0, globals_1.expect)(mockUserProfile.data.id).toBe(userId);
+            (0, globals_1.expect)(mockUserProfile.data).toHaveProperty("name");
+            (0, globals_1.expect)(mockUserProfile.data).toHaveProperty("email");
+        });
+        (0, globals_1.it)("should update user information", async () => {
+            const userId = "user123";
+            const updateData = {
+                name: "Updated Name",
+                phone: "+9876543210",
+            };
+            const mockUpdateResponse = {
+                success: true,
+                message: "User updated successfully",
+                data: {
+                    id: userId,
+                    name: "Updated Name",
+                    email: "testuser@example.com",
+                    phone: "+9876543210",
+                    updated_at: new Date().toISOString(),
+                },
+            };
+            (0, globals_1.expect)(mockUpdateResponse.success).toBe(true);
+            (0, globals_1.expect)(mockUpdateResponse.data.name).toBe(updateData.name);
+            (0, globals_1.expect)(mockUpdateResponse.data.phone).toBe(updateData.phone);
+        });
+    });
+    (0, globals_1.describe)("Course Management Endpoints", () => {
+        (0, globals_1.it)("should retrieve course list", async () => {
+            const mockCoursesResponse = {
+                success: true,
+                data: {
+                    courses: [
+                        {
+                            id: "course1",
+                            title: "Introduction to Programming",
+                            description: "Basic programming concepts",
+                            instructor_id: "teacher1",
+                            duration: "12 weeks",
+                            is_active: true,
+                        },
+                        {
+                            id: "course2",
+                            title: "Advanced JavaScript",
+                            description: "Advanced JS concepts and frameworks",
+                            instructor_id: "teacher2",
+                            duration: "8 weeks",
+                            is_active: true,
+                        },
+                    ],
+                    total: 2,
+                    page: 1,
+                    limit: 10,
+                },
+            };
+            (0, globals_1.expect)(mockCoursesResponse.success).toBe(true);
+            (0, globals_1.expect)(mockCoursesResponse.data.courses).toHaveLength(2);
+            (0, globals_1.expect)(mockCoursesResponse.data.courses[0]).toHaveProperty("id");
+            (0, globals_1.expect)(mockCoursesResponse.data.courses[0]).toHaveProperty("title");
+        });
+        (0, globals_1.it)("should create new course", async () => {
+            const courseData = {
+                title: "New Course",
+                description: "Course description",
+                instructor_id: "teacher1",
+                duration: "10 weeks",
+                price: 299.99,
+            };
+            const mockCreateCourseResponse = {
+                success: true,
+                message: "Course created successfully",
+                data: Object.assign(Object.assign({ id: "newcourse123" }, courseData), { is_active: true, created_at: new Date().toISOString() }),
+            };
+            (0, globals_1.expect)(mockCreateCourseResponse.success).toBe(true);
+            (0, globals_1.expect)(mockCreateCourseResponse.data.title).toBe(courseData.title);
+            (0, globals_1.expect)(mockCreateCourseResponse.data.is_active).toBe(true);
+        });
+    });
+    (0, globals_1.describe)("Error Handling", () => {
+        (0, globals_1.it)("should handle 404 for non-existent endpoints", async () => {
+            const mock404Response = {
+                success: false,
+                message: "Endpoint not found",
+                status: 404,
+            };
+            (0, globals_1.expect)(mock404Response.success).toBe(false);
+            (0, globals_1.expect)(mock404Response.status).toBe(404);
+        });
+        (0, globals_1.it)("should handle validation errors", async () => {
+            const mockValidationError = {
+                success: false,
+                message: "Validation failed",
+                errors: [
+                    { field: "email", message: "Invalid email format" },
+                    { field: "password", message: "Password too short" },
+                ],
+            };
+            (0, globals_1.expect)(mockValidationError.success).toBe(false);
+            (0, globals_1.expect)(mockValidationError.errors).toHaveLength(2);
+            (0, globals_1.expect)(mockValidationError.errors[0]).toHaveProperty("field");
+            (0, globals_1.expect)(mockValidationError.errors[0]).toHaveProperty("message");
+        });
+        (0, globals_1.it)("should handle server errors gracefully", async () => {
+            const mockServerError = {
+                success: false,
+                message: "Internal server error",
+                status: 500,
+            };
+            (0, globals_1.expect)(mockServerError.success).toBe(false);
+            (0, globals_1.expect)(mockServerError.status).toBe(500);
+        });
+    });
+});

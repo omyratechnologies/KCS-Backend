@@ -29,10 +29,7 @@ export class PaymentSettlementController {
                     required_role: "Super Admin",
                     current_role: user_type,
                 });
-                return ctx.json(
-                    PaymentErrorHandler.formatErrorResponse(error),
-                    403
-                );
+                return ctx.json(PaymentErrorHandler.formatErrorResponse(error), 403);
             }
 
             const { gateway_provider, settlement_date } = await ctx.req.json();
@@ -41,18 +38,14 @@ export class PaymentSettlementController {
                 const error = PaymentErrorHandler.createError("VAL_001", {
                     missing_fields: { gateway_provider: true },
                 });
-                return ctx.json(
-                    PaymentErrorHandler.formatErrorResponse(error),
-                    400
-                );
+                return ctx.json(PaymentErrorHandler.formatErrorResponse(error), 400);
             }
 
-            const settlement =
-                await PaymentSettlementService.processAutomaticSettlement(
-                    campus_id,
-                    gateway_provider,
-                    settlement_date ? new Date(settlement_date) : undefined
-                );
+            const settlement = await PaymentSettlementService.processAutomaticSettlement(
+                campus_id,
+                gateway_provider,
+                settlement_date ? new Date(settlement_date) : undefined
+            );
 
             return ctx.json({
                 success: true,
@@ -63,8 +56,7 @@ export class PaymentSettlementController {
                     currency: settlement.currency,
                     status: settlement.settlement_status,
                     gateway_provider: settlement.gateway_provider,
-                    transaction_count:
-                        settlement.transaction_summary.total_transactions,
+                    transaction_count: settlement.transaction_summary.total_transactions,
                 },
                 message: "Settlement initiated successfully",
             });
@@ -94,20 +86,10 @@ export class PaymentSettlementController {
             // Only Admin and Super Admin can view settlement history
             if (!["Admin", "Super Admin"].includes(user_type)) {
                 const error = PaymentErrorHandler.createError("AUTH_002");
-                return ctx.json(
-                    PaymentErrorHandler.formatErrorResponse(error),
-                    403
-                );
+                return ctx.json(PaymentErrorHandler.formatErrorResponse(error), 403);
             }
 
-            const {
-                page = 1,
-                limit = 20,
-                status,
-                gateway_provider,
-                start_date,
-                end_date,
-            } = ctx.req.query();
+            const { page = 1, limit = 20, status, gateway_provider, start_date, end_date } = ctx.req.query();
 
             // This would be implemented in PaymentSettlementService
             const settlements = {
@@ -155,10 +137,7 @@ export class PaymentSettlementController {
             // Only Admin and Super Admin can view settlement details
             if (!["Admin", "Super Admin"].includes(user_type)) {
                 const error = PaymentErrorHandler.createError("AUTH_002");
-                return ctx.json(
-                    PaymentErrorHandler.formatErrorResponse(error),
-                    403
-                );
+                return ctx.json(PaymentErrorHandler.formatErrorResponse(error), 403);
             }
 
             // This would fetch from PaymentSettlementService
@@ -204,10 +183,7 @@ export class PaymentSettlementController {
                 "";
 
             const request_context = {
-                ip_address:
-                    ctx.env.ip ||
-                    ctx.req.header("x-forwarded-for") ||
-                    "unknown",
+                ip_address: ctx.env.ip || ctx.req.header("x-forwarded-for") || "unknown",
                 user_agent: ctx.req.header("user-agent") || "unknown",
                 request_id: crypto.randomUUID(),
             };
@@ -222,13 +198,12 @@ export class PaymentSettlementController {
                 );
             }
 
-            const result =
-                await PaymentSettlementService.handleSettlementWebhook(
-                    gateway as "razorpay" | "payu" | "cashfree",
-                    webhook_data,
-                    signature,
-                    request_context
-                );
+            const result = await PaymentSettlementService.handleSettlementWebhook(
+                gateway as "razorpay" | "payu" | "cashfree",
+                webhook_data,
+                signature,
+                request_context
+            );
 
             return ctx.json({
                 success: result.success,
@@ -271,14 +246,10 @@ export class PaymentSettlementController {
                     required_role: "Super Admin",
                     current_role: user_type,
                 });
-                return ctx.json(
-                    PaymentErrorHandler.formatErrorResponse(error),
-                    403
-                );
+                return ctx.json(PaymentErrorHandler.formatErrorResponse(error), 403);
             }
 
-            const auditResult =
-                await PaymentSettlementService.performSecurityAudit(campus_id);
+            const auditResult = await PaymentSettlementService.performSecurityAudit(campus_id);
 
             return ctx.json({
                 success: true,
@@ -289,9 +260,7 @@ export class PaymentSettlementController {
                     security_issues: auditResult.security_issues,
                     recommendations: auditResult.recommendations,
                     audit_timestamp: new Date(),
-                    next_audit_due: new Date(
-                        Date.now() + 30 * 24 * 60 * 60 * 1000
-                    ), // 30 days
+                    next_audit_due: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
                 },
                 message: `Security audit completed. Overall score: ${auditResult.overall_score}/100`,
             });
@@ -319,21 +288,10 @@ export class PaymentSettlementController {
             // Only Admin and Super Admin can view security events
             if (!["Admin", "Super Admin"].includes(user_type)) {
                 const error = PaymentErrorHandler.createError("AUTH_002");
-                return ctx.json(
-                    PaymentErrorHandler.formatErrorResponse(error),
-                    403
-                );
+                return ctx.json(PaymentErrorHandler.formatErrorResponse(error), 403);
             }
 
-            const {
-                severity,
-                event_type,
-                status,
-                page = 1,
-                limit = 50,
-                start_date,
-                end_date,
-            } = ctx.req.query();
+            const { severity, event_type, status, page = 1, limit = 50, start_date, end_date } = ctx.req.query();
 
             // This would be implemented to fetch from PaymentSecurityEvent model
             const securityEvents = {
@@ -382,10 +340,7 @@ export class PaymentSettlementController {
             // Only Admin and Super Admin can view audit logs
             if (!["Admin", "Super Admin"].includes(user_type)) {
                 const error = PaymentErrorHandler.createError("AUTH_002");
-                return ctx.json(
-                    PaymentErrorHandler.formatErrorResponse(error),
-                    403
-                );
+                return ctx.json(PaymentErrorHandler.formatErrorResponse(error), 403);
             }
 
             const {
@@ -464,10 +419,7 @@ export class PaymentSettlementController {
             // Only Admin and Super Admin can configure gateways
             if (!["Admin", "Super Admin"].includes(user_type)) {
                 const error = PaymentErrorHandler.createError("AUTH_002");
-                return ctx.json(
-                    PaymentErrorHandler.formatErrorResponse(error),
-                    403
-                );
+                return ctx.json(PaymentErrorHandler.formatErrorResponse(error), 403);
             }
 
             const { gateway_provider, configuration } = await ctx.req.json();
@@ -479,19 +431,15 @@ export class PaymentSettlementController {
                         configuration: !configuration,
                     },
                 });
-                return ctx.json(
-                    PaymentErrorHandler.formatErrorResponse(error),
-                    400
-                );
+                return ctx.json(PaymentErrorHandler.formatErrorResponse(error), 400);
             }
 
-            const gatewayConfig =
-                await PaymentSettlementService.configurePaymentGateway(
-                    campus_id,
-                    gateway_provider,
-                    configuration,
-                    user_id
-                );
+            const gatewayConfig = await PaymentSettlementService.configurePaymentGateway(
+                campus_id,
+                gateway_provider,
+                configuration,
+                user_id
+            );
 
             return ctx.json({
                 success: true,
@@ -501,8 +449,7 @@ export class PaymentSettlementController {
                     status: gatewayConfig.status,
                     is_primary: gatewayConfig.is_primary,
                     gateway_mode: gatewayConfig.gateway_mode,
-                    configured_at:
-                        gatewayConfig.configuration_details.configured_at,
+                    configured_at: gatewayConfig.configuration_details.configured_at,
                     test_status: gatewayConfig.testing_details.last_test_status,
                 },
                 message: `${gateway_provider} gateway configured successfully`,
@@ -531,10 +478,7 @@ export class PaymentSettlementController {
             // Only Admin and Super Admin can view gateway configurations
             if (!["Admin", "Super Admin"].includes(user_type)) {
                 const error = PaymentErrorHandler.createError("AUTH_002");
-                return ctx.json(
-                    PaymentErrorHandler.formatErrorResponse(error),
-                    403
-                );
+                return ctx.json(PaymentErrorHandler.formatErrorResponse(error), 403);
             }
 
             // This would be implemented to fetch from PaymentGatewayConfiguration model
@@ -582,18 +526,10 @@ export class PaymentSettlementController {
                     required_role: "Super Admin",
                     current_role: user_type,
                 });
-                return ctx.json(
-                    PaymentErrorHandler.formatErrorResponse(error),
-                    403
-                );
+                return ctx.json(PaymentErrorHandler.formatErrorResponse(error), 403);
             }
 
-            const {
-                report_type,
-                start_date,
-                end_date,
-                format = "pdf",
-            } = ctx.req.query();
+            const { report_type, start_date, end_date, format = "pdf" } = ctx.req.query();
 
             // This would generate various compliance reports
             const reportData = {
@@ -638,22 +574,18 @@ export class PaymentSettlementController {
             filters: any;
         }
     ) {
-        try {
-            // Implementation for exporting audit logs
-            const exportUrl = `https://your-app.com/exports/${crypto.randomUUID()}.${params.format}`;
+        // Implementation for exporting audit logs
+        const exportUrl = `https://your-app.com/exports/${crypto.randomUUID()}.${params.format}`;
 
-            return ctx.json({
-                success: true,
-                data: {
-                    export_url: exportUrl,
-                    format: params.format,
-                    expires_at: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
-                    estimated_records: 0,
-                },
-                message: `Audit logs export initiated in ${params.format} format`,
-            });
-        } catch (error) {
-            throw error;
-        }
+        return ctx.json({
+            success: true,
+            data: {
+                export_url: exportUrl,
+                format: params.format,
+                expires_at: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
+                estimated_records: 0,
+            },
+            message: `Audit logs export initiated in ${params.format} format`,
+        });
     }
 }

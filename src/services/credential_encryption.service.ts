@@ -40,9 +40,7 @@ export class CredentialEncryptionService {
     private static getEncryptionKey(): Buffer {
         const key = process.env.PAYMENT_CREDENTIAL_ENCRYPTION_KEY;
         if (!key) {
-            throw new Error(
-                "PAYMENT_CREDENTIAL_ENCRYPTION_KEY environment variable not set"
-            );
+            throw new Error("PAYMENT_CREDENTIAL_ENCRYPTION_KEY environment variable not set");
         }
 
         // If key is base64 encoded
@@ -70,9 +68,7 @@ export class CredentialEncryptionService {
     /**
      * Encrypt payment gateway credentials
      */
-    static encryptCredentials(
-        credentials: PaymentGatewayCredentials
-    ): EncryptedCredential {
+    static encryptCredentials(credentials: PaymentGatewayCredentials): EncryptedCredential {
         try {
             const key = this.getEncryptionKey();
             const iv = crypto.randomBytes(this.IV_LENGTH);
@@ -99,9 +95,7 @@ export class CredentialEncryptionService {
     /**
      * Decrypt payment gateway credentials
      */
-    static decryptCredentials(
-        encryptedCredential: EncryptedCredential
-    ): PaymentGatewayCredentials {
+    static decryptCredentials(encryptedCredential: EncryptedCredential): PaymentGatewayCredentials {
         try {
             const key = this.getEncryptionKey();
             const iv = Buffer.from(encryptedCredential.iv, "hex");
@@ -110,11 +104,7 @@ export class CredentialEncryptionService {
             const decipher = crypto.createDecipheriv(this.ALGORITHM, key, iv);
             (decipher as any).setAuthTag(tag);
 
-            let decrypted = decipher.update(
-                encryptedCredential.encrypted_data,
-                "hex",
-                "utf8"
-            );
+            let decrypted = decipher.update(encryptedCredential.encrypted_data, "hex", "utf8");
             decrypted += decipher.final("utf8");
 
             return JSON.parse(decrypted);
@@ -126,10 +116,7 @@ export class CredentialEncryptionService {
     /**
      * Encrypt specific gateway credentials
      */
-    static encryptGatewayCredentials(
-        gateway: "razorpay" | "payu" | "cashfree",
-        credentials: any
-    ): EncryptedCredential {
+    static encryptGatewayCredentials(gateway: "razorpay" | "payu" | "cashfree", credentials: any): EncryptedCredential {
         const gatewayCredentials: PaymentGatewayCredentials = {
             [gateway]: credentials,
         };
@@ -157,16 +144,11 @@ export class CredentialEncryptionService {
             const creds = masked[gateway];
             for (const key of Object.keys(creds)) {
                 if (
-                    (key.includes("secret") ||
-                        key.includes("key") ||
-                        key.includes("salt")) &&
+                    (key.includes("secret") || key.includes("key") || key.includes("salt")) &&
                     typeof creds[key] === "string" &&
                     creds[key].length > 8
                 ) {
-                    creds[key] =
-                        creds[key].slice(0, 4) +
-                        "***" +
-                        creds[key].slice(Math.max(0, creds[key].length - 4));
+                    creds[key] = creds[key].slice(0, 4) + "***" + creds[key].slice(Math.max(0, creds[key].length - 4));
                 }
             }
         }
@@ -196,8 +178,7 @@ export class CredentialEncryptionService {
             if (JSON.stringify(testData) !== JSON.stringify(decrypted)) {
                 return {
                     valid: false,
-                    message:
-                        "Encryption key validation failed - encryption/decryption mismatch",
+                    message: "Encryption key validation failed - encryption/decryption mismatch",
                 };
             }
 
@@ -216,10 +197,7 @@ export class CredentialEncryptionService {
     /**
      * Rotate encryption (re-encrypt with new key)
      */
-    static rotateEncryption(
-        oldEncryptedCredential: EncryptedCredential,
-        oldKey: string
-    ): EncryptedCredential {
+    static rotateEncryption(oldEncryptedCredential: EncryptedCredential, oldKey: string): EncryptedCredential {
         try {
             // Temporarily set old key
             const currentKey = process.env.PAYMENT_CREDENTIAL_ENCRYPTION_KEY;

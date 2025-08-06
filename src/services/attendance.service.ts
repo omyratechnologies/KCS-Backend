@@ -63,10 +63,7 @@ export class AttendanceService {
             } catch (error) {
                 errors.push({
                     user_id: userId,
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    error: error instanceof Error ? error.message : "Unknown error",
                 });
             }
         }
@@ -108,9 +105,7 @@ export class AttendanceService {
                 // Validate user_type
                 const userType = attendanceData.user_type || "Student";
                 if (!["Student", "Teacher"].includes(userType)) {
-                    throw new Error(
-                        "user_type must be either 'Student' or 'Teacher'"
-                    );
+                    throw new Error("user_type must be either 'Student' or 'Teacher'");
                 }
 
                 const attendance = await Attendance.create({
@@ -127,10 +122,7 @@ export class AttendanceService {
             } catch (error) {
                 errors.push({
                     user_id: attendanceData.user_id,
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    error: error instanceof Error ? error.message : "Unknown error",
                 });
             }
         }
@@ -165,10 +157,7 @@ export class AttendanceService {
         }
     ) => {
         // Validate user_type if provided
-        if (
-            data.user_type &&
-            !["Student", "Teacher"].includes(data.user_type)
-        ) {
+        if (data.user_type && !["Student", "Teacher"].includes(data.user_type)) {
             throw new Error("user_type must be either 'Student' or 'Teacher'");
         }
 
@@ -197,10 +186,7 @@ export class AttendanceService {
     };
 
     // Get for a date for a campus
-    public static readonly getAttendancesByDate = async (
-        campus_id: string,
-        date: Date
-    ): Promise<IAttendanceData[]> => {
+    public static readonly getAttendancesByDate = async (campus_id: string, date: Date): Promise<IAttendanceData[]> => {
         const data = await Attendance.find(
             {
                 campus_id,
@@ -295,12 +281,10 @@ export class AttendanceService {
             });
 
             // Filter by date on the application side
-            const filteredAttendance = attendanceWithClassId.rows.filter(
-                (record) => {
-                    const recordDate = new Date(record.date);
-                    return recordDate >= startOfDay && recordDate <= endOfDay;
-                }
-            );
+            const filteredAttendance = attendanceWithClassId.rows.filter((record) => {
+                const recordDate = new Date(record.date);
+                return recordDate >= startOfDay && recordDate <= endOfDay;
+            });
 
             if (filteredAttendance.length > 0) {
                 return filteredAttendance;
@@ -316,30 +300,25 @@ export class AttendanceService {
                 throw new Error("Class not found or has no students");
             }
 
-            const attendancePromises = classData.student_ids.map(
-                async (student) => {
-                    try {
-                        // Query attendance by campus_id and user_id only, then filter by date
-                        const userAttendance = await Attendance.find({
-                            campus_id,
-                            user_id: student,
-                        });
+            const attendancePromises = classData.student_ids.map(async (student) => {
+                try {
+                    // Query attendance by campus_id and user_id only, then filter by date
+                    const userAttendance = await Attendance.find({
+                        campus_id,
+                        user_id: student,
+                    });
 
-                        // Filter by date
-                        const filtered = userAttendance.rows.find((record) => {
-                            const recordDate = new Date(record.date);
-                            return (
-                                recordDate >= startOfDay &&
-                                recordDate <= endOfDay
-                            );
-                        });
+                    // Filter by date
+                    const filtered = userAttendance.rows.find((record) => {
+                        const recordDate = new Date(record.date);
+                        return recordDate >= startOfDay && recordDate <= endOfDay;
+                    });
 
-                        return filtered || null; // Return first match or null
-                    } catch {
-                        return null;
-                    }
+                    return filtered || null; // Return first match or null
+                } catch {
+                    return null;
                 }
-            );
+            });
 
             const attendances = await Promise.all(attendancePromises);
             return attendances.filter((attendance) => attendance !== null); // Return empty array if no records found
@@ -382,16 +361,11 @@ export class AttendanceService {
                 // Validate user_type
                 const userType = attendanceData.user_type || "Student";
                 if (!["Student", "Teacher"].includes(userType)) {
-                    throw new Error(
-                        "user_type must be either 'Student' or 'Teacher'"
-                    );
+                    throw new Error("user_type must be either 'Student' or 'Teacher'");
                 }
 
                 // Verify user is part of the class (for students)
-                if (
-                    userType === "Student" &&
-                    !classData.student_ids.includes(attendanceData.user_id)
-                ) {
+                if (userType === "Student" && !classData.student_ids.includes(attendanceData.user_id)) {
                     throw new Error("Student is not enrolled in this class");
                 }
 
@@ -409,10 +383,7 @@ export class AttendanceService {
             } catch (error) {
                 errors.push({
                     user_id: attendanceData.user_id,
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Unknown error",
+                    error: error instanceof Error ? error.message : "Unknown error",
                 });
             }
         }
@@ -453,21 +424,19 @@ export class AttendanceService {
                 throw new Error("Class not found or has no students");
             }
 
-            const attendancePromises = classData.student_ids.map(
-                async (student) => {
-                    try {
-                        // Query attendance by campus_id and user_id
-                        const userAttendance = await Attendance.find({
-                            campus_id,
-                            user_id: student,
-                        });
+            const attendancePromises = classData.student_ids.map(async (student) => {
+                try {
+                    // Query attendance by campus_id and user_id
+                    const userAttendance = await Attendance.find({
+                        campus_id,
+                        user_id: student,
+                    });
 
-                        return userAttendance.rows || [];
-                    } catch {
-                        return [];
-                    }
+                    return userAttendance.rows || [];
+                } catch {
+                    return [];
                 }
-            );
+            });
 
             const attendanceArrays = await Promise.all(attendancePromises);
             // Flatten the array of arrays
@@ -515,8 +484,7 @@ export class AttendanceService {
             const teacherClasses = allClasses.rows.filter((classData) => {
                 return (
                     classData.class_teacher_id === teacher_id ||
-                    (classData.teacher_ids &&
-                        classData.teacher_ids.includes(teacher_id))
+                    (classData.teacher_ids && classData.teacher_ids.includes(teacher_id))
                 );
             });
 
@@ -555,55 +523,41 @@ export class AttendanceService {
                         });
                     } catch {
                         // If class_id query fails, try getting attendance by students
-                        if (
-                            classData.student_ids &&
-                            classData.student_ids.length > 0
-                        ) {
-                            const studentAttendancePromises =
-                                classData.student_ids.map(async (studentId) => {
-                                    try {
-                                        const studentAttendance =
-                                            await Attendance.find({
-                                                campus_id,
-                                                user_id: studentId,
-                                                date: {
-                                                    $gte: startOfDay,
-                                                    $lte: endOfDay,
-                                                },
-                                            });
-                                        return studentAttendance.rows || [];
-                                    } catch {
-                                        return [];
-                                    }
-                                });
+                        if (classData.student_ids && classData.student_ids.length > 0) {
+                            const studentAttendancePromises = classData.student_ids.map(async (studentId) => {
+                                try {
+                                    const studentAttendance = await Attendance.find({
+                                        campus_id,
+                                        user_id: studentId,
+                                        date: {
+                                            $gte: startOfDay,
+                                            $lte: endOfDay,
+                                        },
+                                    });
+                                    return studentAttendance.rows || [];
+                                } catch {
+                                    return [];
+                                }
+                            });
 
-                            const studentAttendanceArrays = await Promise.all(
-                                studentAttendancePromises
-                            );
+                            const studentAttendanceArrays = await Promise.all(studentAttendancePromises);
                             classAttendance = {
                                 rows: studentAttendanceArrays.flat(),
                             };
                         }
                     }
 
-                    const hasAttendanceToday =
-                        classAttendance.rows && classAttendance.rows.length > 0;
+                    const hasAttendanceToday = classAttendance.rows && classAttendance.rows.length > 0;
 
                     if (hasAttendanceToday) {
                         completedToday++;
 
                         // Calculate attendance rate for this class
-                        const presentCount = classAttendance.rows.filter(
-                            (att) => att.status === "present"
-                        ).length;
-                        const totalStudents =
-                            classData.student_count ||
-                            classData.student_ids?.length ||
-                            0;
+                        const presentCount = classAttendance.rows.filter((att) => att.status === "present").length;
+                        const totalStudents = classData.student_count || classData.student_ids?.length || 0;
 
                         if (totalStudents > 0) {
-                            const attendanceRate =
-                                (presentCount / totalStudents) * 100;
+                            const attendanceRate = (presentCount / totalStudents) * 100;
                             totalAttendanceRate += attendanceRate;
                             classesWithAttendance++;
                         }
@@ -614,12 +568,7 @@ export class AttendanceService {
                             status: "completed",
                             present_count: presentCount,
                             total_students: totalStudents,
-                            attendance_rate:
-                                totalStudents > 0
-                                    ? Math.round(
-                                          (presentCount / totalStudents) * 100
-                                      )
-                                    : 0,
+                            attendance_rate: totalStudents > 0 ? Math.round((presentCount / totalStudents) * 100) : 0,
                             last_updated: classAttendance.rows[0]?.updated_at,
                         };
                     } else {
@@ -630,10 +579,7 @@ export class AttendanceService {
                             class_name: classData.name,
                             status: "pending",
                             present_count: 0,
-                            total_students:
-                                classData.student_count ||
-                                classData.student_ids?.length ||
-                                0,
+                            total_students: classData.student_count || classData.student_ids?.length || 0,
                             attendance_rate: 0,
                             last_updated: null,
                         };
@@ -645,16 +591,10 @@ export class AttendanceService {
                         class_name: classData.name,
                         status: "incomplete",
                         present_count: 0,
-                        total_students:
-                            classData.student_count ||
-                            classData.student_ids?.length ||
-                            0,
+                        total_students: classData.student_count || classData.student_ids?.length || 0,
                         attendance_rate: 0,
                         last_updated: null,
-                        error:
-                            error instanceof Error
-                                ? error.message
-                                : "Unknown error",
+                        error: error instanceof Error ? error.message : "Unknown error",
                     };
                 }
             });
@@ -663,9 +603,7 @@ export class AttendanceService {
 
             // Calculate average attendance
             const averageAttendance =
-                classesWithAttendance > 0
-                    ? Math.round(totalAttendanceRate / classesWithAttendance)
-                    : 0;
+                classesWithAttendance > 0 ? Math.round(totalAttendanceRate / classesWithAttendance) : 0;
 
             return {
                 total_classes: totalClasses,
@@ -692,40 +630,28 @@ export class AttendanceService {
         try {
             // Set default date range if not provided (last 30 days)
             const endDate = to_date || new Date();
-            const startDate =
-                from_date || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+            const startDate = from_date || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
             // Get class details
             const classData = await Class.findById(class_id);
-            if (
-                !classData ||
-                !classData.student_ids ||
-                classData.student_ids.length === 0
-            ) {
+            if (!classData || !classData.student_ids || classData.student_ids.length === 0) {
                 throw new Error("Class not found or has no students");
             }
 
             // Get all students in the class
             const { User } = await import("@/models/user.model");
-            const studentPromises = classData.student_ids.map(
-                async (studentId) => {
-                    try {
-                        return await User.findById(studentId);
-                    } catch {
-                        return null;
-                    }
+            const studentPromises = classData.student_ids.map(async (studentId) => {
+                try {
+                    return await User.findById(studentId);
+                } catch {
+                    return null;
                 }
-            );
+            });
 
-            const students = (await Promise.all(studentPromises)).filter(
-                (student) => student !== null
-            );
+            const students = (await Promise.all(studentPromises)).filter((student) => student !== null);
 
             // Calculate total class days (excluding weekends for now)
-            const totalDays = Math.ceil(
-                (endDate.getTime() - startDate.getTime()) /
-                    (1000 * 60 * 60 * 24)
-            );
+            const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
 
             // Get attendance data for all students
             const attendanceReportPromises = students.map(async (student) => {
@@ -744,23 +670,13 @@ export class AttendanceService {
 
                     // Calculate attendance statistics
                     const totalClasses = totalDays; // Can be refined based on actual class schedule
-                    const attendedClasses = attendanceRecords.filter(
-                        (record) => record.status === "present"
-                    ).length;
-                    const absentClasses = attendanceRecords.filter(
-                        (record) => record.status === "absent"
-                    ).length;
-                    const lateClasses = attendanceRecords.filter(
-                        (record) => record.status === "late"
-                    ).length;
-                    const leaveClasses = attendanceRecords.filter(
-                        (record) => record.status === "leave"
-                    ).length;
+                    const attendedClasses = attendanceRecords.filter((record) => record.status === "present").length;
+                    const absentClasses = attendanceRecords.filter((record) => record.status === "absent").length;
+                    const lateClasses = attendanceRecords.filter((record) => record.status === "late").length;
+                    const leaveClasses = attendanceRecords.filter((record) => record.status === "leave").length;
 
                     const attendancePercentage =
-                        totalClasses > 0
-                            ? Math.round((attendedClasses / totalClasses) * 100)
-                            : 0;
+                        totalClasses > 0 ? Math.round((attendedClasses / totalClasses) * 100) : 0;
 
                     // Determine attendance status
                     let attendanceStatus = "good";
@@ -778,9 +694,7 @@ export class AttendanceService {
                     const lastAttendance =
                         attendanceRecords.length > 0
                             ? attendanceRecords.sort(
-                                  (a, b) =>
-                                      new Date(b.date).getTime() -
-                                      new Date(a.date).getTime()
+                                  (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
                               )[0]
                             : null;
 
@@ -795,9 +709,7 @@ export class AttendanceService {
                         leave: leaveClasses,
                         percentage: attendancePercentage,
                         status: attendanceStatus,
-                        last_attended: lastAttendance
-                            ? lastAttendance.date
-                            : null,
+                        last_attended: lastAttendance ? lastAttendance.date : null,
                         email: student.email,
                         phone: student.phone,
                     };
@@ -816,42 +728,28 @@ export class AttendanceService {
                         last_attended: null,
                         email: student.email,
                         phone: student.phone,
-                        error:
-                            error instanceof Error
-                                ? error.message
-                                : "Unknown error",
+                        error: error instanceof Error ? error.message : "Unknown error",
                     };
                 }
             });
 
-            const attendanceReport = await Promise.all(
-                attendanceReportPromises
-            );
+            const attendanceReport = await Promise.all(attendanceReportPromises);
 
             // Calculate summary statistics
             const totalStudents = attendanceReport.length;
             const averageAttendance =
                 totalStudents > 0
-                    ? Math.round(
-                          attendanceReport.reduce(
-                              (sum, student) => sum + student.percentage,
-                              0
-                          ) / totalStudents
-                      )
+                    ? Math.round(attendanceReport.reduce((sum, student) => sum + student.percentage, 0) / totalStudents)
                     : 0;
 
-            const excellentCount = attendanceReport.filter(
-                (student) => student.percentage >= 90
-            ).length;
+            const excellentCount = attendanceReport.filter((student) => student.percentage >= 90).length;
             const goodCount = attendanceReport.filter(
                 (student) => student.percentage >= 75 && student.percentage < 90
             ).length;
             const averageCount = attendanceReport.filter(
                 (student) => student.percentage >= 60 && student.percentage < 75
             ).length;
-            const needsAttentionCount = attendanceReport.filter(
-                (student) => student.percentage < 60
-            ).length;
+            const needsAttentionCount = attendanceReport.filter((student) => student.percentage < 60).length;
 
             // Sort students by attendance percentage (descending)
             attendanceReport.sort((a, b) => b.percentage - a.percentage);
@@ -894,8 +792,7 @@ export class AttendanceService {
         try {
             // Set default date range if not provided (last 12 months)
             const endDate = to_date || new Date();
-            const startDate =
-                from_date || new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
+            const startDate = from_date || new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
 
             // Get student details
             const { User } = await import("@/models/user.model");
@@ -912,10 +809,7 @@ export class AttendanceService {
                 is_deleted: false,
             });
 
-            const primaryClass =
-                studentClasses.rows && studentClasses.rows.length > 0
-                    ? studentClasses.rows[0]
-                    : null;
+            const primaryClass = studentClasses.rows && studentClasses.rows.length > 0 ? studentClasses.rows[0] : null;
 
             // Get all attendance records for this student in the date range
             const studentAttendance = await Attendance.find(
@@ -1000,11 +894,7 @@ export class AttendanceService {
                 // Calculate monthly percentage (including late as present)
                 const effectivePresent = monthData.present + monthData.late;
                 monthData.percentage =
-                    monthData.total_days > 0
-                        ? Math.round(
-                              (effectivePresent / monthData.total_days) * 100
-                          )
-                        : 0;
+                    monthData.total_days > 0 ? Math.round((effectivePresent / monthData.total_days) * 100) : 0;
 
                 // Determine monthly status
                 if (monthData.percentage >= 90) {
@@ -1019,51 +909,36 @@ export class AttendanceService {
             }
 
             // Convert to array and sort by year-month descending
-            const monthlyPerformance = [...monthlyAttendance.values()].sort(
-                (a, b) => {
-                    if (a.year !== b.year) return b.year - a.year;
-                    const monthOrder = [
-                        "January",
-                        "February",
-                        "March",
-                        "April",
-                        "May",
-                        "June",
-                        "July",
-                        "August",
-                        "September",
-                        "October",
-                        "November",
-                        "December",
-                    ];
-                    return (
-                        monthOrder.indexOf(b.month) -
-                        monthOrder.indexOf(a.month)
-                    );
+            const monthlyPerformance = [...monthlyAttendance.values()].sort((a, b) => {
+                if (a.year !== b.year) {
+                    return b.year - a.year;
                 }
-            );
+                const monthOrder = [
+                    "January",
+                    "February",
+                    "March",
+                    "April",
+                    "May",
+                    "June",
+                    "July",
+                    "August",
+                    "September",
+                    "October",
+                    "November",
+                    "December",
+                ];
+                return monthOrder.indexOf(b.month) - monthOrder.indexOf(a.month);
+            });
 
             // Calculate overall summary statistics
             const totalRecords = attendanceRecords.length;
-            const totalPresent = attendanceRecords.filter(
-                (record) => record.status === "present"
-            ).length;
-            const totalAbsent = attendanceRecords.filter(
-                (record) => record.status === "absent"
-            ).length;
-            const totalLate = attendanceRecords.filter(
-                (record) => record.status === "late"
-            ).length;
-            const totalLeave = attendanceRecords.filter(
-                (record) => record.status === "leave"
-            ).length;
+            const totalPresent = attendanceRecords.filter((record) => record.status === "present").length;
+            const totalAbsent = attendanceRecords.filter((record) => record.status === "absent").length;
+            const totalLate = attendanceRecords.filter((record) => record.status === "late").length;
+            const totalLeave = attendanceRecords.filter((record) => record.status === "leave").length;
 
             const overallAttendanceRate =
-                totalRecords > 0
-                    ? Math.round(
-                          ((totalPresent + totalLate) / totalRecords) * 100
-                      )
-                    : 0;
+                totalRecords > 0 ? Math.round(((totalPresent + totalLate) / totalRecords) * 100) : 0;
 
             // Determine overall attendance status
             let overallStatus = "good";

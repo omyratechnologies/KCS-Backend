@@ -67,8 +67,7 @@ app.post(
         tags: ["Attendance"],
         operationId: "markBulkAttendance",
         summary: "Mark bulk attendance",
-        description:
-            "Records attendance for multiple users with individual status and user type per user",
+        description: "Records attendance for multiple users with individual status and user type per user",
         responses: {
             200: {
                 description: "Bulk attendance marked successfully",
@@ -104,8 +103,7 @@ app.post(
         tags: ["Attendance"],
         operationId: "markClassAttendance",
         summary: "Mark class attendance",
-        description:
-            "Records attendance for multiple students in a specific class",
+        description: "Records attendance for multiple students in a specific class",
         responses: {
             200: {
                 description: "Class attendance marked successfully",
@@ -141,8 +139,7 @@ app.get(
         tags: ["Attendance"],
         operationId: "getAttendanceByCampusId",
         summary: "Get attendance by campus ID",
-        description:
-            "Retrieves attendance records for a campus within a date range",
+        description: "Retrieves attendance records for a campus within a date range",
         parameters: [
             {
                 name: "from_date",
@@ -198,8 +195,7 @@ app.get(
                     type: "string",
                     format: "date-time",
                 },
-                description:
-                    "Optional: Filter by specific date (ISO 8601 format)",
+                description: "Optional: Filter by specific date (ISO 8601 format)",
             },
         ],
         responses: {
@@ -207,9 +203,7 @@ app.get(
                 description: "List of attendance records for the class",
                 content: {
                     "application/json": {
-                        schema: resolver(
-                            getAttendanceByClassIdAndDateResponseSchema
-                        ),
+                        schema: resolver(getAttendanceByClassIdAndDateResponseSchema),
                     },
                 },
             },
@@ -340,9 +334,7 @@ app.get(
                 description: "Attendance statistics retrieved successfully",
                 content: {
                     "application/json": {
-                        schema: resolver(
-                            getAttendanceStatsByTeacherIdResponseSchema
-                        ),
+                        schema: resolver(getAttendanceStatsByTeacherIdResponseSchema),
                     },
                 },
             },
@@ -384,8 +376,7 @@ app.get(
         tags: ["Attendance"],
         operationId: "getClassesByTeacherId",
         summary: "Debug: Get all classes for a teacher",
-        description:
-            "Debug endpoint to check what classes are assigned to a teacher",
+        description: "Debug endpoint to check what classes are assigned to a teacher",
         responses: {
             200: {
                 description: "Classes retrieved successfully",
@@ -426,9 +417,7 @@ app.get(
                 description: "Attendance report generated successfully",
                 content: {
                     "application/json": {
-                        schema: resolver(
-                            getClassAttendanceReportResponseSchema
-                        ),
+                        schema: resolver(getClassAttendanceReportResponseSchema),
                     },
                 },
             },
@@ -501,9 +490,7 @@ app.get(
                 description: "Student attendance view generated successfully",
                 content: {
                     "application/json": {
-                        schema: resolver(
-                            getStudentAttendanceViewResponseSchema
-                        ),
+                        schema: resolver(getStudentAttendanceViewResponseSchema),
                     },
                 },
             },

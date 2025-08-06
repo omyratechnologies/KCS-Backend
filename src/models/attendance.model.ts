@@ -42,9 +42,6 @@ AttendanceSchema.index.findByUserId = { by: "user_id" };
 AttendanceSchema.index.findByDate = { by: "date" };
 AttendanceSchema.index.findByClassId = { by: "class_id" };
 
-const Attendance = ottoman.model<IAttendanceData>(
-    "attendances",
-    AttendanceSchema
-);
+const Attendance = ottoman.model<IAttendanceData>("attendances", AttendanceSchema);
 
 export { Attendance, type IAttendanceData };

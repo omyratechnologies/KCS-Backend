@@ -1,26 +1,11 @@
 import { nanoid } from "napi-nanoid";
 
 import { Course, ICourseData } from "@/models/course.model";
-import {
-    CourseCertificate,
-    ICourseCertificateData,
-} from "@/models/course_certificate.model";
-import {
-    CourseEnrollment,
-    ICourseEnrollmentData,
-} from "@/models/course_enrollment.model";
-import {
-    CourseLecture,
-    ICourseLectureData,
-} from "@/models/course_lecture.model";
-import {
-    CourseProgress,
-    ICourseProgressData,
-} from "@/models/course_progress.model";
-import {
-    CourseSection,
-    ICourseSectionData,
-} from "@/models/course_section.model";
+import { CourseCertificate, ICourseCertificateData } from "@/models/course_certificate.model";
+import { CourseEnrollment, ICourseEnrollmentData } from "@/models/course_enrollment.model";
+import { CourseLecture, ICourseLectureData } from "@/models/course_lecture.model";
+import { CourseProgress, ICourseProgressData } from "@/models/course_progress.model";
+import { CourseSection, ICourseSectionData } from "@/models/course_section.model";
 import { User } from "@/models/user.model";
 
 export class CourseService {
@@ -29,10 +14,7 @@ export class CourseService {
     /**
      * Find course by ID - using find instead of findById for better compatibility
      */
-    private static async findCourseById(
-        course_id: string,
-        campus_id?: string
-    ): Promise<ICourseData | null> {
+    private static async findCourseById(course_id: string, campus_id?: string): Promise<ICourseData | null> {
         try {
             const query: any = { id: course_id };
             if (campus_id) {
@@ -40,9 +22,7 @@ export class CourseService {
             }
 
             const result = await Course.find(query);
-            return result.rows && result.rows.length > 0
-                ? result.rows[0]
-                : null;
+            return result.rows && result.rows.length > 0 ? result.rows[0] : null;
         } catch (error) {
             console.error(`Error finding course by ID ${course_id}:`, error);
             return null;
@@ -84,11 +64,7 @@ export class CourseService {
     /**
      * Create a new course
      */
-    static async createCourse(
-        campus_id: string,
-        created_by: string,
-        courseData: Partial<ICourseData>
-    ) {
+    static async createCourse(campus_id: string, created_by: string, courseData: Partial<ICourseData>) {
         try {
             const course = await Course.create({
                 id: nanoid(),
@@ -164,30 +140,20 @@ export class CourseService {
                 courses = courses.filter((course) => course.status === status);
             }
             if (category) {
-                courses = courses.filter(
-                    (course) => course.category === category
-                );
+                courses = courses.filter((course) => course.category === category);
             }
             if (difficulty_level) {
-                courses = courses.filter(
-                    (course) => course.difficulty_level === difficulty_level
-                );
+                courses = courses.filter((course) => course.difficulty_level === difficulty_level);
             }
             if (class_id) {
-                courses = courses.filter(
-                    (course) => course.class_id === class_id
-                );
+                courses = courses.filter((course) => course.class_id === class_id);
             }
             if (is_featured !== undefined) {
-                courses = courses.filter(
-                    (course) => course.is_featured === is_featured
-                );
+                courses = courses.filter((course) => course.is_featured === is_featured);
             }
             if (instructor_id) {
                 courses = courses.filter(
-                    (course) =>
-                        course.instructor_ids &&
-                        course.instructor_ids.includes(instructor_id)
+                    (course) => course.instructor_ids && course.instructor_ids.includes(instructor_id)
                 );
             }
 
@@ -195,9 +161,7 @@ export class CourseService {
             if (price_range) {
                 const [min, max] = price_range.split("-").map(Number);
                 if (!isNaN(min) && !isNaN(max)) {
-                    courses = courses.filter(
-                        (course) => course.price >= min && course.price <= max
-                    );
+                    courses = courses.filter((course) => course.price >= min && course.price <= max);
                 } else if (price_range === "free") {
                     courses = courses.filter((course) => course.price === 0);
                 } else if (price_range === "paid") {
@@ -212,8 +176,7 @@ export class CourseService {
                     (course) =>
                         searchRegex.test(course.title) ||
                         searchRegex.test(course.description) ||
-                        (course.tags &&
-                            course.tags.some((tag) => searchRegex.test(tag)))
+                        (course.tags && course.tags.some((tag) => searchRegex.test(tag)))
                 );
             }
 
@@ -280,11 +243,8 @@ export class CourseService {
 
             return {
                 total_courses: courses.length,
-                published_courses: courses.filter(
-                    (c) => c.status === "published"
-                ).length,
-                draft_courses: courses.filter((c) => c.status === "draft")
-                    .length,
+                published_courses: courses.filter((c) => c.status === "published").length,
+                draft_courses: courses.filter((c) => c.status === "draft").length,
                 featured_courses: courses.filter((c) => c.is_featured).length,
                 free_courses: courses.filter((c) => c.price === 0).length,
                 paid_courses: courses.filter((c) => c.price > 0).length,
@@ -297,11 +257,7 @@ export class CourseService {
     /**
      * Get course by ID with detailed information
      */
-    static async getCourseById(
-        course_id: string,
-        campus_id: string,
-        user_id?: string
-    ) {
+    static async getCourseById(course_id: string, campus_id: string, user_id?: string) {
         try {
             // Use find with id filter instead of findById for better compatibility with different ID formats
             const courseResults = await Course.find({
@@ -321,9 +277,7 @@ export class CourseService {
                 is_published: true,
             });
 
-            const sections = sectionsResult.rows.sort(
-                (a, b) => a.section_order - b.section_order
-            );
+            const sections = sectionsResult.rows.sort((a, b) => a.section_order - b.section_order);
 
             // Get lectures for each section
             const sectionsWithLectures = await Promise.all(
@@ -333,34 +287,27 @@ export class CourseService {
                         is_published: true,
                     });
 
-                    const lectures = lecturesResult.rows.sort(
-                        (a, b) => a.lecture_order - b.lecture_order
-                    );
+                    const lectures = lecturesResult.rows.sort((a, b) => a.lecture_order - b.lecture_order);
 
                     // If user is provided, get their progress for each lecture
                     let lecturesWithProgress = lectures;
                     if (user_id) {
                         lecturesWithProgress = await Promise.all(
                             lectures.map(async (lecture) => {
-                                const progressResult =
-                                    await CourseProgress.find({
-                                        user_id,
-                                        lecture_id: lecture.id,
-                                    });
+                                const progressResult = await CourseProgress.find({
+                                    user_id,
+                                    lecture_id: lecture.id,
+                                });
 
                                 const progress = progressResult.rows[0];
                                 return {
                                     ...lecture,
                                     user_progress: progress
                                         ? {
-                                              progress_status:
-                                                  progress.progress_status,
-                                              completion_percentage:
-                                                  progress.completion_percentage,
-                                              last_accessed_at:
-                                                  progress.last_accessed_at,
-                                              resume_position_seconds:
-                                                  progress.resume_position_seconds,
+                                              progress_status: progress.progress_status,
+                                              completion_percentage: progress.completion_percentage,
+                                              last_accessed_at: progress.last_accessed_at,
+                                              resume_position_seconds: progress.resume_position_seconds,
                                           }
                                         : null,
                                 };
@@ -373,8 +320,7 @@ export class CourseService {
                         lectures: lecturesWithProgress,
                         lecture_count: lectures.length,
                         total_duration_minutes: lectures.reduce(
-                            (sum, lecture) =>
-                                sum + lecture.estimated_duration_minutes,
+                            (sum, lecture) => sum + lecture.estimated_duration_minutes,
                             0
                         ),
                     };
@@ -398,24 +344,17 @@ export class CourseService {
                         const userResults = await User.find({
                             id: instructor_id,
                         });
-                        const userResult =
-                            userResults.rows && userResults.rows.length > 0
-                                ? userResults.rows[0]
-                                : null;
+                        const userResult = userResults.rows && userResults.rows.length > 0 ? userResults.rows[0] : null;
                         return userResult
                             ? {
                                   id: userResult.id,
                                   name: `${userResult.first_name} ${userResult.last_name}`,
                                   email: userResult.email,
-                                  profile_image:
-                                      userResult.meta_data?.profile_image,
+                                  profile_image: userResult.meta_data?.profile_image,
                               }
                             : null;
                     } catch (error) {
-                        console.error(
-                            `Error finding instructor ${instructor_id}:`,
-                            error
-                        );
+                        console.error(`Error finding instructor ${instructor_id}:`, error);
                         return null;
                     }
                 })
@@ -427,10 +366,7 @@ export class CourseService {
                     ...courseResult,
                     sections: sectionsWithLectures,
                     total_sections: sections.length,
-                    total_lectures: sectionsWithLectures.reduce(
-                        (sum, section) => sum + section.lectures.length,
-                        0
-                    ),
+                    total_lectures: sectionsWithLectures.reduce((sum, section) => sum + section.lectures.length, 0),
                     total_duration_minutes: sectionsWithLectures.reduce(
                         (sum, section) => sum + section.total_duration_minutes,
                         0
@@ -448,17 +384,9 @@ export class CourseService {
     /**
      * Update course
      */
-    static async updateCourse(
-        course_id: string,
-        campus_id: string,
-        user_id: string,
-        updateData: Partial<ICourseData>
-    ) {
+    static async updateCourse(course_id: string, campus_id: string, user_id: string, updateData: Partial<ICourseData>) {
         try {
-            const existingCourse = await this.findCourseById(
-                course_id,
-                campus_id
-            );
+            const existingCourse = await this.findCourseById(course_id, campus_id);
             if (!existingCourse) {
                 throw new Error("Course not found");
             }
@@ -487,11 +415,7 @@ export class CourseService {
     /**
      * Publish course
      */
-    static async publishCourse(
-        course_id: string,
-        campus_id: string,
-        user_id: string
-    ) {
+    static async publishCourse(course_id: string, campus_id: string, user_id: string) {
         try {
             const course = await this.findCourseById(course_id, campus_id);
             if (!course) {
@@ -504,9 +428,7 @@ export class CourseService {
                 is_published: true,
             });
             if (sectionsResult.rows.length === 0) {
-                throw new Error(
-                    "Course must have at least one published section to be published"
-                );
+                throw new Error("Course must have at least one published section to be published");
             }
 
             const lecturesResult = await CourseLecture.find({
@@ -514,9 +436,7 @@ export class CourseService {
                 is_published: true,
             });
             if (lecturesResult.rows.length === 0) {
-                throw new Error(
-                    "Course must have at least one published lecture to be published"
-                );
+                throw new Error("Course must have at least one published lecture to be published");
             }
 
             const updatedCourse = await this.updateCourseById(
@@ -542,11 +462,7 @@ export class CourseService {
     /**
      * Delete course (soft delete by archiving)
      */
-    static async deleteCourse(
-        course_id: string,
-        campus_id: string,
-        user_id: string
-    ) {
+    static async deleteCourse(course_id: string, campus_id: string, user_id: string) {
         try {
             const course = await this.findCourseById(course_id, campus_id);
             if (!course) {
@@ -560,9 +476,7 @@ export class CourseService {
             });
 
             if (enrollmentsResult.rows.length > 0) {
-                throw new Error(
-                    "Cannot delete course with active enrollments. Archive it instead."
-                );
+                throw new Error("Cannot delete course with active enrollments. Archive it instead.");
             }
 
             await this.updateCourseById(
@@ -589,11 +503,7 @@ export class CourseService {
     /**
      * Create course section
      */
-    static async createCourseSection(
-        course_id: string,
-        campus_id: string,
-        sectionData: Partial<ICourseSectionData>
-    ) {
+    static async createCourseSection(course_id: string, campus_id: string, sectionData: Partial<ICourseSectionData>) {
         try {
             // Verify course exists
             const course = await this.findCourseById(course_id, campus_id);
@@ -652,11 +562,7 @@ export class CourseService {
     /**
      * Create course lecture
      */
-    static async createCourseLecture(
-        section_id: string,
-        campus_id: string,
-        lectureData: Partial<ICourseLectureData>
-    ) {
+    static async createCourseLecture(section_id: string, campus_id: string, lectureData: Partial<ICourseLectureData>) {
         try {
             // Verify section exists
             const section = await CourseSection.findById(section_id);
@@ -757,16 +663,10 @@ export class CourseService {
 
             // Check enrollment dates
             const now = new Date();
-            if (
-                course.enrollment_start_date &&
-                now < new Date(course.enrollment_start_date)
-            ) {
+            if (course.enrollment_start_date && now < new Date(course.enrollment_start_date)) {
                 throw new Error("Enrollment has not started yet");
             }
-            if (
-                course.enrollment_end_date &&
-                now > new Date(course.enrollment_end_date)
-            ) {
+            if (course.enrollment_end_date && now > new Date(course.enrollment_end_date)) {
                 throw new Error("Enrollment period has ended");
             }
 
@@ -838,35 +738,30 @@ export class CourseService {
 
             // Build query conditions
             const queryConditions: any = { user_id, campus_id };
-            if (status) queryConditions.enrollment_status = status;
+            if (status) {
+                queryConditions.enrollment_status = status;
+            }
 
-            const enrollmentsResult =
-                await CourseEnrollment.find(queryConditions);
+            const enrollmentsResult = await CourseEnrollment.find(queryConditions);
             let enrollments = enrollmentsResult.rows;
 
             // Filter by progress if specified
             if (progress) {
                 switch (progress) {
                     case "not_started": {
-                        enrollments = enrollments.filter(
-                            (e) => e.progress_percentage === 0
-                        );
+                        enrollments = enrollments.filter((e) => e.progress_percentage === 0);
 
                         break;
                     }
                     case "in_progress": {
                         enrollments = enrollments.filter(
-                            (e) =>
-                                e.progress_percentage > 0 &&
-                                e.progress_percentage < 100
+                            (e) => e.progress_percentage > 0 && e.progress_percentage < 100
                         );
 
                         break;
                     }
                     case "completed": {
-                        enrollments = enrollments.filter(
-                            (e) => e.progress_percentage === 100
-                        );
+                        enrollments = enrollments.filter((e) => e.progress_percentage === 100);
 
                         break;
                     }
@@ -881,9 +776,7 @@ export class CourseService {
             // Get course details for each enrollment
             const enrollmentsWithCourses = await Promise.all(
                 paginatedEnrollments.map(async (enrollment) => {
-                    const course = await this.findCourseById(
-                        enrollment.course_id
-                    );
+                    const course = await this.findCourseById(enrollment.course_id);
 
                     // Get total lectures and completed count for progress calculation
                     const lecturesResult = await CourseLecture.find({
@@ -897,17 +790,10 @@ export class CourseService {
                         course_id: enrollment.course_id,
                         user_id: enrollment.user_id,
                     });
-                    const totalWatchTime = progressResult.rows.reduce(
-                        (sum, p) => sum + p.watch_time_seconds,
-                        0
-                    );
+                    const totalWatchTime = progressResult.rows.reduce((sum, p) => sum + p.watch_time_seconds, 0);
                     const estimatedRemainingHours =
                         course && course.estimated_duration_hours
-                            ? Math.max(
-                                  0,
-                                  course.estimated_duration_hours -
-                                      totalWatchTime / 3600
-                              )
+                            ? Math.max(0, course.estimated_duration_hours - totalWatchTime / 3600)
                             : 0;
 
                     return {
@@ -918,13 +804,10 @@ export class CourseService {
                                   thumbnail: course.thumbnail,
                                   category: course.category,
                                   difficulty_level: course.difficulty_level,
-                                  estimated_duration_hours:
-                                      course.estimated_duration_hours,
+                                  estimated_duration_hours: course.estimated_duration_hours,
                                   rating: course.rating,
                                   total_lectures: totalLectures,
-                                  completed_lectures:
-                                      enrollment.access_details
-                                          ?.completed_lectures || 0,
+                                  completed_lectures: enrollment.access_details?.completed_lectures || 0,
                                   time_remaining_hours: estimatedRemainingHours,
                                   last_updated: course.updated_at,
                               }
@@ -1022,14 +905,11 @@ export class CourseService {
             } else {
                 // Update existing progress
                 const existingProgress = existingProgressResult.rows[0];
-                progress = await CourseProgress.updateById(
-                    existingProgress.id,
-                    {
-                        ...progressData,
-                        last_accessed_at: now,
-                        updated_at: now,
-                    }
-                );
+                progress = await CourseProgress.updateById(existingProgress.id, {
+                    ...progressData,
+                    last_accessed_at: now,
+                    updated_at: now,
+                });
             }
 
             // Update enrollment progress if lecture is completed
@@ -1050,10 +930,7 @@ export class CourseService {
     /**
      * Update overall enrollment progress
      */
-    private static async updateEnrollmentProgress(
-        course_id: string,
-        user_id: string
-    ) {
+    private static async updateEnrollmentProgress(course_id: string, user_id: string) {
         try {
             // Get all lectures in the course
             const lecturesResult = await CourseLecture.find({
@@ -1073,11 +950,7 @@ export class CourseService {
 
             // Calculate progress percentage
             const progressPercentage =
-                totalMandatoryLectures > 0
-                    ? Math.round(
-                          (completedLectures / totalMandatoryLectures) * 100
-                      )
-                    : 0;
+                totalMandatoryLectures > 0 ? Math.round((completedLectures / totalMandatoryLectures) * 100) : 0;
 
             // Determine enrollment status
             let enrollmentStatus = "active";
@@ -1101,9 +974,7 @@ export class CourseService {
                     access_details: {
                         ...enrollment.rows[0].access_details,
                         completed_lectures: completedLectures,
-                        completed_lecture_ids: completedProgressResult.rows.map(
-                            (p) => p.lecture_id
-                        ),
+                        completed_lecture_ids: completedProgressResult.rows.map((p) => p.lecture_id),
                     },
                     updated_at: new Date(),
                 });
@@ -1112,11 +983,7 @@ export class CourseService {
                 if (progressPercentage >= 100) {
                     const course = await this.findCourseById(course_id);
                     if (course && course.is_certificate_enabled) {
-                        await this.generateCourseCertificate(
-                            course_id,
-                            user_id,
-                            enrollment.rows[0].id
-                        );
+                        await this.generateCourseCertificate(course_id, user_id, enrollment.rows[0].id);
                     }
 
                     // Update course completion count
@@ -1136,32 +1003,21 @@ export class CourseService {
     /**
      * Generate course certificate
      */
-    private static async generateCourseCertificate(
-        course_id: string,
-        user_id: string,
-        enrollment_id: string
-    ) {
+    private static async generateCourseCertificate(course_id: string, user_id: string, enrollment_id: string) {
         try {
             const course = await this.findCourseById(course_id);
             // Note: User and CourseEnrollment may also need similar fixes if they have ID format issues
             const userResult = await User.find({ id: user_id });
-            const user =
-                userResult.rows && userResult.rows.length > 0
-                    ? userResult.rows[0]
-                    : null;
+            const user = userResult.rows && userResult.rows.length > 0 ? userResult.rows[0] : null;
 
             const enrollmentResult = await CourseEnrollment.find({
                 id: enrollment_id,
             });
             const enrollment =
-                enrollmentResult.rows && enrollmentResult.rows.length > 0
-                    ? enrollmentResult.rows[0]
-                    : null;
+                enrollmentResult.rows && enrollmentResult.rows.length > 0 ? enrollmentResult.rows[0] : null;
 
             if (!course || !user || !enrollment) {
-                throw new Error(
-                    "Missing required data for certificate generation"
-                );
+                throw new Error("Missing required data for certificate generation");
             }
 
             const certificateNumber = `CERT-${course.campus_id}-${course_id.slice(0, 8)}-${user_id.slice(0, 8)}-${Date.now()}`;
@@ -1235,11 +1091,7 @@ export class CourseService {
     /**
      * Get detailed course progress with lecture completion status (like Udemy)
      */
-    static async getCourseProgressDetails(
-        course_id: string,
-        user_id: string,
-        campus_id: string
-    ) {
+    static async getCourseProgressDetails(course_id: string, user_id: string, campus_id: string) {
         try {
             // Verify enrollment
             const enrollmentResult = await CourseEnrollment.find({
@@ -1266,9 +1118,7 @@ export class CourseService {
                 is_published: true,
             });
 
-            const sections = sectionsResult.rows.sort(
-                (a, b) => a.section_order - b.section_order
-            );
+            const sections = sectionsResult.rows.sort((a, b) => a.section_order - b.section_order);
 
             const sectionsWithProgress = await Promise.all(
                 sections.map(async (section) => {
@@ -1277,9 +1127,7 @@ export class CourseService {
                         is_published: true,
                     });
 
-                    const lectures = lecturesResult.rows.sort(
-                        (a, b) => a.lecture_order - b.lecture_order
-                    );
+                    const lectures = lecturesResult.rows.sort((a, b) => a.lecture_order - b.lecture_order);
 
                     const lecturesWithProgress = await Promise.all(
                         lectures.map(async (lecture) => {
@@ -1289,17 +1137,14 @@ export class CourseService {
                             });
 
                             const progress = progressResult.rows[0];
-                            const isCompleted =
-                                progress?.progress_status === "completed";
-                            const watchPercentage =
-                                progress?.completion_percentage || 0;
+                            const isCompleted = progress?.progress_status === "completed";
+                            const watchPercentage = progress?.completion_percentage || 0;
 
                             return {
                                 id: lecture.id,
                                 title: lecture.title,
                                 lecture_type: lecture.lecture_type,
-                                estimated_duration_minutes:
-                                    lecture.estimated_duration_minutes,
+                                estimated_duration_minutes: lecture.estimated_duration_minutes,
                                 is_mandatory: lecture.is_mandatory,
                                 is_preview: lecture.is_preview,
                                 lecture_order: lecture.lecture_order,
@@ -1307,39 +1152,23 @@ export class CourseService {
                                 // Progress details (like Udemy)
                                 is_completed: isCompleted,
                                 watch_percentage: watchPercentage,
-                                watch_time_seconds:
-                                    progress?.watch_time_seconds || 0,
+                                watch_time_seconds: progress?.watch_time_seconds || 0,
                                 last_accessed_at: progress?.last_accessed_at,
-                                resume_position_seconds:
-                                    progress?.resume_position_seconds || 0,
-                                is_bookmarked:
-                                    progress?.interaction_data?.bookmarked ||
-                                    false,
+                                resume_position_seconds: progress?.resume_position_seconds || 0,
+                                is_bookmarked: progress?.interaction_data?.bookmarked || false,
                                 notes_count: progress?.notes?.length || 0,
                                 // Status indicators
-                                status: isCompleted
-                                    ? "completed"
-                                    : watchPercentage > 0
-                                      ? "in_progress"
-                                      : "not_started",
+                                status: isCompleted ? "completed" : watchPercentage > 0 ? "in_progress" : "not_started",
                             };
                         })
                     );
 
                     const sectionProgress = {
                         total_lectures: lectures.length,
-                        completed_lectures: lecturesWithProgress.filter(
-                            (l) => l.is_completed
-                        ).length,
-                        total_duration_minutes: lectures.reduce(
-                            (sum, l) => sum + l.estimated_duration_minutes,
-                            0
-                        ),
+                        completed_lectures: lecturesWithProgress.filter((l) => l.is_completed).length,
+                        total_duration_minutes: lectures.reduce((sum, l) => sum + l.estimated_duration_minutes, 0),
                         watched_duration_minutes: Math.round(
-                            lecturesWithProgress.reduce(
-                                (sum, l) => sum + l.watch_time_seconds / 60,
-                                0
-                            )
+                            lecturesWithProgress.reduce((sum, l) => sum + l.watch_time_seconds / 60, 0)
                         ),
                     };
 
@@ -1353,9 +1182,7 @@ export class CourseService {
                         completion_percentage:
                             sectionProgress.total_lectures > 0
                                 ? Math.round(
-                                      (sectionProgress.completed_lectures /
-                                          sectionProgress.total_lectures) *
-                                          100
+                                      (sectionProgress.completed_lectures / sectionProgress.total_lectures) * 100
                                   )
                                 : 0,
                     };
@@ -1363,14 +1190,8 @@ export class CourseService {
             );
 
             // Calculate overall progress
-            const totalLectures = sectionsWithProgress.reduce(
-                (sum, s) => sum + s.progress.total_lectures,
-                0
-            );
-            const completedLectures = sectionsWithProgress.reduce(
-                (sum, s) => sum + s.progress.completed_lectures,
-                0
-            );
+            const totalLectures = sectionsWithProgress.reduce((sum, s) => sum + s.progress.total_lectures, 0);
+            const completedLectures = sectionsWithProgress.reduce((sum, s) => sum + s.progress.completed_lectures, 0);
             const totalWatchTime = sectionsWithProgress.reduce(
                 (sum, s) => sum + s.progress.watched_duration_minutes,
                 0
@@ -1405,21 +1226,11 @@ export class CourseService {
                         total_lectures: totalLectures,
                         completed_lectures: completedLectures,
                         completion_percentage:
-                            totalLectures > 0
-                                ? Math.round(
-                                      (completedLectures / totalLectures) * 100
-                                  )
-                                : 0,
+                            totalLectures > 0 ? Math.round((completedLectures / totalLectures) * 100) : 0,
                         total_duration_minutes: estimatedTotalTime,
                         watched_duration_minutes: totalWatchTime,
-                        estimated_remaining_minutes: Math.max(
-                            0,
-                            estimatedTotalTime - totalWatchTime
-                        ),
-                        time_to_completion: this.calculateTimeToCompletion(
-                            totalWatchTime,
-                            estimatedTotalTime
-                        ),
+                        estimated_remaining_minutes: Math.max(0, estimatedTotalTime - totalWatchTime),
+                        time_to_completion: this.calculateTimeToCompletion(totalWatchTime, estimatedTotalTime),
                     },
                     sections: sectionsWithProgress,
                     next_lecture: this.findNextLecture(sectionsWithProgress),
@@ -1429,9 +1240,7 @@ export class CourseService {
                         .map((l) => ({
                             id: l.id,
                             title: l.title,
-                            section_title: sectionsWithProgress.find((s) =>
-                                s.lectures.includes(l)
-                            )?.title,
+                            section_title: sectionsWithProgress.find((s) => s.lectures.includes(l))?.title,
                         })),
                 },
                 message: "Course progress details retrieved successfully",
@@ -1444,18 +1253,21 @@ export class CourseService {
     /**
      * Helper method to calculate estimated time to completion
      */
-    private static calculateTimeToCompletion(
-        watchedMinutes: number,
-        totalMinutes: number
-    ) {
-        if (totalMinutes === 0) return "N/A";
+    private static calculateTimeToCompletion(watchedMinutes: number, totalMinutes: number) {
+        if (totalMinutes === 0) {
+            return "N/A";
+        }
 
         const remainingMinutes = Math.max(0, totalMinutes - watchedMinutes);
         const hours = Math.floor(remainingMinutes / 60);
         const minutes = remainingMinutes % 60;
 
-        if (hours === 0) return `${minutes}min`;
-        if (minutes === 0) return `${hours}hr`;
+        if (hours === 0) {
+            return `${minutes}min`;
+        }
+        if (minutes === 0) {
+            return `${hours}hr`;
+        }
         return `${hours}hr ${minutes}min`;
     }
 
@@ -1465,18 +1277,13 @@ export class CourseService {
     private static findNextLecture(sections: any[]) {
         for (const section of sections) {
             for (const lecture of section.lectures) {
-                if (
-                    lecture.status === "not_started" ||
-                    lecture.status === "in_progress"
-                ) {
+                if (lecture.status === "not_started" || lecture.status === "in_progress") {
                     return {
                         lecture_id: lecture.id,
                         lecture_title: lecture.title,
                         section_title: section.title,
-                        resume_position_seconds:
-                            lecture.resume_position_seconds,
-                        estimated_duration_minutes:
-                            lecture.estimated_duration_minutes,
+                        resume_position_seconds: lecture.resume_position_seconds,
+                        estimated_duration_minutes: lecture.estimated_duration_minutes,
                     };
                 }
             }
@@ -1515,71 +1322,44 @@ export class CourseService {
 
             // Calculate recommended schedule based on course duration
             let recommendedDailyMinutes = scheduleData.daily_study_minutes;
-            if (
-                !recommendedDailyMinutes &&
-                scheduleData.target_completion_date &&
-                course
-            ) {
+            if (!recommendedDailyMinutes && scheduleData.target_completion_date && course) {
                 const daysUntilTarget = Math.ceil(
-                    (new Date(scheduleData.target_completion_date).getTime() -
-                        Date.now()) /
-                        (1000 * 60 * 60 * 24)
+                    (new Date(scheduleData.target_completion_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
                 );
-                const totalMinutesRemaining =
-                    (course.estimated_duration_hours || 0) * 60;
+                const totalMinutesRemaining = (course.estimated_duration_hours || 0) * 60;
                 const studyDaysPerWeek = scheduleData.study_days?.length || 5;
-                const totalStudyDays = Math.floor(
-                    (daysUntilTarget / 7) * studyDaysPerWeek
-                );
+                const totalStudyDays = Math.floor((daysUntilTarget / 7) * studyDaysPerWeek);
 
-                recommendedDailyMinutes =
-                    totalStudyDays > 0
-                        ? Math.ceil(totalMinutesRemaining / totalStudyDays)
-                        : 30; // Default 30 minutes
+                recommendedDailyMinutes = totalStudyDays > 0 ? Math.ceil(totalMinutesRemaining / totalStudyDays) : 30; // Default 30 minutes
             }
 
             // Update enrollment with learning schedule
-            const updatedEnrollment = await CourseEnrollment.updateById(
-                enrollment.id,
-                {
-                    learning_schedule: {
-                        target_completion_date:
-                            scheduleData.target_completion_date,
-                        daily_study_minutes: recommendedDailyMinutes || 30,
-                        study_days: scheduleData.study_days || [
-                            "monday",
-                            "tuesday",
-                            "wednesday",
-                            "thursday",
-                            "friday",
-                        ],
-                        reminder_time: scheduleData.reminder_time || "19:00",
-                        timezone: scheduleData.timezone || "UTC",
-                        send_reminders: scheduleData.send_reminders !== false,
-                        created_at: new Date(),
-                        last_reminder_sent: null,
-                    } as any,
-                    updated_at: new Date(),
-                }
-            );
+            const updatedEnrollment = await CourseEnrollment.updateById(enrollment.id, {
+                learning_schedule: {
+                    target_completion_date: scheduleData.target_completion_date,
+                    daily_study_minutes: recommendedDailyMinutes || 30,
+                    study_days: scheduleData.study_days || ["monday", "tuesday", "wednesday", "thursday", "friday"],
+                    reminder_time: scheduleData.reminder_time || "19:00",
+                    timezone: scheduleData.timezone || "UTC",
+                    send_reminders: scheduleData.send_reminders !== false,
+                    created_at: new Date(),
+                    last_reminder_sent: null,
+                } as any,
+                updated_at: new Date(),
+            });
 
             return {
                 success: true,
                 data: {
-                    learning_schedule: (updatedEnrollment as any)
-                        .learning_schedule,
+                    learning_schedule: (updatedEnrollment as any).learning_schedule,
                     recommendations: {
                         daily_study_minutes: recommendedDailyMinutes,
-                        estimated_completion_date:
-                            scheduleData.target_completion_date,
-                        total_study_sessions:
-                            scheduleData.target_completion_date
-                                ? Math.ceil(
-                                      ((course?.estimated_duration_hours || 0) *
-                                          60) /
-                                          (recommendedDailyMinutes || 30)
-                                  )
-                                : null,
+                        estimated_completion_date: scheduleData.target_completion_date,
+                        total_study_sessions: scheduleData.target_completion_date
+                            ? Math.ceil(
+                                  ((course?.estimated_duration_hours || 0) * 60) / (recommendedDailyMinutes || 30)
+                              )
+                            : null,
                     },
                 },
                 message: "Learning schedule set successfully",
@@ -1632,25 +1412,13 @@ export class CourseService {
             const enrollments = enrollmentsResult.rows;
 
             // Calculate statistics
-            const totalWatchTime = progressRecords.reduce(
-                (sum, p) => sum + p.watch_time_seconds,
-                0
-            );
-            const uniqueLectures = new Set(
-                progressRecords.map((p) => p.lecture_id)
-            ).size;
-            const completedLectures = progressRecords.filter(
-                (p) => p.progress_status === "completed"
-            ).length;
+            const totalWatchTime = progressRecords.reduce((sum, p) => sum + p.watch_time_seconds, 0);
+            const uniqueLectures = new Set(progressRecords.map((p) => p.lecture_id)).size;
+            const completedLectures = progressRecords.filter((p) => p.progress_status === "completed").length;
             const coursesInProgress = enrollments.filter(
-                (e) =>
-                    e.enrollment_status === "active" &&
-                    e.progress_percentage > 0 &&
-                    e.progress_percentage < 100
+                (e) => e.enrollment_status === "active" && e.progress_percentage > 0 && e.progress_percentage < 100
             ).length;
-            const coursesCompleted = enrollments.filter(
-                (e) => e.enrollment_status === "completed"
-            ).length;
+            const coursesCompleted = enrollments.filter((e) => e.enrollment_status === "completed").length;
 
             // Calculate streaks and consistency
             const dailyActivity: Array<{
@@ -1658,11 +1426,7 @@ export class CourseService {
                 minutes: number;
                 lectures_watched: number;
                 lectures_completed: number;
-            }> = this.calculateDailyActivity(
-                progressRecords,
-                startDate,
-                endDate
-            );
+            }> = this.calculateDailyActivity(progressRecords, startDate, endDate);
             const currentStreak = this.calculateCurrentStreak(dailyActivity);
             const longestStreak = this.calculateLongestStreak(dailyActivity);
 
@@ -1675,11 +1439,8 @@ export class CourseService {
                         end_date: endDate,
                     },
                     statistics: {
-                        total_watch_time_hours:
-                            Math.round((totalWatchTime / 3600) * 10) / 10,
-                        total_watch_time_minutes: Math.round(
-                            totalWatchTime / 60
-                        ),
+                        total_watch_time_hours: Math.round((totalWatchTime / 3600) * 10) / 10,
+                        total_watch_time_minutes: Math.round(totalWatchTime / 60),
                         unique_lectures_watched: uniqueLectures,
                         lectures_completed: completedLectures,
                         courses_in_progress: coursesInProgress,
@@ -1689,31 +1450,20 @@ export class CourseService {
                                 60 /
                                 Math.max(
                                     1,
-                                    Math.ceil(
-                                        (endDate.getTime() -
-                                            startDate.getTime()) /
-                                            (1000 * 60 * 60 * 24)
-                                    )
+                                    Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
                                 )
                         ),
                     },
                     engagement: {
                         current_streak_days: currentStreak,
                         longest_streak_days: longestStreak,
-                        active_days: dailyActivity.filter((d) => d.minutes > 0)
-                            .length,
+                        active_days: dailyActivity.filter((d) => d.minutes > 0).length,
                         consistency_percentage: Math.round(
-                            (dailyActivity.filter((d) => d.minutes > 0).length /
-                                dailyActivity.length) *
-                                100
+                            (dailyActivity.filter((d) => d.minutes > 0).length / dailyActivity.length) * 100
                         ),
                     },
                     daily_activity: dailyActivity,
-                    achievements: this.calculateAchievements(
-                        enrollments,
-                        progressRecords,
-                        totalWatchTime
-                    ),
+                    achievements: this.calculateAchievements(enrollments, progressRecords, totalWatchTime),
                 },
                 message: "Learning statistics retrieved successfully",
             };
@@ -1754,18 +1504,13 @@ export class CourseService {
                 return updateDate >= dayStart && updateDate <= dayEnd;
             });
 
-            const watchTime = dayProgress.reduce(
-                (sum, p) => sum + p.watch_time_seconds,
-                0
-            );
+            const watchTime = dayProgress.reduce((sum, p) => sum + p.watch_time_seconds, 0);
 
             dailyActivity.push({
                 date: new Date(currentDate),
                 minutes: Math.round(watchTime / 60),
                 lectures_watched: dayProgress.length,
-                lectures_completed: dayProgress.filter(
-                    (p) => p.progress_status === "completed"
-                ).length,
+                lectures_completed: dayProgress.filter((p) => p.progress_status === "completed").length,
             });
 
             currentDate.setDate(currentDate.getDate() + 1);
@@ -1774,9 +1519,7 @@ export class CourseService {
         return dailyActivity;
     }
 
-    private static calculateCurrentStreak(
-        dailyActivity: Array<{ minutes: number }>
-    ) {
+    private static calculateCurrentStreak(dailyActivity: Array<{ minutes: number }>) {
         let streak = 0;
         for (let i = dailyActivity.length - 1; i >= 0; i--) {
             if (dailyActivity[i].minutes > 0) {
@@ -1788,9 +1531,7 @@ export class CourseService {
         return streak;
     }
 
-    private static calculateLongestStreak(
-        dailyActivity: Array<{ minutes: number }>
-    ) {
+    private static calculateLongestStreak(dailyActivity: Array<{ minutes: number }>) {
         let longestStreak = 0;
         let currentStreak = 0;
 
@@ -1823,58 +1564,61 @@ export class CourseService {
 
         // Time-based achievements
         const totalHours = totalWatchTime / 3600;
-        if (totalHours >= 1)
+        if (totalHours >= 1) {
             achievements.push({
                 type: "time",
                 title: "First Hour",
                 description: "Completed 1 hour of learning",
             });
-        if (totalHours >= 10)
+        }
+        if (totalHours >= 10) {
             achievements.push({
                 type: "time",
                 title: "Dedicated Learner",
                 description: "Completed 10 hours of learning",
             });
-        if (totalHours >= 50)
+        }
+        if (totalHours >= 50) {
             achievements.push({
                 type: "time",
                 title: "Learning Machine",
                 description: "Completed 50 hours of learning",
             });
+        }
 
         // Course completion achievements
-        const completedCourses = enrollments.filter(
-            (e) => e.enrollment_status === "completed"
-        ).length;
-        if (completedCourses >= 1)
+        const completedCourses = enrollments.filter((e) => e.enrollment_status === "completed").length;
+        if (completedCourses >= 1) {
             achievements.push({
                 type: "completion",
                 title: "Course Finisher",
                 description: "Completed your first course",
             });
-        if (completedCourses >= 5)
+        }
+        if (completedCourses >= 5) {
             achievements.push({
                 type: "completion",
                 title: "Multi-Course Master",
                 description: "Completed 5 courses",
             });
+        }
 
         // Lecture completion achievements
-        const completedLectures = progressRecords.filter(
-            (p) => p.progress_status === "completed"
-        ).length;
-        if (completedLectures >= 10)
+        const completedLectures = progressRecords.filter((p) => p.progress_status === "completed").length;
+        if (completedLectures >= 10) {
             achievements.push({
                 type: "progress",
                 title: "Lecture Lover",
                 description: "Completed 10 lectures",
             });
-        if (completedLectures >= 50)
+        }
+        if (completedLectures >= 50) {
             achievements.push({
                 type: "progress",
                 title: "Content Consumer",
                 description: "Completed 50 lectures",
             });
+        }
 
         return achievements;
     }
@@ -1897,33 +1641,18 @@ export class CourseService {
             });
             const enrollments = enrollmentsResult.rows;
 
-            const activeEnrollments = enrollments.filter(
-                (e) => e.enrollment_status === "active"
-            ).length;
-            const completedEnrollments = enrollments.filter(
-                (e) => e.enrollment_status === "completed"
-            ).length;
-            const completionRate =
-                enrollments.length > 0
-                    ? (completedEnrollments / enrollments.length) * 100
-                    : 0;
+            const activeEnrollments = enrollments.filter((e) => e.enrollment_status === "active").length;
+            const completedEnrollments = enrollments.filter((e) => e.enrollment_status === "completed").length;
+            const completionRate = enrollments.length > 0 ? (completedEnrollments / enrollments.length) * 100 : 0;
 
             // Get progress analytics
             const progressResult = await CourseProgress.find({ course_id });
             const progressRecords = progressResult.rows;
 
-            const totalWatchTime = progressRecords.reduce(
-                (sum, p) => sum + p.watch_time_seconds,
-                0
-            );
+            const totalWatchTime = progressRecords.reduce((sum, p) => sum + p.watch_time_seconds, 0);
             const averageSessionDuration =
                 progressRecords.length > 0
-                    ? progressRecords.reduce(
-                          (sum, p) => sum + p.watch_time_seconds,
-                          0
-                      ) /
-                      progressRecords.length /
-                      60
+                    ? progressRecords.reduce((sum, p) => sum + p.watch_time_seconds, 0) / progressRecords.length / 60
                     : 0;
 
             // Get lecture performance
@@ -1940,18 +1669,12 @@ export class CourseService {
                     const viewCount = lectureProgress.length;
                     const completionRate =
                         viewCount > 0
-                            ? (lectureProgress.filter(
-                                  (p) => p.progress_status === "completed"
-                              ).length /
-                                  viewCount) *
+                            ? (lectureProgress.filter((p) => p.progress_status === "completed").length / viewCount) *
                               100
                             : 0;
                     const averageWatchTime =
                         viewCount > 0
-                            ? lectureProgress.reduce(
-                                  (sum, p) => sum + p.completion_percentage,
-                                  0
-                              ) / viewCount
+                            ? lectureProgress.reduce((sum, p) => sum + p.completion_percentage, 0) / viewCount
                             : 0;
 
                     return {
@@ -1962,8 +1685,7 @@ export class CourseService {
                         completion_rate: completionRate,
                         average_watch_time_percentage: averageWatchTime,
                         dropout_rate: 100 - completionRate,
-                        engagement_score:
-                            (completionRate + averageWatchTime) / 2,
+                        engagement_score: (completionRate + averageWatchTime) / 2,
                     };
                 })
             );
@@ -1978,52 +1700,37 @@ export class CourseService {
                         completion_rate: completionRate,
                         average_completion_time_hours:
                             enrollments.length > 0
-                                ? enrollments.reduce(
-                                      (sum, e) =>
-                                          sum + (e.completion_time_hours || 0),
-                                      0
-                                  ) / enrollments.length
+                                ? enrollments.reduce((sum, e) => sum + (e.completion_time_hours || 0), 0) /
+                                  enrollments.length
                                 : 0,
                         average_rating: course.rating,
                         total_revenue: enrollments.reduce(
-                            (sum, e) =>
-                                sum +
-                                (e.enrollment_type === "paid"
-                                    ? course.price
-                                    : 0),
+                            (sum, e) => sum + (e.enrollment_type === "paid" ? course.price : 0),
                             0
                         ),
                     },
                     engagement_metrics: {
                         total_watch_time_hours: totalWatchTime / 3600,
-                        average_session_duration_minutes:
-                            averageSessionDuration,
+                        average_session_duration_minutes: averageSessionDuration,
                         video_completion_rate:
                             lecturePerformance
                                 .filter((l) => l.lecture_type === "video")
-                                .reduce(
-                                    (sum, l) => sum + l.completion_rate,
-                                    0
-                                ) /
-                                lecturePerformance.filter(
-                                    (l) => l.lecture_type === "video"
-                                ).length || 0,
+                                .reduce((sum, l) => sum + l.completion_rate, 0) /
+                                lecturePerformance.filter((l) => l.lecture_type === "video").length || 0,
                         quiz_attempt_rate: 0, // TODO: Calculate from quiz data
                         assignment_submission_rate: 0, // TODO: Calculate from assignment data
                         discussion_participation_rate: 0, // TODO: Calculate from discussion data
                     },
                     content_performance: lecturePerformance,
-                    student_progress: enrollments
-                        .slice(0, 50)
-                        .map((enrollment) => ({
-                            user_id: enrollment.user_id,
-                            student_name: "Student", // TODO: Get from user data
-                            enrollment_date: enrollment.enrollment_date,
-                            progress_percentage: enrollment.progress_percentage,
-                            last_accessed: enrollment.last_accessed_at,
-                            completion_status: enrollment.enrollment_status,
-                            grade: enrollment.grade,
-                        })),
+                    student_progress: enrollments.slice(0, 50).map((enrollment) => ({
+                        user_id: enrollment.user_id,
+                        student_name: "Student", // TODO: Get from user data
+                        enrollment_date: enrollment.enrollment_date,
+                        progress_percentage: enrollment.progress_percentage,
+                        last_accessed: enrollment.last_accessed_at,
+                        completion_status: enrollment.enrollment_status,
+                        grade: enrollment.grade,
+                    })),
                     time_series_data: {
                         daily_enrollments: [], // TODO: Implement time series data
                         weekly_engagement: [],

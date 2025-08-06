@@ -27,6 +27,7 @@ export class AuthController {
                 {
                     user_id: user.user.id,
                     user_type: user.user.user_type,
+                    campus_id: user.campus_id,
                     session_id: user.session_id,
                     exp,
                 },
@@ -116,7 +117,7 @@ export class AuthController {
                 throw new Error("Refresh token is required");
             }
 
-            const { user, session_id } = await AuthService.refreshToken({
+            const { user, session_id, campus_id } = await AuthService.refreshToken({
                 refresh_token,
             });
 
@@ -126,6 +127,7 @@ export class AuthController {
                 {
                     user_id: user.id,
                     user_type: user.user_type,
+                    campus_id: campus_id,
                     session_id,
                     exp,
                 },

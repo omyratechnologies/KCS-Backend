@@ -8,12 +8,7 @@ export interface ICourseEnrollmentData {
     user_id: string;
     campus_id: string;
     enrollment_type: "free" | "paid" | "admin_assigned" | "bulk_enrollment";
-    enrollment_status:
-        | "active"
-        | "completed"
-        | "dropped"
-        | "suspended"
-        | "expired";
+    enrollment_status: "active" | "completed" | "dropped" | "suspended" | "expired";
     progress_percentage: number; // 0-100
     enrollment_date: Date;
     completion_date?: Date;
@@ -123,9 +118,6 @@ CourseEnrollmentSchema.index.findByUserAndCourse = {
 CourseEnrollmentSchema.index.findByStatus = { by: "enrollment_status" };
 CourseEnrollmentSchema.index.findByPaymentStatus = { by: "payment_status" };
 
-const CourseEnrollment = ottoman.model<ICourseEnrollmentData>(
-    "course_enrollments",
-    CourseEnrollmentSchema
-);
+const CourseEnrollment = ottoman.model<ICourseEnrollmentData>("course_enrollments", CourseEnrollmentSchema);
 
 export { CourseEnrollment };

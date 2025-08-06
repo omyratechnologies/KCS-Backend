@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+coverage/
+
+# Generated files
+*.d.ts
+*.js.map
+
+# Logs
+*.log
+logs/
+
+# Lock files
+package-lock.json
+yarn.lock
+bun.lockb
+
+# Environment files
+.env*
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation that should maintain specific formatting
+CHANGELOG.md
+LICENSE
+
+# Configuration files that have specific formatting requirements
+Dockerfile*
+docker-compose*.yml
+nginx.conf
+nginx/*.conf
+
+# Jenkins and CI files
+Jenkinsfile
+
+# Specific directories to ignore
+uploads/
+recordings/
+temp/

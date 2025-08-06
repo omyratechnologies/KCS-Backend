@@ -1,0 +1,583 @@
+ce6bf9c80ac71640afba3d3154f19cff
+/* istanbul ignore next */
+function cov_23mkncjst2() {
+  var path = "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/services/syllabus.service.ts";
+  var hash = "aef34bddeba428d0071866f52fcb66cd50033129";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/services/syllabus.service.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 5,
+          column: 0
+        },
+        end: {
+          line: 5,
+          column: 21
+        }
+      },
+      "1": {
+        start: {
+          line: 7,
+          column: 0
+        },
+        end: {
+          line: 9,
+          column: 2
+        }
+      },
+      "2": {
+        start: {
+          line: 8,
+          column: 4
+        },
+        end: {
+          line: 8,
+          column: 172
+        }
+      },
+      "3": {
+        start: {
+          line: 11,
+          column: 0
+        },
+        end: {
+          line: 13,
+          column: 2
+        }
+      },
+      "4": {
+        start: {
+          line: 12,
+          column: 4
+        },
+        end: {
+          line: 12,
+          column: 39
+        }
+      },
+      "5": {
+        start: {
+          line: 15,
+          column: 0
+        },
+        end: {
+          line: 29,
+          column: 2
+        }
+      },
+      "6": {
+        start: {
+          line: 16,
+          column: 21
+        },
+        end: {
+          line: 24,
+          column: 6
+        }
+      },
+      "7": {
+        start: {
+          line: 25,
+          column: 4
+        },
+        end: {
+          line: 27,
+          column: 5
+        }
+      },
+      "8": {
+        start: {
+          line: 26,
+          column: 8
+        },
+        end: {
+          line: 26,
+          column: 18
+        }
+      },
+      "9": {
+        start: {
+          line: 28,
+          column: 4
+        },
+        end: {
+          line: 28,
+          column: 25
+        }
+      },
+      "10": {
+        start: {
+          line: 31,
+          column: 0
+        },
+        end: {
+          line: 45,
+          column: 2
+        }
+      },
+      "11": {
+        start: {
+          line: 32,
+          column: 21
+        },
+        end: {
+          line: 40,
+          column: 6
+        }
+      },
+      "12": {
+        start: {
+          line: 41,
+          column: 4
+        },
+        end: {
+          line: 43,
+          column: 5
+        }
+      },
+      "13": {
+        start: {
+          line: 42,
+          column: 8
+        },
+        end: {
+          line: 42,
+          column: 18
+        }
+      },
+      "14": {
+        start: {
+          line: 44,
+          column: 4
+        },
+        end: {
+          line: 44,
+          column: 25
+        }
+      },
+      "15": {
+        start: {
+          line: 47,
+          column: 0
+        },
+        end: {
+          line: 49,
+          column: 2
+        }
+      },
+      "16": {
+        start: {
+          line: 48,
+          column: 4
+        },
+        end: {
+          line: 48,
+          column: 109
+        }
+      },
+      "17": {
+        start: {
+          line: 51,
+          column: 0
+        },
+        end: {
+          line: 56,
+          column: 2
+        }
+      },
+      "18": {
+        start: {
+          line: 52,
+          column: 4
+        },
+        end: {
+          line: 55,
+          column: 7
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 7,
+            column: 33
+          },
+          end: {
+            line: 7,
+            column: 34
+          }
+        },
+        loc: {
+          start: {
+            line: 7,
+            column: 60
+          },
+          end: {
+            line: 9,
+            column: 1
+          }
+        },
+        line: 7
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 11,
+            column: 34
+          },
+          end: {
+            line: 11,
+            column: 35
+          }
+        },
+        loc: {
+          start: {
+            line: 11,
+            column: 48
+          },
+          end: {
+            line: 13,
+            column: 1
+          }
+        },
+        line: 11
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 15,
+            column: 40
+          },
+          end: {
+            line: 15,
+            column: 41
+          }
+        },
+        loc: {
+          start: {
+            line: 15,
+            column: 61
+          },
+          end: {
+            line: 29,
+            column: 1
+          }
+        },
+        line: 15
+      },
+      "3": {
+        name: "(anonymous_3)",
+        decl: {
+          start: {
+            line: 31,
+            column: 41
+          },
+          end: {
+            line: 31,
+            column: 42
+          }
+        },
+        loc: {
+          start: {
+            line: 31,
+            column: 63
+          },
+          end: {
+            line: 45,
+            column: 1
+          }
+        },
+        line: 31
+      },
+      "4": {
+        name: "(anonymous_4)",
+        decl: {
+          start: {
+            line: 47,
+            column: 37
+          },
+          end: {
+            line: 47,
+            column: 38
+          }
+        },
+        loc: {
+          start: {
+            line: 47,
+            column: 57
+          },
+          end: {
+            line: 49,
+            column: 1
+          }
+        },
+        line: 47
+      },
+      "5": {
+        name: "(anonymous_5)",
+        decl: {
+          start: {
+            line: 51,
+            column: 37
+          },
+          end: {
+            line: 51,
+            column: 38
+          }
+        },
+        loc: {
+          start: {
+            line: 51,
+            column: 51
+          },
+          end: {
+            line: 56,
+            column: 1
+          }
+        },
+        line: 51
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 25,
+            column: 4
+          },
+          end: {
+            line: 27,
+            column: 5
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 25,
+            column: 4
+          },
+          end: {
+            line: 27,
+            column: 5
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 25
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 41,
+            column: 4
+          },
+          end: {
+            line: 43,
+            column: 5
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 41,
+            column: 4
+          },
+          end: {
+            line: 43,
+            column: 5
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 41
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0,
+      "15": 0,
+      "16": 0,
+      "17": 0,
+      "18": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0
+    },
+    b: {
+      "0": [0, 0],
+      "1": [0, 0]
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "aef34bddeba428d0071866f52fcb66cd50033129"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_23mkncjst2 = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_23mkncjst2();
+var _a;
+import { Syllabus } from "@/models/syllabus.model";
+export class SyllabusService {}
+/* istanbul ignore next */
+cov_23mkncjst2().s[0]++;
+_a = SyllabusService;
+// Create
+/* istanbul ignore next */
+cov_23mkncjst2().s[1]++;
+SyllabusService.createSyllabus = async (campus_id, data) => {
+  /* istanbul ignore next */
+  cov_23mkncjst2().f[0]++;
+  cov_23mkncjst2().s[2]++;
+  return await Syllabus.create(Object.assign(Object.assign({
+    campus_id
+  }, data), {
+    is_active: true,
+    is_deleted: false,
+    created_at: new Date(),
+    updated_at: new Date()
+  }));
+};
+// Read by ID
+/* istanbul ignore next */
+cov_23mkncjst2().s[3]++;
+SyllabusService.getSyllabusById = async id => {
+  /* istanbul ignore next */
+  cov_23mkncjst2().f[1]++;
+  cov_23mkncjst2().s[4]++;
+  return await Syllabus.findById(id);
+};
+// Get all by campus id
+/* istanbul ignore next */
+cov_23mkncjst2().s[5]++;
+SyllabusService.getSyllabusByCampusId = async campus_id => {
+  /* istanbul ignore next */
+  cov_23mkncjst2().f[2]++;
+  const syllabus =
+  /* istanbul ignore next */
+  (cov_23mkncjst2().s[6]++, await Syllabus.find({
+    campus_id: campus_id,
+    is_deleted: false,
+    is_active: true
+  }, {
+    sort: {
+      updated_at: "DESC"
+    }
+  }));
+  /* istanbul ignore next */
+  cov_23mkncjst2().s[7]++;
+  if (syllabus.rows.length === 0) {
+    /* istanbul ignore next */
+    cov_23mkncjst2().b[0][0]++;
+    cov_23mkncjst2().s[8]++;
+    return [];
+  } else
+  /* istanbul ignore next */
+  {
+    cov_23mkncjst2().b[0][1]++;
+  }
+  cov_23mkncjst2().s[9]++;
+  return syllabus.rows;
+};
+// Get all by subject id
+/* istanbul ignore next */
+cov_23mkncjst2().s[10]++;
+SyllabusService.getSyllabusBySubjectId = async subject_id => {
+  /* istanbul ignore next */
+  cov_23mkncjst2().f[3]++;
+  const syllabus =
+  /* istanbul ignore next */
+  (cov_23mkncjst2().s[11]++, await Syllabus.find({
+    subject_id: subject_id,
+    is_deleted: false,
+    is_active: true
+  }, {
+    sort: {
+      updated_at: "DESC"
+    }
+  }));
+  /* istanbul ignore next */
+  cov_23mkncjst2().s[12]++;
+  if (syllabus.rows.length === 0) {
+    /* istanbul ignore next */
+    cov_23mkncjst2().b[1][0]++;
+    cov_23mkncjst2().s[13]++;
+    return [];
+  } else
+  /* istanbul ignore next */
+  {
+    cov_23mkncjst2().b[1][1]++;
+  }
+  cov_23mkncjst2().s[14]++;
+  return syllabus.rows;
+};
+// Update by ID
+/* istanbul ignore next */
+cov_23mkncjst2().s[15]++;
+SyllabusService.updateSyllabusById = async (id, data) => {
+  /* istanbul ignore next */
+  cov_23mkncjst2().f[4]++;
+  cov_23mkncjst2().s[16]++;
+  return await Syllabus.updateById(id, Object.assign(Object.assign({}, data), {
+    updated_at: new Date()
+  }));
+};
+// Delete by ID
+/* istanbul ignore next */
+cov_23mkncjst2().s[17]++;
+SyllabusService.deleteSyllabusById = async id => {
+  /* istanbul ignore next */
+  cov_23mkncjst2().f[5]++;
+  cov_23mkncjst2().s[18]++;
+  return await Syllabus.updateById(id, {
+    is_deleted: true,
+    is_active: false
+  });
+};

@@ -1,0 +1,382 @@
+dd56526883074b09c15f1f6d81215f2b
+/* istanbul ignore next */
+function cov_16hcnnme0s() {
+  var path = "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/models/payment_invoice.model.ts";
+  var hash = "bc87151358ce927ae6e727ea25f6bf7899c9847b";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/models/payment_invoice.model.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 29
+        },
+        end: {
+          line: 52,
+          column: 2
+        }
+      },
+      "1": {
+        start: {
+          line: 50,
+          column: 45
+        },
+        end: {
+          line: 50,
+          column: 55
+        }
+      },
+      "2": {
+        start: {
+          line: 51,
+          column: 45
+        },
+        end: {
+          line: 51,
+          column: 55
+        }
+      },
+      "3": {
+        start: {
+          line: 53,
+          column: 0
+        },
+        end: {
+          line: 53,
+          column: 64
+        }
+      },
+      "4": {
+        start: {
+          line: 54,
+          column: 0
+        },
+        end: {
+          line: 54,
+          column: 74
+        }
+      },
+      "5": {
+        start: {
+          line: 55,
+          column: 0
+        },
+        end: {
+          line: 55,
+          column: 58
+        }
+      },
+      "6": {
+        start: {
+          line: 56,
+          column: 0
+        },
+        end: {
+          line: 56,
+          column: 66
+        }
+      },
+      "7": {
+        start: {
+          line: 57,
+          column: 0
+        },
+        end: {
+          line: 57,
+          column: 64
+        }
+      },
+      "8": {
+        start: {
+          line: 58,
+          column: 0
+        },
+        end: {
+          line: 58,
+          column: 74
+        }
+      },
+      "9": {
+        start: {
+          line: 59,
+          column: 0
+        },
+        end: {
+          line: 59,
+          column: 59
+        }
+      },
+      "10": {
+        start: {
+          line: 60,
+          column: 0
+        },
+        end: {
+          line: 60,
+          column: 70
+        }
+      },
+      "11": {
+        start: {
+          line: 61,
+          column: 0
+        },
+        end: {
+          line: 61,
+          column: 62
+        }
+      },
+      "12": {
+        start: {
+          line: 62,
+          column: 23
+        },
+        end: {
+          line: 62,
+          column: 78
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 50,
+            column: 39
+          },
+          end: {
+            line: 50,
+            column: 40
+          }
+        },
+        loc: {
+          start: {
+            line: 50,
+            column: 45
+          },
+          end: {
+            line: 50,
+            column: 55
+          }
+        },
+        line: 50
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 51,
+            column: 39
+          },
+          end: {
+            line: 51,
+            column: 40
+          }
+        },
+        loc: {
+          start: {
+            line: 51,
+            column: 45
+          },
+          end: {
+            line: 51,
+            column: 55
+          }
+        },
+        line: 51
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0
+    },
+    b: {},
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "bc87151358ce927ae6e727ea25f6bf7899c9847b"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_16hcnnme0s = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_16hcnnme0s();
+import { Schema } from "ottoman";
+import { ottoman } from "../libs/db";
+const PaymentInvoiceSchema =
+/* istanbul ignore next */
+(cov_16hcnnme0s().s[0]++, new Schema({
+  campus_id: {
+    type: String,
+    required: true
+  },
+  transaction_id: {
+    type: String,
+    required: true
+  },
+  fee_id: {
+    type: String,
+    required: true
+  },
+  student_id: {
+    type: String,
+    required: true
+  },
+  parent_id: {
+    type: String,
+    required: false
+  },
+  invoice_number: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  invoice_date: {
+    type: Date,
+    required: true
+  },
+  due_date: {
+    type: Date,
+    required: true
+  },
+  amount_details: {
+    type: Object,
+    required: true
+  },
+  payment_details: {
+    type: Object,
+    required: true,
+    default: {
+      amount_paid: 0
+    }
+  },
+  student_details: {
+    type: Object,
+    required: true
+  },
+  school_details: {
+    type: Object,
+    required: true
+  },
+  fee_breakdown: {
+    type: [Object],
+    required: true
+  },
+  status: {
+    type: String,
+    required: true,
+    enum: ["generated", "sent", "paid", "overdue"],
+    default: "generated"
+  },
+  invoice_url: {
+    type: String,
+    required: false
+  },
+  sent_notifications: {
+    type: Object,
+    required: true,
+    default: {
+      email_sent: false,
+      sms_sent: false,
+      whatsapp_sent: false
+    }
+  },
+  meta_data: {
+    type: Object,
+    required: true,
+    default: {}
+  },
+  created_at: {
+    type: Date,
+    default: () => {
+      /* istanbul ignore next */
+      cov_16hcnnme0s().f[0]++;
+      cov_16hcnnme0s().s[1]++;
+      return new Date();
+    }
+  },
+  updated_at: {
+    type: Date,
+    default: () => {
+      /* istanbul ignore next */
+      cov_16hcnnme0s().f[1]++;
+      cov_16hcnnme0s().s[2]++;
+      return new Date();
+    }
+  }
+}));
+/* istanbul ignore next */
+cov_16hcnnme0s().s[3]++;
+PaymentInvoiceSchema.index.findByCampusId = {
+  by: "campus_id"
+};
+/* istanbul ignore next */
+cov_16hcnnme0s().s[4]++;
+PaymentInvoiceSchema.index.findByTransactionId = {
+  by: "transaction_id"
+};
+/* istanbul ignore next */
+cov_16hcnnme0s().s[5]++;
+PaymentInvoiceSchema.index.findByFeeId = {
+  by: "fee_id"
+};
+/* istanbul ignore next */
+cov_16hcnnme0s().s[6]++;
+PaymentInvoiceSchema.index.findByStudentId = {
+  by: "student_id"
+};
+/* istanbul ignore next */
+cov_16hcnnme0s().s[7]++;
+PaymentInvoiceSchema.index.findByParentId = {
+  by: "parent_id"
+};
+/* istanbul ignore next */
+cov_16hcnnme0s().s[8]++;
+PaymentInvoiceSchema.index.findByInvoiceNumber = {
+  by: "invoice_number"
+};
+/* istanbul ignore next */
+cov_16hcnnme0s().s[9]++;
+PaymentInvoiceSchema.index.findByStatus = {
+  by: "status"
+};
+/* istanbul ignore next */
+cov_16hcnnme0s().s[10]++;
+PaymentInvoiceSchema.index.findByInvoiceDate = {
+  by: "invoice_date"
+};
+/* istanbul ignore next */
+cov_16hcnnme0s().s[11]++;
+PaymentInvoiceSchema.index.findByDueDate = {
+  by: "due_date"
+};
+const PaymentInvoice =
+/* istanbul ignore next */
+(cov_16hcnnme0s().s[12]++, ottoman.model("payment_invoices", PaymentInvoiceSchema));
+export { PaymentInvoice };

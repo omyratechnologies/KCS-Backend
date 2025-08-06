@@ -31,9 +31,6 @@ AssignmentSubmissionSchema.index.findByCampusId = { by: "campus_id" };
 AssignmentSubmissionSchema.index.findByAssignmentId = { by: "assignment_id" };
 AssignmentSubmissionSchema.index.findByUserId = { by: "user_id" };
 
-const AssignmentSubmission = ottoman.model<IAssignmentSubmission>(
-    "assignment_submissions",
-    AssignmentSubmissionSchema
-);
+const AssignmentSubmission = ottoman.model<IAssignmentSubmission>("assignment_submissions", AssignmentSubmissionSchema);
 
 export { AssignmentSubmission, type IAssignmentSubmission };

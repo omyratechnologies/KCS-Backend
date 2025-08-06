@@ -9,13 +9,7 @@ interface ICourseAssignmentData {
     user_id: string; // instructor/teacher who created the assignment
     assignment_title: string;
     assignment_description: string;
-    assignment_type:
-        | "quiz"
-        | "homework"
-        | "project"
-        | "exam"
-        | "discussion"
-        | "presentation";
+    assignment_type: "quiz" | "homework" | "project" | "exam" | "discussion" | "presentation";
     due_date: Date;
     max_score?: number;
     is_graded: boolean;
@@ -41,14 +35,7 @@ const CourseAssignmentSchema = new Schema({
     assignment_type: {
         type: String,
         required: true,
-        enum: [
-            "quiz",
-            "homework",
-            "project",
-            "exam",
-            "discussion",
-            "presentation",
-        ],
+        enum: ["quiz", "homework", "project", "exam", "discussion", "presentation"],
     },
     due_date: { type: Date, required: true },
     max_score: { type: Number, required: false },
@@ -80,9 +67,6 @@ CourseAssignmentSchema.index.findByAssignmentType = { by: "assignment_type" };
 CourseAssignmentSchema.index.findByPriority = { by: "priority" };
 CourseAssignmentSchema.index.findActiveAssignments = { by: "is_active" };
 
-const CourseAssignment = ottoman.model<ICourseAssignmentData>(
-    "course_assignments",
-    CourseAssignmentSchema
-);
+const CourseAssignment = ottoman.model<ICourseAssignmentData>("course_assignments", CourseAssignmentSchema);
 
 export { CourseAssignment, type ICourseAssignmentData };

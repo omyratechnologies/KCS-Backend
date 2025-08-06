@@ -1,9 +1,6 @@
 import { Class } from "@/models/class.model";
 import { ExamTerm } from "@/models/exam_term.model";
-import {
-    IStudentPerformanceData,
-    StudentPerformance,
-} from "@/models/student_performance.model";
+import { IStudentPerformanceData, StudentPerformance } from "@/models/student_performance.model";
 import { StudentRecord } from "@/models/student_record.model";
 
 export class StudentPerformanceService {
@@ -38,10 +35,7 @@ export class StudentPerformanceService {
     };
 
     // Get student performance by academic year (all semesters)
-    public static readonly getStudentPerformanceByAcademicYear = async (
-        student_id: string,
-        academic_year: string
-    ) => {
+    public static readonly getStudentPerformanceByAcademicYear = async (student_id: string, academic_year: string) => {
         const performanceRecords: {
             rows: IStudentPerformanceData[];
         } = await StudentPerformance.find(
@@ -60,9 +54,7 @@ export class StudentPerformanceService {
     };
 
     // Get all student performance records
-    public static readonly getAllStudentPerformance = async (
-        student_id: string
-    ) => {
+    public static readonly getAllStudentPerformance = async (student_id: string) => {
         const performanceRecords: {
             rows: IStudentPerformanceData[];
         } = await StudentPerformance.find(
@@ -90,11 +82,7 @@ export class StudentPerformanceService {
         performanceData: Partial<IStudentPerformanceData>
     ) => {
         // Check if performance record already exists
-        const existingRecord = await this.getStudentPerformanceBySemester(
-            student_id,
-            semester,
-            academic_year
-        );
+        const existingRecord = await this.getStudentPerformanceBySemester(student_id, semester, academic_year);
 
         if (existingRecord) {
             // Update existing record
@@ -133,32 +121,16 @@ export class StudentPerformanceService {
         });
 
         // Calculate exam performance
-        const examPerformance = this.calculateExamPerformance(
-            studentRecords.rows,
-            semester,
-            academic_year
-        );
+        const examPerformance = this.calculateExamPerformance(studentRecords.rows, semester, academic_year);
 
         // Get attendance data (you would implement this based on your attendance model)
-        const attendanceData = await this.getAttendanceData(
-            student_id,
-            semester,
-            academic_year
-        );
+        const attendanceData = await this.getAttendanceData(student_id, semester, academic_year);
 
         // Get quiz performance (you would implement this based on your quiz models)
-        const quizPerformance = await this.getQuizPerformance(
-            student_id,
-            semester,
-            academic_year
-        );
+        const quizPerformance = await this.getQuizPerformance(student_id, semester, academic_year);
 
         // Get assignment performance (you would implement this based on your assignment models)
-        const assignmentPerformance = await this.getAssignmentPerformance(
-            student_id,
-            semester,
-            academic_year
-        );
+        const assignmentPerformance = await this.getAssignmentPerformance(student_id, semester, academic_year);
 
         return {
             performance_data: examPerformance,
@@ -169,11 +141,7 @@ export class StudentPerformanceService {
     };
 
     // Helper method to calculate exam performance
-    private static calculateExamPerformance = (
-        studentRecords: any[],
-        semester: string,
-        academic_year: string
-    ) => {
+    private static calculateExamPerformance = (studentRecords: any[], semester: string, academic_year: string) => {
         // Implementation would depend on your exam term structure
         // This is a placeholder that you can customize based on your needs
 
@@ -199,10 +167,7 @@ export class StudentPerformanceService {
             });
         }
 
-        const overallPercentage =
-            totalMarksPossible > 0
-                ? (totalMarksObtained / totalMarksPossible) * 100
-                : 0;
+        const overallPercentage = totalMarksPossible > 0 ? (totalMarksObtained / totalMarksPossible) * 100 : 0;
 
         return {
             exam_term_id: "", // You would set this based on your logic
@@ -219,11 +184,7 @@ export class StudentPerformanceService {
     };
 
     // Helper method to get attendance data
-    private static getAttendanceData = async (
-        student_id: string,
-        semester: string,
-        academic_year: string
-    ) => {
+    private static getAttendanceData = async (student_id: string, semester: string, academic_year: string) => {
         // Implementation would depend on your attendance model
         // This is a placeholder
         return {
@@ -235,11 +196,7 @@ export class StudentPerformanceService {
     };
 
     // Helper method to get quiz performance
-    private static getQuizPerformance = async (
-        student_id: string,
-        semester: string,
-        academic_year: string
-    ) => {
+    private static getQuizPerformance = async (student_id: string, semester: string, academic_year: string) => {
         // Implementation would depend on your quiz models
         // This is a placeholder
         return {
@@ -253,11 +210,7 @@ export class StudentPerformanceService {
     };
 
     // Helper method to get assignment performance
-    private static getAssignmentPerformance = async (
-        student_id: string,
-        semester: string,
-        academic_year: string
-    ) => {
+    private static getAssignmentPerformance = async (student_id: string, semester: string, academic_year: string) => {
         // Implementation would depend on your assignment models
         // This is a placeholder
         return {
@@ -272,31 +225,52 @@ export class StudentPerformanceService {
 
     // Helper method to calculate grade
     private static calculateGrade = (percentage: number): string => {
-        if (percentage >= 90) return "A+";
-        if (percentage >= 80) return "A";
-        if (percentage >= 70) return "B+";
-        if (percentage >= 60) return "B";
-        if (percentage >= 50) return "C";
-        if (percentage >= 40) return "D";
+        if (percentage >= 90) {
+            return "A+";
+        }
+        if (percentage >= 80) {
+            return "A";
+        }
+        if (percentage >= 70) {
+            return "B+";
+        }
+        if (percentage >= 60) {
+            return "B";
+        }
+        if (percentage >= 50) {
+            return "C";
+        }
+        if (percentage >= 40) {
+            return "D";
+        }
         return "F";
     };
 
     // Helper method to calculate GPA
     private static calculateGPA = (percentage: number): number => {
-        if (percentage >= 90) return 4;
-        if (percentage >= 80) return 3.5;
-        if (percentage >= 70) return 3;
-        if (percentage >= 60) return 2.5;
-        if (percentage >= 50) return 2;
-        if (percentage >= 40) return 1.5;
+        if (percentage >= 90) {
+            return 4;
+        }
+        if (percentage >= 80) {
+            return 3.5;
+        }
+        if (percentage >= 70) {
+            return 3;
+        }
+        if (percentage >= 60) {
+            return 2.5;
+        }
+        if (percentage >= 50) {
+            return 2;
+        }
+        if (percentage >= 40) {
+            return 1.5;
+        }
         return 0;
     };
 
     // Get performance summary for multiple semesters
-    public static readonly getPerformanceSummary = async (
-        student_id: string,
-        academic_years?: string[]
-    ) => {
+    public static readonly getPerformanceSummary = async (student_id: string, academic_years?: string[]) => {
         const query: any = { student_id };
 
         if (academic_years && academic_years.length > 0) {
@@ -323,26 +297,21 @@ export class StudentPerformanceService {
 
         if (performanceRecords.rows.length > 0) {
             const totalGPA = performanceRecords.rows.reduce(
-                (sum, record) =>
-                    sum + (record.performance_data.overall_gpa || 0),
+                (sum, record) => sum + (record.performance_data.overall_gpa || 0),
                 0
             );
             const totalPercentage = performanceRecords.rows.reduce(
-                (sum, record) =>
-                    sum + (record.performance_data.overall_percentage || 0),
+                (sum, record) => sum + (record.performance_data.overall_percentage || 0),
                 0
             );
 
             summary.overall_gpa = totalGPA / performanceRecords.rows.length;
-            summary.overall_percentage =
-                totalPercentage / performanceRecords.rows.length;
+            summary.overall_percentage = totalPercentage / performanceRecords.rows.length;
 
             // Find best semester based on percentage
             summary.best_semester = performanceRecords.rows.reduce(
                 (best, current) =>
-                    !best ||
-                    current.performance_data.overall_percentage >
-                        best.performance_data.overall_percentage
+                    !best || current.performance_data.overall_percentage > best.performance_data.overall_percentage
                         ? current
                         : best,
                 performanceRecords.rows[0]

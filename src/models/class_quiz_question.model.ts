@@ -37,9 +37,6 @@ ClassQuizQuestionSchema.index.findByCampusId = { by: "campus_id" };
 ClassQuizQuestionSchema.index.findByClassId = { by: "class_id" };
 ClassQuizQuestionSchema.index.findByQuizId = { by: "quiz_id" };
 
-const ClassQuizQuestion = ottoman.model<IClassQuizQuestion>(
-    "class_quiz_questions",
-    ClassQuizQuestionSchema
-);
+const ClassQuizQuestion = ottoman.model<IClassQuizQuestion>("class_quiz_questions", ClassQuizQuestionSchema);
 
 export { ClassQuizQuestion, type IClassQuizQuestion };

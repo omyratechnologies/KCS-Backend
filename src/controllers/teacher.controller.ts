@@ -10,10 +10,7 @@ export class TeacherController {
             const campus_id = ctx.get("campus_id");
             const teacherData: Partial<ITeacherData> = await ctx.req.json();
 
-            const teacher = await TeacherService.createTeacher(
-                campus_id,
-                teacherData
-            );
+            const teacher = await TeacherService.createTeacher(campus_id, teacherData);
             return ctx.json(teacher);
         } catch (error) {
             if (error instanceof Error) {
@@ -62,10 +59,7 @@ export class TeacherController {
         try {
             const teacherId = ctx.req.param("teacher_id");
             const teacherData: Partial<ITeacherData> = await ctx.req.json();
-            const teacher = await TeacherService.updateTeacher(
-                teacherId,
-                teacherData
-            );
+            const teacher = await TeacherService.updateTeacher(teacherId, teacherData);
             return ctx.json(teacher);
         } catch (error) {
             if (error instanceof Error) {
@@ -97,8 +91,7 @@ export class TeacherController {
     public static readonly getAllClassesByTeacherId = async (ctx: Context) => {
         try {
             const teacherId = ctx.req.param("teacher_id");
-            const classes =
-                await TeacherService.getAllClassesByTeacherId(teacherId);
+            const classes = await TeacherService.getAllClassesByTeacherId(teacherId);
             return ctx.json(classes);
         } catch (error) {
             if (error instanceof Error) {
@@ -114,8 +107,7 @@ export class TeacherController {
     public static readonly getAllSubjectsByTeacherId = async (ctx: Context) => {
         try {
             const teacherId = ctx.req.param("teacher_id");
-            const subjects =
-                await TeacherService.getAllSubjectsByTeacherId(teacherId);
+            const subjects = await TeacherService.getAllSubjectsByTeacherId(teacherId);
             return ctx.json(subjects);
         } catch (error) {
             if (error instanceof Error) {

@@ -109,12 +109,7 @@ describe("Health API Configuration", () => {
         });
 
         it("should verify other endpoints still require authentication", async () => {
-            const protectedEndpoints = [
-                "/api/user",
-                "/api/dashboard",
-                "/api/classes",
-                "/api/courses",
-            ];
+            const protectedEndpoints = ["/api/user", "/api/dashboard", "/api/classes", "/api/courses"];
 
             for (const endpoint of protectedEndpoints) {
                 // These should require authentication

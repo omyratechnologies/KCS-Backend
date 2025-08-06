@@ -51,8 +51,6 @@ export type IAndroidApkDocument = IAndroidApk & {
 };
 
 export type IAndroidApkModel = typeof AndroidApk & {
-    findByPackageName: (
-        packageName: string
-    ) => Promise<IAndroidApkDocument | null>;
+    findByPackageName: (packageName: string) => Promise<IAndroidApkDocument | null>;
     findByVersion: (version: string) => Promise<IAndroidApkDocument | null>;
 };

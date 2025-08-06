@@ -32,9 +32,6 @@ ExaminationSchema.index.findByEndDate = { by: "end_date" };
 ExaminationSchema.index.findBySubjectId = { by: "subject_id" };
 ExaminationSchema.index.findByExamTermId = { by: "exam_term_id" };
 
-const Examination = ottoman.model<IExaminationData>(
-    "examination",
-    ExaminationSchema
-);
+const Examination = ottoman.model<IExaminationData>("examination", ExaminationSchema);
 
 export { Examination, type IExaminationData };

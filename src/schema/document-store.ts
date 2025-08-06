@@ -9,9 +9,7 @@ export const documentStoreSchema = z
         campus_id: z.string().openapi({ example: "campus123" }),
         document_name: z.string().openapi({ example: "Student Certificate" }),
         document_type: z.string().openapi({ example: "certificate" }),
-        document_meta_data: z
-            .record(z.string(), z.any())
-            .openapi({ example: { format: "pdf", size: "1.2MB" } }),
+        document_meta_data: z.record(z.string(), z.any()).openapi({ example: { format: "pdf", size: "1.2MB" } }),
         issued_to: z.string().openapi({ example: "student123" }),
         issuer_id: z.string().openapi({ example: "admin456" }),
         is_active: z.boolean().openapi({ example: true }),
@@ -26,9 +24,7 @@ export const createDocumentStoreRequestBodySchema = z
     .object({
         document_name: z.string().openapi({ example: "Student Certificate" }),
         document_type: z.string().openapi({ example: "certificate" }),
-        document_meta_data: z
-            .record(z.string(), z.any())
-            .openapi({ example: { format: "pdf", size: "1.2MB" } }),
+        document_meta_data: z.record(z.string(), z.any()).openapi({ example: { format: "pdf", size: "1.2MB" } }),
         issued_to: z.string().openapi({ example: "student123" }),
         issuer_id: z.string().openapi({ example: "admin456" }),
     })
@@ -41,14 +37,8 @@ export const createDocumentStoreResponseSchema = documentStoreSchema.openapi({
 // Update Document Store Request
 export const updateDocumentStoreRequestBodySchema = z
     .object({
-        document_name: z
-            .string()
-            .optional()
-            .openapi({ example: "Updated Student Certificate" }),
-        document_type: z
-            .string()
-            .optional()
-            .openapi({ example: "certificate" }),
+        document_name: z.string().optional().openapi({ example: "Updated Student Certificate" }),
+        document_type: z.string().optional().openapi({ example: "certificate" }),
         document_meta_data: z
             .record(z.string(), z.any())
             .optional()

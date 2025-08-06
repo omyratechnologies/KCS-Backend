@@ -67,9 +67,7 @@ export class BackupRecoveryService {
                 status: "initiated",
                 started_at: new Date(),
                 progress: 0,
-                estimated_completion: new Date(
-                    Date.now() + this.estimateBackupTime(backupType)
-                ),
+                estimated_completion: new Date(Date.now() + this.estimateBackupTime(backupType)),
             };
 
             // In a real implementation, this would queue the job for background processing
@@ -111,9 +109,7 @@ export class BackupRecoveryService {
                 checksum: "sha256:abc123def456...",
                 compression: "gzip",
                 encryption: true,
-                retention_expires_at: new Date(
-                    Date.now() + 30 * 24 * 60 * 60 * 1000
-                ), // 30 days
+                retention_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
                 campus_count: 5,
                 user_count: 1250,
                 transaction_count: 15_000,
@@ -162,9 +158,7 @@ export class BackupRecoveryService {
                     checksum: "sha256:abc123def456...",
                     compression: "gzip",
                     encryption: true,
-                    retention_expires_at: new Date(
-                        Date.now() + 30 * 24 * 60 * 60 * 1000
-                    ),
+                    retention_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
                     campus_count: 5,
                     user_count: 1250,
                     transaction_count: 15_000,
@@ -179,9 +173,7 @@ export class BackupRecoveryService {
                     checksum: "sha256:def456ghi789...",
                     compression: "gzip",
                     encryption: true,
-                    retention_expires_at: new Date(
-                        Date.now() + 29 * 24 * 60 * 60 * 1000
-                    ),
+                    retention_expires_at: new Date(Date.now() + 29 * 24 * 60 * 60 * 1000),
                     campus_count: 5,
                     user_count: 1245,
                     transaction_count: 14_800,
@@ -202,12 +194,7 @@ export class BackupRecoveryService {
      */
     static async initiateRestore(restoreOptions: RestoreOptions): Promise<{
         restore_job_id: string;
-        status:
-            | "initiated"
-            | "validating"
-            | "in_progress"
-            | "completed"
-            | "failed";
+        status: "initiated" | "validating" | "in_progress" | "completed" | "failed";
         estimated_completion: Date;
         warnings: string[];
     }> {
@@ -218,18 +205,14 @@ export class BackupRecoveryService {
 
             // Validate backup exists
             const availableBackups = await this.listAvailableBackups();
-            const backup = availableBackups.find(
-                (b) => b.backup_id === restoreOptions.backup_id
-            );
+            const backup = availableBackups.find((b) => b.backup_id === restoreOptions.backup_id);
 
             if (!backup) {
                 throw new Error(`Backup ${restoreOptions.backup_id} not found`);
             }
 
             if (backup.status !== "completed") {
-                throw new Error(
-                    `Backup ${restoreOptions.backup_id} is not in completed status`
-                );
+                throw new Error(`Backup ${restoreOptions.backup_id} is not in completed status`);
             }
 
             // Add warnings for risky operations
@@ -241,15 +224,10 @@ export class BackupRecoveryService {
             }
 
             if (!restoreOptions.create_restore_point) {
-                warnings.push(
-                    "No restore point will be created - this operation cannot be undone"
-                );
+                warnings.push("No restore point will be created - this operation cannot be undone");
             }
 
-            const estimatedCompletion = new Date(
-                Date.now() +
-                    this.estimateRestoreTime(restoreOptions.restore_type)
-            );
+            const estimatedCompletion = new Date(Date.now() + this.estimateRestoreTime(restoreOptions.restore_type));
 
             // In a real implementation, this would queue the restore job for background processing
             return {
@@ -276,9 +254,7 @@ export class BackupRecoveryService {
     }> {
         try {
             const availableBackups = await this.listAvailableBackups();
-            const backup = availableBackups.find(
-                (b) => b.backup_id === backup_id
-            );
+            const backup = availableBackups.find((b) => b.backup_id === backup_id);
 
             if (!backup) {
                 throw new Error(`Backup ${backup_id} not found`);
@@ -295,13 +271,8 @@ export class BackupRecoveryService {
             };
 
             // Simulate some potential issues
-            if (
-                backup.created_at <
-                new Date(Date.now() - 25 * 24 * 60 * 60 * 1000)
-            ) {
-                validation.issues.push(
-                    "Backup is older than 25 days - consider using a more recent backup"
-                );
+            if (backup.created_at < new Date(Date.now() - 25 * 24 * 60 * 60 * 1000)) {
+                validation.issues.push("Backup is older than 25 days - consider using a more recent backup");
             }
 
             return validation;
@@ -344,14 +315,9 @@ export class BackupRecoveryService {
                 rpo: "1 hour", // Maximum 1 hour of data loss acceptable
             },
             backup_strategy: {
-                frequency:
-                    "Daily full backups at 2 AM, incremental every 6 hours",
-                retention:
-                    "30 days for daily backups, 90 days for weekly backups",
-                storage_locations: [
-                    "Primary encrypted cloud storage",
-                    "Secondary geo-replicated storage",
-                ],
+                frequency: "Daily full backups at 2 AM, incremental every 6 hours",
+                retention: "30 days for daily backups, 90 days for weekly backups",
+                storage_locations: ["Primary encrypted cloud storage", "Secondary geo-replicated storage"],
             },
             escalation_procedures: [
                 {
@@ -400,8 +366,7 @@ export class BackupRecoveryService {
                 },
                 {
                     step: 5,
-                    description:
-                        "Validate data integrity and system functionality",
+                    description: "Validate data integrity and system functionality",
                     estimated_time: "1 hour",
                     dependencies: ["Step 4"],
                 },
@@ -420,9 +385,7 @@ export class BackupRecoveryService {
     /**
      * Estimate backup time based on type
      */
-    private static estimateBackupTime(
-        backupType: "full" | "incremental" | "payment_only"
-    ): number {
+    private static estimateBackupTime(backupType: "full" | "incremental" | "payment_only"): number {
         switch (backupType) {
             case "full": {
                 return 45 * 60 * 1000;
@@ -442,9 +405,7 @@ export class BackupRecoveryService {
     /**
      * Estimate restore time based on type
      */
-    private static estimateRestoreTime(
-        restoreType: "full" | "payment_only" | "specific_campus"
-    ): number {
+    private static estimateRestoreTime(restoreType: "full" | "payment_only" | "specific_campus"): number {
         switch (restoreType) {
             case "full": {
                 return 60 * 60 * 1000;
@@ -480,12 +441,10 @@ export class BackupRecoveryService {
 
             job.status = "completed";
             job.completed_at = new Date();
-            job.file_size =
-                Math.floor(Math.random() * 1_000_000_000) + 500_000_000; // Random size between 500MB and 1.5GB
+            job.file_size = Math.floor(Math.random() * 1_000_000_000) + 500_000_000; // Random size between 500MB and 1.5GB
         } catch (error) {
             job.status = "failed";
-            job.error_message =
-                error instanceof Error ? error.message : "Unknown error";
+            job.error_message = error instanceof Error ? error.message : "Unknown error";
         }
     }
 }

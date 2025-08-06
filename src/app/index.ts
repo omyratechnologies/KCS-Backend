@@ -16,13 +16,7 @@ const app = new Hono();
 app.use(
     cors({
         origin: "*", // Allow all origins for development
-        allowHeaders: [
-            "Content-Type",
-            "Authorization",
-            "X-Requested-With",
-            "Accept",
-            "Origin",
-        ],
+        allowHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"],
         allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
         credentials: false, // Note: credentials must be false when origin is "*"
         maxAge: 3600,
@@ -97,10 +91,6 @@ app.get(
 
 // showRoutes(app); // Disabled - only needed during development
 
-log(
-    `Server started at http://localhost:${config.PORT}`,
-    LogTypes.LOGS,
-    "Entrypoint"
-);
+log(`Server started at http://localhost:${config.PORT}`, LogTypes.LOGS, "Entrypoint");
 
 export { app };

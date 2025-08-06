@@ -1,6 +1,7 @@
 # 🚀 Complete CI/CD Setup Guide for KCS Backend
 
-This guide provides step-by-step instructions to set up a complete CI/CD pipeline with Jenkins and Microsoft Teams integration for the KCS Backend project.
+This guide provides step-by-step instructions to set up a complete CI/CD pipeline with Jenkins and
+Microsoft Teams integration for the KCS Backend project.
 
 ## 📋 Overview
 
@@ -189,16 +190,16 @@ TEAMS_WEBHOOK_URL=your_teams_webhook_url
 
 1. **🔍 Checkout & Validate**: Code checkout and environment validation
 2. **📦 Install Dependencies**: Bun dependency installation with frozen lockfile
-3. **🧪 Test & Quality Checks**: 
-   - Unit tests with coverage reporting
-   - ESLint code quality checks (CI mode with expanded warning tolerance)
-   - Prettier format validation
-   - TypeScript compilation verification
-4. **🛡️ Security Scan**: 
-   - Dependency vulnerability scanning with npm audit
-   - Outdated package detection
-   - Security anti-pattern detection
-   - Handles dependency conflicts gracefully with fallback options
+3. **🧪 Test & Quality Checks**:
+    - Unit tests with coverage reporting
+    - ESLint code quality checks (CI mode with expanded warning tolerance)
+    - Prettier format validation
+    - TypeScript compilation verification
+4. **🛡️ Security Scan**:
+    - Dependency vulnerability scanning with npm audit
+    - Outdated package detection
+    - Security anti-pattern detection
+    - Handles dependency conflicts gracefully with fallback options
 5. **🏗️ Build Application**: Application build and compilation
 6. **🐳 Docker Build & Push**: Container image creation with BuildKit optimization
 7. **🚀 Deploy to Production**: Automated production deployment with zero downtime
@@ -215,12 +216,15 @@ You'll receive notifications for:
 
 ## 🔄 Alternative: GitHub Actions
 
-If you prefer GitHub Actions over Jenkins, the repository includes a complete GitHub Actions workflow:
+If you prefer GitHub Actions over Jenkins, the repository includes a complete GitHub Actions
+workflow:
 
 ### Recent Improvements (Latest Update)
 
 **Enhanced Jenkins Pipeline Security & Reliability:**
-- ✅ **Fixed dependency conflicts**: Resolved npm/Bun dependency resolution issues using `--legacy-peer-deps`
+
+- ✅ **Fixed dependency conflicts**: Resolved npm/Bun dependency resolution issues using
+  `--legacy-peer-deps`
 - ✅ **Improved security scanning**: Enhanced vulnerability detection with graceful fallback options
 - ✅ **Better error handling**: Pipeline now handles dependency conflicts without failing
 - ✅ **Comprehensive quality gates**: Expanded ESLint checks with configurable warning thresholds
@@ -229,6 +233,7 @@ If you prefer GitHub Actions over Jenkins, the repository includes a complete Gi
 - ✅ **Test coverage**: Complete unit test suite with coverage reporting
 
 **Security Scan Improvements:**
+
 - Creates temporary package-lock.json for npm audit compatibility
 - Falls back to Bun-native security checks if npm audit fails
 - Scans for sensitive patterns and security anti-patterns
@@ -409,7 +414,9 @@ curl https://devapi.letscatchup-kcs.com/api/health
 
 ---
 
-🎊 **Congratulations!** You now have a complete CI/CD pipeline with Jenkins and Teams integration for your KCS Backend project. Every push to the main branch will automatically build, test, and deploy your application with full notifications to your Teams channel.
+🎊 **Congratulations!** You now have a complete CI/CD pipeline with Jenkins and Teams integration
+for your KCS Backend project. Every push to the main branch will automatically build, test, and
+deploy your application with full notifications to your Teams channel.
 
 ## 📚 Next Steps
 

@@ -119,9 +119,6 @@ PaymentInvoiceSchema.index.findByStatus = { by: "status" };
 PaymentInvoiceSchema.index.findByInvoiceDate = { by: "invoice_date" };
 PaymentInvoiceSchema.index.findByDueDate = { by: "due_date" };
 
-const PaymentInvoice = ottoman.model<IPaymentInvoice>(
-    "payment_invoices",
-    PaymentInvoiceSchema
-);
+const PaymentInvoice = ottoman.model<IPaymentInvoice>("payment_invoices", PaymentInvoiceSchema);
 
 export { type IPaymentInvoice, PaymentInvoice };

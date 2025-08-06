@@ -228,8 +228,7 @@ app.post(
     describeRoute({
         operationId: "createLibraryIssue",
         summary: "Issue a book",
-        description:
-            "Creates a new book issue record when a user borrows a book",
+        description: "Creates a new book issue record when a user borrows a book",
         tags: ["Library"],
         responses: {
             200: {
@@ -341,8 +340,7 @@ app.patch(
     describeRoute({
         operationId: "updateLibraryIssue",
         summary: "Update a book issue",
-        description:
-            "Updates a specific book issue record by ID (e.g., when returning a book)",
+        description: "Updates a specific book issue record by ID (e.g., when returning a book)",
         tags: ["Library"],
         parameters: [
             {

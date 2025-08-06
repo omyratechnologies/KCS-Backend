@@ -11,8 +11,7 @@ app.get(
     describeRoute({
         operationId: "getBasicHealthCheck",
         summary: "Basic health check",
-        description:
-            "Basic application health check - no authentication required",
+        description: "Basic application health check - no authentication required",
         tags: ["Health"],
         responses: {
             200: {
@@ -110,8 +109,7 @@ app.get(
     describeRoute({
         operationId: "getWebRTCHealthCheck",
         summary: "WebRTC service health check",
-        description:
-            "Check WebRTC service status and MediaSoup workers - no authentication required",
+        description: "Check WebRTC service status and MediaSoup workers - no authentication required",
         tags: ["Health", "WebRTC"],
         responses: {
             200: {

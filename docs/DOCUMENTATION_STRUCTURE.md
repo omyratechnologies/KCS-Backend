@@ -1,6 +1,7 @@
 # KCS Backend Documentation Structure
 
-This document outlines the complete documentation structure for the KCS Backend project, providing new developers with a clear path to understanding the system.
+This document outlines the complete documentation structure for the KCS Backend project, providing
+new developers with a clear path to understanding the system.
 
 ## 📋 Documentation Index
 
@@ -208,6 +209,10 @@ bun run build
 
 ---
 
-**Note**: This documentation structure is designed to be progressive - start with the basics and gradually move to advanced topics as you become more comfortable with the codebase. Each document builds upon the previous ones, so following the recommended reading order will give you the best learning experience.
+**Note**: This documentation structure is designed to be progressive - start with the basics and
+gradually move to advanced topics as you become more comfortable with the codebase. Each document
+builds upon the previous ones, so following the recommended reading order will give you the best
+learning experience.
 
-**Keep This Page Bookmarked**: Use this as your navigation hub throughout your onboarding and development journey!
+**Keep This Page Bookmarked**: Use this as your navigation hub throughout your onboarding and
+development journey!

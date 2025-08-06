@@ -1,0 +1,33 @@
+536f743b9291383fe584651baae50ea3
+/* istanbul ignore next */
+function cov_ws4oinwek() {
+  var path = "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/routes/student_quiz.route.ts";
+  var hash = "f5265d4316fb918c3b3a421fb1b0a9e3649837d7";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/routes/student_quiz.route.ts",
+    statementMap: {},
+    fnMap: {},
+    branchMap: {},
+    s: {},
+    f: {},
+    b: {},
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "f5265d4316fb918c3b3a421fb1b0a9e3649837d7"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_ws4oinwek = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_ws4oinwek();
+export {};

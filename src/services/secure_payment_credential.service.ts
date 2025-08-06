@@ -1,7 +1,4 @@
-import {
-    ISchoolBankDetails,
-    SchoolBankDetails,
-} from "@/models/school_bank_details.model";
+import { ISchoolBankDetails, SchoolBankDetails } from "@/models/school_bank_details.model";
 
 import {
     CredentialEncryptionService,
@@ -19,14 +16,12 @@ export class SecurePaymentCredentialService {
     ): Promise<ISchoolBankDetails> {
         try {
             // Encrypt credentials
-            const encryptedCredentials =
-                CredentialEncryptionService.encryptCredentials(credentials);
+            const encryptedCredentials = CredentialEncryptionService.encryptCredentials(credentials);
 
             // Prepare gateway status (non-sensitive metadata)
             const gatewayStatus: any = {};
             for (const gateway of Object.keys(credentials)) {
-                const creds =
-                    credentials[gateway as keyof PaymentGatewayCredentials];
+                const creds = credentials[gateway as keyof PaymentGatewayCredentials];
                 if (creds) {
                     gatewayStatus[gateway] = {
                         enabled: creds.enabled || false,
@@ -45,25 +40,17 @@ export class SecurePaymentCredentialService {
 
             let bankDetails: ISchoolBankDetails;
 
-            if (
-                existingBankDetails.rows &&
-                existingBankDetails.rows.length > 0
-            ) {
+            if (existingBankDetails.rows && existingBankDetails.rows.length > 0) {
                 // Update existing record
-                bankDetails = await SchoolBankDetails.updateById(
-                    existingBankDetails.rows[0].id,
-                    {
-                        encrypted_payment_credentials: encryptedCredentials,
-                        gateway_status: gatewayStatus,
-                        credential_updated_at: new Date(),
-                        encryption_version: "v1",
-                        updated_at: new Date(),
-                    }
-                );
+                bankDetails = await SchoolBankDetails.updateById(existingBankDetails.rows[0].id, {
+                    encrypted_payment_credentials: encryptedCredentials,
+                    gateway_status: gatewayStatus,
+                    credential_updated_at: new Date(),
+                    encryption_version: "v1",
+                    updated_at: new Date(),
+                });
             } else {
-                throw new Error(
-                    "Bank details not found. Please setup bank details first."
-                );
+                throw new Error("Bank details not found. Please setup bank details first.");
             }
 
             return bankDetails;
@@ -75,9 +62,7 @@ export class SecurePaymentCredentialService {
     /**
      * Retrieve and decrypt payment gateway credentials
      */
-    static async getSecureCredentials(
-        campus_id: string
-    ): Promise<PaymentGatewayCredentials | null> {
+    static async getSecureCredentials(campus_id: string): Promise<PaymentGatewayCredentials | null> {
         try {
             const bankDetails = await SchoolBankDetails.find({
                 campus_id,
@@ -92,9 +77,7 @@ export class SecurePaymentCredentialService {
 
             // Check if encrypted credentials exist
             if (details.encrypted_payment_credentials) {
-                return CredentialEncryptionService.decryptCredentials(
-                    details.encrypted_payment_credentials
-                );
+                return CredentialEncryptionService.decryptCredentials(details.encrypted_payment_credentials);
             }
 
             // Fallback to legacy unencrypted credentials (for backward compatibility)
@@ -136,8 +119,7 @@ export class SecurePaymentCredentialService {
     ): Promise<ISchoolBankDetails> {
         try {
             // Get existing credentials
-            const existingCredentials =
-                (await this.getSecureCredentials(campus_id)) || {};
+            const existingCredentials = (await this.getSecureCredentials(campus_id)) || {};
 
             // Update specific gateway
             const updatedCredentials: PaymentGatewayCredentials = {
@@ -146,14 +128,9 @@ export class SecurePaymentCredentialService {
             };
 
             // Store updated credentials
-            return await this.storeSecureCredentials(
-                campus_id,
-                updatedCredentials
-            );
+            return await this.storeSecureCredentials(campus_id, updatedCredentials);
         } catch (error) {
-            throw new Error(
-                `Failed to update ${gateway} credentials: ${error}`
-            );
+            throw new Error(`Failed to update ${gateway} credentials: ${error}`);
         }
     }
 
@@ -165,20 +142,14 @@ export class SecurePaymentCredentialService {
         gateway: "razorpay" | "payu" | "cashfree"
     ): Promise<ISchoolBankDetails> {
         try {
-            const existingCredentials =
-                (await this.getSecureCredentials(campus_id)) || {};
+            const existingCredentials = (await this.getSecureCredentials(campus_id)) || {};
 
             // Remove specific gateway
             delete existingCredentials[gateway];
 
-            return await this.storeSecureCredentials(
-                campus_id,
-                existingCredentials
-            );
+            return await this.storeSecureCredentials(campus_id, existingCredentials);
         } catch (error) {
-            throw new Error(
-                `Failed to remove ${gateway} credentials: ${error}`
-            );
+            throw new Error(`Failed to remove ${gateway} credentials: ${error}`);
         }
     }
 
@@ -286,8 +257,7 @@ export class SecurePaymentCredentialService {
             }
 
             // Migrate to encrypted storage
-            const legacyCredentials =
-                details.payment_gateway_credentials as PaymentGatewayCredentials;
+            const legacyCredentials = details.payment_gateway_credentials as PaymentGatewayCredentials;
             await this.storeSecureCredentials(campus_id, legacyCredentials);
 
             // Clear legacy credentials
@@ -300,8 +270,7 @@ export class SecurePaymentCredentialService {
 
             return {
                 success: true,
-                message:
-                    "Credentials successfully migrated to encrypted storage",
+                message: "Credentials successfully migrated to encrypted storage",
                 migrated_gateways: migratedGateways,
             };
         } catch (error) {
@@ -340,11 +309,10 @@ export class SecurePaymentCredentialService {
             }
 
             // Rotate encryption
-            const newEncryptedCredentials =
-                CredentialEncryptionService.rotateEncryption(
-                    details.encrypted_payment_credentials,
-                    oldEncryptionKey
-                );
+            const newEncryptedCredentials = CredentialEncryptionService.rotateEncryption(
+                details.encrypted_payment_credentials,
+                oldEncryptionKey
+            );
 
             // Update with new encryption
             await SchoolBankDetails.updateById(details.id, {
@@ -378,8 +346,7 @@ export class SecurePaymentCredentialService {
             const recommendations: string[] = [];
 
             // Validate encryption key
-            const keyValidation =
-                CredentialEncryptionService.validateEncryptionKey();
+            const keyValidation = CredentialEncryptionService.validateEncryptionKey();
             if (!keyValidation.valid) {
                 issues.push(`Encryption key issue: ${keyValidation.message}`);
             }
@@ -398,34 +365,23 @@ export class SecurePaymentCredentialService {
             const details = bankDetails.rows[0];
 
             // Check if using encrypted storage
-            if (
-                !details.encrypted_payment_credentials &&
-                details.payment_gateway_credentials
-            ) {
+            if (!details.encrypted_payment_credentials && details.payment_gateway_credentials) {
                 issues.push("Using legacy unencrypted credential storage");
                 recommendations.push("Migrate to encrypted credential storage");
             }
 
             // Check encryption version
-            if (
-                details.encryption_version &&
-                details.encryption_version !== "v2"
-            ) {
-                recommendations.push(
-                    "Consider updating to latest encryption version"
-                );
+            if (details.encryption_version && details.encryption_version !== "v2") {
+                recommendations.push("Consider updating to latest encryption version");
             }
 
             // Check last updated
             if (details.credential_updated_at) {
                 const daysSinceUpdate = Math.floor(
-                    (Date.now() - details.credential_updated_at.getTime()) /
-                        (1000 * 60 * 60 * 24)
+                    (Date.now() - details.credential_updated_at.getTime()) / (1000 * 60 * 60 * 24)
                 );
                 if (daysSinceUpdate > 90) {
-                    recommendations.push(
-                        "Consider rotating payment gateway credentials (>90 days old)"
-                    );
+                    recommendations.push("Consider rotating payment gateway credentials (>90 days old)");
                 }
             }
 
@@ -446,18 +402,13 @@ export class SecurePaymentCredentialService {
     /**
      * Check if gateway is properly configured
      */
-    private static isGatewayConfigured(
-        gateway: string,
-        credentials: any
-    ): boolean {
+    private static isGatewayConfigured(gateway: string, credentials: any): boolean {
         switch (gateway) {
             case "razorpay": {
                 return !!(credentials.key_id && credentials.key_secret);
             }
             case "payu": {
-                return !!(
-                    credentials.merchant_key && credentials.merchant_salt
-                );
+                return !!(credentials.merchant_key && credentials.merchant_salt);
             }
             case "cashfree": {
                 return !!(credentials.app_id && credentials.secret_key);

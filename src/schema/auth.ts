@@ -13,12 +13,8 @@ export const loginRequestBodySchema = z
 
 export const loginResponseSchema = z
     .object({
-        access_token: z
-            .string()
-            .openapi({ example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" }),
-        refresh_token: z
-            .string()
-            .openapi({ example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" }),
+        access_token: z.string().openapi({ example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" }),
+        refresh_token: z.string().openapi({ example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" }),
         expires_in: z.number().openapi({ example: 3600 }),
         type: z.string().openapi({ example: "Bearer" }),
     })
@@ -53,19 +49,13 @@ export const resetPasswordResponseSchema = z
 // Sub Route /refresh
 export const refreshTokenRequestBodySchema = z
     .object({
-        refresh_token: z
-            .string()
-            .openapi({ example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" }),
+        refresh_token: z.string().openapi({ example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" }),
     })
     .openapi({ ref: "refreshTokenRequestBody" });
 export const refreshTokenResponseSchema = z
     .object({
-        access_token: z
-            .string()
-            .openapi({ example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" }),
-        refresh_token: z
-            .string()
-            .openapi({ example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" }),
+        access_token: z.string().openapi({ example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" }),
+        refresh_token: z.string().openapi({ example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" }),
         expires_in: z.number().openapi({ example: 3600 }),
         type: z.string().openapi({ example: "Bearer" }),
     })

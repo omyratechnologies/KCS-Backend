@@ -34,14 +34,7 @@
 
             /* Header */
             .header {
-                background: linear-gradient(
-                    135deg,
-                    #0a0a0a 0%,
-                    #1a1a2e 25%,
-                    #16213e 50%,
-                    #0f3460 75%,
-                    #0e4b99 100%
-                );
+                background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #0e4b99 100%);
                 padding: 40px 30px;
                 text-align: center;
                 position: relative;
@@ -56,16 +49,8 @@
                 right: 0;
                 bottom: 0;
                 background-image:
-                    radial-gradient(
-                        circle at 20% 20%,
-                        rgba(255, 255, 255, 0.1) 1px,
-                        transparent 1px
-                    ),
-                    radial-gradient(
-                        circle at 80% 80%,
-                        rgba(85, 218, 215, 0.2) 1px,
-                        transparent 1px
-                    );
+                    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                    radial-gradient(circle at 80% 80%, rgba(85, 218, 215, 0.2) 1px, transparent 1px);
                 background-size:
                     50px 50px,
                     80px 80px;
@@ -353,23 +338,17 @@
             <div class="content">
                 <h1 class="welcome-title">🎉 Welcome to KCS!</h1>
                 <p class="welcome-subtitle">
-                    Dear {{body.first_name}} {{body.last_name}}, your account
-                    has been successfully created. You're now part of our
-                    educational community and ready to start your learning
-                    journey.
+                    Dear {{body.first_name}} {{body.last_name}}, your account has been successfully created. You're now
+                    part of our educational community and ready to start your learning journey.
                 </p>
 
                 <!-- User Details Box -->
                 <div class="user-details-box">
-                    <div class="user-details-title">
-                        👤 Your Account Information
-                    </div>
+                    <div class="user-details-title">👤 Your Account Information</div>
 
                     <div class="detail-item">
                         <div class="detail-label">Full Name</div>
-                        <div class="detail-value">
-                            {{body.first_name}} {{body.last_name}}
-                        </div>
+                        <div class="detail-value">{{body.first_name}} {{body.last_name}}</div>
                     </div>
 
                     <div class="detail-item">
@@ -397,19 +376,15 @@
 
                 <!-- Action Button -->
                 <div style="text-align: center">
-                    <a href="{{body.login_url}}" class="action-button">
-                        🚀 Access Your Account
-                    </a>
+                    <a href="{{body.login_url}}" class="action-button"> 🚀 Access Your Account </a>
                 </div>
 
                 <!-- Getting Started Info -->
                 <div class="info-box">
                     <div class="info-title">🎯 Getting Started</div>
                     <div class="info-text">
-                        Complete your profile, explore the dashboard, connect
-                        with your campus community, and begin your educational
-                        journey with all the tools and resources available to
-                        you.
+                        Complete your profile, explore the dashboard, connect with your campus community, and begin your
+                        educational journey with all the tools and resources available to you.
                     </div>
                 </div>
 
@@ -418,30 +393,22 @@
                     <div class="feature-item">
                         <div class="feature-icon">📚</div>
                         <div class="feature-title">Interactive Learning</div>
-                        <div class="feature-text">
-                            Access courses, assignments, and educational content
-                        </div>
+                        <div class="feature-text">Access courses, assignments, and educational content</div>
                     </div>
                     <div class="feature-item">
                         <div class="feature-icon">💬</div>
                         <div class="feature-title">Communication</div>
-                        <div class="feature-text">
-                            Connect with teachers and classmates
-                        </div>
+                        <div class="feature-text">Connect with teachers and classmates</div>
                     </div>
                     <div class="feature-item">
                         <div class="feature-icon">📊</div>
                         <div class="feature-title">Progress Tracking</div>
-                        <div class="feature-text">
-                            Monitor your academic achievements
-                        </div>
+                        <div class="feature-text">Monitor your academic achievements</div>
                     </div>
                     <div class="feature-item">
                         <div class="feature-icon">🔔</div>
                         <div class="feature-title">Notifications</div>
-                        <div class="feature-text">
-                            Stay updated with announcements
-                        </div>
+                        <div class="feature-text">Stay updated with announcements</div>
                     </div>
                 </div>
             </div>
@@ -450,26 +417,19 @@
             <div class="footer">
                 <div class="footer-title">Need Help Getting Started?</div>
                 <div class="footer-text">
-                    Our support team is here to help you every step of the way.
-                    Don't hesitate to reach out if you have any questions or
-                    need assistance.
+                    Our support team is here to help you every step of the way. Don't hesitate to reach out if you have
+                    any questions or need assistance.
                 </div>
 
                 <div class="footer-links">
-                    <a href="mailto:{{body.support_email}}" class="footer-link"
-                        >Contact Support</a
-                    >
-                    <a href="{{body.login_url}}" class="footer-link"
-                        >Login Portal</a
-                    >
+                    <a href="mailto:{{body.support_email}}" class="footer-link">Contact Support</a>
+                    <a href="{{body.login_url}}" class="footer-link">Login Portal</a>
                     <a href="#" class="footer-link">Help Center</a>
                 </div>
 
                 <div class="footer-copy">
-                    © 2025 KANDHUGULE CONSULTANCY SERVICES PRIVATE LIMITED. All
-                    Rights Reserved.<br />
-                    This email was sent to {{body.email}}. If you received this
-                    email by mistake, please ignore it.
+                    © 2025 KANDHUGULE CONSULTANCY SERVICES PRIVATE LIMITED. All Rights Reserved.<br />
+                    This email was sent to {{body.email}}. If you received this email by mistake, please ignore it.
                 </div>
             </div>
         </div>

@@ -1,0 +1,286 @@
+2775949c5c891d882ba0746f87617033
+/* istanbul ignore next */
+function cov_8d7m0tzq0() {
+  var path = "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/models/library.model.ts";
+  var hash = "6a3fe7d85a33b1458d9987430f7f7e5a2654cde8";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/models/library.model.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 22
+        },
+        end: {
+          line: 22,
+          column: 2
+        }
+      },
+      "1": {
+        start: {
+          line: 20,
+          column: 45
+        },
+        end: {
+          line: 20,
+          column: 55
+        }
+      },
+      "2": {
+        start: {
+          line: 21,
+          column: 45
+        },
+        end: {
+          line: 21,
+          column: 55
+        }
+      },
+      "3": {
+        start: {
+          line: 23,
+          column: 0
+        },
+        end: {
+          line: 23,
+          column: 57
+        }
+      },
+      "4": {
+        start: {
+          line: 24,
+          column: 0
+        },
+        end: {
+          line: 24,
+          column: 57
+        }
+      },
+      "5": {
+        start: {
+          line: 25,
+          column: 0
+        },
+        end: {
+          line: 25,
+          column: 61
+        }
+      },
+      "6": {
+        start: {
+          line: 26,
+          column: 0
+        },
+        end: {
+          line: 26,
+          column: 57
+        }
+      },
+      "7": {
+        start: {
+          line: 27,
+          column: 16
+        },
+        end: {
+          line: 27,
+          column: 55
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 20,
+            column: 39
+          },
+          end: {
+            line: 20,
+            column: 40
+          }
+        },
+        loc: {
+          start: {
+            line: 20,
+            column: 45
+          },
+          end: {
+            line: 20,
+            column: 55
+          }
+        },
+        line: 20
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 21,
+            column: 39
+          },
+          end: {
+            line: 21,
+            column: 40
+          }
+        },
+        loc: {
+          start: {
+            line: 21,
+            column: 45
+          },
+          end: {
+            line: 21,
+            column: 55
+          }
+        },
+        line: 21
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0
+    },
+    b: {},
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "6a3fe7d85a33b1458d9987430f7f7e5a2654cde8"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_8d7m0tzq0 = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_8d7m0tzq0();
+import { Schema } from "ottoman";
+import { ottoman } from "../libs/db";
+const LibrarySchema =
+/* istanbul ignore next */
+(cov_8d7m0tzq0().s[0]++, new Schema({
+  campus_id: {
+    type: String,
+    required: true
+  },
+  book_name: {
+    type: String,
+    required: true
+  },
+  author_name: {
+    type: String,
+    required: true
+  },
+  book_code: {
+    type: String,
+    required: true
+  },
+  book_cover: {
+    type: String,
+    required: true
+  },
+  book_description: {
+    type: String,
+    required: true
+  },
+  book_quantity: {
+    type: Number,
+    required: true
+  },
+  book_available: {
+    type: Number,
+    required: true
+  },
+  book_issued: {
+    type: Number,
+    required: true
+  },
+  book_fine: {
+    type: Number,
+    required: true
+  },
+  book_status: {
+    type: String,
+    required: true
+  },
+  book_location: {
+    type: String,
+    required: true
+  },
+  book_tags: {
+    type: [String],
+    required: true
+  },
+  book_meta_data: {
+    type: Object,
+    required: true
+  },
+  is_active: {
+    type: Boolean,
+    required: true
+  },
+  is_deleted: {
+    type: Boolean,
+    required: true
+  },
+  created_at: {
+    type: Date,
+    default: () => {
+      /* istanbul ignore next */
+      cov_8d7m0tzq0().f[0]++;
+      cov_8d7m0tzq0().s[1]++;
+      return new Date();
+    }
+  },
+  updated_at: {
+    type: Date,
+    default: () => {
+      /* istanbul ignore next */
+      cov_8d7m0tzq0().f[1]++;
+      cov_8d7m0tzq0().s[2]++;
+      return new Date();
+    }
+  }
+}));
+/* istanbul ignore next */
+cov_8d7m0tzq0().s[3]++;
+LibrarySchema.index.findByCampusId = {
+  by: "campus_id"
+};
+/* istanbul ignore next */
+cov_8d7m0tzq0().s[4]++;
+LibrarySchema.index.findByBookName = {
+  by: "book_name"
+};
+/* istanbul ignore next */
+cov_8d7m0tzq0().s[5]++;
+LibrarySchema.index.findByAuthorName = {
+  by: "author_name"
+};
+/* istanbul ignore next */
+cov_8d7m0tzq0().s[6]++;
+LibrarySchema.index.findByBookCode = {
+  by: "book_code"
+};
+const Library =
+/* istanbul ignore next */
+(cov_8d7m0tzq0().s[7]++, ottoman.model("library", LibrarySchema));
+export { Library };

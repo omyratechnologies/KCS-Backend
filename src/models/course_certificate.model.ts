@@ -9,11 +9,7 @@ export interface ICourseCertificateData {
     enrollment_id: string;
     campus_id: string;
     certificate_number: string; // Unique certificate number
-    certificate_type:
-        | "completion"
-        | "achievement"
-        | "participation"
-        | "excellence";
+    certificate_type: "completion" | "achievement" | "participation" | "excellence";
     status: "pending" | "generated" | "issued" | "revoked";
     issue_date: Date;
     expiry_date?: Date;
@@ -133,9 +129,6 @@ CourseCertificateSchema.index.findByVerificationCode = {
     by: "verification_details.verification_code",
 };
 
-const CourseCertificate = ottoman.model<ICourseCertificateData>(
-    "course_certificates",
-    CourseCertificateSchema
-);
+const CourseCertificate = ottoman.model<ICourseCertificateData>("course_certificates", CourseCertificateSchema);
 
 export { CourseCertificate };

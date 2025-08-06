@@ -1,0 +1,101 @@
+142b4f8651809f236f588e966047dc67
+/* istanbul ignore next */
+function cov_ty1j4sd63() {
+  var path = "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/store/role.store.ts";
+  var hash = "ab3782633cd64b873c4c917165f42ae298f7bbe4";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/store/role.store.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 2,
+          column: 25
+        },
+        end: {
+          line: 227,
+          column: 1
+        }
+      },
+      "1": {
+        start: {
+          line: 229,
+          column: 25
+        },
+        end: {
+          line: 357,
+          column: 2
+        }
+      }
+    },
+    fnMap: {},
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0
+    },
+    f: {},
+    b: {},
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "ab3782633cd64b873c4c917165f42ae298f7bbe4"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_ty1j4sd63 = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_ty1j4sd63();
+import { z } from "zod";
+export const actionMap =
+/* istanbul ignore next */
+(cov_ty1j4sd63().s[0]++, {
+  Student: ["get_user", "get_class", "get_all_courses", "get_course", "get_subject", "get_exam", "student_get_assignments", "student_get_assignment", "student_submit_assignment", "student_assignment_dashboard", "student_assignment_performance", "get_assignment",
+  // Course content permissions
+  "view_course_content", "view_course_materials", "track_watch_history", "view_course_progress", "download_materials", "attempt_course_quiz", "submit_course_assignment", "view_enrolled_courses", "enroll_in_course", "view_course_certificate", "download_course_certificate", "bookmark_lectures", "take_course_notes", "rate_course", "view_course_announcements", "track_learning_streaks", "view_personal_analytics", "resume_video_playback", "adjust_video_settings", "view_course_discussions"],
+  Parent: ["get_user", "parent_get_student_assignments", "parent_get_student_performance",
+  // Course tracking permissions
+  "track_student_course_progress", "view_student_enrolled_courses", "view_student_course_analytics", "view_student_certificates", "monitor_study_time", "view_course_completion_reports", "access_parent_dashboard"],
+  Teacher: ["get_user", "get_users", "create_assignment", "update_assignment", "delete_assignment", "get_assignment", "teacher_get_assignments", "teacher_get_submissions", "teacher_grade_submission", "teacher_assignment_dashboard",
+  // Course content permissions (Instructor level)
+  "create_course_content", "update_course_content", "delete_course_content", "create_course_sections", "update_course_sections", "delete_course_sections", "create_course_lectures", "update_course_lectures", "delete_course_lectures", "upload_course_materials", "manage_course_materials", "view_course_analytics", "create_lesson_steps", "bulk_upload_materials", "manage_assigned_courses", "view_student_progress", "grade_course_assignments", "manage_course_quizzes", "conduct_live_sessions", "send_course_announcements", "moderate_course_discussions", "export_student_reports", "manage_course_certificates", "view_enrollment_analytics", "customize_course_settings", "reorder_course_content"],
+  Staff: ["get_user", "get_users", "create_users", "update_users", "delete_users", "get_assignment"],
+  Principal: ["get_user", "get_users", "create_users", "update_users", "delete_users", "create_assignment", "update_assignment", "delete_assignment", "get_assignment", "admin_assignment_overview", "admin_assignment_analytics", "admin_bulk_assignment_operations"],
+  Admin: ["get_user", "get_users", "create_users", "update_users", "delete_users", "create_campus", "get_all_campus", "get_campus", "update_campus", "delete_campus", "create_class", "get_all_class", "get_class", "update_class", "delete_class", "create_subject", "get_all_subject", "get_subject", "update_subject", "delete_subject", "create_assignment", "update_assignment", "delete_assignment", "get_assignment", "admin_assignment_overview", "admin_assignment_analytics", "admin_bulk_assignment_operations",
+  // Course content permissions (full access)
+  "create_course", "update_course", "delete_course", "publish_course", "archive_course", "create_course_content", "update_course_content", "delete_course_content", "create_course_sections", "update_course_sections", "delete_course_sections", "create_course_lectures", "update_course_lectures", "delete_course_lectures", "upload_course_materials", "manage_course_materials", "delete_course_materials", "view_course_analytics", "manage_course_analytics", "create_lesson_steps", "bulk_upload_materials", "manage_course_permissions", "manage_course_enrollments", "bulk_enroll_students", "export_course_data", "generate_course_reports", "manage_course_categories", "set_course_pricing", "manage_discount_rules", "view_revenue_analytics", "manage_certificates", "customize_certificate_templates", "configure_course_settings", "manage_instructor_assignments", "moderate_all_discussions", "manage_course_backups", "import_course_content", "clone_courses", "manage_course_prerequisites"],
+  "Super Admin": ["create_campus", "get_all_campus", "get_campus", "update_campus", "delete_campus", "create_users",
+  // Course content permissions (Super Admin level - all permissions)
+  "create_course", "update_course", "delete_course", "publish_course", "archive_course", "create_course_content", "update_course_content", "delete_course_content", "create_course_sections", "update_course_sections", "delete_course_sections", "create_course_lectures", "update_course_lectures", "delete_course_lectures", "upload_course_materials", "manage_course_materials", "delete_course_materials", "view_course_analytics", "manage_course_analytics", "create_lesson_steps", "bulk_upload_materials", "manage_course_permissions", "manage_course_enrollments", "bulk_enroll_students", "export_course_data", "generate_course_reports", "manage_course_categories", "set_course_pricing", "manage_discount_rules", "view_revenue_analytics", "manage_certificates", "customize_certificate_templates", "configure_course_settings", "manage_instructor_assignments", "moderate_all_discussions", "manage_course_backups", "import_course_content", "clone_courses", "manage_course_prerequisites", "system_course_administration", "cross_campus_course_management", "platform_analytics", "course_compliance_management"],
+  Public: []
+});
+// use zod to create a union type for action names
+const actionNameSchema =
+/* istanbul ignore next */
+(cov_ty1j4sd63().s[1]++, z.union([z.literal("get_user"), z.literal("get_users"), z.literal("create_users"), z.literal("update_users"), z.literal("delete_users"), z.literal("create_campus"), z.literal("get_all_campus"), z.literal("get_campus"), z.literal("update_campus"), z.literal("delete_campus"), z.literal("create_class"), z.literal("get_all_class"), z.literal("get_class"), z.literal("update_class"), z.literal("delete_class"), z.literal("create_subject"), z.literal("get_all_subject"), z.literal("get_subject"), z.literal("update_subject"), z.literal("delete_subject"),
+// Assignment actions
+z.literal("create_assignment"), z.literal("update_assignment"), z.literal("delete_assignment"), z.literal("get_assignment"),
+// Admin assignment actions
+z.literal("admin_assignment_overview"), z.literal("admin_assignment_analytics"), z.literal("admin_bulk_assignment_operations"),
+// Teacher assignment actions
+z.literal("teacher_get_assignments"), z.literal("teacher_get_submissions"), z.literal("teacher_grade_submission"), z.literal("teacher_assignment_dashboard"),
+// Student assignment actions
+z.literal("student_get_assignments"), z.literal("student_get_assignment"), z.literal("student_submit_assignment"), z.literal("student_assignment_dashboard"), z.literal("student_assignment_performance"),
+// Parent assignment actions
+z.literal("parent_get_student_assignments"), z.literal("parent_get_student_performance"),
+// Course content management actions
+z.literal("view_course_content"), z.literal("view_course_materials"), z.literal("track_watch_history"), z.literal("view_course_progress"), z.literal("download_materials"), z.literal("attempt_course_quiz"), z.literal("submit_course_assignment"), z.literal("view_enrolled_courses"), z.literal("enroll_in_course"), z.literal("view_course_certificate"), z.literal("download_course_certificate"), z.literal("bookmark_lectures"), z.literal("take_course_notes"), z.literal("rate_course"), z.literal("view_course_announcements"), z.literal("track_learning_streaks"), z.literal("view_personal_analytics"), z.literal("resume_video_playback"), z.literal("adjust_video_settings"), z.literal("view_course_discussions"),
+// Parent course tracking
+z.literal("track_student_course_progress"), z.literal("view_student_enrolled_courses"), z.literal("view_student_course_analytics"), z.literal("view_student_certificates"), z.literal("monitor_study_time"), z.literal("view_course_completion_reports"), z.literal("access_parent_dashboard"),
+// Course creation and management
+z.literal("create_course"), z.literal("update_course"), z.literal("delete_course"), z.literal("publish_course"), z.literal("archive_course"), z.literal("create_course_content"), z.literal("update_course_content"), z.literal("delete_course_content"), z.literal("create_course_sections"), z.literal("update_course_sections"), z.literal("delete_course_sections"), z.literal("create_course_lectures"), z.literal("update_course_lectures"), z.literal("delete_course_lectures"), z.literal("upload_course_materials"), z.literal("manage_course_materials"), z.literal("delete_course_materials"), z.literal("view_course_analytics"), z.literal("manage_course_analytics"), z.literal("create_lesson_steps"), z.literal("bulk_upload_materials"), z.literal("manage_course_permissions"), z.literal("manage_course_enrollments"), z.literal("bulk_enroll_students"), z.literal("export_course_data"), z.literal("generate_course_reports"), z.literal("manage_course_categories"), z.literal("set_course_pricing"), z.literal("manage_discount_rules"), z.literal("view_revenue_analytics"), z.literal("manage_certificates"), z.literal("customize_certificate_templates"), z.literal("configure_course_settings"), z.literal("manage_instructor_assignments"), z.literal("moderate_all_discussions"), z.literal("manage_course_backups"), z.literal("import_course_content"), z.literal("clone_courses"), z.literal("manage_course_prerequisites"), z.literal("system_course_administration"), z.literal("cross_campus_course_management"), z.literal("platform_analytics"), z.literal("course_compliance_management"),
+// Teacher specific course permissions
+z.literal("manage_assigned_courses"), z.literal("view_student_progress"), z.literal("grade_course_assignments"), z.literal("manage_course_quizzes"), z.literal("conduct_live_sessions"), z.literal("send_course_announcements"), z.literal("moderate_course_discussions"), z.literal("export_student_reports"), z.literal("customize_course_settings"), z.literal("reorder_course_content")]));

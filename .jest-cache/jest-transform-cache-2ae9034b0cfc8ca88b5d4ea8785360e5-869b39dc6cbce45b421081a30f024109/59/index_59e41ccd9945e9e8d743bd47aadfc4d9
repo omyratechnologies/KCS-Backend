@@ -1,0 +1,343 @@
+8135a7010e1fdc674364b1f28c61b3c6
+/* istanbul ignore next */
+function cov_2qhntjku4e() {
+  var path = "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/app/index.ts";
+  var hash = "8467bad3a6b0943d5476ff3f51ab68443f4df13a";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/app/index.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 12,
+          column: 12
+        },
+        end: {
+          line: 12,
+          column: 22
+        }
+      },
+      "1": {
+        start: {
+          line: 13,
+          column: 0
+        },
+        end: {
+          line: 19,
+          column: 4
+        }
+      },
+      "2": {
+        start: {
+          line: 20,
+          column: 0
+        },
+        end: {
+          line: 20,
+          column: 18
+        }
+      },
+      "3": {
+        start: {
+          line: 21,
+          column: 0
+        },
+        end: {
+          line: 21,
+          column: 22
+        }
+      },
+      "4": {
+        start: {
+          line: 22,
+          column: 0
+        },
+        end: {
+          line: 22,
+          column: 21
+        }
+      },
+      "5": {
+        start: {
+          line: 23,
+          column: 0
+        },
+        end: {
+          line: 23,
+          column: 57
+        }
+      },
+      "6": {
+        start: {
+          line: 23,
+          column: 28
+        },
+        end: {
+          line: 23,
+          column: 55
+        }
+      },
+      "7": {
+        start: {
+          line: 24,
+          column: 0
+        },
+        end: {
+          line: 26,
+          column: 3
+        }
+      },
+      "8": {
+        start: {
+          line: 25,
+          column: 4
+        },
+        end: {
+          line: 25,
+          column: 66
+        }
+      },
+      "9": {
+        start: {
+          line: 27,
+          column: 0
+        },
+        end: {
+          line: 27,
+          column: 26
+        }
+      },
+      "10": {
+        start: {
+          line: 28,
+          column: 0
+        },
+        end: {
+          line: 60,
+          column: 4
+        }
+      },
+      "11": {
+        start: {
+          line: 61,
+          column: 0
+        },
+        end: {
+          line: 65,
+          column: 4
+        }
+      },
+      "12": {
+        start: {
+          line: 66,
+          column: 0
+        },
+        end: {
+          line: 69,
+          column: 4
+        }
+      },
+      "13": {
+        start: {
+          line: 71,
+          column: 0
+        },
+        end: {
+          line: 71,
+          column: 86
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 23,
+            column: 19
+          },
+          end: {
+            line: 23,
+            column: 20
+          }
+        },
+        loc: {
+          start: {
+            line: 23,
+            column: 28
+          },
+          end: {
+            line: 23,
+            column: 55
+          }
+        },
+        line: 23
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 24,
+            column: 24
+          },
+          end: {
+            line: 24,
+            column: 25
+          }
+        },
+        loc: {
+          start: {
+            line: 24,
+            column: 39
+          },
+          end: {
+            line: 26,
+            column: 1
+          }
+        },
+        line: 24
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0
+    },
+    b: {},
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "8467bad3a6b0943d5476ff3f51ab68443f4df13a"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_2qhntjku4e = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_2qhntjku4e();
+import { swaggerUI } from "@hono/swagger-ui";
+import { Scalar } from "@scalar/hono-api-reference";
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { logger } from "hono/logger";
+import { poweredBy } from "hono/powered-by";
+import { prettyJSON } from "hono/pretty-json";
+import { openAPISpecs } from "hono-openapi";
+import log, { LogTypes } from "@/libs/logger";
+import routes from "@/routes";
+import { config } from "@/utils/env";
+const app =
+/* istanbul ignore next */
+(cov_2qhntjku4e().s[0]++, new Hono());
+/* istanbul ignore next */
+cov_2qhntjku4e().s[1]++;
+app.use(cors({
+  origin: "*",
+  // Allow all origins for development
+  allowHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"],
+  allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+  credentials: false,
+  // Note: credentials must be false when origin is "*"
+  maxAge: 3600
+}));
+/* istanbul ignore next */
+cov_2qhntjku4e().s[2]++;
+app.use(logger());
+/* istanbul ignore next */
+cov_2qhntjku4e().s[3]++;
+app.use(prettyJSON());
+/* istanbul ignore next */
+cov_2qhntjku4e().s[4]++;
+app.use(poweredBy());
+/* istanbul ignore next */
+cov_2qhntjku4e().s[5]++;
+app.get("/health", ctx => {
+  /* istanbul ignore next */
+  cov_2qhntjku4e().f[0]++;
+  cov_2qhntjku4e().s[6]++;
+  return ctx.json({
+    status: "ok!"
+  });
+});
+/* istanbul ignore next */
+cov_2qhntjku4e().s[7]++;
+app.get("/favicon.ico", async ctx => {
+  /* istanbul ignore next */
+  cov_2qhntjku4e().f[1]++;
+  cov_2qhntjku4e().s[8]++;
+  return ctx.redirect("https://hono.dev/images/logo-small.png");
+});
+/* istanbul ignore next */
+cov_2qhntjku4e().s[9]++;
+app.route("/api", routes);
+/* istanbul ignore next */
+cov_2qhntjku4e().s[10]++;
+app.get("/openapi", openAPISpecs(app, {
+  documentation: {
+    info: {
+      title: "KCS LMS API",
+      version: "0.0.0",
+      description: "API Documentation"
+    },
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT"
+        }
+      }
+    },
+    security: [{
+      bearerAuth: []
+    }],
+    servers: [{
+      url: "https://localhost:4500",
+      description: "Local server"
+    }, {
+      url: "https://dev-api.letscatchup-kcs.com",
+      description: "Production server"
+    }]
+  }
+}));
+/* istanbul ignore next */
+cov_2qhntjku4e().s[11]++;
+app.get("/docs", Scalar({
+  theme: "elysiajs",
+  url: "/openapi",
+  title: "KCS LMS API via Scalar"
+}));
+/* istanbul ignore next */
+cov_2qhntjku4e().s[12]++;
+app.get("/swagger", swaggerUI({
+  url: "/openapi",
+  title: "KCS LMS API via Swagger UI"
+}));
+// showRoutes(app); // Disabled - only needed during development
+/* istanbul ignore next */
+cov_2qhntjku4e().s[13]++;
+log(`Server started at http://localhost:${config.PORT}`, LogTypes.LOGS, "Entrypoint");
+export { app };

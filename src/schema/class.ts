@@ -9,17 +9,11 @@ export const classSchema = z
         campus_id: z.string().openapi({ example: "campus123" }),
         name: z.string().openapi({ example: "Class 10A" }),
         class_teacher_id: z.string().openapi({ example: "teacher123" }),
-        student_ids: z
-            .array(z.string())
-            .openapi({ example: ["student1", "student2"] }),
+        student_ids: z.array(z.string()).openapi({ example: ["student1", "student2"] }),
         student_count: z.number().openapi({ example: 30 }),
         academic_year: z.string().openapi({ example: "2023-2024" }),
-        teacher_ids: z
-            .array(z.string())
-            .openapi({ example: ["teacher1", "teacher2"] }),
-        meta_data: z
-            .record(z.string(), z.any())
-            .openapi({ example: { section: "A", floor: 2 } }),
+        teacher_ids: z.array(z.string()).openapi({ example: ["teacher1", "teacher2"] }),
+        meta_data: z.record(z.string(), z.any()).openapi({ example: { section: "A", floor: 2 } }),
         is_active: z.boolean().openapi({ example: true }),
         is_deleted: z.boolean().openapi({ example: false }),
         created_at: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
@@ -33,18 +27,11 @@ export const createClassRequestBodySchema = z
         classData: z
             .object({
                 name: z.string().openapi({ example: "Class 10A" }),
-                class_teacher_id: z
-                    .string()
-                    .optional()
-                    .openapi({ example: "teacher123" }),
-                student_ids: z
-                    .array(z.string())
-                    .openapi({ example: ["student1", "student2"] }),
+                class_teacher_id: z.string().optional().openapi({ example: "teacher123" }),
+                student_ids: z.array(z.string()).openapi({ example: ["student1", "student2"] }),
                 student_count: z.number().openapi({ example: 30 }),
                 academic_year: z.string().openapi({ example: "2023-2024" }),
-                teacher_ids: z
-                    .array(z.string())
-                    .openapi({ example: ["teacher1", "teacher2"] }),
+                teacher_ids: z.array(z.string()).openapi({ example: ["teacher1", "teacher2"] }),
             })
             .openapi({
                 example: {
@@ -69,19 +56,13 @@ export const updateClassRequestBodySchema = z
         classData: z
             .object({
                 name: z.string().optional().openapi({ example: "Class 10B" }),
-                class_teacher_id: z
-                    .string()
-                    .optional()
-                    .openapi({ example: "teacher456" }),
+                class_teacher_id: z.string().optional().openapi({ example: "teacher456" }),
                 student_ids: z
                     .array(z.string())
                     .optional()
                     .openapi({ example: ["student3", "student4"] }),
                 student_count: z.number().optional().openapi({ example: 25 }),
-                academic_year: z
-                    .string()
-                    .optional()
-                    .openapi({ example: "2023-2024" }),
+                academic_year: z.string().optional().openapi({ example: "2023-2024" }),
                 teacher_ids: z
                     .array(z.string())
                     .optional()
@@ -146,14 +127,8 @@ export const updateClassSubjectRequestBodySchema = z
     .object({
         classSubjectData: z
             .object({
-                subject_id: z
-                    .string()
-                    .optional()
-                    .openapi({ example: "subject456" }),
-                teacher_id: z
-                    .string()
-                    .optional()
-                    .openapi({ example: "teacher456" }),
+                subject_id: z.string().optional().openapi({ example: "subject456" }),
+                teacher_id: z.string().optional().openapi({ example: "teacher456" }),
             })
             .openapi({
                 example: {
@@ -204,18 +179,9 @@ export const createAssignmentResponseSchema = assignmentSchema.openapi({
 // Update Assignment Request
 export const updateAssignmentRequestBodySchema = z
     .object({
-        title: z
-            .string()
-            .optional()
-            .openapi({ example: "Updated Math Assignment" }),
-        description: z
-            .string()
-            .optional()
-            .openapi({ example: "Updated description" }),
-        due_date: z
-            .string()
-            .optional()
-            .openapi({ example: "2023-01-20T00:00:00Z" }),
+        title: z.string().optional().openapi({ example: "Updated Math Assignment" }),
+        description: z.string().optional().openapi({ example: "Updated description" }),
+        due_date: z.string().optional().openapi({ example: "2023-01-20T00:00:00Z" }),
         subject_id: z.string().optional().openapi({ example: "subject456" }),
     })
     .openapi({ ref: "UpdateAssignmentRequest" });
@@ -231,9 +197,7 @@ export const assignmentSubmissionSchema = z
         campus_id: z.string().openapi({ example: "campus123" }),
         assignment_id: z.string().openapi({ example: "assignment123" }),
         user_id: z.string().openapi({ example: "student123" }),
-        submission_date: z
-            .string()
-            .openapi({ example: "2023-01-10T00:00:00Z" }),
+        submission_date: z.string().openapi({ example: "2023-01-10T00:00:00Z" }),
         grade: z.number().optional().openapi({ example: 95 }),
         feedback: z.string().optional().openapi({ example: "Great work!" }),
         meta_data: z
@@ -251,10 +215,7 @@ export const assignmentSubmissionSchema = z
 export const createAssignmentSubmissionRequestBodySchema = z
     .object({
         user_id: z.string().openapi({ example: "student123" }),
-        submission_date: z
-            .string()
-            .optional()
-            .openapi({ example: "2023-01-10T00:00:00Z" }),
+        submission_date: z.string().optional().openapi({ example: "2023-01-10T00:00:00Z" }),
         meta_data: z
             .object({})
             .optional()
@@ -270,25 +231,18 @@ export const createAssignmentSubmissionRequestBodySchema = z
     })
     .openapi({ ref: "CreateAssignmentSubmissionRequest" });
 
-export const createAssignmentSubmissionResponseSchema =
-    assignmentSubmissionSchema.openapi({
-        ref: "CreateAssignmentSubmissionResponse",
-    });
+export const createAssignmentSubmissionResponseSchema = assignmentSubmissionSchema.openapi({
+    ref: "CreateAssignmentSubmissionResponse",
+});
 
 // Get Classes Response
-export const getClassesResponseSchema = z
-    .array(classSchema)
-    .openapi({ ref: "GetClassesResponse" });
+export const getClassesResponseSchema = z.array(classSchema).openapi({ ref: "GetClassesResponse" });
 
 // Get Class Subjects Response
-export const getClassSubjectsResponseSchema = z
-    .array(classSubjectSchema)
-    .openapi({ ref: "GetClassSubjectsResponse" });
+export const getClassSubjectsResponseSchema = z.array(classSubjectSchema).openapi({ ref: "GetClassSubjectsResponse" });
 
 // Get Assignments Response
-export const getAssignmentsResponseSchema = z
-    .array(assignmentSchema)
-    .openapi({ ref: "GetAssignmentsResponse" });
+export const getAssignmentsResponseSchema = z.array(assignmentSchema).openapi({ ref: "GetAssignmentsResponse" });
 
 // Get Assignment Submissions Response
 export const getAssignmentSubmissionsResponseSchema = z
@@ -321,9 +275,7 @@ export const getStudentsByClassIdResponseSchema = z
 // Delete Response
 export const deleteResponseSchema = z
     .object({
-        message: z
-            .string()
-            .openapi({ example: "Resource deleted successfully" }),
+        message: z.string().openapi({ example: "Resource deleted successfully" }),
     })
     .openapi({ ref: "DeleteResponse" });
 
@@ -357,9 +309,7 @@ export const assignTeachersRequestBodySchema = z
 export const assignmentResponseSchema = z
     .object({
         success: z.boolean().openapi({ example: true }),
-        message: z
-            .string()
-            .openapi({ example: "Students assigned to class successfully" }),
+        message: z.string().openapi({ example: "Students assigned to class successfully" }),
         data: classSchema,
     })
     .openapi({ ref: "AssignmentResponse" });

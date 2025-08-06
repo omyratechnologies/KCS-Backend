@@ -27,8 +27,7 @@ describe("AuthController", () => {
                 };
 
                 // Simulate validation
-                return email === "test@example.com" &&
-                    password === "validpassword"
+                return email === "test@example.com" && password === "validpassword"
                     ? {
                           success: true,
                           message: "Authentication successful",
@@ -41,10 +40,7 @@ describe("AuthController", () => {
                       };
             };
 
-            const result = await authenticate(
-                "test@example.com",
-                "validpassword"
-            );
+            const result = await authenticate("test@example.com", "validpassword");
 
             expect(result.success).toBe(true);
             expect(result.message).toBe("Authentication successful");
@@ -62,10 +58,7 @@ describe("AuthController", () => {
                 };
             };
 
-            const result = await authenticate(
-                "wrong@example.com",
-                "wrongpassword"
-            );
+            const result = await authenticate("wrong@example.com", "wrongpassword");
 
             expect(result.success).toBe(false);
             expect(result.message).toBe("Invalid credentials");
@@ -151,11 +144,7 @@ describe("AuthController", () => {
             };
 
             // Test valid token
-            const validToken =
-                "mock.jwt." +
-                btoa(
-                    JSON.stringify({ userId: "123", email: "test@example.com" })
-                );
+            const validToken = "mock.jwt." + btoa(JSON.stringify({ userId: "123", email: "test@example.com" }));
             const result1 = validateToken(validToken);
             expect(result1.valid).toBe(true);
 
@@ -188,10 +177,7 @@ describe("AuthController", () => {
 
         it("should verify hashed passwords", async () => {
             // Simulate password verification
-            const verifyPassword = (
-                plainPassword: string,
-                hashedPassword: string
-            ) => {
+            const verifyPassword = (plainPassword: string, hashedPassword: string) => {
                 // Mock bcrypt comparison
                 const mockHash = `$2b$10$mock.hash.${plainPassword.length}.`;
                 return hashedPassword.startsWith(mockHash);

@@ -18,8 +18,7 @@ process.env.DATABASE_URL = "test-database-url";
 process.env.REDIS_URL = "redis://localhost:6379";
 
 // Global test utilities
-global.testTimeout = (ms = 5000) =>
-    new Promise((resolve) => setTimeout(resolve, ms));
+global.testTimeout = (ms = 5000) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Mock Date for consistent testing
 const mockDate = new Date("2025-08-05T10:00:00Z");
@@ -36,3 +35,24 @@ global.Date = class extends Date {
         return mockDate.getTime();
     }
 } as DateConstructor;
+
+// Global cleanup
+afterEach(() => {
+    jest.clearAllMocks();
+    jest.clearAllTimers();
+});
+
+// Global teardown
+afterAll(async () => {
+    // Clear any remaining timers
+    jest.clearAllTimers();
+    jest.useRealTimers();
+
+    // Force garbage collection if available
+    if (global.gc) {
+        global.gc();
+    }
+
+    // Wait a bit to ensure all async operations complete
+    await new Promise((resolve) => setTimeout(resolve, 100));
+});

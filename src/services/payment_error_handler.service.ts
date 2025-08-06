@@ -86,10 +86,8 @@ export class PaymentErrorHandler {
             code,
             message: this.errorCodes[code],
             details,
-            user_friendly_message:
-                userFriendlyMessage || this.getUserFriendlyMessage(code),
-            recovery_suggestions:
-                recoverySuggestions || this.getRecoverySuggestions(code),
+            user_friendly_message: userFriendlyMessage || this.getUserFriendlyMessage(code),
+            recovery_suggestions: recoverySuggestions || this.getRecoverySuggestions(code),
         };
     }
 
@@ -108,9 +106,7 @@ export class PaymentErrorHandler {
         if (this.isPaymentError(error)) {
             return {
                 error: error as PaymentError,
-                httpStatus: this.getHttpStatusFromErrorCode(
-                    (error as PaymentError).code
-                ),
+                httpStatus: this.getHttpStatusFromErrorCode((error as PaymentError).code),
                 shouldLog: this.shouldLogError((error as PaymentError).code),
             };
         }
@@ -178,26 +174,14 @@ export class PaymentErrorHandler {
     }
 
     private static isPaymentError(error: unknown): boolean {
-        return (
-            typeof error === "object" &&
-            error !== null &&
-            "code" in error &&
-            "message" in error
-        );
+        return typeof error === "object" && error !== null && "code" in error && "message" in error;
     }
 
-    private static categorizeStandardError(
-        error: Error,
-        context?: Record<string, any>
-    ): PaymentError {
+    private static categorizeStandardError(error: Error, context?: Record<string, any>): PaymentError {
         const message = error.message.toLowerCase();
 
         // Database errors
-        if (
-            message.includes("connection") ||
-            message.includes("database") ||
-            message.includes("timeout")
-        ) {
+        if (message.includes("connection") || message.includes("database") || message.includes("timeout")) {
             return this.createError("SYS_001", {
                 original_message: error.message,
                 context,
@@ -205,11 +189,7 @@ export class PaymentErrorHandler {
         }
 
         // Validation errors
-        if (
-            message.includes("validation") ||
-            message.includes("invalid") ||
-            message.includes("required")
-        ) {
+        if (message.includes("validation") || message.includes("invalid") || message.includes("required")) {
             return this.createError("VAL_002", {
                 original_message: error.message,
                 context,
@@ -217,11 +197,7 @@ export class PaymentErrorHandler {
         }
 
         // Authentication errors
-        if (
-            message.includes("unauthorized") ||
-            message.includes("token") ||
-            message.includes("auth")
-        ) {
+        if (message.includes("unauthorized") || message.includes("token") || message.includes("auth")) {
             return this.createError("AUTH_001", {
                 original_message: error.message,
                 context,
@@ -229,11 +205,7 @@ export class PaymentErrorHandler {
         }
 
         // Payment gateway errors
-        if (
-            message.includes("gateway") ||
-            message.includes("payment") ||
-            message.includes("signature")
-        ) {
+        if (message.includes("gateway") || message.includes("payment") || message.includes("signature")) {
             return this.createError("GATEWAY_002", {
                 original_message: error.message,
                 context,
@@ -289,9 +261,7 @@ export class PaymentErrorHandler {
         return !["VAL", "BIZ"].includes(prefix); // Don't log validation and business logic errors
     }
 
-    private static getUserFriendlyMessage(
-        code: keyof typeof PaymentErrorHandler.errorCodes
-    ): string {
+    private static getUserFriendlyMessage(code: keyof typeof PaymentErrorHandler.errorCodes): string {
         const friendlyMessages: Record<string, string> = {
             AUTH_001: "Please log in again to continue",
             AUTH_002: "You don't have permission to perform this action",
@@ -306,60 +276,26 @@ export class PaymentErrorHandler {
             SYS_003: "Something went wrong, please try again later",
         };
 
-        return (
-            friendlyMessages[code] ||
-            "An error occurred, please contact support if the problem persists"
-        );
+        return friendlyMessages[code] || "An error occurred, please contact support if the problem persists";
     }
 
-    private static getRecoverySuggestions(
-        code: keyof typeof PaymentErrorHandler.errorCodes
-    ): string[] {
+    private static getRecoverySuggestions(code: keyof typeof PaymentErrorHandler.errorCodes): string[] {
         const suggestions: Record<string, string[]> = {
             AUTH_001: [
                 "Log out and log back in",
                 "Clear browser cache and cookies",
                 "Contact support if issue persists",
             ],
-            AUTH_002: [
-                "Contact your administrator for access",
-                "Verify you have the correct role assigned",
-            ],
-            GATEWAY_002: [
-                "Try again in a few minutes",
-                "Use a different payment method",
-                "Contact support",
-            ],
-            TRANS_005: [
-                "Check your bank balance",
-                "Try a different payment method",
-                "Contact your bank",
-            ],
-            VAL_003: [
-                "Enter an amount greater than ₹1",
-                "Check for decimal places or special characters",
-            ],
-            BIZ_001: [
-                "Check your payment history",
-                "Contact the fee office if payment is missing",
-            ],
-            RATE_001: [
-                "Wait 5-10 minutes before trying again",
-                "Clear browser cache",
-            ],
-            SYS_003: [
-                "Refresh the page and try again",
-                "Check your internet connection",
-                "Contact support",
-            ],
+            AUTH_002: ["Contact your administrator for access", "Verify you have the correct role assigned"],
+            GATEWAY_002: ["Try again in a few minutes", "Use a different payment method", "Contact support"],
+            TRANS_005: ["Check your bank balance", "Try a different payment method", "Contact your bank"],
+            VAL_003: ["Enter an amount greater than ₹1", "Check for decimal places or special characters"],
+            BIZ_001: ["Check your payment history", "Contact the fee office if payment is missing"],
+            RATE_001: ["Wait 5-10 minutes before trying again", "Clear browser cache"],
+            SYS_003: ["Refresh the page and try again", "Check your internet connection", "Contact support"],
         };
 
-        return (
-            suggestions[code] || [
-                "Try again later",
-                "Contact support if the problem continues",
-            ]
-        );
+        return suggestions[code] || ["Try again later", "Contact support if the problem continues"];
     }
 }
 

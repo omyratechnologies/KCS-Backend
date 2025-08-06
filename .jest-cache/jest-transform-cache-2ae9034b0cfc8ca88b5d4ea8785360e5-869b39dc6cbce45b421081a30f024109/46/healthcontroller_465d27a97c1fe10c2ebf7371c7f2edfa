@@ -1,0 +1,838 @@
+9f5ba04c5b1c288ae46d61ec71e3bf3c
+/* istanbul ignore next */
+function cov_1mwoqicz4c() {
+  var path = "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/controllers/health.controller.ts";
+  var hash = "9c675f95c4548d07bd52edcd5f9cbf66c01991df";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/controllers/health.controller.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 6,
+          column: 0
+        },
+        end: {
+          line: 6,
+          column: 22
+        }
+      },
+      "1": {
+        start: {
+          line: 10,
+          column: 0
+        },
+        end: {
+          line: 38,
+          column: 2
+        }
+      },
+      "2": {
+        start: {
+          line: 11,
+          column: 4
+        },
+        end: {
+          line: 37,
+          column: 5
+        }
+      },
+      "3": {
+        start: {
+          line: 13,
+          column: 8
+        },
+        end: {
+          line: 13,
+          column: 61
+        }
+      },
+      "4": {
+        start: {
+          line: 14,
+          column: 8
+        },
+        end: {
+          line: 19,
+          column: 11
+        }
+      },
+      "5": {
+        start: {
+          line: 22,
+          column: 8
+        },
+        end: {
+          line: 22,
+          column: 62
+        }
+      },
+      "6": {
+        start: {
+          line: 23,
+          column: 29
+        },
+        end: {
+          line: 23,
+          column: 83
+        }
+      },
+      "7": {
+        start: {
+          line: 24,
+          column: 8
+        },
+        end: {
+          line: 36,
+          column: 16
+        }
+      },
+      "8": {
+        start: {
+          line: 42,
+          column: 0
+        },
+        end: {
+          line: 71,
+          column: 2
+        }
+      },
+      "9": {
+        start: {
+          line: 43,
+          column: 25
+        },
+        end: {
+          line: 53,
+          column: 5
+        }
+      },
+      "10": {
+        start: {
+          line: 55,
+          column: 4
+        },
+        end: {
+          line: 68,
+          column: 5
+        }
+      },
+      "11": {
+        start: {
+          line: 56,
+          column: 8
+        },
+        end: {
+          line: 56,
+          column: 61
+        }
+      },
+      "12": {
+        start: {
+          line: 57,
+          column: 8
+        },
+        end: {
+          line: 60,
+          column: 10
+        }
+      },
+      "13": {
+        start: {
+          line: 63,
+          column: 8
+        },
+        end: {
+          line: 63,
+          column: 42
+        }
+      },
+      "14": {
+        start: {
+          line: 64,
+          column: 8
+        },
+        end: {
+          line: 67,
+          column: 10
+        }
+      },
+      "15": {
+        start: {
+          line: 69,
+          column: 23
+        },
+        end: {
+          line: 69,
+          column: 68
+        }
+      },
+      "16": {
+        start: {
+          line: 70,
+          column: 4
+        },
+        end: {
+          line: 70,
+          column: 44
+        }
+      },
+      "17": {
+        start: {
+          line: 75,
+          column: 0
+        },
+        end: {
+          line: 103,
+          column: 2
+        }
+      },
+      "18": {
+        start: {
+          line: 76,
+          column: 4
+        },
+        end: {
+          line: 102,
+          column: 5
+        }
+      },
+      "19": {
+        start: {
+          line: 77,
+          column: 23
+        },
+        end: {
+          line: 77,
+          column: 48
+        }
+      },
+      "20": {
+        start: {
+          line: 78,
+          column: 8
+        },
+        end: {
+          line: 90,
+          column: 11
+        }
+      },
+      "21": {
+        start: {
+          line: 93,
+          column: 8
+        },
+        end: {
+          line: 93,
+          column: 60
+        }
+      },
+      "22": {
+        start: {
+          line: 94,
+          column: 29
+        },
+        end: {
+          line: 94,
+          column: 83
+        }
+      },
+      "23": {
+        start: {
+          line: 95,
+          column: 8
+        },
+        end: {
+          line: 101,
+          column: 16
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 10,
+            column: 33
+          },
+          end: {
+            line: 10,
+            column: 34
+          }
+        },
+        loc: {
+          start: {
+            line: 10,
+            column: 46
+          },
+          end: {
+            line: 38,
+            column: 1
+          }
+        },
+        line: 10
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 42,
+            column: 31
+          },
+          end: {
+            line: 42,
+            column: 32
+          }
+        },
+        loc: {
+          start: {
+            line: 42,
+            column: 44
+          },
+          end: {
+            line: 71,
+            column: 1
+          }
+        },
+        line: 42
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 75,
+            column: 31
+          },
+          end: {
+            line: 75,
+            column: 32
+          }
+        },
+        loc: {
+          start: {
+            line: 75,
+            column: 44
+          },
+          end: {
+            line: 103,
+            column: 1
+          }
+        },
+        line: 75
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 23,
+            column: 29
+          },
+          end: {
+            line: 23,
+            column: 83
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 23,
+            column: 54
+          },
+          end: {
+            line: 23,
+            column: 67
+          }
+        }, {
+          start: {
+            line: 23,
+            column: 70
+          },
+          end: {
+            line: 23,
+            column: 83
+          }
+        }],
+        line: 23
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 46,
+            column: 17
+          },
+          end: {
+            line: 46,
+            column: 61
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 46,
+            column: 17
+          },
+          end: {
+            line: 46,
+            column: 48
+          }
+        }, {
+          start: {
+            line: 46,
+            column: 52
+          },
+          end: {
+            line: 46,
+            column: 61
+          }
+        }],
+        line: 46
+      },
+      "2": {
+        loc: {
+          start: {
+            line: 47,
+            column: 21
+          },
+          end: {
+            line: 47,
+            column: 54
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 47,
+            column: 21
+          },
+          end: {
+            line: 47,
+            column: 41
+          }
+        }, {
+          start: {
+            line: 47,
+            column: 45
+          },
+          end: {
+            line: 47,
+            column: 54
+          }
+        }],
+        line: 47
+      },
+      "3": {
+        loc: {
+          start: {
+            line: 66,
+            column: 21
+          },
+          end: {
+            line: 66,
+            column: 75
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 66,
+            column: 46
+          },
+          end: {
+            line: 66,
+            column: 59
+          }
+        }, {
+          start: {
+            line: 66,
+            column: 62
+          },
+          end: {
+            line: 66,
+            column: 75
+          }
+        }],
+        line: 66
+      },
+      "4": {
+        loc: {
+          start: {
+            line: 69,
+            column: 23
+          },
+          end: {
+            line: 69,
+            column: 68
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 69,
+            column: 59
+          },
+          end: {
+            line: 69,
+            column: 62
+          }
+        }, {
+          start: {
+            line: 69,
+            column: 65
+          },
+          end: {
+            line: 69,
+            column: 68
+          }
+        }],
+        line: 69
+      },
+      "5": {
+        loc: {
+          start: {
+            line: 80,
+            column: 21
+          },
+          end: {
+            line: 80,
+            column: 97
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 80,
+            column: 40
+          },
+          end: {
+            line: 80,
+            column: 64
+          }
+        }, {
+          start: {
+            line: 80,
+            column: 67
+          },
+          end: {
+            line: 80,
+            column: 97
+          }
+        }],
+        line: 80
+      },
+      "6": {
+        loc: {
+          start: {
+            line: 88,
+            column: 22
+          },
+          end: {
+            line: 88,
+            column: 86
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 88,
+            column: 41
+          },
+          end: {
+            line: 88,
+            column: 54
+          }
+        }, {
+          start: {
+            line: 88,
+            column: 57
+          },
+          end: {
+            line: 88,
+            column: 86
+          }
+        }],
+        line: 88
+      },
+      "7": {
+        loc: {
+          start: {
+            line: 94,
+            column: 29
+          },
+          end: {
+            line: 94,
+            column: 83
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 94,
+            column: 54
+          },
+          end: {
+            line: 94,
+            column: 67
+          }
+        }, {
+          start: {
+            line: 94,
+            column: 70
+          },
+          end: {
+            line: 94,
+            column: 83
+          }
+        }],
+        line: 94
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0,
+      "15": 0,
+      "16": 0,
+      "17": 0,
+      "18": 0,
+      "19": 0,
+      "20": 0,
+      "21": 0,
+      "22": 0,
+      "23": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0
+    },
+    b: {
+      "0": [0, 0],
+      "1": [0, 0],
+      "2": [0, 0],
+      "3": [0, 0],
+      "4": [0, 0],
+      "5": [0, 0],
+      "6": [0, 0],
+      "7": [0, 0]
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "9c675f95c4548d07bd52edcd5f9cbf66c01991df"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_1mwoqicz4c = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_1mwoqicz4c();
+var _a;
+import { User } from "@/models/user.model";
+import { WebRTCService } from "@/services/webrtc.service";
+export class HealthController {}
+/* istanbul ignore next */
+cov_1mwoqicz4c().s[0]++;
+_a = HealthController;
+/**
+ * Check database connectivity
+ */
+/* istanbul ignore next */
+cov_1mwoqicz4c().s[1]++;
+HealthController.checkDatabase = async c => {
+  /* istanbul ignore next */
+  cov_1mwoqicz4c().f[0]++;
+  cov_1mwoqicz4c().s[2]++;
+  try {
+    /* istanbul ignore next */
+    cov_1mwoqicz4c().s[3]++;
+    // Try a simple database operation
+    await User.find({
+      is_deleted: false
+    }, {
+      limit: 1
+    });
+    /* istanbul ignore next */
+    cov_1mwoqicz4c().s[4]++;
+    return c.json({
+      success: true,
+      message: "Database connection healthy",
+      timestamp: new Date().toISOString(),
+      service: "Ottoman/Couchbase"
+    });
+  } catch (error) {
+    /* istanbul ignore next */
+    cov_1mwoqicz4c().s[5]++;
+    console.error("Database health check failed:", error);
+    const errorMessage =
+    /* istanbul ignore next */
+    (cov_1mwoqicz4c().s[6]++, error instanceof Error ?
+    /* istanbul ignore next */
+    (cov_1mwoqicz4c().b[0][0]++, error.message) :
+    /* istanbul ignore next */
+    (cov_1mwoqicz4c().b[0][1]++, String(error)));
+    /* istanbul ignore next */
+    cov_1mwoqicz4c().s[7]++;
+    return c.json({
+      success: false,
+      message: "Database connection failed",
+      error: errorMessage,
+      timestamp: new Date().toISOString(),
+      service: "Ottoman/Couchbase",
+      suggestions: ["Check if database service is running", "Verify environment variables (OTTOMAN_*)", "Ensure initDB() was called during application startup", "Check network connectivity to database"]
+    }, 500);
+  }
+};
+/**
+ * Check overall application health
+ */
+/* istanbul ignore next */
+cov_1mwoqicz4c().s[8]++;
+HealthController.checkHealth = async c => {
+  /* istanbul ignore next */
+  cov_1mwoqicz4c().f[1]++;
+  const healthChecks =
+  /* istanbul ignore next */
+  (cov_1mwoqicz4c().s[9]++, {
+    timestamp: new Date().toISOString(),
+    status: "healthy",
+    version:
+    /* istanbul ignore next */
+    (cov_1mwoqicz4c().b[1][0]++, process.env.npm_package_version) ||
+    /* istanbul ignore next */
+    (cov_1mwoqicz4c().b[1][1]++, "unknown"),
+    environment:
+    /* istanbul ignore next */
+    (cov_1mwoqicz4c().b[2][0]++, process.env.NODE_ENV) ||
+    /* istanbul ignore next */
+    (cov_1mwoqicz4c().b[2][1]++, "unknown"),
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+    checks: {
+      database: {
+        status: "unknown",
+        message: ""
+      }
+    }
+  });
+  // Check database
+  /* istanbul ignore next */
+  cov_1mwoqicz4c().s[10]++;
+  try {
+    /* istanbul ignore next */
+    cov_1mwoqicz4c().s[11]++;
+    await User.find({
+      is_deleted: false
+    }, {
+      limit: 1
+    });
+    /* istanbul ignore next */
+    cov_1mwoqicz4c().s[12]++;
+    healthChecks.checks.database = {
+      status: "healthy",
+      message: "Database connection successful"
+    };
+  } catch (error) {
+    /* istanbul ignore next */
+    cov_1mwoqicz4c().s[13]++;
+    healthChecks.status = "unhealthy";
+    /* istanbul ignore next */
+    cov_1mwoqicz4c().s[14]++;
+    healthChecks.checks.database = {
+      status: "unhealthy",
+      message: error instanceof Error ?
+      /* istanbul ignore next */
+      (cov_1mwoqicz4c().b[3][0]++, error.message) :
+      /* istanbul ignore next */
+      (cov_1mwoqicz4c().b[3][1]++, String(error))
+    };
+  }
+  const statusCode =
+  /* istanbul ignore next */
+  (cov_1mwoqicz4c().s[15]++, healthChecks.status === "healthy" ?
+  /* istanbul ignore next */
+  (cov_1mwoqicz4c().b[4][0]++, 200) :
+  /* istanbul ignore next */
+  (cov_1mwoqicz4c().b[4][1]++, 503));
+  /* istanbul ignore next */
+  cov_1mwoqicz4c().s[16]++;
+  return c.json(healthChecks, statusCode);
+};
+/**
+ * Check WebRTC service status
+ */
+/* istanbul ignore next */
+cov_1mwoqicz4c().s[17]++;
+HealthController.checkWebRTC = async c => {
+  /* istanbul ignore next */
+  cov_1mwoqicz4c().f[2]++;
+  cov_1mwoqicz4c().s[18]++;
+  try {
+    const status =
+    /* istanbul ignore next */
+    (cov_1mwoqicz4c().s[19]++, WebRTCService.getStatus());
+    /* istanbul ignore next */
+    cov_1mwoqicz4c().s[20]++;
+    return c.json({
+      success: true,
+      message: status.available ?
+      /* istanbul ignore next */
+      (cov_1mwoqicz4c().b[5][0]++, "WebRTC service healthy") :
+      /* istanbul ignore next */
+      (cov_1mwoqicz4c().b[5][1]++, "WebRTC in compatibility mode"),
+      timestamp: new Date().toISOString(),
+      service: "MediaSoup WebRTC",
+      status: {
+        available: status.available,
+        workers: status.workers,
+        activeRouters: status.routers,
+        activeRooms: status.activeRooms,
+        mode: status.available ?
+        /* istanbul ignore next */
+        (cov_1mwoqicz4c().b[6][0]++, "Full WebRTC") :
+        /* istanbul ignore next */
+        (cov_1mwoqicz4c().b[6][1]++, "Participant Management Only")
+      }
+    });
+  } catch (error) {
+    /* istanbul ignore next */
+    cov_1mwoqicz4c().s[21]++;
+    console.error("WebRTC health check failed:", error);
+    const errorMessage =
+    /* istanbul ignore next */
+    (cov_1mwoqicz4c().s[22]++, error instanceof Error ?
+    /* istanbul ignore next */
+    (cov_1mwoqicz4c().b[7][0]++, error.message) :
+    /* istanbul ignore next */
+    (cov_1mwoqicz4c().b[7][1]++, String(error)));
+    /* istanbul ignore next */
+    cov_1mwoqicz4c().s[23]++;
+    return c.json({
+      success: false,
+      message: "WebRTC service check failed",
+      error: errorMessage,
+      timestamp: new Date().toISOString(),
+      service: "MediaSoup WebRTC"
+    }, 503);
+  }
+};

@@ -2,10 +2,7 @@ import crypto from "node:crypto";
 
 import { onForgotPassword, sendPasswordResetSuccessEmail } from "@/libs/mailer";
 import { LoginSession } from "@/models/login_session.model";
-import {
-    IPasswordResetsData,
-    PasswordResets,
-} from "@/models/password_reset.model";
+import { IPasswordResetsData, PasswordResets } from "@/models/password_reset.model";
 import { IUser, User } from "@/models/user.model";
 import { LoginSessionsData } from "@/types/db";
 import { genOTP } from "@/utils/random";
@@ -14,9 +11,7 @@ export class AuthService {
     public static readonly login = async ({ login_id, password }) => {
         const is_login_id_email = login_id.includes("@");
 
-        const filter = is_login_id_email
-            ? { email: login_id }
-            : { user_id: login_id };
+        const filter = is_login_id_email ? { email: login_id } : { user_id: login_id };
 
         const dbUser: {
             rows: IUser[];
@@ -28,16 +23,9 @@ export class AuthService {
             throw new Error("User not found");
         }
 
-        const hash = crypto
-            .pbkdf2Sync(password, user[0].salt, 1000, 64, "sha512")
-            .toString("hex");
+        const hash = crypto.pbkdf2Sync(password, user[0].salt, 1000, 64, "sha512").toString("hex");
 
-        if (
-            !crypto.timingSafeEqual(
-                Buffer.from(hash),
-                Buffer.from(user[0].hash)
-            )
-        ) {
+        if (!crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(user[0].hash))) {
             throw new Error("Invalid password");
         }
 
@@ -47,6 +35,7 @@ export class AuthService {
 
         await LoginSession.create({
             user_id: user[0].id,
+            campus_id: user[0].campus_id || null,
             session_id,
             refresh_token,
             created_at: new Date(),
@@ -62,6 +51,7 @@ export class AuthService {
             user: user[0],
             session_id,
             refresh_token,
+            campus_id: user[0].campus_id,
         };
     };
 
@@ -138,9 +128,7 @@ export class AuthService {
         await PasswordResets.removeById(reset[0].id);
 
         const salt = crypto.randomBytes(16).toString("hex");
-        const hash = crypto
-            .pbkdf2Sync(password, salt, 1000, 64, "sha512")
-            .toString("hex");
+        const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, "sha512").toString("hex");
 
         await User.updateById(user[0].id, {
             salt,
@@ -168,10 +156,7 @@ export class AuthService {
             await sendPasswordResetSuccessEmail(user[0].email, resetData);
         } catch (emailError) {
             // Log email error but don't fail the password reset
-            console.error(
-                "Failed to send password reset success email:",
-                emailError
-            );
+            console.error("Failed to send password reset success email:", emailError);
         }
 
         return {
@@ -204,14 +189,12 @@ export class AuthService {
         return {
             user: user[0],
             session_id: session[0].session_id,
+            campus_id: session[0].campus_id,
         };
     };
 
     // Check if session is valid
-    public static readonly checkIfSessionIsValid = async ({
-        user_id,
-        session_id,
-    }) => {
+    public static readonly checkIfSessionIsValid = async ({ user_id, session_id }) => {
         const dbSession = (await LoginSession.find({
             session_id,
         })) as {

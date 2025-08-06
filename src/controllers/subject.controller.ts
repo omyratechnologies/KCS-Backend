@@ -13,10 +13,7 @@ export class SubjectController {
                 subjectData: Partial<ISubject>;
             } = await ctx.req.json();
 
-            const subject = await SubjectService.createSubject(
-                campus_id,
-                subjectData
-            );
+            const subject = await SubjectService.createSubject(campus_id, subjectData);
 
             return ctx.json(subject);
         } catch (error) {
@@ -73,10 +70,7 @@ export class SubjectController {
 
             const data: Partial<ISubject> = await ctx.req.json();
 
-            const subject = await SubjectService.updateSubject(
-                subject_id,
-                data
-            );
+            const subject = await SubjectService.updateSubject(subject_id, data);
 
             return ctx.json(subject);
         } catch (error) {
@@ -111,14 +105,11 @@ export class SubjectController {
     };
 
     // getAllTeacherForASubjectById
-    public static readonly getAllTeacherForASubjectById = async (
-        ctx: Context
-    ) => {
+    public static readonly getAllTeacherForASubjectById = async (ctx: Context) => {
         try {
             const subject_id = ctx.req.param("subject_id");
 
-            const teachers =
-                await SubjectService.getAllTeacherForASubjectById(subject_id);
+            const teachers = await SubjectService.getAllTeacherForASubjectById(subject_id);
 
             return ctx.json(teachers);
         } catch (error) {
@@ -134,14 +125,11 @@ export class SubjectController {
     };
 
     // getAllClassesForASubjectById
-    public static readonly getAllClassesForASubjectById = async (
-        ctx: Context
-    ) => {
+    public static readonly getAllClassesForASubjectById = async (ctx: Context) => {
         try {
             const subject_id = ctx.req.param("subject_id");
 
-            const classes =
-                await SubjectService.getAllClassesForASubjectById(subject_id);
+            const classes = await SubjectService.getAllClassesForASubjectById(subject_id);
 
             return ctx.json(classes);
         } catch (error) {

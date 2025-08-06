@@ -12,13 +12,8 @@ export const userSchema = z
         last_name: z.string().openapi({ example: "Doe" }),
         phone: z.string().openapi({ example: "+1234567890" }),
         address: z.string().openapi({ example: "123 Main St, City" }),
-        last_login: z
-            .string()
-            .optional()
-            .openapi({ example: "2023-01-01T00:00:00Z" }),
-        meta_data: z
-            .record(z.string(), z.any())
-            .openapi({ example: { role: "teacher" } }),
+        last_login: z.string().optional().openapi({ example: "2023-01-01T00:00:00Z" }),
+        meta_data: z.record(z.string(), z.any()).openapi({ example: { role: "teacher" } }),
         is_active: z.boolean().openapi({ example: true }),
         is_deleted: z.boolean().openapi({ example: false }),
         user_type: z.string().openapi({ example: "Teacher" }),
@@ -38,9 +33,7 @@ export const createUserRequestBodySchema = z
         last_name: z.string().openapi({ example: "Doe" }),
         phone: z.string().openapi({ example: "+1234567890" }),
         address: z.string().openapi({ example: "123 Main St, City" }),
-        meta_data: z
-            .record(z.string(), z.any())
-            .openapi({ example: { role: "teacher" } }),
+        meta_data: z.record(z.string(), z.any()).openapi({ example: { role: "teacher" } }),
         user_type: z.string().openapi({ example: "Teacher" }),
         campus_id: z.string().optional().openapi({ example: "campus123" }),
     })
@@ -51,9 +44,7 @@ export const createUserResponseSchema = userSchema.openapi({
 });
 
 // Get Users Response
-export const getUsersResponseSchema = z
-    .array(userSchema)
-    .openapi({ ref: "GetUsersResponse" });
+export const getUsersResponseSchema = z.array(userSchema).openapi({ ref: "GetUsersResponse" });
 
 // Get User Response
 export const getUserResponseSchema = userSchema.openapi({
@@ -64,18 +55,11 @@ export const getUserResponseSchema = userSchema.openapi({
 export const updateUserRequestBodySchema = z
     .object({
         user_id: z.string().optional().openapi({ example: "user123" }),
-        email: z
-            .string()
-            .email()
-            .optional()
-            .openapi({ example: "user@example.com" }),
+        email: z.string().email().optional().openapi({ example: "user@example.com" }),
         first_name: z.string().optional().openapi({ example: "John" }),
         last_name: z.string().optional().openapi({ example: "Doe" }),
         phone: z.string().optional().openapi({ example: "+1234567890" }),
-        address: z
-            .string()
-            .optional()
-            .openapi({ example: "123 Main St, City" }),
+        address: z.string().optional().openapi({ example: "123 Main St, City" }),
         meta_data: z
             .record(z.string(), z.any())
             .optional()

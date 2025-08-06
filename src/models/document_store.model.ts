@@ -39,9 +39,6 @@ DocumentStoreSchema.index.findByDocumentType = { by: "document_type" };
 DocumentStoreSchema.index.findByIssuedTo = { by: "issued_to" };
 DocumentStoreSchema.index.findByIssuerId = { by: "issuer_id" };
 
-const DocumentStore = ottoman.model<IDocumentStoreData>(
-    "document_store",
-    DocumentStoreSchema
-);
+const DocumentStore = ottoman.model<IDocumentStoreData>("document_store", DocumentStoreSchema);
 
 export { DocumentStore, type IDocumentStoreData };

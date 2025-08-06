@@ -1,7 +1,4 @@
-import {
-    DocumentStore,
-    IDocumentStoreData,
-} from "@/models/document_store.model";
+import { DocumentStore, IDocumentStoreData } from "@/models/document_store.model";
 
 export class DocumentStoreService {
     // create document
@@ -26,7 +23,9 @@ export class DocumentStoreService {
             updated_at: new Date(),
         });
 
-        if (!documentStore) throw new Error("Document not created");
+        if (!documentStore) {
+            throw new Error("Document not created");
+        }
 
         return documentStore;
     };
@@ -55,19 +54,20 @@ export class DocumentStoreService {
     public static readonly getDocumentStoreById = async (id: string) => {
         const document = await DocumentStore.findById(id);
 
-        if (!document) throw new Error("Document not found");
+        if (!document) {
+            throw new Error("Document not found");
+        }
 
         return document;
     };
 
     // update document
-    public static readonly updateDocumentStore = async (
-        id: string,
-        data: Partial<IDocumentStoreData>
-    ) => {
+    public static readonly updateDocumentStore = async (id: string, data: Partial<IDocumentStoreData>) => {
         const document = await DocumentStore.updateById(id, data);
 
-        if (!document) throw new Error("Document not updated");
+        if (!document) {
+            throw new Error("Document not updated");
+        }
 
         return document;
     };
@@ -78,15 +78,15 @@ export class DocumentStoreService {
             is_deleted: true,
         });
 
-        if (!document) throw new Error("Document not deleted");
+        if (!document) {
+            throw new Error("Document not deleted");
+        }
 
         return document;
     };
 
     // get document by issued to
-    public static readonly getDocumentStoreByIssuedTo = async (
-        issued_to: string
-    ) => {
+    public static readonly getDocumentStoreByIssuedTo = async (issued_to: string) => {
         const documents: {
             rows: IDocumentStoreData[];
         } = await DocumentStore.find(
@@ -98,15 +98,15 @@ export class DocumentStoreService {
             }
         );
 
-        if (documents.rows.length === 0) throw new Error("Documents not found");
+        if (documents.rows.length === 0) {
+            throw new Error("Documents not found");
+        }
 
         return documents.rows;
     };
 
     // get document by issuer id
-    public static readonly getDocumentStoreByIssuerId = async (
-        issuer_id: string
-    ) => {
+    public static readonly getDocumentStoreByIssuerId = async (issuer_id: string) => {
         const documents: {
             rows: IDocumentStoreData[];
         } = await DocumentStore.find(
@@ -118,7 +118,9 @@ export class DocumentStoreService {
             }
         );
 
-        if (documents.rows.length === 0) throw new Error("Documents not found");
+        if (documents.rows.length === 0) {
+            throw new Error("Documents not found");
+        }
 
         return documents.rows;
     };

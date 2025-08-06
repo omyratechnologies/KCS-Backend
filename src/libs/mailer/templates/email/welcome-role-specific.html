@@ -34,14 +34,7 @@
 
             /* Header */
             .header {
-                background: linear-gradient(
-                    135deg,
-                    #0a0a0a 0%,
-                    #1a1a2e 25%,
-                    #16213e 50%,
-                    #0f3460 75%,
-                    #0e4b99 100%
-                );
+                background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #0e4b99 100%);
                 padding: 40px 30px;
                 text-align: center;
                 position: relative;
@@ -56,16 +49,8 @@
                 right: 0;
                 bottom: 0;
                 background-image:
-                    radial-gradient(
-                        circle at 20% 20%,
-                        rgba(255, 255, 255, 0.1) 1px,
-                        transparent 1px
-                    ),
-                    radial-gradient(
-                        circle at 80% 80%,
-                        rgba(85, 218, 215, 0.2) 1px,
-                        transparent 1px
-                    );
+                    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                    radial-gradient(circle at 80% 80%, rgba(85, 218, 215, 0.2) 1px, transparent 1px);
                 background-size:
                     50px 50px,
                     80px 80px;
@@ -472,9 +457,7 @@
                     <img src="{{LOGO_URL}}" alt="Let's Catch Up Logo" />
                 </div>
                 <div class="brand-title">Let's Catch Up</div>
-                <div class="brand-subtitle">
-                    Learning & Communication Platform
-                </div>
+                <div class="brand-subtitle">Learning & Communication Platform</div>
                 <div class="role-badge">{{USER_ROLE}} Account</div>
             </div>
 
@@ -482,34 +465,25 @@
             <div class="content">
                 <h1 class="welcome-title">🎉 Welcome to Let's Catch Up!</h1>
                 <p class="welcome-subtitle">
-                    {{GREETING_NAME}}, we're excited to have you join our
-                    learning community as a {{USER_ROLE}}!
+                    {{GREETING_NAME}}, we're excited to have you join our learning community as a {{USER_ROLE}}!
                 </p>
 
                 <!-- Role-specific Welcome Box -->
                 <div class="role-specific-box {{USER_ROLE}}">
-                    <div class="role-title {{USER_ROLE}}">
-                        {{ROLE_ICON}} Welcome {{USER_ROLE_TITLE}}!
-                    </div>
-                    <div class="role-description {{USER_ROLE}}">
-                        {{ROLE_WELCOME_MESSAGE}}
-                    </div>
+                    <div class="role-title {{USER_ROLE}}">{{ROLE_ICON}} Welcome {{USER_ROLE_TITLE}}!</div>
+                    <div class="role-description {{USER_ROLE}}">{{ROLE_WELCOME_MESSAGE}}</div>
                 </div>
 
                 <!-- Getting Started Section -->
                 <div class="getting-started">
-                    <div class="getting-started-title">
-                        🚀 Getting Started - Your First Steps
-                    </div>
+                    <div class="getting-started-title">🚀 Getting Started - Your First Steps</div>
                     <div class="steps-list">
                         {{#each GETTING_STARTED_STEPS}}
                         <div class="step-item">
                             <div class="step-number">{{@index_plus_one}}</div>
                             <div class="step-content">
                                 <div class="step-title">{{title}}</div>
-                                <div class="step-description">
-                                    {{description}}
-                                </div>
+                                <div class="step-description">{{description}}</div>
                             </div>
                         </div>
                         {{/each}}
@@ -518,9 +492,7 @@
 
                 <!-- Action Button -->
                 <div style="text-align: center">
-                    <a href="{{DASHBOARD_URL}}" class="action-button">
-                        🏠 Access Your Dashboard
-                    </a>
+                    <a href="{{DASHBOARD_URL}}" class="action-button"> 🏠 Access Your Dashboard </a>
                 </div>
 
                 <!-- Role-specific Features -->
@@ -546,53 +518,33 @@
 
                 <!-- Support Box -->
                 <div class="support-box">
-                    <div class="support-title">
-                        💬 Need Help Getting Started?
-                    </div>
+                    <div class="support-title">💬 Need Help Getting Started?</div>
                     <div class="support-text">
-                        Our support team is here to help you make the most of
-                        your Let's Catch Up experience. Don't hesitate to reach
-                        out if you have any questions or need assistance with
-                        any features.
+                        Our support team is here to help you make the most of your Let's Catch Up experience. Don't
+                        hesitate to reach out if you have any questions or need assistance with any features.
                     </div>
                 </div>
             </div>
 
             <!-- Footer -->
             <div class="footer">
-                <div class="footer-title">
-                    Welcome to Our Learning Community!
-                </div>
+                <div class="footer-title">Welcome to Our Learning Community!</div>
                 <div class="footer-text">
-                    Thank you for joining Let's Catch Up. We're committed to
-                    providing you with the best learning and communication
-                    experience. Explore all the features and make the most of
-                    your educational journey!
+                    Thank you for joining Let's Catch Up. We're committed to providing you with the best learning and
+                    communication experience. Explore all the features and make the most of your educational journey!
                 </div>
 
                 <div class="footer-links">
-                    <a href="{{HELP_CENTER_URL}}" class="footer-link"
-                        >Help Center</a
-                    >
-                    <a href="{{USER_GUIDE_URL}}" class="footer-link"
-                        >User Guide</a
-                    >
-                    <a href="{{SUPPORT_URL}}" class="footer-link"
-                        >Contact Support</a
-                    >
-                    <a href="{{WEBSITE_URL}}" class="footer-link"
-                        >Visit Website</a
-                    >
+                    <a href="{{HELP_CENTER_URL}}" class="footer-link">Help Center</a>
+                    <a href="{{USER_GUIDE_URL}}" class="footer-link">User Guide</a>
+                    <a href="{{SUPPORT_URL}}" class="footer-link">Contact Support</a>
+                    <a href="{{WEBSITE_URL}}" class="footer-link">Visit Website</a>
                 </div>
 
                 <div class="footer-copy">
-                    © 2025 KANDHUGULE CONSULTANCY SERVICES PRIVATE LIMITED. All
-                    Rights Reserved.<br />
-                    This welcome email was sent to {{EMAIL}}. For help getting
-                    started,
-                    <a href="{{HELP_CENTER_URL}}" style="color: #55dad7"
-                        >visit our help center</a
-                    >.
+                    © 2025 KANDHUGULE CONSULTANCY SERVICES PRIVATE LIMITED. All Rights Reserved.<br />
+                    This welcome email was sent to {{EMAIL}}. For help getting started,
+                    <a href="{{HELP_CENTER_URL}}" style="color: #55dad7">visit our help center</a>.
                 </div>
             </div>
         </div>

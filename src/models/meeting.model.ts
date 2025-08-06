@@ -104,11 +104,7 @@ interface IMeetingParticipant {
     participant_email?: string;
 
     // Connection Status
-    connection_status:
-        | "connecting"
-        | "connected"
-        | "reconnecting"
-        | "disconnected";
+    connection_status: "connecting" | "connected" | "reconnecting" | "disconnected";
     connection_quality: "poor" | "fair" | "good" | "excellent";
     joined_at: Date;
     left_at?: Date;
@@ -239,10 +235,7 @@ const MeetingSchema = new Schema({
     webrtc_config: {
         type: Object,
         default: {
-            ice_servers: [
-                { urls: ["stun:stun.l.google.com:19302"] },
-                { urls: ["stun:stun1.l.google.com:19302"] },
-            ],
+            ice_servers: [{ urls: ["stun:stun.l.google.com:19302"] }, { urls: ["stun:stun1.l.google.com:19302"] }],
             media_constraints: {
                 video: {
                     enabled: true,
@@ -394,18 +387,9 @@ MeetingRecordingSchema.index.findByMeetingId = { by: "meeting_id" };
 MeetingRecordingSchema.index.findByType = { by: "recording_type" };
 
 const Meeting = ottoman.model<IMeetingData>("meeting", MeetingSchema);
-const MeetingParticipant = ottoman.model<IMeetingParticipant>(
-    "meeting_participant",
-    MeetingParticipantSchema
-);
-const MeetingChat = ottoman.model<IMeetingChat>(
-    "meeting_chat",
-    MeetingChatSchema
-);
-const MeetingRecording = ottoman.model<IMeetingRecording>(
-    "meeting_recording",
-    MeetingRecordingSchema
-);
+const MeetingParticipant = ottoman.model<IMeetingParticipant>("meeting_participant", MeetingParticipantSchema);
+const MeetingChat = ottoman.model<IMeetingChat>("meeting_chat", MeetingChatSchema);
+const MeetingRecording = ottoman.model<IMeetingRecording>("meeting_recording", MeetingRecordingSchema);
 
 export {
     type IMeetingChat,

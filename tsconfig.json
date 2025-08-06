@@ -1,10 +1,11 @@
 {
-    "compilerOptions": {
+  "compilerOptions": {
         "baseUrl": ".",
         "declaration": true,
         "emitDecoratorMetadata": true,
         "esModuleInterop": true,
         "experimentalDecorators": true,
+        "isolatedModules": true,
         "jsx": "react-jsx",
         "jsxImportSource": "hono/jsx",
         "lib": ["es2021", "es5", "dom"],
@@ -23,7 +24,7 @@
         "target": "ES2017",
         "typeRoots": ["node_modules/@types", "src/types"]
     },
-    "exclude": ["./node_modules/**/*", "./dist/**/*"],
-    "files": ["src/types/index.d.ts"],
-    "include": ["./src/**/*.ts", "./src/**/*.tsx"]
+  "exclude": ["./node_modules/**/*", "./dist/**/*"],
+  "files": ["src/types/index.d.ts"],
+  "include": ["./src/**/*.ts", "./src/**/*.tsx"]
 }

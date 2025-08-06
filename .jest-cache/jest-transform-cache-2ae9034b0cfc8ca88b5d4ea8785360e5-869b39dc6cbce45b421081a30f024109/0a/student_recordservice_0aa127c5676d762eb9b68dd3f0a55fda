@@ -1,0 +1,744 @@
+c8f11c260fae2c9dd015d0ebee3364a5
+/* istanbul ignore next */
+function cov_45c2690h3() {
+  var path = "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/services/student_record.service.ts";
+  var hash = "a34b08e4e5e297eca05f157d7df00f324c0be92c";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/services/student_record.service.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 5,
+          column: 0
+        },
+        end: {
+          line: 5,
+          column: 26
+        }
+      },
+      "1": {
+        start: {
+          line: 7,
+          column: 0
+        },
+        end: {
+          line: 15,
+          column: 2
+        }
+      },
+      "2": {
+        start: {
+          line: 8,
+          column: 4
+        },
+        end: {
+          line: 14,
+          column: 7
+        }
+      },
+      "3": {
+        start: {
+          line: 17,
+          column: 0
+        },
+        end: {
+          line: 30,
+          column: 2
+        }
+      },
+      "4": {
+        start: {
+          line: 18,
+          column: 27
+        },
+        end: {
+          line: 25,
+          column: 6
+        }
+      },
+      "5": {
+        start: {
+          line: 26,
+          column: 4
+        },
+        end: {
+          line: 28,
+          column: 5
+        }
+      },
+      "6": {
+        start: {
+          line: 27,
+          column: 8
+        },
+        end: {
+          line: 27,
+          column: 18
+        }
+      },
+      "7": {
+        start: {
+          line: 29,
+          column: 4
+        },
+        end: {
+          line: 29,
+          column: 31
+        }
+      },
+      "8": {
+        start: {
+          line: 32,
+          column: 0
+        },
+        end: {
+          line: 45,
+          column: 2
+        }
+      },
+      "9": {
+        start: {
+          line: 33,
+          column: 27
+        },
+        end: {
+          line: 40,
+          column: 6
+        }
+      },
+      "10": {
+        start: {
+          line: 41,
+          column: 4
+        },
+        end: {
+          line: 43,
+          column: 5
+        }
+      },
+      "11": {
+        start: {
+          line: 42,
+          column: 8
+        },
+        end: {
+          line: 42,
+          column: 18
+        }
+      },
+      "12": {
+        start: {
+          line: 44,
+          column: 4
+        },
+        end: {
+          line: 44,
+          column: 31
+        }
+      },
+      "13": {
+        start: {
+          line: 47,
+          column: 0
+        },
+        end: {
+          line: 49,
+          column: 2
+        }
+      },
+      "14": {
+        start: {
+          line: 48,
+          column: 4
+        },
+        end: {
+          line: 48,
+          column: 44
+        }
+      },
+      "15": {
+        start: {
+          line: 51,
+          column: 0
+        },
+        end: {
+          line: 57,
+          column: 2
+        }
+      },
+      "16": {
+        start: {
+          line: 52,
+          column: 26
+        },
+        end: {
+          line: 52,
+          column: 128
+        }
+      },
+      "17": {
+        start: {
+          line: 53,
+          column: 4
+        },
+        end: {
+          line: 55,
+          column: 5
+        }
+      },
+      "18": {
+        start: {
+          line: 54,
+          column: 8
+        },
+        end: {
+          line: 54,
+          column: 54
+        }
+      },
+      "19": {
+        start: {
+          line: 56,
+          column: 4
+        },
+        end: {
+          line: 56,
+          column: 25
+        }
+      },
+      "20": {
+        start: {
+          line: 59,
+          column: 0
+        },
+        end: {
+          line: 68,
+          column: 2
+        }
+      },
+      "21": {
+        start: {
+          line: 60,
+          column: 26
+        },
+        end: {
+          line: 63,
+          column: 6
+        }
+      },
+      "22": {
+        start: {
+          line: 64,
+          column: 4
+        },
+        end: {
+          line: 66,
+          column: 5
+        }
+      },
+      "23": {
+        start: {
+          line: 65,
+          column: 8
+        },
+        end: {
+          line: 65,
+          column: 54
+        }
+      },
+      "24": {
+        start: {
+          line: 67,
+          column: 4
+        },
+        end: {
+          line: 67,
+          column: 25
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 7,
+            column: 43
+          },
+          end: {
+            line: 7,
+            column: 44
+          }
+        },
+        loc: {
+          start: {
+            line: 7,
+            column: 89
+          },
+          end: {
+            line: 15,
+            column: 1
+          }
+        },
+        line: 7
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 17,
+            column: 51
+          },
+          end: {
+            line: 17,
+            column: 52
+          }
+        },
+        loc: {
+          start: {
+            line: 17,
+            column: 73
+          },
+          end: {
+            line: 30,
+            column: 1
+          }
+        },
+        line: 17
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 32,
+            column: 50
+          },
+          end: {
+            line: 32,
+            column: 51
+          }
+        },
+        loc: {
+          start: {
+            line: 32,
+            column: 71
+          },
+          end: {
+            line: 45,
+            column: 1
+          }
+        },
+        line: 32
+      },
+      "3": {
+        name: "(anonymous_3)",
+        decl: {
+          start: {
+            line: 47,
+            column: 44
+          },
+          end: {
+            line: 47,
+            column: 45
+          }
+        },
+        loc: {
+          start: {
+            line: 47,
+            column: 58
+          },
+          end: {
+            line: 49,
+            column: 1
+          }
+        },
+        line: 47
+      },
+      "4": {
+        name: "(anonymous_4)",
+        decl: {
+          start: {
+            line: 51,
+            column: 47
+          },
+          end: {
+            line: 51,
+            column: 48
+          }
+        },
+        loc: {
+          start: {
+            line: 51,
+            column: 67
+          },
+          end: {
+            line: 57,
+            column: 1
+          }
+        },
+        line: 51
+      },
+      "5": {
+        name: "(anonymous_5)",
+        decl: {
+          start: {
+            line: 59,
+            column: 47
+          },
+          end: {
+            line: 59,
+            column: 48
+          }
+        },
+        loc: {
+          start: {
+            line: 59,
+            column: 61
+          },
+          end: {
+            line: 68,
+            column: 1
+          }
+        },
+        line: 59
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 26,
+            column: 4
+          },
+          end: {
+            line: 28,
+            column: 5
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 26,
+            column: 4
+          },
+          end: {
+            line: 28,
+            column: 5
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 26
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 41,
+            column: 4
+          },
+          end: {
+            line: 43,
+            column: 5
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 41,
+            column: 4
+          },
+          end: {
+            line: 43,
+            column: 5
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 41
+      },
+      "2": {
+        loc: {
+          start: {
+            line: 53,
+            column: 4
+          },
+          end: {
+            line: 55,
+            column: 5
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 53,
+            column: 4
+          },
+          end: {
+            line: 55,
+            column: 5
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 53
+      },
+      "3": {
+        loc: {
+          start: {
+            line: 64,
+            column: 4
+          },
+          end: {
+            line: 66,
+            column: 5
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 64,
+            column: 4
+          },
+          end: {
+            line: 66,
+            column: 5
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 64
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0,
+      "15": 0,
+      "16": 0,
+      "17": 0,
+      "18": 0,
+      "19": 0,
+      "20": 0,
+      "21": 0,
+      "22": 0,
+      "23": 0,
+      "24": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0
+    },
+    b: {
+      "0": [0, 0],
+      "1": [0, 0],
+      "2": [0, 0],
+      "3": [0, 0]
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "a34b08e4e5e297eca05f157d7df00f324c0be92c"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_45c2690h3 = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_45c2690h3();
+var _a;
+import { StudentRecord } from "@/models/student_record.model";
+export class StudentRecordService {}
+/* istanbul ignore next */
+cov_45c2690h3().s[0]++;
+_a = StudentRecordService;
+// create student record
+/* istanbul ignore next */
+cov_45c2690h3().s[1]++;
+StudentRecordService.createStudentRecord = async (campus_id, student_id, record_data) => {
+  /* istanbul ignore next */
+  cov_45c2690h3().f[0]++;
+  cov_45c2690h3().s[2]++;
+  return await StudentRecord.create({
+    campus_id,
+    student_id,
+    record_data,
+    created_at: new Date(),
+    updated_at: new Date()
+  });
+};
+// get student record by student id
+/* istanbul ignore next */
+cov_45c2690h3().s[3]++;
+StudentRecordService.getStudentRecordByStudentId = async student_id => {
+  /* istanbul ignore next */
+  cov_45c2690h3().f[1]++;
+  const studentRecords =
+  /* istanbul ignore next */
+  (cov_45c2690h3().s[4]++, await StudentRecord.find({
+    student_id,
+    is_deleted: false
+  }, {
+    sort: {
+      updated_at: "DESC"
+    }
+  }));
+  /* istanbul ignore next */
+  cov_45c2690h3().s[5]++;
+  if (studentRecords.rows.length === 0) {
+    /* istanbul ignore next */
+    cov_45c2690h3().b[0][0]++;
+    cov_45c2690h3().s[6]++;
+    return [];
+  } else
+  /* istanbul ignore next */
+  {
+    cov_45c2690h3().b[0][1]++;
+  }
+  cov_45c2690h3().s[7]++;
+  return studentRecords.rows;
+};
+// get student record by campus id
+/* istanbul ignore next */
+cov_45c2690h3().s[8]++;
+StudentRecordService.getStudentRecordByCampusId = async campus_id => {
+  /* istanbul ignore next */
+  cov_45c2690h3().f[2]++;
+  const studentRecords =
+  /* istanbul ignore next */
+  (cov_45c2690h3().s[9]++, await StudentRecord.find({
+    campus_id,
+    is_deleted: false
+  }, {
+    sort: {
+      updated_at: "DESC"
+    }
+  }));
+  /* istanbul ignore next */
+  cov_45c2690h3().s[10]++;
+  if (studentRecords.rows.length === 0) {
+    /* istanbul ignore next */
+    cov_45c2690h3().b[1][0]++;
+    cov_45c2690h3().s[11]++;
+    return [];
+  } else
+  /* istanbul ignore next */
+  {
+    cov_45c2690h3().b[1][1]++;
+  }
+  cov_45c2690h3().s[12]++;
+  return studentRecords.rows;
+};
+// get student record by id
+/* istanbul ignore next */
+cov_45c2690h3().s[13]++;
+StudentRecordService.getStudentRecordById = async id => {
+  /* istanbul ignore next */
+  cov_45c2690h3().f[3]++;
+  cov_45c2690h3().s[14]++;
+  return await StudentRecord.findById(id);
+};
+// update student record by id
+/* istanbul ignore next */
+cov_45c2690h3().s[15]++;
+StudentRecordService.updateStudentRecordById = async (id, data) => {
+  /* istanbul ignore next */
+  cov_45c2690h3().f[4]++;
+  const studentRecord =
+  /* istanbul ignore next */
+  (cov_45c2690h3().s[16]++, await StudentRecord.updateById(id, Object.assign(Object.assign({}, data), {
+    updated_at: new Date()
+  })));
+  /* istanbul ignore next */
+  cov_45c2690h3().s[17]++;
+  if (!studentRecord) {
+    /* istanbul ignore next */
+    cov_45c2690h3().b[2][0]++;
+    cov_45c2690h3().s[18]++;
+    throw new Error("Student record not updated");
+  } else
+  /* istanbul ignore next */
+  {
+    cov_45c2690h3().b[2][1]++;
+  }
+  cov_45c2690h3().s[19]++;
+  return studentRecord;
+};
+// delete student record by id
+/* istanbul ignore next */
+cov_45c2690h3().s[20]++;
+StudentRecordService.deleteStudentRecordById = async id => {
+  /* istanbul ignore next */
+  cov_45c2690h3().f[5]++;
+  const studentRecord =
+  /* istanbul ignore next */
+  (cov_45c2690h3().s[21]++, await StudentRecord.updateById(id, {
+    is_deleted: true,
+    is_active: false
+  }));
+  /* istanbul ignore next */
+  cov_45c2690h3().s[22]++;
+  if (!studentRecord) {
+    /* istanbul ignore next */
+    cov_45c2690h3().b[3][0]++;
+    cov_45c2690h3().s[23]++;
+    throw new Error("Student record not deleted");
+  } else
+  /* istanbul ignore next */
+  {
+    cov_45c2690h3().b[3][1]++;
+  }
+  cov_45c2690h3().s[24]++;
+  return studentRecord;
+};

@@ -1,6 +1,7 @@
 # KCS Backend Developer Guide
 
-Welcome to the KCS (Knowledge Center System) Backend project! This comprehensive guide will help new backend developers understand the project structure, architecture, and development workflow.
+Welcome to the KCS (Knowledge Center System) Backend project! This comprehensive guide will help new
+backend developers understand the project structure, architecture, and development workflow.
 
 ## Table of Contents
 
@@ -22,7 +23,8 @@ Welcome to the KCS (Knowledge Center System) Backend project! This comprehensive
 
 ## Project Overview
 
-The KCS Backend is a comprehensive educational management system API built with modern TypeScript technologies. It provides a robust backend for managing:
+The KCS Backend is a comprehensive educational management system API built with modern TypeScript
+technologies. It provides a robust backend for managing:
 
 - **Student Management**: Student records, enrollments, and academic tracking
 - **Teacher Management**: Teacher profiles, assignments, and class management
@@ -260,10 +262,7 @@ When adding a new feature, follow this structure:
         // ... other fields
     });
 
-    export const Example = ottoman.model<IExampleData>(
-        "Example",
-        ExampleSchema
-    );
+    export const Example = ottoman.model<IExampleData>("Example", ExampleSchema);
     ```
 
 2. **Create the Service** (`src/services/`)
@@ -699,4 +698,5 @@ Useful database management scripts in `scripts/`:
 - **Database Schema**: Review model files in `src/models/`
 - **Test Examples**: Look at test files for usage patterns
 
-Welcome to the KCS Backend team! This guide should help you get started. Don't hesitate to ask questions and refer to existing code for examples.
+Welcome to the KCS Backend team! This guide should help you get started. Don't hesitate to ask
+questions and refer to existing code for examples.

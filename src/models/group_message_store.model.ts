@@ -28,9 +28,6 @@ const GroupMessageStoreSchema = new Schema({
 GroupMessageStoreSchema.index.findByCampusId = { by: "campus_id" };
 GroupMessageStoreSchema.index.findByGroupId = { by: "group_id" };
 
-const GroupMessageStore = ottoman.model<IGroupMessageStore>(
-    "group_messages_store",
-    GroupMessageStoreSchema
-);
+const GroupMessageStore = ottoman.model<IGroupMessageStore>("group_messages_store", GroupMessageStoreSchema);
 
 export { GroupMessageStore, type IGroupMessageStore };

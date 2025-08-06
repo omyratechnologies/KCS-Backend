@@ -1,0 +1,266 @@
+1530e12fb1b1d1bca2bd09052e8b0946
+/* istanbul ignore next */
+function cov_5fk61kuus() {
+  var path = "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/models/examination.model.ts";
+  var hash = "34dfe9e6ec7b70747ffb760ff55f6a728385473c";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/models/examination.model.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 26
+        },
+        end: {
+          line: 13,
+          column: 2
+        }
+      },
+      "1": {
+        start: {
+          line: 11,
+          column: 45
+        },
+        end: {
+          line: 11,
+          column: 55
+        }
+      },
+      "2": {
+        start: {
+          line: 12,
+          column: 45
+        },
+        end: {
+          line: 12,
+          column: 55
+        }
+      },
+      "3": {
+        start: {
+          line: 14,
+          column: 0
+        },
+        end: {
+          line: 14,
+          column: 61
+        }
+      },
+      "4": {
+        start: {
+          line: 15,
+          column: 0
+        },
+        end: {
+          line: 15,
+          column: 63
+        }
+      },
+      "5": {
+        start: {
+          line: 16,
+          column: 0
+        },
+        end: {
+          line: 16,
+          column: 59
+        }
+      },
+      "6": {
+        start: {
+          line: 17,
+          column: 0
+        },
+        end: {
+          line: 17,
+          column: 63
+        }
+      },
+      "7": {
+        start: {
+          line: 18,
+          column: 0
+        },
+        end: {
+          line: 18,
+          column: 66
+        }
+      },
+      "8": {
+        start: {
+          line: 19,
+          column: 20
+        },
+        end: {
+          line: 19,
+          column: 67
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 11,
+            column: 39
+          },
+          end: {
+            line: 11,
+            column: 40
+          }
+        },
+        loc: {
+          start: {
+            line: 11,
+            column: 45
+          },
+          end: {
+            line: 11,
+            column: 55
+          }
+        },
+        line: 11
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 12,
+            column: 39
+          },
+          end: {
+            line: 12,
+            column: 40
+          }
+        },
+        loc: {
+          start: {
+            line: 12,
+            column: 45
+          },
+          end: {
+            line: 12,
+            column: 55
+          }
+        },
+        line: 12
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0
+    },
+    b: {},
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "34dfe9e6ec7b70747ffb760ff55f6a728385473c"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_5fk61kuus = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_5fk61kuus();
+import { Schema } from "ottoman";
+import { ottoman } from "../libs/db";
+const ExaminationSchema =
+/* istanbul ignore next */
+(cov_5fk61kuus().s[0]++, new Schema({
+  campus_id: {
+    type: String,
+    required: true
+  },
+  subject_id: {
+    type: String,
+    required: true
+  },
+  date: {
+    type: Date,
+    required: true
+  },
+  start_date: {
+    type: Date,
+    required: true
+  },
+  end_date: {
+    type: Date,
+    required: true
+  },
+  exam_term_id: {
+    type: String,
+    required: true
+  },
+  meta_data: {
+    type: Object,
+    required: true
+  },
+  created_at: {
+    type: Date,
+    default: () => {
+      /* istanbul ignore next */
+      cov_5fk61kuus().f[0]++;
+      cov_5fk61kuus().s[1]++;
+      return new Date();
+    }
+  },
+  updated_at: {
+    type: Date,
+    default: () => {
+      /* istanbul ignore next */
+      cov_5fk61kuus().f[1]++;
+      cov_5fk61kuus().s[2]++;
+      return new Date();
+    }
+  }
+}));
+/* istanbul ignore next */
+cov_5fk61kuus().s[3]++;
+ExaminationSchema.index.findByCampusId = {
+  by: "campus_id"
+};
+/* istanbul ignore next */
+cov_5fk61kuus().s[4]++;
+ExaminationSchema.index.findByStartDate = {
+  by: "start_date"
+};
+/* istanbul ignore next */
+cov_5fk61kuus().s[5]++;
+ExaminationSchema.index.findByEndDate = {
+  by: "end_date"
+};
+/* istanbul ignore next */
+cov_5fk61kuus().s[6]++;
+ExaminationSchema.index.findBySubjectId = {
+  by: "subject_id"
+};
+/* istanbul ignore next */
+cov_5fk61kuus().s[7]++;
+ExaminationSchema.index.findByExamTermId = {
+  by: "exam_term_id"
+};
+const Examination =
+/* istanbul ignore next */
+(cov_5fk61kuus().s[8]++, ottoman.model("examination", ExaminationSchema));
+export { Examination };

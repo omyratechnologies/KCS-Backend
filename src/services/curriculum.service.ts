@@ -29,9 +29,7 @@ export class CurriculumService {
     };
 
     // Get all by campus id
-    public static readonly getCurriculumsByCampusId = async (
-        campus_id: string
-    ) => {
+    public static readonly getCurriculumsByCampusId = async (campus_id: string) => {
         const curriculum: {
             rows: ICurriculumData[];
         } = await Curriculum.find(
@@ -54,10 +52,7 @@ export class CurriculumService {
     };
 
     // Update by ID
-    public static readonly updateCurriculumById = async (
-        id: string,
-        data: Partial<ICurriculumData>
-    ) => {
+    public static readonly updateCurriculumById = async (id: string, data: Partial<ICurriculumData>) => {
         return await Curriculum.updateById(id, {
             ...data,
             updated_at: new Date(),

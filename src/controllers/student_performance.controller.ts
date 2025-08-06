@@ -4,26 +4,22 @@ import { StudentPerformanceService } from "@/services/student_performance.servic
 
 export class StudentPerformanceController {
     // Get student performance by semester
-    public static readonly getStudentPerformanceBySemester = async (
-        ctx: Context
-    ) => {
+    public static readonly getStudentPerformanceBySemester = async (ctx: Context) => {
         try {
             const student_id = ctx.req.param("student_id");
             const semester = ctx.req.param("semester");
             const academic_year = ctx.req.query("academic_year");
 
-            const performance =
-                await StudentPerformanceService.getStudentPerformanceBySemester(
-                    student_id,
-                    semester,
-                    academic_year
-                );
+            const performance = await StudentPerformanceService.getStudentPerformanceBySemester(
+                student_id,
+                semester,
+                academic_year
+            );
 
             if (!performance) {
                 return ctx.json(
                     {
-                        message:
-                            "Performance data not found for the specified semester",
+                        message: "Performance data not found for the specified semester",
                     },
                     404
                 );
@@ -47,18 +43,15 @@ export class StudentPerformanceController {
     };
 
     // Get student performance by academic year (all semesters)
-    public static readonly getStudentPerformanceByAcademicYear = async (
-        ctx: Context
-    ) => {
+    public static readonly getStudentPerformanceByAcademicYear = async (ctx: Context) => {
         try {
             const student_id = ctx.req.param("student_id");
             const academic_year = ctx.req.param("academic_year");
 
-            const performance =
-                await StudentPerformanceService.getStudentPerformanceByAcademicYear(
-                    student_id,
-                    academic_year
-                );
+            const performance = await StudentPerformanceService.getStudentPerformanceByAcademicYear(
+                student_id,
+                academic_year
+            );
 
             return ctx.json({
                 success: true,
@@ -83,10 +76,7 @@ export class StudentPerformanceController {
         try {
             const student_id = ctx.req.param("student_id");
 
-            const performance =
-                await StudentPerformanceService.getAllStudentPerformance(
-                    student_id
-                );
+            const performance = await StudentPerformanceService.getAllStudentPerformance(student_id);
 
             return ctx.json({
                 success: true,
@@ -117,11 +107,7 @@ export class StudentPerformanceController {
                 academicYearsArray = academic_years.split(",");
             }
 
-            const summary =
-                await StudentPerformanceService.getPerformanceSummary(
-                    student_id,
-                    academicYearsArray
-                );
+            const summary = await StudentPerformanceService.getPerformanceSummary(student_id, academicYearsArray);
 
             return ctx.json({
                 success: true,
@@ -141,9 +127,7 @@ export class StudentPerformanceController {
     };
 
     // Create or update student performance
-    public static readonly createOrUpdateStudentPerformance = async (
-        ctx: Context
-    ) => {
+    public static readonly createOrUpdateStudentPerformance = async (ctx: Context) => {
         try {
             const campus_id = ctx.get("campus_id");
             const {
@@ -157,20 +141,19 @@ export class StudentPerformanceController {
                 assignment_performance,
             } = await ctx.req.json();
 
-            const performance =
-                await StudentPerformanceService.createOrUpdateStudentPerformance(
-                    campus_id,
-                    student_id,
-                    academic_year,
-                    semester,
-                    class_id,
-                    {
-                        performance_data,
-                        attendance,
-                        quiz_performance,
-                        assignment_performance,
-                    }
-                );
+            const performance = await StudentPerformanceService.createOrUpdateStudentPerformance(
+                campus_id,
+                student_id,
+                academic_year,
+                semester,
+                class_id,
+                {
+                    performance_data,
+                    attendance,
+                    quiz_performance,
+                    assignment_performance,
+                }
+            );
 
             return ctx.json({
                 success: true,
@@ -191,38 +174,32 @@ export class StudentPerformanceController {
     };
 
     // Calculate and save performance metrics
-    public static readonly calculateAndSavePerformanceMetrics = async (
-        ctx: Context
-    ) => {
+    public static readonly calculateAndSavePerformanceMetrics = async (ctx: Context) => {
         try {
             const campus_id = ctx.get("campus_id");
-            const { student_id, semester, academic_year, class_id } =
-                await ctx.req.json();
+            const { student_id, semester, academic_year, class_id } = await ctx.req.json();
 
             // Calculate performance metrics from raw data
-            const calculatedMetrics =
-                await StudentPerformanceService.calculatePerformanceMetrics(
-                    student_id,
-                    semester,
-                    academic_year
-                );
+            const calculatedMetrics = await StudentPerformanceService.calculatePerformanceMetrics(
+                student_id,
+                semester,
+                academic_year
+            );
 
             // Save the calculated metrics
-            const performance =
-                await StudentPerformanceService.createOrUpdateStudentPerformance(
-                    campus_id,
-                    student_id,
-                    academic_year,
-                    semester,
-                    class_id,
-                    calculatedMetrics
-                );
+            const performance = await StudentPerformanceService.createOrUpdateStudentPerformance(
+                campus_id,
+                student_id,
+                academic_year,
+                semester,
+                class_id,
+                calculatedMetrics
+            );
 
             return ctx.json({
                 success: true,
                 data: performance,
-                message:
-                    "Performance metrics calculated and saved successfully",
+                message: "Performance metrics calculated and saved successfully",
             });
         } catch (error) {
             if (error instanceof Error) {
@@ -238,9 +215,7 @@ export class StudentPerformanceController {
     };
 
     // Get current student's performance (authenticated student)
-    public static readonly getCurrentStudentPerformance = async (
-        ctx: Context
-    ) => {
+    public static readonly getCurrentStudentPerformance = async (ctx: Context) => {
         try {
             const user = ctx.get("user");
             const student_id = user.user_id;
@@ -249,19 +224,17 @@ export class StudentPerformanceController {
 
             if (semester) {
                 // Get specific semester performance
-                const performance =
-                    await StudentPerformanceService.getStudentPerformanceBySemester(
-                        student_id,
-                        semester,
-                        academic_year
-                    );
+                const performance = await StudentPerformanceService.getStudentPerformanceBySemester(
+                    student_id,
+                    semester,
+                    academic_year
+                );
 
                 if (!performance) {
                     return ctx.json(
                         {
                             success: false,
-                            message:
-                                "Performance data not found for the specified semester",
+                            message: "Performance data not found for the specified semester",
                         },
                         404
                     );
@@ -273,10 +246,7 @@ export class StudentPerformanceController {
                 });
             } else {
                 // Get all performance records
-                const performance =
-                    await StudentPerformanceService.getAllStudentPerformance(
-                        student_id
-                    );
+                const performance = await StudentPerformanceService.getAllStudentPerformance(student_id);
 
                 return ctx.json({
                     success: true,
@@ -298,9 +268,7 @@ export class StudentPerformanceController {
     };
 
     // Get current student's performance summary (authenticated student)
-    public static readonly getCurrentStudentPerformanceSummary = async (
-        ctx: Context
-    ) => {
+    public static readonly getCurrentStudentPerformanceSummary = async (ctx: Context) => {
         try {
             const user = ctx.get("user");
             const student_id = user.user_id;
@@ -311,11 +279,7 @@ export class StudentPerformanceController {
                 academicYearsArray = academic_years.split(",");
             }
 
-            const summary =
-                await StudentPerformanceService.getPerformanceSummary(
-                    student_id,
-                    academicYearsArray
-                );
+            const summary = await StudentPerformanceService.getPerformanceSummary(student_id, academicYearsArray);
 
             return ctx.json({
                 success: true,

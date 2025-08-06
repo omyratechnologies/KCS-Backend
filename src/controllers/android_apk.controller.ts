@@ -18,22 +18,13 @@ export class AndroidApkController {
                 file = body.file;
                 packageName = body.packageName;
                 version = body.version;
-                log(
-                    "Parsed body successfully",
-                    LogTypes.LOGS,
-                    "APK Controller"
-                );
+                log("Parsed body successfully", LogTypes.LOGS, "APK Controller");
             } catch (parseError) {
-                log(
-                    `Error parsing request body: ${parseError}`,
-                    LogTypes.ERROR,
-                    "APK Controller"
-                );
+                log(`Error parsing request body: ${parseError}`, LogTypes.ERROR, "APK Controller");
                 return ctx.json(
                     {
                         success: false,
-                        message:
-                            "Error parsing request body - invalid multipart form data",
+                        message: "Error parsing request body - invalid multipart form data",
                     },
                     400
                 );
@@ -41,11 +32,7 @@ export class AndroidApkController {
 
             // Validate required fields
             if (!file || typeof file === "string") {
-                log(
-                    "No file uploaded or invalid file type",
-                    LogTypes.ERROR,
-                    "APK Controller"
-                );
+                log("No file uploaded or invalid file type", LogTypes.ERROR, "APK Controller");
                 return ctx.json(
                     {
                         success: false,
@@ -56,11 +43,7 @@ export class AndroidApkController {
             }
 
             if (!packageName || !version) {
-                log(
-                    `Missing packageName or version: ${packageName}, ${version}`,
-                    LogTypes.ERROR,
-                    "APK Controller"
-                );
+                log(`Missing packageName or version: ${packageName}, ${version}`, LogTypes.ERROR, "APK Controller");
                 return ctx.json(
                     {
                         success: false,
@@ -70,27 +53,15 @@ export class AndroidApkController {
                 );
             }
 
-            log(
-                `Received file: ${file.name}, size: ${file.size}, type: ${file.type}`,
-                LogTypes.LOGS,
-                "APK Controller"
-            );
+            log(`Received file: ${file.name}, size: ${file.size}, type: ${file.type}`, LogTypes.LOGS, "APK Controller");
 
             // Validate file type
-            if (
-                !file.name.endsWith(".apk") &&
-                file.type !== "application/vnd.android.package-archive"
-            ) {
-                log(
-                    `Invalid file type: ${file.type}, name: ${file.name}`,
-                    LogTypes.ERROR,
-                    "APK Controller"
-                );
+            if (!file.name.endsWith(".apk") && file.type !== "application/vnd.android.package-archive") {
+                log(`Invalid file type: ${file.type}, name: ${file.name}`, LogTypes.ERROR, "APK Controller");
                 return ctx.json(
                     {
                         success: false,
-                        message:
-                            "Invalid file type. Only APK files are allowed",
+                        message: "Invalid file type. Only APK files are allowed",
                     },
                     400
                 );
@@ -99,16 +70,11 @@ export class AndroidApkController {
             // Validate file size (max 100MB)
             const maxSize = 100 * 1024 * 1024; // 100MB in bytes
             if (file.size > maxSize) {
-                log(
-                    `File too large: ${file.size} bytes (max: ${maxSize})`,
-                    LogTypes.ERROR,
-                    "APK Controller"
-                );
+                log(`File too large: ${file.size} bytes (max: ${maxSize})`, LogTypes.ERROR, "APK Controller");
                 return ctx.json(
                     {
                         success: false,
-                        message:
-                            "File too large. Maximum size allowed is 100MB",
+                        message: "File too large. Maximum size allowed is 100MB",
                     },
                     400
                 );
@@ -123,22 +89,11 @@ export class AndroidApkController {
                 });
             } catch (findError) {
                 // If it's a "document not found" error or collection doesn't exist, treat as no existing APK
-                if (
-                    findError instanceof Error &&
-                    findError.message.includes("document not found")
-                ) {
-                    log(
-                        "Collection doesn't exist yet, proceeding with upload",
-                        LogTypes.LOGS,
-                        "APK Controller"
-                    );
+                if (findError instanceof Error && findError.message.includes("document not found")) {
+                    log("Collection doesn't exist yet, proceeding with upload", LogTypes.LOGS, "APK Controller");
                     existingApk = null;
                 } else {
-                    log(
-                        `Error checking for existing APK: ${findError}`,
-                        LogTypes.ERROR,
-                        "APK Controller"
-                    );
+                    log(`Error checking for existing APK: ${findError}`, LogTypes.ERROR, "APK Controller");
                     throw findError; // Re-throw other types of errors
                 }
             }
@@ -147,8 +102,7 @@ export class AndroidApkController {
                 return ctx.json(
                     {
                         success: false,
-                        message:
-                            "APK with this package name and version already exists",
+                        message: "APK with this package name and version already exists",
                     },
                     409
                 );
@@ -162,33 +116,18 @@ export class AndroidApkController {
                 // Add timeout for S3 upload (30 seconds)
                 const uploadPromise = UploadFactory.upload(file);
                 const timeoutPromise = new Promise((_, reject) =>
-                    setTimeout(
-                        () =>
-                            reject(
-                                new Error("Upload timeout after 30 seconds")
-                            ),
-                        30_000
-                    )
+                    setTimeout(() => reject(new Error("Upload timeout after 30 seconds")), 30_000)
                 );
 
                 s3Data = await Promise.race([uploadPromise, timeoutPromise]);
-                log(
-                    `File uploaded to S3: ${s3Data.url}`,
-                    LogTypes.LOGS,
-                    "APK Controller"
-                );
+                log(`File uploaded to S3: ${s3Data.url}`, LogTypes.LOGS, "APK Controller");
             } catch (uploadError) {
-                log(
-                    `Error uploading file to S3: ${uploadError}`,
-                    LogTypes.ERROR,
-                    "APK Controller"
-                );
+                log(`Error uploading file to S3: ${uploadError}`, LogTypes.ERROR, "APK Controller");
                 return ctx.json(
                     {
                         success: false,
                         message:
-                            uploadError instanceof Error &&
-                            uploadError.message.includes("timeout")
+                            uploadError instanceof Error && uploadError.message.includes("timeout")
                                 ? "Upload timeout - file too large or network issue"
                                 : "Failed to upload file to storage",
                     },
@@ -210,28 +149,13 @@ export class AndroidApkController {
 
             let savedApk;
             try {
-                log(
-                    `Saving APK to database: ${packageName} v${version}`,
-                    LogTypes.LOGS,
-                    "APK Controller"
-                );
+                log(`Saving APK to database: ${packageName} v${version}`, LogTypes.LOGS, "APK Controller");
                 savedApk = await AndroidApk.create(apkData);
-                log(
-                    `APK saved successfully with ID: ${savedApk.id}`,
-                    LogTypes.LOGS,
-                    "APK Controller"
-                );
+                log(`APK saved successfully with ID: ${savedApk.id}`, LogTypes.LOGS, "APK Controller");
             } catch (createError) {
-                log(
-                    `Error creating APK document: ${createError}`,
-                    LogTypes.ERROR,
-                    "APK Controller"
-                );
+                log(`Error creating APK document: ${createError}`, LogTypes.ERROR, "APK Controller");
                 // If collection doesn't exist or other creation error, provide specific error
-                const errorMessage =
-                    createError instanceof Error
-                        ? createError.message
-                        : String(createError);
+                const errorMessage = createError instanceof Error ? createError.message : String(createError);
                 return ctx.json(
                     {
                         success: false,
@@ -241,11 +165,7 @@ export class AndroidApkController {
                 );
             }
 
-            log(
-                `APK uploaded successfully: ${packageName} v${version}`,
-                LogTypes.LOGS,
-                "APK Controller"
-            );
+            log(`APK uploaded successfully: ${packageName} v${version}`, LogTypes.LOGS, "APK Controller");
 
             return ctx.json(
                 {
@@ -263,11 +183,7 @@ export class AndroidApkController {
                 201
             );
         } catch (error) {
-            log(
-                `Error uploading APK: ${error}`,
-                LogTypes.ERROR,
-                "APK Controller"
-            );
+            log(`Error uploading APK: ${error}`, LogTypes.ERROR, "APK Controller");
             return ctx.json(
                 {
                     success: false,
@@ -288,14 +204,10 @@ export class AndroidApkController {
                 result = await AndroidApk.find({});
             } catch (findError) {
                 // If collection doesn't exist yet, return empty array
-                if (
-                    findError instanceof Error &&
-                    findError.message.includes("document not found")
-                ) {
+                if (findError instanceof Error && findError.message.includes("document not found")) {
                     return ctx.json({
                         success: true,
-                        message:
-                            "No APK files found (collection not created yet)",
+                        message: "No APK files found (collection not created yet)",
                         data: [],
                     });
                 }
@@ -318,11 +230,7 @@ export class AndroidApkController {
                 })),
             });
         } catch (error) {
-            log(
-                `Error fetching APKs: ${error}`,
-                LogTypes.ERROR,
-                "APK Controller"
-            );
+            log(`Error fetching APKs: ${error}`, LogTypes.ERROR, "APK Controller");
             return ctx.json(
                 {
                     success: false,
@@ -355,10 +263,7 @@ export class AndroidApkController {
                 result = await AndroidApk.find({ packageName });
             } catch (findError) {
                 // If collection doesn't exist yet, return not found
-                if (
-                    findError instanceof Error &&
-                    findError.message.includes("document not found")
-                ) {
+                if (findError instanceof Error && findError.message.includes("document not found")) {
                     return ctx.json(
                         {
                             success: false,
@@ -395,11 +300,7 @@ export class AndroidApkController {
                 })),
             });
         } catch (error) {
-            log(
-                `Error fetching APK by package name: ${error}`,
-                LogTypes.ERROR,
-                "APK Controller"
-            );
+            log(`Error fetching APK by package name: ${error}`, LogTypes.ERROR, "APK Controller");
             return ctx.json(
                 {
                     success: false,
@@ -432,10 +333,7 @@ export class AndroidApkController {
                 apk = await AndroidApk.findOne({ packageName, version });
             } catch (findError) {
                 // If collection doesn't exist yet, return not found
-                if (
-                    findError instanceof Error &&
-                    findError.message.includes("document not found")
-                ) {
+                if (findError instanceof Error && findError.message.includes("document not found")) {
                     return ctx.json(
                         {
                             success: false,
@@ -470,11 +368,7 @@ export class AndroidApkController {
                 },
             });
         } catch (error) {
-            log(
-                `Error fetching APK: ${error}`,
-                LogTypes.ERROR,
-                "APK Controller"
-            );
+            log(`Error fetching APK: ${error}`, LogTypes.ERROR, "APK Controller");
             return ctx.json(
                 {
                     success: false,
@@ -517,9 +411,7 @@ export class AndroidApkController {
 
             // Sort by upload date to get the latest
             const latestApk = apks.sort(
-                (a, b) =>
-                    new Date(b.uploadDate).getTime() -
-                    new Date(a.uploadDate).getTime()
+                (a, b) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime()
             )[0];
 
             return ctx.json({
@@ -535,11 +427,7 @@ export class AndroidApkController {
                 },
             });
         } catch (error) {
-            log(
-                `Error fetching latest APK: ${error}`,
-                LogTypes.ERROR,
-                "APK Controller"
-            );
+            log(`Error fetching latest APK: ${error}`, LogTypes.ERROR, "APK Controller");
             return ctx.json(
                 {
                     success: false,
@@ -581,22 +469,14 @@ export class AndroidApkController {
 
             await AndroidApk.removeById(id);
 
-            log(
-                `APK deleted successfully: ${apk.packageName} v${apk.version}`,
-                LogTypes.LOGS,
-                "APK Controller"
-            );
+            log(`APK deleted successfully: ${apk.packageName} v${apk.version}`, LogTypes.LOGS, "APK Controller");
 
             return ctx.json({
                 success: true,
                 message: "APK deleted successfully",
             });
         } catch (error) {
-            log(
-                `Error deleting APK: ${error}`,
-                LogTypes.ERROR,
-                "APK Controller"
-            );
+            log(`Error deleting APK: ${error}`, LogTypes.ERROR, "APK Controller");
             return ctx.json(
                 {
                     success: false,
@@ -639,11 +519,7 @@ export class AndroidApkController {
             // Redirect to the S3 URL for download
             return ctx.redirect(apk.filePath);
         } catch (error) {
-            log(
-                `Error downloading APK: ${error}`,
-                LogTypes.ERROR,
-                "APK Controller"
-            );
+            log(`Error downloading APK: ${error}`, LogTypes.ERROR, "APK Controller");
             return ctx.json(
                 {
                     success: false,

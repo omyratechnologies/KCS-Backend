@@ -1,0 +1,206 @@
+32eb82973a3ac4c533e1694b60bc4787
+/* istanbul ignore next */
+function cov_t7kml7uu() {
+  var path = "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/models/message_group.model.ts";
+  var hash = "bcb2a71d4e799e8dc503c643fdc6d1d9f61ffada";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/models/message_group.model.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 27
+        },
+        end: {
+          line: 14,
+          column: 2
+        }
+      },
+      "1": {
+        start: {
+          line: 12,
+          column: 45
+        },
+        end: {
+          line: 12,
+          column: 55
+        }
+      },
+      "2": {
+        start: {
+          line: 13,
+          column: 45
+        },
+        end: {
+          line: 13,
+          column: 55
+        }
+      },
+      "3": {
+        start: {
+          line: 15,
+          column: 0
+        },
+        end: {
+          line: 15,
+          column: 62
+        }
+      },
+      "4": {
+        start: {
+          line: 16,
+          column: 21
+        },
+        end: {
+          line: 16,
+          column: 72
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 12,
+            column: 39
+          },
+          end: {
+            line: 12,
+            column: 40
+          }
+        },
+        loc: {
+          start: {
+            line: 12,
+            column: 45
+          },
+          end: {
+            line: 12,
+            column: 55
+          }
+        },
+        line: 12
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 13,
+            column: 39
+          },
+          end: {
+            line: 13,
+            column: 40
+          }
+        },
+        loc: {
+          start: {
+            line: 13,
+            column: 45
+          },
+          end: {
+            line: 13,
+            column: 55
+          }
+        },
+        line: 13
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0
+    },
+    b: {},
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "bcb2a71d4e799e8dc503c643fdc6d1d9f61ffada"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_t7kml7uu = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_t7kml7uu();
+import { Schema } from "ottoman";
+import { ottoman } from "../libs/db";
+const MessageGroupSchema =
+/* istanbul ignore next */
+(cov_t7kml7uu().s[0]++, new Schema({
+  campus_id: {
+    type: String,
+    required: true
+  },
+  group_name: {
+    type: String,
+    required: true
+  },
+  group_description: {
+    type: String,
+    required: true
+  },
+  admin_user_id: {
+    type: String,
+    required: true
+  },
+  members: {
+    type: [String],
+    required: true
+  },
+  meta_data: {
+    type: Object,
+    required: true
+  },
+  is_active: {
+    type: Boolean,
+    required: true
+  },
+  is_deleted: {
+    type: Boolean,
+    required: true
+  },
+  created_at: {
+    type: Date,
+    default: () => {
+      /* istanbul ignore next */
+      cov_t7kml7uu().f[0]++;
+      cov_t7kml7uu().s[1]++;
+      return new Date();
+    }
+  },
+  updated_at: {
+    type: Date,
+    default: () => {
+      /* istanbul ignore next */
+      cov_t7kml7uu().f[1]++;
+      cov_t7kml7uu().s[2]++;
+      return new Date();
+    }
+  }
+}));
+/* istanbul ignore next */
+cov_t7kml7uu().s[3]++;
+MessageGroupSchema.index.findByCampusId = {
+  by: "campus_id"
+};
+const MessageGroup =
+/* istanbul ignore next */
+(cov_t7kml7uu().s[4]++, ottoman.model("message_groups", MessageGroupSchema));
+export { MessageGroup };

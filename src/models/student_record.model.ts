@@ -31,9 +31,6 @@ const StudentRecordSchema = new Schema({
 StudentRecordSchema.index.findByCampusId = { by: "campus_id" };
 StudentRecordSchema.index.findByStudentId = { by: "student_id" };
 
-const StudentRecord = ottoman.model<IStudentRecordData>(
-    "student_records",
-    StudentRecordSchema
-);
+const StudentRecord = ottoman.model<IStudentRecordData>("student_records", StudentRecordSchema);
 
 export { type IStudentRecordData, StudentRecord };

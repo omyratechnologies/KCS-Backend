@@ -105,11 +105,7 @@ export class BulkOperationsService {
             }
 
             // Get target students
-            const targetStudents = await this.getTargetStudents(
-                campus_id,
-                request.class_ids,
-                request.student_ids
-            );
+            const targetStudents = await this.getTargetStudents(campus_id, request.class_ids, request.student_ids);
 
             result.total_requested = targetStudents.length;
 
@@ -146,10 +142,7 @@ export class BulkOperationsService {
                     const feeItems = template.fee_structure.map((item) => ({
                         category_id: item.category_id,
                         fee_type: "template",
-                        amount: customAmount
-                            ? (item.amount / template.total_amount) *
-                              customAmount
-                            : item.amount,
+                        amount: customAmount ? (item.amount / template.total_amount) * customAmount : item.amount,
                         name: item.category_name,
                         due_date: request.due_date_override || item.due_date,
                         is_mandatory: item.is_mandatory,
@@ -172,8 +165,7 @@ export class BulkOperationsService {
                         late_fee_amount: 0,
                         payment_status: "unpaid",
                         is_paid: false,
-                        installments_allowed:
-                            request.installments_allowed ?? false,
+                        installments_allowed: request.installments_allowed ?? false,
                         auto_late_fee: true,
                         reminder_sent: {
                             email_count: 0,
@@ -192,16 +184,11 @@ export class BulkOperationsService {
 
                     // Apply discounts if requested
                     if (request.apply_discounts) {
-                        await this.applyAutoDiscounts(
-                            campus_id,
-                            createdFee.id,
-                            student.id
-                        );
+                        await this.applyAutoDiscounts(campus_id, createdFee.id, student.id);
                     }
 
                     result.successful++;
-                    result.summary.total_amount =
-                        (result.summary.total_amount || 0) + feeAmount;
+                    result.summary.total_amount = (result.summary.total_amount || 0) + feeAmount;
 
                     result.results.push({
                         student_id: student.id,
@@ -214,20 +201,13 @@ export class BulkOperationsService {
 
                     // Send notification if requested
                     if (request.send_notifications) {
-                        await this.sendFeeGenerationNotification(
-                            campus_id,
-                            createdFee,
-                            student
-                        );
+                        await this.sendFeeGenerationNotification(campus_id, createdFee, student);
                     }
                 } catch (error) {
                     result.failed++;
                     result.errors.push({
                         entity_id: student.id,
-                        error:
-                            error instanceof Error
-                                ? error.message
-                                : "Unknown error",
+                        error: error instanceof Error ? error.message : "Unknown error",
                         details: {
                             student_name: `${student.first_name} ${student.last_name}`,
                         },
@@ -235,8 +215,7 @@ export class BulkOperationsService {
                 }
             }
 
-            result.summary.success_rate =
-                (result.successful / result.total_requested) * 100;
+            result.summary.success_rate = (result.successful / result.total_requested) * 100;
             result.summary.processing_time_ms = Date.now() - startTime;
 
             return result;
@@ -272,17 +251,11 @@ export class BulkOperationsService {
 
         try {
             const { Fee } = await import("@/models/fee.model");
-            const { PaymentService } = await import(
-                "@/services/payment.service"
-            );
+            const { PaymentService } = await import("@/services/payment.service");
             const { UserService } = await import("@/services/users.service");
 
             // Get target fees
-            const targetFees = await this.getTargetFees(
-                campus_id,
-                request.student_ids,
-                request.fee_ids
-            );
+            const targetFees = await this.getTargetFees(campus_id, request.student_ids, request.fee_ids);
 
             result.total_requested = targetFees.length;
 
@@ -308,15 +281,10 @@ export class BulkOperationsService {
 
                     if (request.auto_approve) {
                         // For admin-initiated payments, mark as completed
-                        await this.processAdminPayment(
-                            campus_id,
-                            fee,
-                            processed_by
-                        );
+                        await this.processAdminPayment(campus_id, fee, processed_by);
 
                         result.successful++;
-                        result.summary.total_amount =
-                            (result.summary.total_amount || 0) + fee.due_amount;
+                        result.summary.total_amount = (result.summary.total_amount || 0) + fee.due_amount;
 
                         result.results.push({
                             student_id: fee.user_id,
@@ -328,21 +296,19 @@ export class BulkOperationsService {
                         });
                     } else {
                         // Initiate normal payment process
-                        const paymentResult =
-                            await PaymentService.initiatePayment(
-                                campus_id,
-                                fee.id,
-                                fee.user_id,
-                                fee.parent_id,
-                                request.payment_gateway,
-                                fee.due_amount,
-                                `${process.env.FRONTEND_URL}/payment/callback`,
-                                `${process.env.FRONTEND_URL}/payment/cancel`
-                            );
+                        const paymentResult = await PaymentService.initiatePayment(
+                            campus_id,
+                            fee.id,
+                            fee.user_id,
+                            fee.parent_id,
+                            request.payment_gateway,
+                            fee.due_amount,
+                            `${process.env.FRONTEND_URL}/payment/callback`,
+                            `${process.env.FRONTEND_URL}/payment/cancel`
+                        );
 
                         result.successful++;
-                        result.summary.total_amount =
-                            (result.summary.total_amount || 0) + fee.due_amount;
+                        result.summary.total_amount = (result.summary.total_amount || 0) + fee.due_amount;
 
                         result.results.push({
                             student_id: fee.user_id,
@@ -351,28 +317,19 @@ export class BulkOperationsService {
                             transaction_id: paymentResult.transaction.id,
                             amount: fee.due_amount,
                             status: "initiated",
-                            payment_url:
-                                paymentResult.payment_details?.payment_url,
+                            payment_url: paymentResult.payment_details?.payment_url,
                         });
                     }
 
                     // Send notification if requested
                     if (request.send_notifications) {
-                        await this.sendPaymentNotification(
-                            campus_id,
-                            fee,
-                            student,
-                            request.auto_approve || false
-                        );
+                        await this.sendPaymentNotification(campus_id, fee, student, request.auto_approve || false);
                     }
                 } catch (error) {
                     result.failed++;
                     result.errors.push({
                         entity_id: fee.id,
-                        error:
-                            error instanceof Error
-                                ? error.message
-                                : "Unknown error",
+                        error: error instanceof Error ? error.message : "Unknown error",
                         details: {
                             student_id: fee.user_id,
                             amount: fee.due_amount,
@@ -381,8 +338,7 @@ export class BulkOperationsService {
                 }
             }
 
-            result.summary.success_rate =
-                (result.successful / result.total_requested) * 100;
+            result.summary.success_rate = (result.successful / result.total_requested) * 100;
             result.summary.processing_time_ms = Date.now() - startTime;
 
             return result;
@@ -406,9 +362,7 @@ export class BulkOperationsService {
             installments_allowed?: boolean;
         },
         updated_by: string
-    ): Promise<
-        BulkOperationResult<{ fee_id: string; updated_fields: string[] }>
-    > {
+    ): Promise<BulkOperationResult<{ fee_id: string; updated_fields: string[] }>> {
         const startTime = Date.now();
         const result: BulkOperationResult<{
             fee_id: string;
@@ -450,10 +404,8 @@ export class BulkOperationsService {
                     };
 
                     if (updates.amount_adjustment) {
-                        feeUpdates.total_amount =
-                            fee.total_amount + updates.amount_adjustment;
-                        feeUpdates.due_amount =
-                            fee.due_amount + updates.amount_adjustment;
+                        feeUpdates.total_amount = fee.total_amount + updates.amount_adjustment;
+                        feeUpdates.due_amount = fee.due_amount + updates.amount_adjustment;
                         updatedFields.push("amount");
                     }
 
@@ -471,8 +423,7 @@ export class BulkOperationsService {
                     }
 
                     if (updates.installments_allowed !== undefined) {
-                        feeUpdates.installments_allowed =
-                            updates.installments_allowed;
+                        feeUpdates.installments_allowed = updates.installments_allowed;
                         updatedFields.push("installments");
                     }
 
@@ -487,16 +438,12 @@ export class BulkOperationsService {
                     result.failed++;
                     result.errors.push({
                         entity_id: fee_id,
-                        error:
-                            error instanceof Error
-                                ? error.message
-                                : "Unknown error",
+                        error: error instanceof Error ? error.message : "Unknown error",
                     });
                 }
             }
 
-            result.summary.success_rate =
-                (result.successful / result.total_requested) * 100;
+            result.summary.success_rate = (result.successful / result.total_requested) * 100;
             result.summary.processing_time_ms = Date.now() - startTime;
 
             return result;
@@ -581,25 +528,17 @@ export class BulkOperationsService {
         return fees.rows || [];
     }
 
-    private static async applyAutoDiscounts(
-        campus_id: string,
-        fee_id: string,
-        student_id: string
-    ): Promise<void> {
+    private static async applyAutoDiscounts(campus_id: string, fee_id: string, student_id: string): Promise<void> {
         try {
-            const { DiscountService } = await import(
-                "@/services/discount.service"
-            );
+            const { DiscountService } = await import("@/services/discount.service");
             const { Fee } = await import("@/models/fee.model");
 
             const fee = await Fee.findById(fee_id);
-            if (!fee) return;
+            if (!fee) {
+                return;
+            }
 
-            const eligibility = await DiscountService.checkDiscountEligibility(
-                campus_id,
-                fee,
-                student_id
-            );
+            const eligibility = await DiscountService.checkDiscountEligibility(campus_id, fee, student_id);
 
             for (const discount of eligibility.applicable_discounts) {
                 if (discount.rule.auto_apply) {
@@ -618,18 +557,10 @@ export class BulkOperationsService {
         }
     }
 
-    private static async processAdminPayment(
-        campus_id: string,
-        fee: IFeeData,
-        processed_by: string
-    ): Promise<void> {
+    private static async processAdminPayment(campus_id: string, fee: IFeeData, processed_by: string): Promise<void> {
         const { Fee } = await import("@/models/fee.model");
-        const { PaymentTransaction } = await import(
-            "@/models/payment_transaction.model"
-        );
-        const { PaymentInvoice } = await import(
-            "@/models/payment_invoice.model"
-        );
+        const { PaymentTransaction } = await import("@/models/payment_transaction.model");
+        const { PaymentInvoice } = await import("@/models/payment_invoice.model");
 
         // Create transaction record
         const transaction: Partial<IPaymentTransaction> = {
@@ -678,15 +609,9 @@ export class BulkOperationsService {
         await this.generateInvoice(campus_id, createdTransaction, fee);
     }
 
-    private static async generateInvoice(
-        campus_id: string,
-        transaction: any,
-        fee: IFeeData
-    ): Promise<void> {
+    private static async generateInvoice(campus_id: string, transaction: any, fee: IFeeData): Promise<void> {
         try {
-            const { PaymentInvoice } = await import(
-                "@/models/payment_invoice.model"
-            );
+            const { PaymentInvoice } = await import("@/models/payment_invoice.model");
             const { UserService } = await import("@/services/users.service");
 
             const student = await UserService.getUser(fee.user_id);
@@ -717,24 +642,12 @@ export class BulkOperationsService {
         }
     }
 
-    private static async sendFeeGenerationNotification(
-        campus_id: string,
-        fee: any,
-        student: any
-    ): Promise<void> {
+    private static async sendFeeGenerationNotification(campus_id: string, fee: any, student: any): Promise<void> {
         try {
-            const { PaymentNotificationService } = await import(
-                "@/services/payment_notification.service"
-            );
-            const schoolData =
-                await PaymentNotificationService.getSchoolDetails(campus_id);
+            const { PaymentNotificationService } = await import("@/services/payment_notification.service");
+            const schoolData = await PaymentNotificationService.getSchoolDetails(campus_id);
 
-            await PaymentNotificationService.sendPaymentDueReminder(
-                campus_id,
-                fee,
-                student,
-                schoolData
-            );
+            await PaymentNotificationService.sendPaymentDueReminder(campus_id, fee, student, schoolData);
         } catch (error) {
             console.error("Failed to send fee generation notification:", error);
         }
@@ -747,11 +660,8 @@ export class BulkOperationsService {
         isCompleted: boolean
     ): Promise<void> {
         try {
-            const { PaymentNotificationService } = await import(
-                "@/services/payment_notification.service"
-            );
-            const schoolData =
-                await PaymentNotificationService.getSchoolDetails(campus_id);
+            const { PaymentNotificationService } = await import("@/services/payment_notification.service");
+            const schoolData = await PaymentNotificationService.getSchoolDetails(campus_id);
 
             if (isCompleted) {
                 // Send payment success notification
@@ -772,12 +682,7 @@ export class BulkOperationsService {
                 );
             } else {
                 // Send payment due notification
-                await PaymentNotificationService.sendPaymentDueReminder(
-                    campus_id,
-                    fee,
-                    student,
-                    schoolData
-                );
+                await PaymentNotificationService.sendPaymentDueReminder(campus_id, fee, student, schoolData);
             }
         } catch (error) {
             console.error("Failed to send payment notification:", error);

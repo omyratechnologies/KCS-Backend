@@ -6,10 +6,7 @@ import { UserService } from "./users.service";
 
 export class TeacherService {
     // Create a new teacher
-    public static async createTeacher(
-        campusId: string,
-        teacherData: Partial<ITeacherData>
-    ): Promise<ITeacherData> {
+    public static async createTeacher(campusId: string, teacherData: Partial<ITeacherData>): Promise<ITeacherData> {
         const teacher = await Teacher.create({
             campus_id: campusId,
             ...teacherData,
@@ -33,10 +30,7 @@ export class TeacherService {
                         } catch {
                             existingMetaData = {};
                         }
-                    } else if (
-                        user.meta_data &&
-                        typeof user.meta_data === "object"
-                    ) {
+                    } else if (user.meta_data && typeof user.meta_data === "object") {
                         existingMetaData = user.meta_data;
                     }
 
@@ -52,9 +46,7 @@ export class TeacherService {
                     });
                 }
             } catch (error) {
-                console.error(
-                    `Failed to update user meta_data with teacher_id: ${error}`
-                );
+                console.error(`Failed to update user meta_data with teacher_id: ${error}`);
                 // Don't throw error here as teacher creation was successful
                 // Just log the error for debugging
             }
@@ -106,9 +98,7 @@ export class TeacherService {
             throw new Error("Teacher profile not found");
         }
 
-        const teacher_subjects = await this.getAllSubjectsByTeacherId(
-            teacher.id
-        );
+        const teacher_subjects = await this.getAllSubjectsByTeacherId(teacher.id);
         if (!teacher_subjects) {
             throw new Error("Teacher subjects not found");
         }
@@ -126,10 +116,7 @@ export class TeacherService {
     }
 
     // Update a teacher
-    public static async updateTeacher(
-        id: string,
-        teacherData: Partial<ITeacherData>
-    ) {
+    public static async updateTeacher(id: string, teacherData: Partial<ITeacherData>) {
         const teacher = await Teacher.findById(id);
         if (!teacher) {
             throw new Error("Teacher not found");
@@ -167,10 +154,7 @@ export class TeacherService {
                         } catch {
                             existingMetaData = {};
                         }
-                    } else if (
-                        user.meta_data &&
-                        typeof user.meta_data === "object"
-                    ) {
+                    } else if (user.meta_data && typeof user.meta_data === "object") {
                         existingMetaData = user.meta_data;
                     }
 
@@ -183,9 +167,7 @@ export class TeacherService {
                     });
                 }
             } catch (error) {
-                console.error(
-                    `Failed to remove teacher_id from user meta_data: ${error}`
-                );
+                console.error(`Failed to remove teacher_id from user meta_data: ${error}`);
                 // Don't throw error here as we still want to delete the teacher
                 // Just log the error for debugging
             }
@@ -200,9 +182,7 @@ export class TeacherService {
     }
 
     // Get all classes by teacher ID
-    public static async getAllClassesByTeacherId(
-        teacherId: string
-    ): Promise<IClassData[]> {
+    public static async getAllClassesByTeacherId(teacherId: string): Promise<IClassData[]> {
         const teacher = await Teacher.findById(teacherId);
 
         const classIds = teacher.classes;
@@ -215,9 +195,7 @@ export class TeacherService {
     }
 
     // Get all subjects by teacher ID
-    public static async getAllSubjectsByTeacherId(
-        teacherId: string
-    ): Promise<ISubject[]> {
+    public static async getAllSubjectsByTeacherId(teacherId: string): Promise<ISubject[]> {
         const teacher = await Teacher.findById(teacherId);
 
         const subjectIds = teacher.subjects;

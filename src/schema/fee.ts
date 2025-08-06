@@ -27,10 +27,7 @@ export const feeSchema = z
         due_amount: z.number().openapi({ example: 3000 }),
         payment_status: z.string().openapi({ example: "partial" }),
         is_paid: z.boolean().openapi({ example: false }),
-        payment_date: z
-            .string()
-            .nullable()
-            .openapi({ example: "2023-01-15T00:00:00Z" }),
+        payment_date: z.string().nullable().openapi({ example: "2023-01-15T00:00:00Z" }),
         payment_mode: z.string().nullable().openapi({ example: "online" }),
         meta_data: z.record(z.string(), z.any()).openapi({
             example: { semester: "Fall 2023", receipt_number: "R12345" },
@@ -50,9 +47,7 @@ export const createFeeRequestBodySchema = z
                 { fee_type: "library", amount: 500, name: "Library Fee" },
             ],
         }),
-        meta_data: z
-            .record(z.string(), z.any())
-            .openapi({ example: { semester: "Fall 2023" } }),
+        meta_data: z.record(z.string(), z.any()).openapi({ example: { semester: "Fall 2023" } }),
     })
     .openapi({ ref: "CreateFeeRequest" });
 
@@ -67,10 +62,7 @@ export const updateFeeRequestBodySchema = z
         due_amount: z.number().optional().openapi({ example: 0 }),
         payment_status: z.string().optional().openapi({ example: "paid" }),
         is_paid: z.boolean().optional().openapi({ example: true }),
-        payment_date: z
-            .string()
-            .optional()
-            .openapi({ example: "2023-01-20T00:00:00Z" }),
+        payment_date: z.string().optional().openapi({ example: "2023-01-20T00:00:00Z" }),
         payment_mode: z.string().optional().openapi({ example: "credit_card" }),
         meta_data: z
             .record(z.string(), z.any())
@@ -90,9 +82,7 @@ export const updateFeeResponseSchema = feeSchema.openapi({
 });
 
 // Get Fees Response
-export const getFeesResponseSchema = z
-    .array(feeSchema)
-    .openapi({ ref: "GetFeesResponse" });
+export const getFeesResponseSchema = z.array(feeSchema).openapi({ ref: "GetFeesResponse" });
 
 // Error Response
 export const errorResponseSchema = z

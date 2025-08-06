@@ -117,9 +117,6 @@ SchoolBankDetailsSchema.index.findByCampusId = { by: "campus_id" };
 SchoolBankDetailsSchema.index.findByAccountNumber = { by: "account_number" };
 SchoolBankDetailsSchema.index.findByIfscCode = { by: "ifsc_code" };
 
-const SchoolBankDetails = ottoman.model<ISchoolBankDetails>(
-    "school_bank_details",
-    SchoolBankDetailsSchema
-);
+const SchoolBankDetails = ottoman.model<ISchoolBankDetails>("school_bank_details", SchoolBankDetailsSchema);
 
 export { type ISchoolBankDetails, SchoolBankDetails };

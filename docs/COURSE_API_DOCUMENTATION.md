@@ -18,7 +18,9 @@
 
 ## Overview
 
-The Course Management API provides a comprehensive learning management system similar to Udemy/Coursera platforms. It supports course creation, enrollment, progress tracking, certificates, and detailed analytics.
+The Course Management API provides a comprehensive learning management system similar to
+Udemy/Coursera platforms. It supports course creation, enrollment, progress tracking, certificates,
+and detailed analytics.
 
 ### Key Features
 
@@ -246,10 +248,7 @@ user_id=user_123    # Optional: Include user's progress data
         "enrollment_count": 1250,
         "completion_count": 890,
         "estimated_duration_hours": 25,
-        "learning_objectives": [
-            "Build RESTful APIs with Node.js",
-            "Integrate with MongoDB"
-        ],
+        "learning_objectives": ["Build RESTful APIs with Node.js", "Integrate with MongoDB"],
         "prerequisites": ["Basic JavaScript knowledge"],
         "sections": [
             {
@@ -389,10 +388,7 @@ Creates a new section within a course.
     "section_order": 3,
     "is_published": true,
     "estimated_duration_minutes": 240,
-    "learning_objectives": [
-        "Understand event loops",
-        "Master async programming"
-    ]
+    "learning_objectives": ["Understand event loops", "Master async programming"]
 }
 ```
 
@@ -443,10 +439,7 @@ Creates a new lecture within a section.
             "url": "https://example.com/diagram.pdf"
         }
     ],
-    "learning_objectives": [
-        "Understand event loop phases",
-        "Learn about callback queue"
-    ]
+    "learning_objectives": ["Understand event loop phases", "Learn about callback queue"]
 }
 ```
 
@@ -890,13 +883,7 @@ Sets up a learning schedule with reminders (Udemy-style).
         "learning_schedule": {
             "target_completion_date": "2025-12-31T23:59:59Z",
             "daily_study_minutes": 30,
-            "study_days": [
-                "monday",
-                "tuesday",
-                "wednesday",
-                "thursday",
-                "friday"
-            ],
+            "study_days": ["monday", "tuesday", "wednesday", "thursday", "friday"],
             "reminder_time": "19:00",
             "timezone": "America/New_York",
             "send_reminders": true,
@@ -1140,4 +1127,6 @@ The system can send webhook notifications for:
 
 ---
 
-This documentation provides a comprehensive guide to the Course Management API with clear request/response examples, error handling, and business logic flows similar to industry-leading platforms like Udemy and Coursera.
+This documentation provides a comprehensive guide to the Course Management API with clear
+request/response examples, error handling, and business logic flows similar to industry-leading
+platforms like Udemy and Coursera.

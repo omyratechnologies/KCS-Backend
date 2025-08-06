@@ -1,0 +1,301 @@
+3fc77d1b7f9099dce6f9ac70c38445fd
+/* istanbul ignore next */
+function cov_12m9pp1bdn() {
+  var path = "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/routes/curriculum.route.ts";
+  var hash = "5541a18db3d6395630fc7e35c64e4c330da80149";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/avinashgantala/Development/KCS-Project/KCS-Backend/src/routes/curriculum.route.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 6,
+          column: 12
+        },
+        end: {
+          line: 6,
+          column: 22
+        }
+      },
+      "1": {
+        start: {
+          line: 7,
+          column: 0
+        },
+        end: {
+          line: 35,
+          column: 98
+        }
+      },
+      "2": {
+        start: {
+          line: 36,
+          column: 0
+        },
+        end: {
+          line: 64,
+          column: 51
+        }
+      },
+      "3": {
+        start: {
+          line: 65,
+          column: 0
+        },
+        end: {
+          line: 102,
+          column: 44
+        }
+      },
+      "4": {
+        start: {
+          line: 103,
+          column: 0
+        },
+        end: {
+          line: 140,
+          column: 102
+        }
+      },
+      "5": {
+        start: {
+          line: 141,
+          column: 0
+        },
+        end: {
+          line: 178,
+          column: 47
+        }
+      }
+    },
+    fnMap: {},
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0
+    },
+    f: {},
+    b: {},
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "5541a18db3d6395630fc7e35c64e4c330da80149"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_12m9pp1bdn = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_12m9pp1bdn();
+import { Hono } from "hono";
+import { describeRoute } from "hono-openapi";
+import { resolver, validator as zValidator } from "hono-openapi/zod";
+import { CurriculumController } from "@/controllers/curriculum.controller";
+import { createCurriculumRequestBodySchema, createCurriculumResponseSchema, curriculumSchema, deleteCurriculumResponseSchema, getCurriculumsResponseSchema, updateCurriculumRequestBodySchema, updateCurriculumResponseSchema } from "@/schema/curriculum";
+const app =
+/* istanbul ignore next */
+(cov_12m9pp1bdn().s[0]++, new Hono());
+/* istanbul ignore next */
+cov_12m9pp1bdn().s[1]++;
+app.post("/", describeRoute({
+  tags: ["Curriculum"],
+  operationId: "createCurriculum",
+  summary: "Create a new curriculum",
+  description: "Creates a new curriculum in the system",
+  responses: {
+    200: {
+      description: "Curriculum created successfully",
+      content: {
+        "application/json": {
+          schema: resolver(createCurriculumResponseSchema)
+        }
+      }
+    },
+    500: {
+      description: "Server error",
+      content: {
+        "application/json": {
+          schema: {
+            type: "object",
+            properties: {
+              message: {
+                type: "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}), zValidator("json", createCurriculumRequestBodySchema), CurriculumController.createCurriculum);
+/* istanbul ignore next */
+cov_12m9pp1bdn().s[2]++;
+app.get("/", describeRoute({
+  tags: ["Curriculum"],
+  operationId: "getCurriculumsByCampusId",
+  summary: "Get all curriculums by campus ID",
+  description: "Retrieves all curriculums for a specific campus",
+  responses: {
+    200: {
+      description: "List of curriculums",
+      content: {
+        "application/json": {
+          schema: resolver(getCurriculumsResponseSchema)
+        }
+      }
+    },
+    500: {
+      description: "Server error",
+      content: {
+        "application/json": {
+          schema: {
+            type: "object",
+            properties: {
+              message: {
+                type: "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}), CurriculumController.getCurriculumsByCampusId);
+/* istanbul ignore next */
+cov_12m9pp1bdn().s[3]++;
+app.get("/:id", describeRoute({
+  tags: ["Curriculum"],
+  operationId: "getCurriculumById",
+  summary: "Get curriculum by ID",
+  description: "Retrieves a specific curriculum by ID",
+  parameters: [{
+    name: "id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Curriculum ID"
+  }],
+  responses: {
+    200: {
+      description: "Curriculum details",
+      content: {
+        "application/json": {
+          schema: resolver(curriculumSchema)
+        }
+      }
+    },
+    500: {
+      description: "Server error",
+      content: {
+        "application/json": {
+          schema: {
+            type: "object",
+            properties: {
+              message: {
+                type: "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}), CurriculumController.getCurriculumById);
+/* istanbul ignore next */
+cov_12m9pp1bdn().s[4]++;
+app.put("/:id", describeRoute({
+  tags: ["Curriculum"],
+  operationId: "updateCurriculumById",
+  summary: "Update a curriculum",
+  description: "Updates a specific curriculum by ID",
+  parameters: [{
+    name: "id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Curriculum ID"
+  }],
+  responses: {
+    200: {
+      description: "Curriculum updated successfully",
+      content: {
+        "application/json": {
+          schema: resolver(updateCurriculumResponseSchema)
+        }
+      }
+    },
+    500: {
+      description: "Server error",
+      content: {
+        "application/json": {
+          schema: {
+            type: "object",
+            properties: {
+              message: {
+                type: "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}), zValidator("json", updateCurriculumRequestBodySchema), CurriculumController.updateCurriculumById);
+/* istanbul ignore next */
+cov_12m9pp1bdn().s[5]++;
+app.delete("/:id", describeRoute({
+  tags: ["Curriculum"],
+  operationId: "deleteCurriculumById",
+  summary: "Delete a curriculum",
+  description: "Deletes a specific curriculum by ID",
+  parameters: [{
+    name: "id",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string"
+    },
+    description: "Curriculum ID"
+  }],
+  responses: {
+    200: {
+      description: "Curriculum deleted successfully",
+      content: {
+        "application/json": {
+          schema: resolver(deleteCurriculumResponseSchema)
+        }
+      }
+    },
+    500: {
+      description: "Server error",
+      content: {
+        "application/json": {
+          schema: {
+            type: "object",
+            properties: {
+              message: {
+                type: "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}), CurriculumController.deleteCurriculumById);
+export default app;

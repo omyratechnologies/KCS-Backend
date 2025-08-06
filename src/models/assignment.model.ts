@@ -36,9 +36,6 @@ AssignmentSchema.index.findBySubjectId = { by: "subject_id" };
 AssignmentSchema.index.findByUserId = { by: "user_id" };
 AssignmentSchema.index.findByClassId = { by: "class_id" };
 
-const Assignment = ottoman.model<IAssignmentData>(
-    "assignments",
-    AssignmentSchema
-);
+const Assignment = ottoman.model<IAssignmentData>("assignments", AssignmentSchema);
 
 export { Assignment, type IAssignmentData };

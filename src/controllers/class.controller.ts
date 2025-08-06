@@ -110,8 +110,7 @@ export class ClassController {
         try {
             const { subject_id } = ctx.req.param();
 
-            const result =
-                await classService.getAllClassesBySubjectId(subject_id);
+            const result = await classService.getAllClassesBySubjectId(subject_id);
 
             return ctx.json(result);
         } catch (error) {
@@ -120,14 +119,11 @@ export class ClassController {
             }
         }
     };
-    public static readonly getAllClassSubjectsByClassId = async (
-        ctx: Context
-    ) => {
+    public static readonly getAllClassSubjectsByClassId = async (ctx: Context) => {
         try {
             const { class_id } = ctx.req.param();
 
-            const result =
-                await classService.getAllClassSubjectsByClassId(class_id);
+            const result = await classService.getAllClassSubjectsByClassId(class_id);
 
             return ctx.json(result);
         } catch (error) {
@@ -150,11 +146,7 @@ export class ClassController {
                 };
             } = await ctx.req.json();
 
-            const result = await classService.createClassSubject(
-                campus_id,
-                class_id,
-                classSubjectData
-            );
+            const result = await classService.createClassSubject(campus_id, class_id, classSubjectData);
 
             return ctx.json(result);
         } catch (error) {
@@ -173,10 +165,7 @@ export class ClassController {
                 classSubjectData: Partial<IClassSubjectData>;
             } = await ctx.req.json();
 
-            const result = await classService.updateClassSubject(
-                class_subject_id,
-                classSubjectData
-            );
+            const result = await classService.updateClassSubject(class_subject_id, classSubjectData);
 
             return ctx.json(result);
         } catch (error) {
@@ -189,8 +178,7 @@ export class ClassController {
         try {
             const { class_subject_id } = ctx.req.param();
 
-            const result =
-                await classService.deleteClassSubject(class_subject_id);
+            const result = await classService.deleteClassSubject(class_subject_id);
 
             return ctx.json(result);
         } catch (error) {
@@ -203,8 +191,7 @@ export class ClassController {
         try {
             const { class_subject_id } = ctx.req.param();
 
-            const result =
-                await classService.getClassSubjectById(class_subject_id);
+            const result = await classService.getClassSubjectById(class_subject_id);
 
             return ctx.json(result);
         } catch (error) {
@@ -214,14 +201,11 @@ export class ClassController {
         }
     };
 
-    public static readonly getAllAssignmentsByClassId = async (
-        ctx: Context
-    ) => {
+    public static readonly getAllAssignmentsByClassId = async (ctx: Context) => {
         try {
             const { class_id } = ctx.req.param();
 
-            const result =
-                await classService.getAllAssignmentsByClassId(class_id);
+            const result = await classService.getAllAssignmentsByClassId(class_id);
 
             return ctx.json(result);
         } catch (error) {
@@ -260,11 +244,7 @@ export class ClassController {
                 meta_data: data.meta_data ?? {}, // Default to empty object if not provided
             };
 
-            const result = await classService.createAssignment(
-                campus_id,
-                class_id,
-                assignmentData
-            );
+            const result = await classService.createAssignment(campus_id, class_id, assignmentData);
 
             return ctx.json(result);
         } catch (error) {
@@ -279,10 +259,7 @@ export class ClassController {
 
             const data: Partial<IAssignmentData> = await ctx.req.json();
 
-            const result = await classService.updateAssignment(
-                assignment_id,
-                data
-            );
+            const result = await classService.updateAssignment(assignment_id, data);
 
             return ctx.json(result);
         } catch (error) {
@@ -317,14 +294,11 @@ export class ClassController {
         }
     };
 
-    public static readonly getAssignmentSubmissionById = async (
-        ctx: Context
-    ) => {
+    public static readonly getAssignmentSubmissionById = async (ctx: Context) => {
         try {
             const { submission_id } = ctx.req.param();
 
-            const result =
-                await classService.getAssignmentSubmissionById(submission_id);
+            const result = await classService.getAssignmentSubmissionById(submission_id);
 
             return ctx.json(result);
         } catch (error) {
@@ -333,17 +307,14 @@ export class ClassController {
             }
         }
     };
-    public static readonly createAssignmentSubmission = async (
-        ctx: Context
-    ) => {
+    public static readonly createAssignmentSubmission = async (ctx: Context) => {
         try {
             const { assignment_id } = ctx.req.param();
 
             const data: Partial<IAssignmentSubmission> = await ctx.req.json();
 
             // Get the assignment to extract campus_id
-            const assignment =
-                await classService.getAssignmentById(assignment_id);
+            const assignment = await classService.getAssignmentById(assignment_id);
             if (!assignment) {
                 return ctx.json({ error: "Assignment not found" }, 404);
             }
@@ -354,16 +325,10 @@ export class ClassController {
                 campus_id: assignment.campus_id,
             };
 
-            const result = await classService.createAssignmentSubmission(
-                assignment_id,
-                submissionData
-            );
+            const result = await classService.createAssignmentSubmission(assignment_id, submissionData);
 
             if (!result) {
-                return ctx.json(
-                    { error: "Failed to create assignment submission" },
-                    500
-                );
+                return ctx.json({ error: "Failed to create assignment submission" }, 500);
             }
 
             return ctx.json(result);
@@ -373,16 +338,11 @@ export class ClassController {
             }
         }
     };
-    public static readonly getAssignmentSubmissionByAssignmentId = async (
-        ctx: Context
-    ) => {
+    public static readonly getAssignmentSubmissionByAssignmentId = async (ctx: Context) => {
         try {
             const { assignment_id } = ctx.req.param();
 
-            const result =
-                await classService.getAssignmentSubmissionByAssignmentId(
-                    assignment_id
-                );
+            const result = await classService.getAssignmentSubmissionByAssignmentId(assignment_id);
 
             return ctx.json(result);
         } catch (error) {
@@ -391,14 +351,11 @@ export class ClassController {
             }
         }
     };
-    public static readonly deleteAssignmentSubmission = async (
-        ctx: Context
-    ) => {
+    public static readonly deleteAssignmentSubmission = async (ctx: Context) => {
         try {
             const { submission_id } = ctx.req.param();
 
-            const result =
-                await classService.deleteAssignmentSubmission(submission_id);
+            const result = await classService.deleteAssignmentSubmission(submission_id);
 
             return ctx.json(result);
         } catch (error) {
@@ -407,14 +364,11 @@ export class ClassController {
             }
         }
     };
-    public static readonly getAssignmentSubmissionsByUserId = async (
-        ctx: Context
-    ) => {
+    public static readonly getAssignmentSubmissionsByUserId = async (ctx: Context) => {
         try {
             const { user_id } = ctx.req.param();
 
-            const result =
-                await classService.getAssignmentSubmissionsByUserId(user_id);
+            const result = await classService.getAssignmentSubmissionsByUserId(user_id);
 
             return ctx.json(result);
         } catch (error) {
@@ -423,14 +377,11 @@ export class ClassController {
             }
         }
     };
-    public static readonly getAssignmentSubmissionsByClassId = async (
-        ctx: Context
-    ) => {
+    public static readonly getAssignmentSubmissionsByClassId = async (ctx: Context) => {
         try {
             const { class_id } = ctx.req.param();
 
-            const result =
-                await classService.getAssignmentSubmissionsByClassId(class_id);
+            const result = await classService.getAssignmentSubmissionsByClassId(class_id);
 
             return ctx.json(result);
         } catch (error) {
@@ -457,14 +408,9 @@ export class ClassController {
     public static readonly assignStudentsToClass = async (ctx: Context) => {
         try {
             const { class_id } = ctx.req.param();
-            const { student_ids }: { student_ids: string[] } =
-                await ctx.req.json();
+            const { student_ids }: { student_ids: string[] } = await ctx.req.json();
 
-            if (
-                !student_ids ||
-                !Array.isArray(student_ids) ||
-                student_ids.length === 0
-            ) {
+            if (!student_ids || !Array.isArray(student_ids) || student_ids.length === 0) {
                 return ctx.json(
                     {
                         error: "student_ids array is required and cannot be empty",
@@ -473,10 +419,7 @@ export class ClassController {
                 );
             }
 
-            const result = await classService.assignStudentsToClass(
-                class_id,
-                student_ids
-            );
+            const result = await classService.assignStudentsToClass(class_id, student_ids);
 
             return ctx.json({
                 success: true,
@@ -495,14 +438,9 @@ export class ClassController {
     public static readonly removeStudentsFromClass = async (ctx: Context) => {
         try {
             const { class_id } = ctx.req.param();
-            const { student_ids }: { student_ids: string[] } =
-                await ctx.req.json();
+            const { student_ids }: { student_ids: string[] } = await ctx.req.json();
 
-            if (
-                !student_ids ||
-                !Array.isArray(student_ids) ||
-                student_ids.length === 0
-            ) {
+            if (!student_ids || !Array.isArray(student_ids) || student_ids.length === 0) {
                 return ctx.json(
                     {
                         error: "student_ids array is required and cannot be empty",
@@ -511,10 +449,7 @@ export class ClassController {
                 );
             }
 
-            const result = await classService.removeStudentsFromClass(
-                class_id,
-                student_ids
-            );
+            const result = await classService.removeStudentsFromClass(class_id, student_ids);
 
             return ctx.json({
                 success: true,
@@ -533,14 +468,9 @@ export class ClassController {
     public static readonly assignTeachersToClass = async (ctx: Context) => {
         try {
             const { class_id } = ctx.req.param();
-            const { teacher_ids }: { teacher_ids: string[] } =
-                await ctx.req.json();
+            const { teacher_ids }: { teacher_ids: string[] } = await ctx.req.json();
 
-            if (
-                !teacher_ids ||
-                !Array.isArray(teacher_ids) ||
-                teacher_ids.length === 0
-            ) {
+            if (!teacher_ids || !Array.isArray(teacher_ids) || teacher_ids.length === 0) {
                 return ctx.json(
                     {
                         error: "teacher_ids array is required and cannot be empty",
@@ -549,10 +479,7 @@ export class ClassController {
                 );
             }
 
-            const result = await classService.assignTeachersToClass(
-                class_id,
-                teacher_ids
-            );
+            const result = await classService.assignTeachersToClass(class_id, teacher_ids);
 
             return ctx.json({
                 success: true,
@@ -571,14 +498,9 @@ export class ClassController {
     public static readonly removeTeachersFromClass = async (ctx: Context) => {
         try {
             const { class_id } = ctx.req.param();
-            const { teacher_ids }: { teacher_ids: string[] } =
-                await ctx.req.json();
+            const { teacher_ids }: { teacher_ids: string[] } = await ctx.req.json();
 
-            if (
-                !teacher_ids ||
-                !Array.isArray(teacher_ids) ||
-                teacher_ids.length === 0
-            ) {
+            if (!teacher_ids || !Array.isArray(teacher_ids) || teacher_ids.length === 0) {
                 return ctx.json(
                     {
                         error: "teacher_ids array is required and cannot be empty",
@@ -587,10 +509,7 @@ export class ClassController {
                 );
             }
 
-            const result = await classService.removeTeachersFromClass(
-                class_id,
-                teacher_ids
-            );
+            const result = await classService.removeTeachersFromClass(class_id, teacher_ids);
 
             return ctx.json({
                 success: true,
@@ -605,14 +524,11 @@ export class ClassController {
         }
     };
 
-    public static readonly getAllAssignmentsFromAllClasses = async (
-        ctx: Context
-    ) => {
+    public static readonly getAllAssignmentsFromAllClasses = async (ctx: Context) => {
         try {
             const campus_id = ctx.get("campus_id");
 
-            const result =
-                await classService.getAllAssignmentsFromAllClasses(campus_id);
+            const result = await classService.getAllAssignmentsFromAllClasses(campus_id);
 
             return ctx.json(result);
         } catch (error) {
@@ -629,17 +545,10 @@ export class ClassController {
             const { academic_year, class_id } = ctx.req.query();
 
             if (!academic_year) {
-                return ctx.json(
-                    { error: "academic_year query parameter is required" },
-                    400
-                );
+                return ctx.json({ error: "academic_year query parameter is required" }, 400);
             }
 
-            const result = await classService.getStudentsByYearAndClassId(
-                campus_id,
-                academic_year,
-                class_id
-            );
+            const result = await classService.getStudentsByYearAndClassId(campus_id, academic_year, class_id);
 
             return ctx.json(result);
         } catch (error) {
@@ -651,24 +560,16 @@ export class ClassController {
     };
 
     // Get students grouped by class for a specific academic year
-    public static readonly getStudentsGroupedByClassForYear = async (
-        ctx: Context
-    ) => {
+    public static readonly getStudentsGroupedByClassForYear = async (ctx: Context) => {
         try {
             const campus_id = ctx.get("campus_id");
             const { academic_year } = ctx.req.query();
 
             if (!academic_year) {
-                return ctx.json(
-                    { error: "academic_year query parameter is required" },
-                    400
-                );
+                return ctx.json({ error: "academic_year query parameter is required" }, 400);
             }
 
-            const result = await classService.getStudentsGroupedByClassForYear(
-                campus_id,
-                academic_year
-            );
+            const result = await classService.getStudentsGroupedByClassForYear(campus_id, academic_year);
 
             return ctx.json(result);
         } catch (error) {
@@ -684,8 +585,7 @@ export class ClassController {
         try {
             const campus_id = ctx.get("campus_id");
 
-            const academicYears =
-                await classService.getAcademicYearsByCampus(campus_id);
+            const academicYears = await classService.getAcademicYearsByCampus(campus_id);
 
             return ctx.json({ academic_years: academicYears });
         } catch (error) {
@@ -720,11 +620,7 @@ export class ClassController {
             const { submission_id } = ctx.req.param();
             const { grade, feedback } = await ctx.req.json();
 
-            const result = await classService.gradeAssignmentSubmission(
-                submission_id,
-                grade,
-                feedback
-            );
+            const result = await classService.gradeAssignmentSubmission(submission_id, grade, feedback);
 
             return ctx.json({
                 success: true,
@@ -739,18 +635,12 @@ export class ClassController {
         }
     };
 
-    public static readonly getStudentAssignmentsWithSubmissions = async (
-        ctx: Context
-    ) => {
+    public static readonly getStudentAssignmentsWithSubmissions = async (ctx: Context) => {
         try {
             const { student_id } = ctx.req.param();
             const campus_id = ctx.get("campus_id");
 
-            const assignments =
-                await classService.getStudentAssignmentsWithSubmissions(
-                    student_id,
-                    campus_id
-                );
+            const assignments = await classService.getStudentAssignmentsWithSubmissions(student_id, campus_id);
 
             return ctx.json({ assignments });
         } catch (error) {
@@ -761,17 +651,12 @@ export class ClassController {
         }
     };
 
-    public static readonly updateAssignmentSubmission = async (
-        ctx: Context
-    ) => {
+    public static readonly updateAssignmentSubmission = async (ctx: Context) => {
         try {
             const { submission_id } = ctx.req.param();
             const data = await ctx.req.json();
 
-            const result = await classService.updateAssignmentSubmission(
-                submission_id,
-                data
-            );
+            const result = await classService.updateAssignmentSubmission(submission_id, data);
 
             return ctx.json({
                 success: true,
@@ -794,11 +679,7 @@ export class ClassController {
 
             const daysAhead = days ? Number.parseInt(days as string) : 7;
 
-            const assignments = await classService.getAssignmentsDueSoon(
-                student_id,
-                campus_id,
-                daysAhead
-            );
+            const assignments = await classService.getAssignmentsDueSoon(student_id, campus_id, daysAhead);
 
             return ctx.json({
                 assignments,
