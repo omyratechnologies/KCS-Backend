@@ -317,6 +317,162 @@ export class CourseController {
     // ==================== COURSE CONTENT MANAGEMENT ====================
 
     /**
+     * Get section by ID with detailed information
+     */
+    public static readonly getSectionById = async (ctx: Context) => {
+        try {
+            const section_id = ctx.req.param("section_id");
+            const campus_id = ctx.get("campus_id");
+            const user_id = ctx.get("user_id");
+
+            if (!section_id) {
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Section ID is required",
+                    },
+                    400
+                );
+            }
+
+            const result = await CourseService.getSectionById(section_id, campus_id, user_id);
+
+            return ctx.json({
+                success: true,
+                data: result.data,
+                message: result.message,
+            });
+        } catch (error) {
+            console.error("Error getting section:", error);
+            return ctx.json(
+                {
+                    success: false,
+                    error: error instanceof Error ? error.message : "Failed to get section",
+                },
+                500
+            );
+        }
+    };
+
+    /**
+     * Update course section
+     */
+    public static readonly updateCourseSection = async (ctx: Context) => {
+        try {
+            const section_id = ctx.req.param("section_id");
+            const campus_id = ctx.get("campus_id");
+            const user_id = ctx.get("user_id");
+            const user_type = ctx.get("user_type");
+            const updateData = await ctx.req.json();
+
+            if (!section_id) {
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Section ID is required",
+                    },
+                    400
+                );
+            }
+
+            // Check permissions - get section first to get course_id
+            const sectionResult = await CourseService.getSectionById(section_id, campus_id);
+            const courseResult = await CourseService.getCourseById(sectionResult.data.course_id, campus_id);
+            const course = courseResult.data;
+
+            const canUpdate =
+                ["Admin", "Super Admin"].includes(user_type) ||
+                course.created_by === user_id ||
+                course.instructor_ids.includes(user_id);
+
+            if (!canUpdate) {
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Insufficient permissions to update section in this course",
+                    },
+                    403
+                );
+            }
+
+            const result = await CourseService.updateCourseSection(section_id, campus_id, user_id, updateData);
+
+            return ctx.json({
+                success: true,
+                data: result.data,
+                message: result.message,
+            });
+        } catch (error) {
+            console.error("Error updating section:", error);
+            return ctx.json(
+                {
+                    success: false,
+                    error: error instanceof Error ? error.message : "Failed to update section",
+                },
+                500
+            );
+        }
+    };
+
+    /**
+     * Delete course section
+     */
+    public static readonly deleteCourseSection = async (ctx: Context) => {
+        try {
+            const section_id = ctx.req.param("section_id");
+            const campus_id = ctx.get("campus_id");
+            const user_id = ctx.get("user_id");
+            const user_type = ctx.get("user_type");
+
+            if (!section_id) {
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Section ID is required",
+                    },
+                    400
+                );
+            }
+
+            // Check permissions - get section first to get course_id
+            const sectionResult = await CourseService.getSectionById(section_id, campus_id);
+            const courseResult = await CourseService.getCourseById(sectionResult.data.course_id, campus_id);
+            const course = courseResult.data;
+
+            const canDelete =
+                ["Admin", "Super Admin"].includes(user_type) ||
+                course.created_by === user_id ||
+                course.instructor_ids.includes(user_id);
+
+            if (!canDelete) {
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Insufficient permissions to delete section in this course",
+                    },
+                    403
+                );
+            }
+
+            const result = await CourseService.deleteCourseSection(section_id, campus_id, user_id);
+
+            return ctx.json({
+                success: true,
+                message: result.message,
+            });
+        } catch (error) {
+            console.error("Error deleting section:", error);
+            return ctx.json(
+                {
+                    success: false,
+                    error: error instanceof Error ? error.message : "Failed to delete section",
+                },
+                500
+            );
+        }
+    };
+
+    /**
      * Create course section
      */
     public static readonly createCourseSection = async (ctx: Context) => {
@@ -372,6 +528,162 @@ export class CourseController {
                 {
                     success: false,
                     error: error instanceof Error ? error.message : "Failed to create course section",
+                },
+                500
+            );
+        }
+    };
+
+    /**
+     * Get lecture by ID with detailed information
+     */
+    public static readonly getLectureById = async (ctx: Context) => {
+        try {
+            const lecture_id = ctx.req.param("lecture_id");
+            const campus_id = ctx.get("campus_id");
+            const user_id = ctx.get("user_id");
+
+            if (!lecture_id) {
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Lecture ID is required",
+                    },
+                    400
+                );
+            }
+
+            const result = await CourseService.getLectureById(lecture_id, campus_id, user_id);
+
+            return ctx.json({
+                success: true,
+                data: result.data,
+                message: result.message,
+            });
+        } catch (error) {
+            console.error("Error getting lecture:", error);
+            return ctx.json(
+                {
+                    success: false,
+                    error: error instanceof Error ? error.message : "Failed to get lecture",
+                },
+                500
+            );
+        }
+    };
+
+    /**
+     * Update course lecture
+     */
+    public static readonly updateCourseLecture = async (ctx: Context) => {
+        try {
+            const lecture_id = ctx.req.param("lecture_id");
+            const campus_id = ctx.get("campus_id");
+            const user_id = ctx.get("user_id");
+            const user_type = ctx.get("user_type");
+            const updateData = await ctx.req.json();
+
+            if (!lecture_id) {
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Lecture ID is required",
+                    },
+                    400
+                );
+            }
+
+            // Check permissions - get lecture first to get course_id
+            const lectureResult = await CourseService.getLectureById(lecture_id, campus_id);
+            const courseResult = await CourseService.getCourseById(lectureResult.data.course_id, campus_id);
+            const course = courseResult.data;
+
+            const canUpdate =
+                ["Admin", "Super Admin"].includes(user_type) ||
+                course.created_by === user_id ||
+                course.instructor_ids.includes(user_id);
+
+            if (!canUpdate) {
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Insufficient permissions to update lecture in this course",
+                    },
+                    403
+                );
+            }
+
+            const result = await CourseService.updateCourseLecture(lecture_id, campus_id, user_id, updateData);
+
+            return ctx.json({
+                success: true,
+                data: result.data,
+                message: result.message,
+            });
+        } catch (error) {
+            console.error("Error updating lecture:", error);
+            return ctx.json(
+                {
+                    success: false,
+                    error: error instanceof Error ? error.message : "Failed to update lecture",
+                },
+                500
+            );
+        }
+    };
+
+    /**
+     * Delete course lecture
+     */
+    public static readonly deleteCourseLecture = async (ctx: Context) => {
+        try {
+            const lecture_id = ctx.req.param("lecture_id");
+            const campus_id = ctx.get("campus_id");
+            const user_id = ctx.get("user_id");
+            const user_type = ctx.get("user_type");
+
+            if (!lecture_id) {
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Lecture ID is required",
+                    },
+                    400
+                );
+            }
+
+            // Check permissions - get lecture first to get course_id
+            const lectureResult = await CourseService.getLectureById(lecture_id, campus_id);
+            const courseResult = await CourseService.getCourseById(lectureResult.data.course_id, campus_id);
+            const course = courseResult.data;
+
+            const canDelete =
+                ["Admin", "Super Admin"].includes(user_type) ||
+                course.created_by === user_id ||
+                course.instructor_ids.includes(user_id);
+
+            if (!canDelete) {
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Insufficient permissions to delete lecture in this course",
+                    },
+                    403
+                );
+            }
+
+            const result = await CourseService.deleteCourseLecture(lecture_id, campus_id, user_id);
+
+            return ctx.json({
+                success: true,
+                message: result.message,
+            });
+        } catch (error) {
+            console.error("Error deleting lecture:", error);
+            return ctx.json(
+                {
+                    success: false,
+                    error: error instanceof Error ? error.message : "Failed to delete lecture",
                 },
                 500
             );

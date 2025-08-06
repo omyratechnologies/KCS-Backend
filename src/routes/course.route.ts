@@ -364,6 +364,256 @@ app.delete(
 
 // ==================== COURSE CONTENT MANAGEMENT ====================
 
+app.get(
+    "/sections/:section_id",
+    describeRoute({
+        operationId: "getSectionById",
+        summary: "Get section by ID",
+        description: "Get detailed section information including lectures and user progress (if enrolled).",
+        tags: ["Courses"],
+        parameters: [
+            {
+                name: "section_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Section ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Section retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(courseSectionResponseSchema),
+                    },
+                },
+            },
+            404: {
+                description: "Section not found",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    CourseController.getSectionById
+);
+
+app.put(
+    "/sections/:section_id",
+    describeRoute({
+        operationId: "updateCourseSection",
+        summary: "Update course section",
+        description: "Update section details (title, description, notes, etc.). Admin, course creator, or assigned instructor only.",
+        tags: ["Courses"],
+        parameters: [
+            {
+                name: "section_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Section ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Section updated successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(successResponseSchema),
+                    },
+                },
+            },
+            403: {
+                description: "Insufficient permissions",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    roleMiddleware("update_course_sections"),
+    zValidator("json", updateCourseSectionRequestBodySchema),
+    CourseController.updateCourseSection
+);
+
+app.delete(
+    "/sections/:section_id",
+    describeRoute({
+        operationId: "deleteCourseSection",
+        summary: "Delete/Archive course section",
+        description: "Archive a course section (soft delete). Admin, course creator, or assigned instructor only.",
+        tags: ["Courses"],
+        parameters: [
+            {
+                name: "section_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Section ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Section archived successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(successResponseSchema),
+                    },
+                },
+            },
+            400: {
+                description: "Cannot delete section with active content",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+            403: {
+                description: "Insufficient permissions",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    roleMiddleware("delete_course_sections"),
+    CourseController.deleteCourseSection
+);
+
+app.get(
+    "/lectures/:lecture_id",
+    describeRoute({
+        operationId: "getLectureById",
+        summary: "Get lecture by ID",
+        description: "Get detailed lecture information including user progress (if enrolled).",
+        tags: ["Courses"],
+        parameters: [
+            {
+                name: "lecture_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Lecture ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Lecture retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(courseLectureResponseSchema),
+                    },
+                },
+            },
+            404: {
+                description: "Lecture not found",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    CourseController.getLectureById
+);
+
+app.put(
+    "/lectures/:lecture_id",
+    describeRoute({
+        operationId: "updateCourseLecture",
+        summary: "Update course lecture",
+        description: "Update lecture details (title, description, video URL, etc.). Admin, course creator, or assigned instructor only.",
+        tags: ["Courses"],
+        parameters: [
+            {
+                name: "lecture_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Lecture ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Lecture updated successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(successResponseSchema),
+                    },
+                },
+            },
+            403: {
+                description: "Insufficient permissions",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    roleMiddleware("update_course_lectures"),
+    zValidator("json", updateCourseLectureRequestBodySchema),
+    CourseController.updateCourseLecture
+);
+
+app.delete(
+    "/lectures/:lecture_id",
+    describeRoute({
+        operationId: "deleteCourseLecture",
+        summary: "Delete/Archive course lecture",
+        description: "Archive a course lecture (soft delete). Admin, course creator, or assigned instructor only.",
+        tags: ["Courses"],
+        parameters: [
+            {
+                name: "lecture_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Lecture ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Lecture archived successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(successResponseSchema),
+                    },
+                },
+            },
+            400: {
+                description: "Cannot delete lecture with user progress",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+            403: {
+                description: "Insufficient permissions",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    roleMiddleware("delete_course_lectures"),
+    CourseController.deleteCourseLecture
+);
+
 app.post(
     "/:course_id/sections",
     describeRoute({

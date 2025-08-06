@@ -531,6 +531,187 @@ export class CourseService {
     }
 
     /**
+     * Get section by ID with detailed information
+     */
+    static async getSectionById(section_id: string, campus_id: string, user_id?: string) {
+        try {
+            // Get section details
+            const sectionResult = await CourseSection.find({
+                id: section_id,
+                campus_id,
+            });
+
+            if (!sectionResult.rows || sectionResult.rows.length === 0) {
+                throw new Error("Section not found");
+            }
+
+            const section = sectionResult.rows[0];
+
+            // Get course details to verify access
+            const course = await this.findCourseById(section.course_id, campus_id);
+            if (!course) {
+                throw new Error("Course not found");
+            }
+
+            // Get lectures for this section
+            const lecturesResult = await CourseLecture.find({
+                section_id: section.id,
+                is_published: true,
+            });
+
+            const lectures = lecturesResult.rows.sort((a, b) => a.lecture_order - b.lecture_order);
+
+            // If user is provided, get their progress for each lecture
+            let lecturesWithProgress = lectures;
+            if (user_id) {
+                lecturesWithProgress = await Promise.all(
+                    lectures.map(async (lecture) => {
+                        const progressResult = await CourseProgress.find({
+                            user_id,
+                            lecture_id: lecture.id,
+                        });
+
+                        const progress = progressResult.rows[0];
+                        return {
+                            ...lecture,
+                            user_progress: progress
+                                ? {
+                                      progress_status: progress.progress_status,
+                                      completion_percentage: progress.completion_percentage,
+                                      last_accessed_at: progress.last_accessed_at,
+                                      resume_position_seconds: progress.resume_position_seconds,
+                                  }
+                                : null,
+                        };
+                    })
+                );
+            }
+
+            return {
+                success: true,
+                data: {
+                    ...section,
+                    course_details: {
+                        id: course.id,
+                        title: course.title,
+                        status: course.status,
+                    },
+                    lectures: lecturesWithProgress,
+                    lecture_count: lectures.length,
+                    total_duration_minutes: lectures.reduce(
+                        (sum, lecture) => sum + lecture.estimated_duration_minutes,
+                        0
+                    ),
+                },
+                message: "Section retrieved successfully",
+            };
+        } catch (error) {
+            throw new Error(`Failed to get section: ${error}`);
+        }
+    }
+
+    /**
+     * Update course section
+     */
+    static async updateCourseSection(
+        section_id: string,
+        campus_id: string,
+        user_id: string,
+        updateData: Partial<ICourseSectionData>
+    ) {
+        try {
+            // Get existing section
+            const sectionResult = await CourseSection.find({
+                id: section_id,
+                campus_id,
+            });
+
+            if (!sectionResult.rows || sectionResult.rows.length === 0) {
+                throw new Error("Section not found");
+            }
+
+            const existingSection = sectionResult.rows[0];
+
+            // Verify course exists and user has permission
+            const course = await this.findCourseById(existingSection.course_id, campus_id);
+            if (!course) {
+                throw new Error("Course not found");
+            }
+
+            // Update section
+            const updatedSection = await CourseSection.updateById(section_id, {
+                ...updateData,
+                updated_at: new Date(),
+            });
+
+            return {
+                success: true,
+                data: updatedSection,
+                message: "Section updated successfully",
+            };
+        } catch (error) {
+            throw new Error(`Failed to update section: ${error}`);
+        }
+    }
+
+    /**
+     * Delete course section (soft delete by archiving)
+     */
+    static async deleteCourseSection(section_id: string, campus_id: string, user_id: string) {
+        try {
+            // Get existing section
+            const sectionResult = await CourseSection.find({
+                id: section_id,
+                campus_id,
+            });
+
+            if (!sectionResult.rows || sectionResult.rows.length === 0) {
+                throw new Error("Section not found");
+            }
+
+            const section = sectionResult.rows[0];
+
+            // Verify course exists
+            const course = await this.findCourseById(section.course_id, campus_id);
+            if (!course) {
+                throw new Error("Course not found");
+            }
+
+            // Check if section has lectures
+            const lecturesResult = await CourseLecture.find({
+                section_id: section.id,
+            });
+
+            if (lecturesResult.rows.length > 0) {
+                // Archive all lectures in this section first
+                const archiveLecturePromises = lecturesResult.rows.map((lecture) =>
+                    CourseLecture.updateById(lecture.id, {
+                        is_published: false,
+                        is_archived: true,
+                        updated_at: new Date(),
+                    })
+                );
+
+                await Promise.all(archiveLecturePromises);
+            }
+
+            // Archive the section
+            await CourseSection.updateById(section_id, {
+                is_published: false,
+                is_archived: true,
+                updated_at: new Date(),
+            });
+
+            return {
+                success: true,
+                message: "Section archived successfully",
+            };
+        } catch (error) {
+            throw new Error(`Failed to delete section: ${error}`);
+        }
+    }
+
+    /**
      * Update section order
      */
     static async updateSectionOrder(
@@ -558,6 +739,180 @@ export class CourseService {
     }
 
     // ==================== LECTURE MANAGEMENT ====================
+
+    /**
+     * Get lecture by ID with detailed information
+     */
+    static async getLectureById(lecture_id: string, campus_id: string, user_id?: string) {
+        try {
+            // Get lecture details
+            const lectureResult = await CourseLecture.find({
+                id: lecture_id,
+                campus_id,
+            });
+
+            if (!lectureResult.rows || lectureResult.rows.length === 0) {
+                throw new Error("Lecture not found");
+            }
+
+            const lecture = lectureResult.rows[0];
+
+            // Get section details
+            const sectionResult = await CourseSection.find({
+                id: lecture.section_id,
+            });
+
+            const section = sectionResult.rows[0];
+
+            // Get course details
+            const course = await this.findCourseById(lecture.course_id, campus_id);
+            if (!course) {
+                throw new Error("Course not found");
+            }
+
+            // Get user progress if user is provided
+            let userProgress: any = null;
+            if (user_id) {
+                const progressResult = await CourseProgress.find({
+                    user_id,
+                    lecture_id: lecture.id,
+                });
+
+                const progress = progressResult.rows[0];
+                userProgress = progress
+                    ? {
+                          progress_status: progress.progress_status,
+                          completion_percentage: progress.completion_percentage,
+                          last_accessed_at: progress.last_accessed_at,
+                          resume_position_seconds: progress.resume_position_seconds,
+                          watch_time_seconds: progress.watch_time_seconds,
+                          notes: progress.notes,
+                          interaction_data: progress.interaction_data,
+                      }
+                    : null;
+            }
+
+            return {
+                success: true,
+                data: {
+                    ...lecture,
+                    course_details: {
+                        id: course.id,
+                        title: course.title,
+                        status: course.status,
+                    },
+                    section_details: section
+                        ? {
+                              id: section.id,
+                              title: section.title,
+                              section_order: section.section_order,
+                          }
+                        : null,
+                    user_progress: userProgress,
+                },
+                message: "Lecture retrieved successfully",
+            };
+        } catch (error) {
+            throw new Error(`Failed to get lecture: ${error}`);
+        }
+    }
+
+    /**
+     * Update course lecture
+     */
+    static async updateCourseLecture(
+        lecture_id: string,
+        campus_id: string,
+        user_id: string,
+        updateData: Partial<ICourseLectureData>
+    ) {
+        try {
+            // Get existing lecture
+            const lectureResult = await CourseLecture.find({
+                id: lecture_id,
+                campus_id,
+            });
+
+            if (!lectureResult.rows || lectureResult.rows.length === 0) {
+                throw new Error("Lecture not found");
+            }
+
+            const existingLecture = lectureResult.rows[0];
+
+            // Verify course exists and user has permission
+            const course = await this.findCourseById(existingLecture.course_id, campus_id);
+            if (!course) {
+                throw new Error("Course not found");
+            }
+
+            // Update lecture
+            const updatedLecture = await CourseLecture.updateById(lecture_id, {
+                ...updateData,
+                updated_at: new Date(),
+            });
+
+            return {
+                success: true,
+                data: updatedLecture,
+                message: "Lecture updated successfully",
+            };
+        } catch (error) {
+            throw new Error(`Failed to update lecture: ${error}`);
+        }
+    }
+
+    /**
+     * Delete course lecture (soft delete by archiving)
+     */
+    static async deleteCourseLecture(lecture_id: string, campus_id: string, user_id: string) {
+        try {
+            // Get existing lecture
+            const lectureResult = await CourseLecture.find({
+                id: lecture_id,
+                campus_id,
+            });
+
+            if (!lectureResult.rows || lectureResult.rows.length === 0) {
+                throw new Error("Lecture not found");
+            }
+
+            const lecture = lectureResult.rows[0];
+
+            // Verify course exists
+            const course = await this.findCourseById(lecture.course_id, campus_id);
+            if (!course) {
+                throw new Error("Course not found");
+            }
+
+            // Check if there are any user progress records for this lecture
+            const progressResult = await CourseProgress.find({
+                lecture_id: lecture.id,
+            });
+
+            if (progressResult.rows.length > 0) {
+                // Don't actually delete if users have progress, just archive
+                await CourseLecture.updateById(lecture_id, {
+                    is_published: false,
+                    is_archived: true,
+                    updated_at: new Date(),
+                });
+            } else {
+                // Can safely archive since no user progress exists
+                await CourseLecture.updateById(lecture_id, {
+                    is_published: false,
+                    is_archived: true,
+                    updated_at: new Date(),
+                });
+            }
+
+            return {
+                success: true,
+                message: "Lecture archived successfully",
+            };
+        } catch (error) {
+            throw new Error(`Failed to delete lecture: ${error}`);
+        }
+    }
 
     /**
      * Create course lecture
