@@ -344,7 +344,7 @@ pipeline {
                         // Build Docker image with environment-specific tags
                         def imageTag = "${DOCKER_REPO}:${BUILD_TAG}"
                         def latestTag = "${DOCKER_REPO}:${BRANCH_TAG}-latest"
-                        def dockerfile = env.NODE_ENV == 'development' ? 'Dockerfile.simple' : 'Dockerfile'
+                        def dockerfile = 'Dockerfile'  // Use same Dockerfile for all environments
                     
                     sh """
                         echo "🐳 Building Docker image for ${NODE_ENV} environment..."
