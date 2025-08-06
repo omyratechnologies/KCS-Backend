@@ -88,7 +88,6 @@ backup/
 
 # KCS Backend specific
 mediasoup-worker*
-builder.ts
 
 # SSL certificates and keys
 *.pem
