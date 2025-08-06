@@ -20,13 +20,30 @@ export interface ICourseProgressData {
         play_count: number;
         pause_count: number;
         seek_count: number;
+        seek_forward_count?: number;
+        seek_backward_count?: number;
         speed_changes: number;
         quality_changes: number;
         fullscreen_toggles: number;
+        volume_changes?: number;
         notes_taken: number;
         bookmarked: boolean;
         liked: boolean;
         difficulty_rating?: number; // 1-5
+        engagement_score?: number; // 0-100
+        focus_percentage?: number; // 0-100
+        playback_speed?: number; // 0.25-3.0
+        attention_drops?: number;
+        replay_segments?: Array<{
+            start_time: number;
+            end_time: number;
+            replay_count: number;
+        }>;
+        continuous_watch_segments?: Array<{
+            start_time: number;
+            end_time: number;
+            focus_percentage: number;
+        }>;
     };
     quiz_data?: {
         attempts: number;
@@ -46,7 +63,9 @@ export interface ICourseProgressData {
         id: string;
         timestamp_seconds: number; // For videos
         note_text: string;
+        note_type?: "manual" | "auto_bookmark" | "key_moment";
         is_public: boolean;
+        tags?: string[];
         created_at: Date;
         updated_at: Date;
     }>;
@@ -55,11 +74,30 @@ export interface ICourseProgressData {
         browser?: string;
         os?: string;
         app_version?: string;
+        screen_resolution?: string;
+        connection_speed?: "slow" | "medium" | "fast";
+        connection_quality?: "poor" | "fair" | "good";
+        battery_level?: number;
     };
     meta_data: {
         learning_streaks?: number;
         difficulty_feedback?: string;
         help_requests?: number;
+        auto_tracking_enabled?: boolean;
+        quality_metrics?: {
+            buffer_health?: number;
+            quality_level?: string;
+            stalls_count?: number;
+            quality_switches?: number;
+        };
+        session_data?: {
+            session_id?: string;
+            session_start?: Date;
+            previous_lecture_id?: string;
+            learning_path_position?: number;
+            estimated_completion_time?: number;
+            break_duration_seconds?: number;
+        };
         custom_markers?: Array<{
             timestamp: number;
             label: string;
