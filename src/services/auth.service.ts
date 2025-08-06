@@ -35,6 +35,7 @@ export class AuthService {
 
         await LoginSession.create({
             user_id: user[0].id,
+            campus_id: user[0].campus_id || null,
             session_id,
             refresh_token,
             created_at: new Date(),
@@ -50,6 +51,7 @@ export class AuthService {
             user: user[0],
             session_id,
             refresh_token,
+            campus_id: user[0].campus_id,
         };
     };
 
@@ -187,6 +189,7 @@ export class AuthService {
         return {
             user: user[0],
             session_id: session[0].session_id,
+            campus_id: session[0].campus_id,
         };
     };
 
