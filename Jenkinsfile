@@ -341,37 +341,37 @@ pipeline {
             steps {
                 timeout(time: 15, unit: 'MINUTES') {
                     script {
-                        // Build Docker image with environment-specific tags
+                        // Build Docker image with smart optimization
                         def imageTag = "${DOCKER_REPO}:${BUILD_TAG}"
                         def latestTag = "${DOCKER_REPO}:${BRANCH_TAG}-latest"
-                        def dockerfile = 'Dockerfile'  // Use same Dockerfile for all environments
+                        
+                        // Use optimized build script for fastest builds
+                        echo "� Using optimized Docker build process..."
                     
                     sh """
-                        echo "🐳 Building Docker image for ${NODE_ENV} environment..."
+                        echo "🐳 Building optimized Docker image for ${NODE_ENV} environment..."
                         
                         # Clean up old images to free space
                         docker system prune -f || echo "Cleanup completed"
                         
-                        # Build with BuildKit for optimization
-                        export DOCKER_BUILDKIT=1
+                        # Use the optimized build script
+                        ./docker-build.sh \\
+                            --name omyratechnologies/kcs-backend \\
+                            --tag ${BUILD_TAG} \\
+                            --type auto \\
+                            --platform linux/amd64
                         
-                        # Build the image with timeout and progress
-                        timeout 900 docker build \\
-                            -f ${dockerfile} \\
-                            --build-arg BUILD_NUMBER=${env.BUILD_NUMBER} \\
-                            --build-arg BUILD_TIMESTAMP=${BUILD_TIMESTAMP} \\
-                            --build-arg NODE_ENV=${NODE_ENV} \\
-                            --progress=plain \\
-                            -t ${imageTag} \\
-                            -t ${latestTag} \\
-                            . || {
-                                echo "❌ Docker build failed or timed out"
-                                docker system df
-                                exit 1
-                            }
+                        # Tag with latest
+                        docker tag omyratechnologies/kcs-backend:${BUILD_TAG} ${latestTag}
                         
-                        echo "✅ Docker image built: ${imageTag}"
+                        echo "✅ Docker images built:"
                         docker images | grep kcs-backend || echo "No images found"
+                        
+                        # Show build summary
+                        echo "📊 Build Summary:"
+                        echo "   🏷️ Primary tag: ${imageTag}"
+                        echo "   🏷️ Latest tag: ${latestTag}"
+                        echo "   📅 Build time: \$(date)"
                     """
                     
                     // Push to registry (if configured)
