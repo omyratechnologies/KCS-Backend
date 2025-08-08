@@ -72,7 +72,7 @@ RUN set -e; \
 
 # Install dependencies with Bun (fastest package manager)
 RUN echo "📦 Installing dependencies..." && \
-    bun install --frozen-lockfile --production=false && \
+    bun install --frozen-lockfile && \
     echo "✅ Dependencies installed successfully"
 
 # ==============================================================================
