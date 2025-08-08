@@ -18,6 +18,18 @@ import { MeetingErrorMonitor } from "@/utils/meeting_error_monitor";
 import { SocketService } from "./socket.service";
 import { WebRTCService } from "./webrtc.service";
 
+// Import email functions
+import {
+    sendMeetingInvitation,
+    sendMeetingReminder,
+    sendMeetingCancellation,
+    sendMeetingUpdate,
+    type MeetingInvitationEmailData,
+    type MeetingReminderEmailData,
+    type MeetingCancellationEmailData,
+    type MeetingUpdateEmailData,
+} from "@/libs/mailer";
+
 /**
  * Handle Couchbase DocumentNotFoundError consistently
  */
@@ -29,6 +41,170 @@ const handleDocumentNotFoundError = (error: any, context: string, additionalCont
         return notFoundError;
     }
     return error;
+};
+
+/**
+ * Helper function to send meeting invitations to participants
+ */
+const sendMeetingInvitations = async (
+    meeting: IMeetingData,
+    host: any,
+    participants: string[],
+    meeting_url: string
+): Promise<void> => {
+    try {
+        // Get participant user details
+        const participantUsers = await Promise.all(
+            participants.map(async (participantId) => {
+                try {
+                    return await User.findById(participantId);
+                } catch (error) {
+                    MeetingErrorMonitor.logError("sendInvitations:userNotFound", error as Error, {
+                        meeting_id: meeting.id,
+                        participant_id: participantId,
+                    });
+                    return null;
+                }
+            })
+        );
+
+        // Send invitations to valid participants
+        await Promise.all(
+            participantUsers.map(async (participant) => {
+                if (!participant || !participant.email) return;
+
+                try {
+                    const invitationData: MeetingInvitationEmailData = {
+                        participant_name: `${participant.first_name} ${participant.last_name}`,
+                        meeting_name: meeting.meeting_name,
+                        meeting_description: meeting.meeting_description,
+                        meeting_date: meeting.meeting_start_time.toLocaleDateString("en-IN", {
+                            weekday: "long",
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                        }),
+                        meeting_time: meeting.meeting_start_time.toLocaleTimeString("en-IN", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            timeZone: "Asia/Kolkata",
+                        }),
+                        meeting_duration: `${Math.ceil(
+                            (meeting.meeting_end_time.getTime() - meeting.meeting_start_time.getTime()) / (1000 * 60)
+                        )} minutes`,
+                        meeting_timezone: "IST",
+                        host_name: `${host.first_name} ${host.last_name}`,
+                        host_email: host.email,
+                        host_phone: host.phone_number,
+                        meeting_url,
+                        meeting_id: meeting.meeting_room_id,
+                        meeting_password: meeting.meeting_password,
+                        agenda: (meeting.meeting_meta_data as any)?.agenda || "",
+                        participants_count: participants.length,
+                        email: participant.email,
+                    };
+
+                    await sendMeetingInvitation(participant.email, invitationData);
+                } catch (emailError) {
+                    MeetingErrorMonitor.logError("sendInvitations:emailFailed", emailError as Error, {
+                        meeting_id: meeting.id,
+                        participant_email: participant.email,
+                    });
+                    // Continue with other invitations
+                }
+            })
+        );
+    } catch (error) {
+        MeetingErrorMonitor.logError("sendInvitations", error as Error, {
+            meeting_id: meeting.id,
+            participants_count: participants.length,
+        });
+        // Don't throw error - invitations are non-critical
+    }
+};
+
+/**
+ * Helper function to send meeting cancellation notifications
+ */
+const sendMeetingCancellations = async (
+    meeting: IMeetingData,
+    host: any,
+    participants: string[],
+    cancellation_reason?: string
+): Promise<void> => {
+    try {
+        // Get participant user details
+        const participantUsers = await Promise.all(
+            participants.map(async (participantId) => {
+                try {
+                    return await User.findById(participantId);
+                } catch (error) {
+                    return null;
+                }
+            })
+        );
+
+        const now = new Date();
+
+        // Send cancellation notifications to valid participants
+        await Promise.all(
+            participantUsers.map(async (participant) => {
+                if (!participant || !participant.email) return;
+
+                try {
+                    const cancellationData: MeetingCancellationEmailData = {
+                        participant_name: `${participant.first_name} ${participant.last_name}`,
+                        meeting_name: meeting.meeting_name,
+                        meeting_date: meeting.meeting_start_time.toLocaleDateString("en-IN", {
+                            weekday: "long",
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                        }),
+                        meeting_time: meeting.meeting_start_time.toLocaleTimeString("en-IN", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            timeZone: "Asia/Kolkata",
+                        }),
+                        meeting_duration: `${Math.ceil(
+                            (meeting.meeting_end_time.getTime() - meeting.meeting_start_time.getTime()) / (1000 * 60)
+                        )} minutes`,
+                        host_name: `${host.first_name} ${host.last_name}`,
+                        host_email: host.email,
+                        host_phone: host.phone_number,
+                        cancellation_reason,
+                        cancellation_date: now.toLocaleDateString("en-IN", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                        }),
+                        cancellation_time: now.toLocaleTimeString("en-IN", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            timeZone: "Asia/Kolkata",
+                        }),
+                        reschedule_available: true,
+                        reschedule_url: `https://dev.letscatchup-kcs.com/meetings/reschedule/${meeting.id}`,
+                        email: participant.email,
+                    };
+
+                    await sendMeetingCancellation(participant.email, cancellationData);
+                } catch (emailError) {
+                    MeetingErrorMonitor.logError("sendCancellations:emailFailed", emailError as Error, {
+                        meeting_id: meeting.id,
+                        participant_email: participant.email,
+                    });
+                    // Continue with other notifications
+                }
+            })
+        );
+    } catch (error) {
+        MeetingErrorMonitor.logError("sendCancellations", error as Error, {
+            meeting_id: meeting.id,
+            participants_count: participants.length,
+        });
+        // Don't throw error - notifications are non-critical
+    }
 };
 
 /**
@@ -207,6 +383,24 @@ export class MeetingService {
                 }
             }
 
+            // Send meeting invitations to participants (for scheduled meetings)
+            if (data.meeting_type !== "instant" && data.participants && data.participants.length > 0) {
+                try {
+                    // Get host user details
+                    const host = await User.findById(creator_id);
+                    if (host && host.email) {
+                        const meeting_url = `https://dev.letscatchup-kcs.com/meeting/${meeting.meeting_room_id}`;
+                        await sendMeetingInvitations(meeting, host, data.participants, meeting_url);
+                    }
+                } catch (emailError) {
+                    MeetingErrorMonitor.logError("createMeeting:invitations", emailError as Error, {
+                        meeting_id: meeting.id,
+                        participants_count: data.participants.length,
+                    });
+                    // Continue without failing the meeting creation
+                }
+            }
+
             return meeting;
         } catch (error) {
             MeetingErrorMonitor.logError("createMeeting", error as Error, {
@@ -368,6 +562,79 @@ export class MeetingService {
                     throw error;
                 }
 
+                // Send update notifications via email if meeting time/date changed
+                if (
+                    (data.meeting_start_time || data.meeting_end_time || data.meeting_name) &&
+                    meeting.participants &&
+                    meeting.participants.length > 0
+                ) {
+                    try {
+                        const host = await User.findById(meeting.creator_id);
+                        if (host && host.email) {
+                            // Get participant user details
+                            const participantUsers = await Promise.all(
+                                meeting.participants.map(async (participantId) => {
+                                    try {
+                                        return await User.findById(participantId);
+                                    } catch (error) {
+                                        return null;
+                                    }
+                                })
+                            );
+
+                            // Send update notifications
+                            await Promise.all(
+                                participantUsers.map(async (participant) => {
+                                    if (!participant || !participant.email) return;
+
+                                    try {
+                                        const updateData: MeetingUpdateEmailData = {
+                                            participant_name: `${participant.first_name} ${participant.last_name}`,
+                                            meeting_name: data.meeting_name || meeting.meeting_name,
+                                            old_meeting_date: meeting.meeting_start_time.toLocaleDateString("en-IN"),
+                                            old_meeting_time: meeting.meeting_start_time.toLocaleTimeString("en-IN"),
+                                            new_meeting_date: (data.meeting_start_time || meeting.meeting_start_time).toLocaleDateString("en-IN", {
+                                                weekday: "long",
+                                                year: "numeric",
+                                                month: "long",
+                                                day: "numeric",
+                                            }),
+                                            new_meeting_time: (data.meeting_start_time || meeting.meeting_start_time).toLocaleTimeString("en-IN", {
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                                timeZone: "Asia/Kolkata",
+                                            }),
+                                            meeting_duration: `${Math.ceil(
+                                                ((data.meeting_end_time || meeting.meeting_end_time).getTime() - 
+                                                 (data.meeting_start_time || meeting.meeting_start_time).getTime()) / (1000 * 60)
+                                            )} minutes`,
+                                            host_name: `${host.first_name} ${host.last_name}`,
+                                            meeting_url: `https://dev.letscatchup-kcs.com/meeting/${meeting.meeting_room_id}`,
+                                            update_reason: "Meeting details have been updated",
+                                            changes_summary: Object.keys(data),
+                                            email: participant.email,
+                                        };
+
+                                        await sendMeetingUpdate(participant.email, updateData);
+                                    } catch (emailError) {
+                                        MeetingErrorMonitor.logError("updateMeeting:emailFailed", emailError as Error, {
+                                            meeting_id: id,
+                                            participant_email: participant.email,
+                                        });
+                                        // Continue with other notifications
+                                    }
+                                })
+                            );
+                        }
+                    } catch (emailError) {
+                        MeetingErrorMonitor.logError("updateMeeting:emailNotifications", emailError as Error, {
+                            meeting_id: id,
+                            participants_count: meeting.participants.length,
+                        });
+                        // Continue - email notifications are non-critical
+                    }
+                }
+
                 // Notify participants if meeting is live
                 if (meeting.meeting_status === "live") {
                     try {
@@ -436,12 +703,25 @@ export class MeetingService {
             }
 
             try {
-                // Find the meeting first
-                const meeting = await Meeting.findById(id);
-                if (!meeting) {
-                    const error = new Error("Meeting not found for deletion");
-                    MeetingErrorMonitor.logError("deleteMeeting:notFound", error, { meeting_id: id });
-                    throw error;
+                // Send cancellation emails before deleting (if meeting is scheduled or live)
+                if (meeting.meeting_status === "scheduled" || meeting.meeting_status === "live") {
+                    try {
+                        const host = await User.findById(meeting.creator_id);
+                        if (host && host.email && meeting.participants && meeting.participants.length > 0) {
+                            await sendMeetingCancellations(
+                                meeting,
+                                host,
+                                meeting.participants,
+                                "Meeting has been cancelled by the organizer"
+                            );
+                        }
+                    } catch (emailError) {
+                        MeetingErrorMonitor.logError("deleteMeeting:cancellationEmails", emailError as Error, {
+                            meeting_id: id,
+                            participants_count: meeting.participants?.length || 0,
+                        });
+                        // Continue with deletion even if emails fail
+                    }
                 }
 
                 // Update the meeting to mark as deleted
@@ -1154,6 +1434,144 @@ export class MeetingService {
                 .slice(0, limit);
         } catch (error) {
             console.error("Error searching users:", error);
+            throw error;
+        }
+    };
+
+    /**
+     * Send meeting reminders to participants
+     */
+    public static readonly sendMeetingReminders = async (
+        meetingId: string,
+        reminderType: "1_hour" | "15_minutes" | "5_minutes" = "15_minutes"
+    ): Promise<void> => {
+        try {
+            const meeting = await Meeting.findById(meetingId);
+            if (!meeting) {
+                throw new Error("Meeting not found");
+            }
+
+            // Only send reminders for scheduled meetings
+            if (meeting.meeting_status !== "scheduled") {
+                return;
+            }
+
+            // Check if meeting is starting soon based on reminder type
+            const now = new Date();
+            const meetingStartTime = new Date(meeting.meeting_start_time);
+            const timeDiffMinutes = Math.floor((meetingStartTime.getTime() - now.getTime()) / (1000 * 60));
+
+            let shouldSendReminder = false;
+            let timeRemaining = "";
+            let timeLabel = "";
+            let urgencyClass = "";
+            let urgencyIcon = "";
+
+            switch (reminderType) {
+                case "1_hour":
+                    shouldSendReminder = timeDiffMinutes <= 60 && timeDiffMinutes > 45;
+                    timeRemaining = "1 Hour";
+                    timeLabel = "Meeting starts in 1 hour";
+                    urgencyClass = "medium";
+                    urgencyIcon = "⏰";
+                    break;
+                case "15_minutes":
+                    shouldSendReminder = timeDiffMinutes <= 15 && timeDiffMinutes > 10;
+                    timeRemaining = "15 Minutes";
+                    timeLabel = "Meeting starts soon";
+                    urgencyClass = "medium";
+                    urgencyIcon = "⚡";
+                    break;
+                case "5_minutes":
+                    shouldSendReminder = timeDiffMinutes <= 5 && timeDiffMinutes > 0;
+                    timeRemaining = "5 Minutes";
+                    timeLabel = "Meeting starting now";
+                    urgencyClass = "high";
+                    urgencyIcon = "🚨";
+                    break;
+            }
+
+            if (!shouldSendReminder) {
+                return;
+            }
+
+            // Get host and participants
+            const host = await User.findById(meeting.creator_id);
+            if (!host || !meeting.participants || meeting.participants.length === 0) {
+                return;
+            }
+
+            // Get participant user details
+            const participantUsers = await Promise.all(
+                meeting.participants.map(async (participantId) => {
+                    try {
+                        return await User.findById(participantId);
+                    } catch (error) {
+                        return null;
+                    }
+                })
+            );
+
+            // Send reminders to valid participants
+            await Promise.all(
+                participantUsers.map(async (participant) => {
+                    if (!participant || !participant.email) return;
+
+                    try {
+                        const reminderData: MeetingReminderEmailData = {
+                            participant_name: `${participant.first_name} ${participant.last_name}`,
+                            meeting_name: meeting.meeting_name,
+                            meeting_date: meetingStartTime.toLocaleDateString("en-IN", {
+                                weekday: "long",
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                            }),
+                            meeting_time: meetingStartTime.toLocaleTimeString("en-IN", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                timeZone: "Asia/Kolkata",
+                            }),
+                            meeting_duration: `${Math.ceil(
+                                (meeting.meeting_end_time.getTime() - meeting.meeting_start_time.getTime()) / (1000 * 60)
+                            )} minutes`,
+                            host_name: `${host.first_name} ${host.last_name}`,
+                            meeting_url: `https://dev.letscatchup-kcs.com/meeting/${meeting.meeting_room_id}`,
+                            time_remaining: timeRemaining,
+                            time_label: timeLabel,
+                            urgency_class: urgencyClass,
+                            urgency_icon: urgencyIcon,
+                            email: participant.email,
+                        };
+
+                        await sendMeetingReminder(participant.email, reminderData);
+                    } catch (emailError) {
+                        MeetingErrorMonitor.logError("sendReminders:emailFailed", emailError as Error, {
+                            meeting_id: meetingId,
+                            participant_email: participant.email,
+                            reminder_type: reminderType,
+                        });
+                        // Continue with other reminders
+                    }
+                })
+            );
+
+            // Log successful reminder sending
+            MeetingErrorMonitor.logError(
+                "sendReminders:success",
+                new Error("Meeting reminders sent successfully"),
+                {
+                    meeting_id: meetingId,
+                    reminder_type: reminderType,
+                    participants_count: participantUsers.filter((p) => p && p.email).length,
+                    time_diff_minutes: timeDiffMinutes,
+                }
+            );
+        } catch (error) {
+            MeetingErrorMonitor.logError("sendMeetingReminders", error as Error, {
+                meeting_id: meetingId,
+                reminder_type: reminderType,
+            });
             throw error;
         }
     };

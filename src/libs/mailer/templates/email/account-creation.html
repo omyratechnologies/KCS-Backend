@@ -2,8 +2,9 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="format-detection" content="telephone=no, date=no, address=no, email=no, url=no" />
         <title>Welcome to Let's Catch Up - Your Account is Ready!</title>
         <style>
             /* Reset styles */
@@ -289,22 +290,108 @@
             }
 
             /* Responsive */
-            @media (max-width: 600px) {
+            @media (max-width: 768px) {
+                .header {
+                    padding: 30px 20px;
+                }
+                .brand-title {
+                    font-size: 28px;
+                }
+                .brand-subtitle {
+                    font-size: 14px;
+                }
                 .content {
-                    padding: 32px 24px;
+                    padding: 32px 20px;
+                }
+                .welcome-title {
+                    font-size: 24px;
+                }
+                .welcome-subtitle {
+                    font-size: 16px;
                 }
                 .credentials-box {
-                    padding: 24px 20px;
+                    padding: 24px 16px;
+                    margin: 24px 0;
+                }
+                .credentials-title {
+                    font-size: 18px;
+                }
+                .credential-item {
+                    padding: 16px;
+                }
+                .credential-value {
+                    font-size: 14px;
+                    padding: 10px 12px;
+                }
+                .action-button {
+                    padding: 14px 24px;
+                    font-size: 14px;
+                    width: 100%;
+                    box-sizing: border-box;
                 }
                 .features-grid {
                     grid-template-columns: 1fr;
+                    gap: 12px;
+                }
+                .feature-item {
+                    padding: 16px;
+                }
+                .feature-icon {
+                    font-size: 28px;
                 }
                 .footer {
-                    padding: 24px 20px;
+                    padding: 24px 16px;
                 }
                 .footer-links {
                     flex-direction: column;
                     gap: 12px;
+                }
+                .footer-title {
+                    font-size: 16px;
+                }
+            }
+            
+            @media (max-width: 480px) {
+                .header {
+                    padding: 20px 16px;
+                }
+                .logo {
+                    padding: 16px;
+                    margin-bottom: 16px;
+                }
+                .logo img {
+                    width: 60px;
+                    height: 60px;
+                }
+                .brand-title {
+                    font-size: 24px;
+                }
+                .content {
+                    padding: 24px 16px;
+                }
+                .welcome-title {
+                    font-size: 20px;
+                }
+                .welcome-subtitle {
+                    font-size: 14px;
+                }
+                .credentials-box {
+                    padding: 20px 12px;
+                }
+                .credential-value {
+                    font-size: 12px;
+                    word-break: break-word;
+                    overflow-wrap: break-word;
+                }
+                .action-button {
+                    padding: 12px 20px;
+                    font-size: 14px;
+                }
+                .info-box, .security-tips {
+                    padding: 16px;
+                }
+                .footer {
+                    padding: 20px 12px;
                 }
             }
         </style>
