@@ -1,0 +1,712 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="format-detection" content="telephone=no, date=no, address=no, email=no, url=no" />
+        <title>Meeting Invitation - {{MEETING_NAME}}</title>
+        <style>
+            /* Reset styles */
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                margin: 0;
+                padding: 0;
+                font-family:
+                    "Poppins",
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Roboto,
+                    sans-serif;
+                background-color: #f8fafc;
+            }
+
+            /* Container */
+            .email-container {
+                max-width: 600px;
+                margin: 0 auto;
+                background-color: #ffffff;
+            }
+
+            /* Header */
+            .header {
+                background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 25%, #a855f7 50%, #c084fc 75%, #e879f9 100%);
+                padding: 40px 30px;
+                text-align: center;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .header::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-image:
+                    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                    radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.2) 1px, transparent 1px);
+                background-size:
+                    50px 50px,
+                    80px 80px;
+            }
+
+            .logo {
+                background-color: rgba(255, 255, 255, 0.1);
+                border-radius: 20px;
+                padding: 20px;
+                display: inline-block;
+                margin-bottom: 20px;
+                position: relative;
+                z-index: 1;
+            }
+
+            .logo img {
+                width: 80px;
+                height: 80px;
+                border-radius: 12px;
+            }
+
+            .brand-title {
+                color: #ffffff;
+                font-size: 32px;
+                font-weight: 700;
+                margin-bottom: 8px;
+                position: relative;
+                z-index: 1;
+            }
+
+            .brand-subtitle {
+                color: rgba(255, 255, 255, 0.8);
+                font-size: 16px;
+                font-weight: 400;
+                position: relative;
+                z-index: 1;
+            }
+
+            .meeting-badge {
+                background: rgba(255, 255, 255, 0.2);
+                color: #ffffff;
+                padding: 8px 16px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 16px;
+                display: inline-block;
+                position: relative;
+                z-index: 1;
+            }
+
+            /* Content */
+            .content {
+                padding: 50px 40px;
+            }
+
+            .meeting-title {
+                color: #0a1929;
+                font-size: 28px;
+                font-weight: 700;
+                margin-bottom: 16px;
+                text-align: center;
+            }
+
+            .meeting-subtitle {
+                color: #64748b;
+                font-size: 18px;
+                font-weight: 400;
+                margin-bottom: 40px;
+                text-align: center;
+                line-height: 1.5;
+            }
+
+            /* Meeting Details Box */
+            .meeting-details {
+                background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+                border: 2px solid #0ea5e9;
+                border-radius: 16px;
+                padding: 32px;
+                margin: 32px 0;
+            }
+
+            .meeting-name {
+                color: #0f172a;
+                font-size: 24px;
+                font-weight: 700;
+                text-align: center;
+                margin-bottom: 24px;
+                background: #ffffff;
+                padding: 16px 24px;
+                border-radius: 12px;
+                border: 1px solid #0ea5e9;
+            }
+
+            .meeting-info-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+                margin: 24px 0;
+            }
+
+            .meeting-info-item {
+                background: #ffffff;
+                border: 1px solid #0ea5e9;
+                border-radius: 12px;
+                padding: 20px;
+                text-align: center;
+            }
+
+            .info-icon {
+                font-size: 24px;
+                margin-bottom: 8px;
+            }
+
+            .info-label {
+                color: #0c4a6e;
+                font-size: 12px;
+                font-weight: 500;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 8px;
+            }
+
+            .info-value {
+                color: #0f172a;
+                font-size: 14px;
+                font-weight: 600;
+            }
+
+            .info-value.highlight {
+                color: #dc2626;
+                font-weight: 700;
+            }
+
+            /* Meeting Description */
+            .meeting-description {
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                padding: 24px;
+                margin: 32px 0;
+            }
+
+            .description-title {
+                color: #0a1929;
+                font-size: 18px;
+                font-weight: 600;
+                margin-bottom: 16px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .description-content {
+                color: #374151;
+                font-size: 16px;
+                line-height: 1.6;
+            }
+
+            /* Join Meeting Section */
+            .join-meeting {
+                background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+                border: 2px solid #22c55e;
+                border-radius: 16px;
+                padding: 32px;
+                margin: 32px 0;
+                text-align: center;
+            }
+
+            .join-title {
+                color: #166534;
+                font-size: 20px;
+                font-weight: 600;
+                margin-bottom: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+            }
+
+            .join-button {
+                display: inline-block;
+                background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+                color: #ffffff;
+                text-decoration: none;
+                padding: 18px 36px;
+                border-radius: 12px;
+                font-size: 18px;
+                font-weight: 600;
+                margin: 16px 0;
+                text-align: center;
+                transition: transform 0.2s ease;
+                box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+            }
+
+            .join-button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(34, 197, 94, 0.4);
+            }
+
+            .meeting-link {
+                background: #ffffff;
+                border: 1px solid #22c55e;
+                border-radius: 8px;
+                padding: 16px;
+                margin: 16px 0;
+                word-break: break-all;
+                font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+                font-size: 14px;
+                color: #166534;
+            }
+
+            .meeting-id {
+                background: #ffffff;
+                border: 1px solid #22c55e;
+                border-radius: 8px;
+                padding: 16px;
+                margin: 16px 0;
+                text-align: center;
+            }
+
+            .id-label {
+                color: #166534;
+                font-size: 12px;
+                font-weight: 500;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 8px;
+            }
+
+            .id-value {
+                color: #0f172a;
+                font-size: 20px;
+                font-weight: 700;
+                font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+                letter-spacing: 2px;
+            }
+
+            /* Calendar Integration */
+            .calendar-section {
+                background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%);
+                border: 2px solid #f59e0b;
+                border-radius: 16px;
+                padding: 24px;
+                margin: 32px 0;
+                text-align: center;
+            }
+
+            .calendar-title {
+                color: #92400e;
+                font-size: 18px;
+                font-weight: 600;
+                margin-bottom: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+            }
+
+            .calendar-buttons {
+                display: flex;
+                justify-content: center;
+                gap: 12px;
+                flex-wrap: wrap;
+            }
+
+            .calendar-button {
+                background: #ffffff;
+                border: 1px solid #f59e0b;
+                color: #92400e;
+                text-decoration: none;
+                padding: 12px 20px;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 500;
+                transition: all 0.2s ease;
+            }
+
+            .calendar-button:hover {
+                background: #f59e0b;
+                color: #ffffff;
+            }
+
+            /* Participants Section */
+            .participants-section {
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                padding: 24px;
+                margin: 32px 0;
+            }
+
+            .participants-title {
+                color: #0a1929;
+                font-size: 18px;
+                font-weight: 600;
+                margin-bottom: 16px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .participants-count {
+                color: #6366f1;
+                font-weight: 700;
+            }
+
+            /* Quick Actions */
+            .quick-actions {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 16px;
+                margin: 32px 0;
+            }
+
+            .quick-action {
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                padding: 20px;
+                text-align: center;
+                text-decoration: none;
+                transition: all 0.2s ease;
+            }
+
+            .quick-action:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                border-color: #6366f1;
+            }
+
+            .quick-action-icon {
+                font-size: 32px;
+                margin-bottom: 12px;
+            }
+
+            .quick-action-title {
+                color: #0a1929;
+                font-size: 14px;
+                font-weight: 600;
+                margin-bottom: 8px;
+            }
+
+            .quick-action-desc {
+                color: #64748b;
+                font-size: 12px;
+                line-height: 1.4;
+            }
+
+            /* Footer */
+            .footer {
+                background: #0a1929;
+                color: #94a3b8;
+                padding: 32px 40px;
+                text-align: center;
+            }
+
+            .footer-title {
+                color: #ffffff;
+                font-size: 18px;
+                font-weight: 600;
+                margin-bottom: 16px;
+            }
+
+            .footer-text {
+                font-size: 14px;
+                line-height: 1.6;
+                margin-bottom: 24px;
+            }
+
+            .footer-links {
+                display: flex;
+                justify-content: center;
+                gap: 24px;
+                margin-bottom: 24px;
+            }
+
+            .footer-link {
+                color: #55dad7;
+                text-decoration: none;
+                font-size: 14px;
+                font-weight: 500;
+            }
+
+            .footer-link:hover {
+                color: #f1531c;
+            }
+
+            .footer-copy {
+                color: #64748b;
+                font-size: 12px;
+                margin-top: 24px;
+                padding-top: 24px;
+                border-top: 1px solid #1e293b;
+            }
+
+            /* Responsive */
+            @media (max-width: 768px) {
+                .header {
+                    padding: 30px 20px;
+                }
+                .brand-title {
+                    font-size: 28px;
+                }
+                .brand-subtitle {
+                    font-size: 14px;
+                }
+                .content {
+                    padding: 32px 20px;
+                }
+                .meeting-title {
+                    font-size: 24px;
+                }
+                .meeting-subtitle {
+                    font-size: 16px;
+                }
+                .meeting-details {
+                    padding: 24px 16px;
+                    margin: 24px 0;
+                }
+                .meeting-info-grid {
+                    grid-template-columns: 1fr;
+                    gap: 12px;
+                }
+                .calendar-buttons {
+                    flex-direction: column;
+                    align-items: center;
+                }
+                .calendar-button {
+                    width: 200px;
+                }
+                .quick-actions {
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 12px;
+                }
+                .footer {
+                    padding: 24px 16px;
+                }
+                .footer-links {
+                    flex-direction: column;
+                    gap: 12px;
+                }
+            }
+            
+            @media (max-width: 480px) {
+                .header {
+                    padding: 20px 16px;
+                }
+                .logo {
+                    padding: 16px;
+                    margin-bottom: 16px;
+                }
+                .logo img {
+                    width: 60px;
+                    height: 60px;
+                }
+                .brand-title {
+                    font-size: 24px;
+                }
+                .content {
+                    padding: 24px 16px;
+                }
+                .meeting-title {
+                    font-size: 20px;
+                }
+                .meeting-subtitle {
+                    font-size: 14px;
+                }
+                .meeting-details {
+                    padding: 20px 12px;
+                }
+                .join-meeting {
+                    padding: 24px 16px;
+                }
+                .join-button {
+                    padding: 16px 28px;
+                    font-size: 16px;
+                    width: 100%;
+                    box-sizing: border-box;
+                }
+                .calendar-section {
+                    padding: 20px 12px;
+                }
+                .calendar-button {
+                    width: 100%;
+                }
+                .quick-actions {
+                    grid-template-columns: 1fr;
+                }
+                .footer {
+                    padding: 20px 12px;
+                }
+                .footer-title {
+                    font-size: 16px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="email-container">
+            <!-- Header -->
+            <div class="header">
+                <div class="logo">
+                    <img src="{{LOGO_URL}}" alt="Let's Catch Up Logo" />
+                </div>
+                <div class="brand-title">Let's Catch Up</div>
+                <div class="brand-subtitle">Learning & Communication Platform</div>
+                <div class="meeting-badge">Meeting Invitation</div>
+            </div>
+
+            <!-- Content -->
+            <div class="content">
+                <h1 class="meeting-title">📅 You're Invited to a Meeting!</h1>
+                <p class="meeting-subtitle">
+                    {{PARTICIPANT_NAME}}, you have been invited to join an important meeting.
+                </p>
+
+                <!-- Meeting Details -->
+                <div class="meeting-details">
+                    <div class="meeting-name">{{MEETING_NAME}}</div>
+
+                    <div class="meeting-info-grid">
+                        <div class="meeting-info-item">
+                            <div class="info-icon">📅</div>
+                            <div class="info-label">Date</div>
+                            <div class="info-value">{{MEETING_DATE}}</div>
+                        </div>
+                        <div class="meeting-info-item">
+                            <div class="info-icon">⏰</div>
+                            <div class="info-label">Time</div>
+                            <div class="info-value">{{MEETING_TIME}}</div>
+                        </div>
+                        <div class="meeting-info-item">
+                            <div class="info-icon">⏱️</div>
+                            <div class="info-label">Duration</div>
+                            <div class="info-value">{{MEETING_DURATION}}</div>
+                        </div>
+                        <div class="meeting-info-item">
+                            <div class="info-icon">👤</div>
+                            <div class="info-label">Host</div>
+                            <div class="info-value">{{HOST_NAME}}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Meeting Description -->
+                {{#if MEETING_DESCRIPTION}}
+                <div class="meeting-description">
+                    <div class="description-title">📝 Meeting Details</div>
+                    <div class="description-content">{{MEETING_DESCRIPTION}}</div>
+                </div>
+                {{/if}}
+
+                <!-- Join Meeting Section -->
+                <div class="join-meeting">
+                    <div class="join-title">🎥 Ready to Join?</div>
+                    <div style="margin: 16px 0;">
+                        <a href="{{MEETING_URL}}" class="join-button">🚀 Join Meeting Now</a>
+                    </div>
+                    
+                    {{#if MEETING_ID}}
+                    <div class="meeting-id">
+                        <div class="id-label">Meeting ID</div>
+                        <div class="id-value">{{MEETING_ID}}</div>
+                    </div>
+                    {{/if}}
+
+                    {{#if MEETING_PASSWORD}}
+                    <div class="meeting-id">
+                        <div class="id-label">Password</div>
+                        <div class="id-value">{{MEETING_PASSWORD}}</div>
+                    </div>
+                    {{/if}}
+
+                    <div class="meeting-link">{{MEETING_URL}}</div>
+                </div>
+
+                <!-- Calendar Integration -->
+                <div class="calendar-section">
+                    <div class="calendar-title">📅 Add to Your Calendar</div>
+                    <div class="calendar-buttons">
+                        {{#if GOOGLE_CALENDAR_URL}}
+                        <a href="{{GOOGLE_CALENDAR_URL}}" class="calendar-button">Google Calendar</a>
+                        {{/if}}
+                        {{#if OUTLOOK_CALENDAR_URL}}
+                        <a href="{{OUTLOOK_CALENDAR_URL}}" class="calendar-button">Outlook</a>
+                        {{/if}}
+                        {{#if ICS_DOWNLOAD_URL}}
+                        <a href="{{ICS_DOWNLOAD_URL}}" class="calendar-button">Download .ics</a>
+                        {{/if}}
+                    </div>
+                </div>
+
+                <!-- Participants Section -->
+                {{#if PARTICIPANT_COUNT}}
+                <div class="participants-section">
+                    <div class="participants-title">
+                        👥 Participants 
+                        <span class="participants-count">({{PARTICIPANT_COUNT}} invited)</span>
+                    </div>
+                </div>
+                {{/if}}
+
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <a href="{{DASHBOARD_URL}}" class="quick-action">
+                        <div class="quick-action-icon">🏠</div>
+                        <div class="quick-action-title">Dashboard</div>
+                        <div class="quick-action-desc">View your meetings</div>
+                    </a>
+
+                    <a href="{{CALENDAR_URL}}" class="quick-action">
+                        <div class="quick-action-icon">📅</div>
+                        <div class="quick-action-title">Calendar</div>
+                        <div class="quick-action-desc">Check your schedule</div>
+                    </a>
+
+                    {{#if MEETING_PREP_URL}}
+                    <a href="{{MEETING_PREP_URL}}" class="quick-action">
+                        <div class="quick-action-icon">📋</div>
+                        <div class="quick-action-title">Preparation</div>
+                        <div class="quick-action-desc">Meeting materials</div>
+                    </a>
+                    {{/if}}
+
+                    <a href="{{SUPPORT_URL}}" class="quick-action">
+                        <div class="quick-action-icon">💬</div>
+                        <div class="quick-action-title">Support</div>
+                        <div class="quick-action-desc">Need help?</div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                <div class="footer-title">Meeting Support</div>
+                <div class="footer-text">
+                    Need technical support for the meeting? Our team is here to help you have a smooth experience.
+                </div>
+
+                <div class="footer-links">
+                    <a href="{{TECH_SUPPORT_URL}}" class="footer-link">Technical Support</a>
+                    <a href="{{MEETING_HELP_URL}}" class="footer-link">Meeting Help</a>
+                    <a href="{{NOTIFICATION_SETTINGS_URL}}" class="footer-link">Notification Settings</a>
+                    <a href="{{WEBSITE_URL}}" class="footer-link">Visit Website</a>
+                </div>
+
+                <div class="footer-copy">
+                    © 2025 KANDHUGULE CONSULTANCY SERVICES PRIVATE LIMITED. All Rights Reserved.<br />
+                    This meeting invitation was sent to {{EMAIL}}. To manage your meeting notifications,
+                    <a href="{{NOTIFICATION_SETTINGS_URL}}" style="color: #55dad7">click here</a>.
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

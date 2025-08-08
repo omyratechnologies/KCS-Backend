@@ -1,0 +1,753 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="format-detection" content="telephone=no, date=no, address=no, email=no, url=no" />
+        <title>Meeting Cancelled - {{MEETING_NAME}}</title>
+        <style>
+            /* Reset styles */
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                margin: 0;
+                padding: 0;
+                font-family:
+                    "Poppins",
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    Roboto,
+                    sans-serif;
+                background-color: #f8fafc;
+            }
+
+            /* Container */
+            .email-container {
+                max-width: 600px;
+                margin: 0 auto;
+                background-color: #ffffff;
+            }
+
+            /* Header */
+            .header {
+                background: linear-gradient(135deg, #dc2626 0%, #b91c1c 25%, #991b1b 50%, #7f1d1d 75%, #450a0a 100%);
+                padding: 40px 30px;
+                text-align: center;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .header::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-image:
+                    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                    radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.2) 1px, transparent 1px);
+                background-size:
+                    50px 50px,
+                    80px 80px;
+            }
+
+            .logo {
+                background-color: rgba(255, 255, 255, 0.1);
+                border-radius: 20px;
+                padding: 20px;
+                display: inline-block;
+                margin-bottom: 20px;
+                position: relative;
+                z-index: 1;
+            }
+
+            .logo img {
+                width: 80px;
+                height: 80px;
+                border-radius: 12px;
+            }
+
+            .brand-title {
+                color: #ffffff;
+                font-size: 32px;
+                font-weight: 700;
+                margin-bottom: 8px;
+                position: relative;
+                z-index: 1;
+            }
+
+            .brand-subtitle {
+                color: rgba(255, 255, 255, 0.8);
+                font-size: 16px;
+                font-weight: 400;
+                position: relative;
+                z-index: 1;
+            }
+
+            .cancellation-badge {
+                background: rgba(255, 255, 255, 0.2);
+                color: #ffffff;
+                padding: 8px 16px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 16px;
+                display: inline-block;
+                position: relative;
+                z-index: 1;
+            }
+
+            /* Content */
+            .content {
+                padding: 50px 40px;
+            }
+
+            .cancellation-title {
+                color: #0a1929;
+                font-size: 28px;
+                font-weight: 700;
+                margin-bottom: 16px;
+                text-align: center;
+            }
+
+            .cancellation-subtitle {
+                color: #64748b;
+                font-size: 18px;
+                font-weight: 400;
+                margin-bottom: 40px;
+                text-align: center;
+                line-height: 1.5;
+            }
+
+            /* Cancellation Notice */
+            .cancellation-notice {
+                background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);
+                border: 2px solid #ef4444;
+                border-radius: 16px;
+                padding: 32px;
+                margin: 32px 0;
+                text-align: center;
+            }
+
+            .notice-icon {
+                font-size: 48px;
+                margin-bottom: 16px;
+            }
+
+            .notice-title {
+                color: #dc2626;
+                font-size: 24px;
+                font-weight: 700;
+                margin-bottom: 16px;
+            }
+
+            .notice-text {
+                color: #991b1b;
+                font-size: 16px;
+                line-height: 1.6;
+                margin-bottom: 16px;
+            }
+
+            .notice-timestamp {
+                color: #7f1d1d;
+                font-size: 14px;
+                font-weight: 500;
+                margin-top: 16px;
+                padding-top: 16px;
+                border-top: 1px solid #fca5a5;
+            }
+
+            /* Meeting Details */
+            .meeting-details {
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 16px;
+                padding: 32px;
+                margin: 32px 0;
+            }
+
+            .meeting-name {
+                color: #0f172a;
+                font-size: 24px;
+                font-weight: 700;
+                text-align: center;
+                margin-bottom: 24px;
+                background: #ffffff;
+                padding: 16px 24px;
+                border-radius: 12px;
+                border: 1px solid #cbd5e1;
+            }
+
+            .details-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+                margin: 24px 0;
+            }
+
+            .detail-item {
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                padding: 20px;
+                text-align: center;
+            }
+
+            .detail-icon {
+                font-size: 24px;
+                margin-bottom: 8px;
+                opacity: 0.6;
+            }
+
+            .detail-label {
+                color: #64748b;
+                font-size: 12px;
+                font-weight: 500;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 8px;
+            }
+
+            .detail-value {
+                color: #0f172a;
+                font-size: 14px;
+                font-weight: 600;
+            }
+
+            /* Reason Section */
+            .reason-section {
+                background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+                border: 2px solid #f59e0b;
+                border-radius: 16px;
+                padding: 32px;
+                margin: 32px 0;
+            }
+
+            .reason-title {
+                color: #92400e;
+                font-size: 20px;
+                font-weight: 600;
+                margin-bottom: 16px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .reason-text {
+                color: #78350f;
+                font-size: 16px;
+                line-height: 1.6;
+                background: #ffffff;
+                padding: 20px;
+                border-radius: 12px;
+                border: 1px solid #f59e0b;
+            }
+
+            /* Apology Section */
+            .apology-section {
+                background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+                border: 2px solid #22c55e;
+                border-radius: 16px;
+                padding: 32px;
+                margin: 32px 0;
+                text-align: center;
+            }
+
+            .apology-title {
+                color: #166534;
+                font-size: 20px;
+                font-weight: 600;
+                margin-bottom: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+            }
+
+            .apology-text {
+                color: #15803d;
+                font-size: 16px;
+                line-height: 1.6;
+                margin-bottom: 16px;
+            }
+
+            /* Reschedule Options */
+            .reschedule-section {
+                background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+                border: 2px solid #0ea5e9;
+                border-radius: 16px;
+                padding: 32px;
+                margin: 32px 0;
+                text-align: center;
+            }
+
+            .reschedule-title {
+                color: #0c4a6e;
+                font-size: 20px;
+                font-weight: 600;
+                margin-bottom: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+            }
+
+            .reschedule-text {
+                color: #075985;
+                font-size: 16px;
+                line-height: 1.6;
+                margin-bottom: 24px;
+            }
+
+            .reschedule-button {
+                display: inline-block;
+                background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+                color: #ffffff;
+                text-decoration: none;
+                padding: 16px 32px;
+                border-radius: 12px;
+                font-size: 16px;
+                font-weight: 600;
+                margin: 8px;
+                text-align: center;
+                transition: transform 0.2s ease;
+                box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+            }
+
+            .reschedule-button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(14, 165, 233, 0.4);
+            }
+
+            .alternative-text {
+                color: #64748b;
+                font-size: 14px;
+                margin-top: 16px;
+                font-style: italic;
+            }
+
+            /* Quick Actions */
+            .quick-actions {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 16px;
+                margin: 32px 0;
+            }
+
+            .quick-action {
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                padding: 20px;
+                text-align: center;
+                text-decoration: none;
+                transition: all 0.2s ease;
+            }
+
+            .quick-action:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                border-color: #0ea5e9;
+            }
+
+            .quick-action-icon {
+                font-size: 32px;
+                margin-bottom: 12px;
+            }
+
+            .quick-action-title {
+                color: #0a1929;
+                font-size: 14px;
+                font-weight: 600;
+                margin-bottom: 8px;
+            }
+
+            .quick-action-desc {
+                color: #64748b;
+                font-size: 12px;
+                line-height: 1.4;
+            }
+
+            /* Contact Information */
+            .contact-section {
+                background: linear-gradient(135deg, #fdf4ff 0%, #ddd6fe 100%);
+                border: 2px solid #8b5cf6;
+                border-radius: 16px;
+                padding: 24px;
+                margin: 32px 0;
+            }
+
+            .contact-title {
+                color: #7c3aed;
+                font-size: 18px;
+                font-weight: 600;
+                margin-bottom: 16px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .contact-text {
+                color: #6b21a8;
+                font-size: 14px;
+                line-height: 1.6;
+                margin-bottom: 16px;
+            }
+
+            .contact-info {
+                background: #ffffff;
+                border: 1px solid #8b5cf6;
+                border-radius: 8px;
+                padding: 16px;
+                margin: 16px 0;
+            }
+
+            .contact-item {
+                color: #581c87;
+                font-size: 14px;
+                margin-bottom: 8px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .contact-item:last-child {
+                margin-bottom: 0;
+            }
+
+            /* Footer */
+            .footer {
+                background: #0a1929;
+                color: #94a3b8;
+                padding: 32px 40px;
+                text-align: center;
+            }
+
+            .footer-title {
+                color: #ffffff;
+                font-size: 18px;
+                font-weight: 600;
+                margin-bottom: 16px;
+            }
+
+            .footer-text {
+                font-size: 14px;
+                line-height: 1.6;
+                margin-bottom: 24px;
+            }
+
+            .footer-links {
+                display: flex;
+                justify-content: center;
+                gap: 24px;
+                margin-bottom: 24px;
+            }
+
+            .footer-link {
+                color: #55dad7;
+                text-decoration: none;
+                font-size: 14px;
+                font-weight: 500;
+            }
+
+            .footer-link:hover {
+                color: #f1531c;
+            }
+
+            .footer-copy {
+                color: #64748b;
+                font-size: 12px;
+                margin-top: 24px;
+                padding-top: 24px;
+                border-top: 1px solid #1e293b;
+            }
+
+            /* Responsive */
+            @media (max-width: 768px) {
+                .header {
+                    padding: 30px 20px;
+                }
+                .brand-title {
+                    font-size: 28px;
+                }
+                .brand-subtitle {
+                    font-size: 14px;
+                }
+                .content {
+                    padding: 32px 20px;
+                }
+                .cancellation-title {
+                    font-size: 24px;
+                }
+                .cancellation-subtitle {
+                    font-size: 16px;
+                }
+                .cancellation-notice {
+                    padding: 24px 16px;
+                    margin: 24px 0;
+                }
+                .notice-title {
+                    font-size: 20px;
+                }
+                .notice-text {
+                    font-size: 14px;
+                }
+                .meeting-details {
+                    padding: 24px 16px;
+                }
+                .details-grid {
+                    grid-template-columns: 1fr;
+                    gap: 12px;
+                }
+                .reason-section, .apology-section, .reschedule-section {
+                    padding: 24px 16px;
+                }
+                .reschedule-button {
+                    padding: 14px 24px;
+                    font-size: 14px;
+                    width: 100%;
+                    box-sizing: border-box;
+                }
+                .quick-actions {
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 12px;
+                }
+                .footer {
+                    padding: 24px 16px;
+                }
+                .footer-links {
+                    flex-direction: column;
+                    gap: 12px;
+                }
+            }
+            
+            @media (max-width: 480px) {
+                .header {
+                    padding: 20px 16px;
+                }
+                .logo {
+                    padding: 16px;
+                    margin-bottom: 16px;
+                }
+                .logo img {
+                    width: 60px;
+                    height: 60px;
+                }
+                .brand-title {
+                    font-size: 24px;
+                }
+                .content {
+                    padding: 24px 16px;
+                }
+                .cancellation-title {
+                    font-size: 20px;
+                }
+                .cancellation-subtitle {
+                    font-size: 14px;
+                }
+                .cancellation-notice {
+                    padding: 20px 12px;
+                }
+                .notice-icon {
+                    font-size: 36px;
+                }
+                .notice-title {
+                    font-size: 18px;
+                }
+                .meeting-details {
+                    padding: 20px 12px;
+                }
+                .reason-section, .apology-section, .reschedule-section, .contact-section {
+                    padding: 20px 12px;
+                }
+                .reschedule-button {
+                    padding: 12px 20px;
+                    font-size: 14px;
+                }
+                .quick-actions {
+                    grid-template-columns: 1fr;
+                }
+                .footer {
+                    padding: 20px 12px;
+                }
+                .footer-title {
+                    font-size: 16px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="email-container">
+            <!-- Header -->
+            <div class="header">
+                <div class="logo">
+                    <img src="{{LOGO_URL}}" alt="Let's Catch Up Logo" />
+                </div>
+                <div class="brand-title">Let's Catch Up</div>
+                <div class="brand-subtitle">Learning & Communication Platform</div>
+                <div class="cancellation-badge">Meeting Cancelled</div>
+            </div>
+
+            <!-- Content -->
+            <div class="content">
+                <h1 class="cancellation-title">❌ Meeting Cancelled</h1>
+                <p class="cancellation-subtitle">
+                    We regret to inform you that your scheduled meeting has been cancelled.
+                </p>
+
+                <!-- Cancellation Notice -->
+                <div class="cancellation-notice">
+                    <div class="notice-icon">🚫</div>
+                    <div class="notice-title">Meeting Cancelled</div>
+                    <div class="notice-text">
+                        The meeting scheduled for <strong>{{MEETING_DATE}}</strong> at <strong>{{MEETING_TIME}}</strong> has been cancelled.
+                    </div>
+                    <div class="notice-timestamp">
+                        Cancelled on {{CANCELLATION_DATE}} at {{CANCELLATION_TIME}}
+                    </div>
+                </div>
+
+                <!-- Meeting Details -->
+                <div class="meeting-details">
+                    <div class="meeting-name">{{MEETING_NAME}}</div>
+
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <div class="detail-icon">📅</div>
+                            <div class="detail-label">Original Date</div>
+                            <div class="detail-value">{{MEETING_DATE}}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-icon">⏰</div>
+                            <div class="detail-label">Original Time</div>
+                            <div class="detail-value">{{MEETING_TIME}}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-icon">⏱️</div>
+                            <div class="detail-label">Duration</div>
+                            <div class="detail-value">{{MEETING_DURATION}}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-icon">👤</div>
+                            <div class="detail-label">Host</div>
+                            <div class="detail-value">{{HOST_NAME}}</div>
+                        </div>
+                    </div>
+                </div>
+
+                {{#if CANCELLATION_REASON}}
+                <!-- Reason Section -->
+                <div class="reason-section">
+                    <div class="reason-title">💭 Reason for Cancellation</div>
+                    <div class="reason-text">{{CANCELLATION_REASON}}</div>
+                </div>
+                {{/if}}
+
+                <!-- Apology Section -->
+                <div class="apology-section">
+                    <div class="apology-title">🙏 We Apologize</div>
+                    <div class="apology-text">
+                        We sincerely apologize for any inconvenience this cancellation may cause. 
+                        We understand that your time is valuable and we regret the short notice.
+                    </div>
+                </div>
+
+                {{#if RESCHEDULE_AVAILABLE}}
+                <!-- Reschedule Section -->
+                <div class="reschedule-section">
+                    <div class="reschedule-title">📅 Reschedule Meeting</div>
+                    <div class="reschedule-text">
+                        Would you like to reschedule this meeting? Click below to view available time slots and select a new date and time.
+                    </div>
+                    <a href="{{RESCHEDULE_URL}}" class="reschedule-button">📅 Reschedule Meeting</a>
+                    <div class="alternative-text">
+                        Or contact {{HOST_NAME}} directly to arrange an alternative time.
+                    </div>
+                </div>
+                {{/if}}
+
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    {{#if RESCHEDULE_URL}}
+                    <a href="{{RESCHEDULE_URL}}" class="quick-action">
+                        <div class="quick-action-icon">📅</div>
+                        <div class="quick-action-title">Reschedule</div>
+                        <div class="quick-action-desc">Book new time</div>
+                    </a>
+                    {{/if}}
+
+                    <a href="{{CALENDAR_URL}}" class="quick-action">
+                        <div class="quick-action-icon">📋</div>
+                        <div class="quick-action-title">Calendar</div>
+                        <div class="quick-action-desc">View schedule</div>
+                    </a>
+
+                    <a href="{{DASHBOARD_URL}}" class="quick-action">
+                        <div class="quick-action-icon">🏠</div>
+                        <div class="quick-action-title">Dashboard</div>
+                        <div class="quick-action-desc">Go to main</div>
+                    </a>
+
+                    <a href="{{SUPPORT_URL}}" class="quick-action">
+                        <div class="quick-action-icon">💬</div>
+                        <div class="quick-action-title">Support</div>
+                        <div class="quick-action-desc">Get help</div>
+                    </a>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="contact-section">
+                    <div class="contact-title">📞 Need Assistance?</div>
+                    <div class="contact-text">
+                        If you have any questions about this cancellation or need to discuss alternative arrangements:
+                    </div>
+                    <div class="contact-info">
+                        <div class="contact-item">
+                            <span>📧</span> Email: {{HOST_EMAIL}}
+                        </div>
+                        {{#if HOST_PHONE}}
+                        <div class="contact-item">
+                            <span>📱</span> Phone: {{HOST_PHONE}}
+                        </div>
+                        {{/if}}
+                        <div class="contact-item">
+                            <span>💬</span> Support: {{SUPPORT_EMAIL}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                <div class="footer-title">Meeting Support</div>
+                <div class="footer-text">
+                    We're committed to providing you with the best meeting experience. 
+                    Thank you for your understanding and flexibility.
+                </div>
+
+                <div class="footer-links">
+                    {{#if RESCHEDULE_URL}}
+                    <a href="{{RESCHEDULE_URL}}" class="footer-link">Reschedule Meeting</a>
+                    {{/if}}
+                    <a href="{{SUPPORT_URL}}" class="footer-link">Contact Support</a>
+                    <a href="{{DASHBOARD_URL}}" class="footer-link">Dashboard</a>
+                    <a href="{{WEBSITE_URL}}" class="footer-link">Visit Website</a>
+                </div>
+
+                <div class="footer-copy">
+                    © 2025 KANDHUGULE CONSULTANCY SERVICES PRIVATE LIMITED. All Rights Reserved.<br />
+                    This cancellation notice was sent to {{EMAIL}}. To manage your notification preferences,
+                    <a href="{{NOTIFICATION_SETTINGS_URL}}" style="color: #55dad7">click here</a>.
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

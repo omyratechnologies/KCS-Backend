@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="format-detection" content="telephone=no, date=no, address=no, email=no, url=no" />
-        <title>Password Successfully Reset - Let's Catch Up</title>
+        <title>Meeting Reminder - {{MEETING_NAME}}</title>
         <style>
             /* Reset styles */
             * {
@@ -35,7 +35,7 @@
 
             /* Header */
             .header {
-                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                background: linear-gradient(135deg, #f59e0b 0%, #d97706 25%, #b45309 50%, #92400e 75%, #78350f 100%);
                 padding: 40px 30px;
                 text-align: center;
                 position: relative;
@@ -90,7 +90,7 @@
                 z-index: 1;
             }
 
-            .success-badge {
+            .reminder-badge {
                 background: rgba(255, 255, 255, 0.2);
                 color: #ffffff;
                 padding: 8px 16px;
@@ -110,7 +110,7 @@
                 padding: 50px 40px;
             }
 
-            .success-title {
+            .reminder-title {
                 color: #0a1929;
                 font-size: 28px;
                 font-weight: 700;
@@ -118,7 +118,7 @@
                 text-align: center;
             }
 
-            .success-subtitle {
+            .reminder-subtitle {
                 color: #64748b;
                 font-size: 18px;
                 font-weight: 400;
@@ -127,37 +127,128 @@
                 line-height: 1.5;
             }
 
-            /* Success Icon */
-            .success-icon-container {
-                text-align: center;
-                margin: 40px 0;
-            }
-
-            .success-icon {
-                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-                color: #ffffff;
-                width: 100px;
-                height: 100px;
-                border-radius: 50%;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 48px;
-                margin-bottom: 24px;
-                box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
-            }
-
-            /* Info Box */
-            .info-box {
-                background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-                border: 2px solid #10b981;
+            /* Urgency Box */
+            .urgency-box {
+                background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%);
+                border: 2px solid #f59e0b;
                 border-radius: 16px;
                 padding: 32px;
                 margin: 32px 0;
                 text-align: center;
             }
 
-            .info-title {
+            .urgency-box.high {
+                background: linear-gradient(135deg, #fef2f2 0%, #fca5a5 100%);
+                border-color: #ef4444;
+            }
+
+            .urgency-box.medium {
+                background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%);
+                border-color: #f59e0b;
+            }
+
+            .urgency-title {
+                color: #92400e;
+                font-size: 20px;
+                font-weight: 600;
+                margin-bottom: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+            }
+
+            .urgency-title.high {
+                color: #dc2626;
+            }
+
+            .time-remaining {
+                color: #0f172a;
+                font-size: 36px;
+                font-weight: 700;
+                margin: 16px 0;
+                text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            }
+
+            .time-label {
+                color: #92400e;
+                font-size: 14px;
+                font-weight: 500;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
+            .time-label.high {
+                color: #dc2626;
+            }
+
+            /* Meeting Quick Info */
+            .meeting-quick-info {
+                background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+                border: 2px solid #0ea5e9;
+                border-radius: 16px;
+                padding: 32px;
+                margin: 32px 0;
+            }
+
+            .meeting-name {
+                color: #0f172a;
+                font-size: 24px;
+                font-weight: 700;
+                text-align: center;
+                margin-bottom: 24px;
+                background: #ffffff;
+                padding: 16px 24px;
+                border-radius: 12px;
+                border: 1px solid #0ea5e9;
+            }
+
+            .quick-info-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+                margin: 24px 0;
+            }
+
+            .quick-info-item {
+                background: #ffffff;
+                border: 1px solid #0ea5e9;
+                border-radius: 12px;
+                padding: 20px;
+                text-align: center;
+            }
+
+            .info-icon {
+                font-size: 24px;
+                margin-bottom: 8px;
+            }
+
+            .info-label {
+                color: #0c4a6e;
+                font-size: 12px;
+                font-weight: 500;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 8px;
+            }
+
+            .info-value {
+                color: #0f172a;
+                font-size: 14px;
+                font-weight: 600;
+            }
+
+            /* Join Button Section */
+            .join-section {
+                background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+                border: 2px solid #22c55e;
+                border-radius: 16px;
+                padding: 32px;
+                margin: 32px 0;
+                text-align: center;
+            }
+
+            .join-title {
                 color: #166534;
                 font-size: 20px;
                 font-weight: 600;
@@ -168,68 +259,28 @@
                 gap: 8px;
             }
 
-            .info-text {
-                color: #166534;
-                font-size: 16px;
-                line-height: 1.6;
-                margin-bottom: 24px;
-            }
-
-            .reset-details {
-                background: #ffffff;
-                border: 1px solid #d1fae5;
-                border-radius: 12px;
-                padding: 20px;
-                margin: 20px 0;
-                text-align: left;
-            }
-
-            .detail-row {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 12px 0;
-                border-bottom: 1px solid #f0fdf4;
-            }
-
-            .detail-row:last-child {
-                border-bottom: none;
-            }
-
-            .detail-label {
-                color: #166534;
-                font-size: 14px;
-                font-weight: 500;
-            }
-
-            .detail-value {
-                color: #0f172a;
-                font-size: 14px;
-                font-weight: 600;
-            }
-
-            /* Action Button */
-            .action-button {
+            .join-button {
                 display: inline-block;
-                background: linear-gradient(135deg, #55dad7 0%, #f1531c 100%);
+                background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
                 color: #ffffff;
                 text-decoration: none;
-                padding: 16px 32px;
+                padding: 18px 36px;
                 border-radius: 12px;
-                font-size: 16px;
+                font-size: 18px;
                 font-weight: 600;
-                margin: 32px 0;
+                margin: 16px 0;
                 text-align: center;
                 transition: transform 0.2s ease;
+                box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
             }
 
-            .action-button:hover {
+            .join-button:hover {
                 transform: translateY(-2px);
-                box-shadow: 0 8px 25px rgba(85, 218, 215, 0.3);
+                box-shadow: 0 8px 25px rgba(34, 197, 94, 0.4);
             }
 
-            /* Security Tips */
-            .security-tips {
+            /* Preparation Checklist */
+            .preparation-section {
                 background: #f8fafc;
                 border: 1px solid #e2e8f0;
                 border-radius: 12px;
@@ -237,7 +288,7 @@
                 margin: 32px 0;
             }
 
-            .security-title {
+            .preparation-title {
                 color: #0a1929;
                 font-size: 18px;
                 font-weight: 600;
@@ -247,12 +298,12 @@
                 gap: 8px;
             }
 
-            .security-list {
+            .checklist {
                 list-style: none;
                 padding: 0;
             }
 
-            .security-list li {
+            .checklist-item {
                 color: #64748b;
                 font-size: 14px;
                 line-height: 1.6;
@@ -261,25 +312,25 @@
                 position: relative;
             }
 
-            .security-list li::before {
+            .checklist-item::before {
                 content: "✓";
-                color: #10b981;
+                color: #22c55e;
                 font-weight: 600;
                 position: absolute;
                 left: 0;
             }
 
-            /* Warning Box */
-            .warning-box {
-                background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 100%);
-                border-left: 4px solid #f59e0b;
-                border-radius: 8px;
+            /* Device Check */
+            .device-check {
+                background: linear-gradient(135deg, #fdf4ff 0%, #ddd6fe 100%);
+                border: 2px solid #8b5cf6;
+                border-radius: 16px;
                 padding: 24px;
                 margin: 32px 0;
             }
 
-            .warning-title {
-                color: #f59e0b;
+            .device-title {
+                color: #7c3aed;
                 font-size: 16px;
                 font-weight: 600;
                 margin-bottom: 12px;
@@ -288,16 +339,35 @@
                 gap: 8px;
             }
 
-            .warning-text {
-                color: #92400e;
+            .device-text {
+                color: #6b21a8;
                 font-size: 14px;
                 line-height: 1.6;
+                margin-bottom: 16px;
+            }
+
+            .test-button {
+                background: #ffffff;
+                border: 1px solid #8b5cf6;
+                color: #7c3aed;
+                text-decoration: none;
+                padding: 12px 20px;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 500;
+                display: inline-block;
+                transition: all 0.2s ease;
+            }
+
+            .test-button:hover {
+                background: #8b5cf6;
+                color: #ffffff;
             }
 
             /* Quick Actions */
             .quick-actions {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
                 gap: 16px;
                 margin: 32px 0;
             }
@@ -315,7 +385,7 @@
             .quick-action:hover {
                 transform: translateY(-2px);
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-                border-color: #10b981;
+                border-color: #f59e0b;
             }
 
             .quick-action-icon {
@@ -397,39 +467,38 @@
                 .content {
                     padding: 32px 20px;
                 }
-                .success-title {
+                .reminder-title {
                     font-size: 24px;
                 }
-                .success-subtitle {
+                .reminder-subtitle {
                     font-size: 16px;
                 }
-                .success-icon {
-                    width: 80px;
-                    height: 80px;
-                    font-size: 40px;
-                }
-                .info-box {
+                .urgency-box {
                     padding: 24px 16px;
                     margin: 24px 0;
                 }
-                .info-title {
-                    font-size: 18px;
+                .time-remaining {
+                    font-size: 28px;
                 }
-                .reset-details {
-                    padding: 16px;
+                .meeting-quick-info {
+                    padding: 24px 16px;
                 }
-                .action-button {
-                    padding: 14px 28px;
-                    font-size: 14px;
+                .quick-info-grid {
+                    grid-template-columns: 1fr;
+                    gap: 12px;
+                }
+                .join-section {
+                    padding: 24px 16px;
+                }
+                .join-button {
+                    padding: 16px 28px;
+                    font-size: 16px;
                     width: 100%;
                     box-sizing: border-box;
                 }
                 .quick-actions {
-                    grid-template-columns: 1fr;
+                    grid-template-columns: repeat(2, 1fr);
                     gap: 12px;
-                }
-                .security-tips, .warning-box {
-                    padding: 20px 16px;
                 }
                 .footer {
                     padding: 24px 16px;
@@ -455,44 +524,36 @@
                 .brand-title {
                     font-size: 24px;
                 }
-                .success-badge {
-                    font-size: 10px;
-                    padding: 6px 12px;
-                }
                 .content {
                     padding: 24px 16px;
                 }
-                .success-title {
+                .reminder-title {
                     font-size: 20px;
                 }
-                .success-subtitle {
+                .reminder-subtitle {
                     font-size: 14px;
                 }
-                .success-icon {
-                    width: 60px;
-                    height: 60px;
-                    font-size: 32px;
-                }
-                .info-box {
+                .urgency-box {
                     padding: 20px 12px;
                 }
-                .reset-details {
-                    padding: 12px;
+                .time-remaining {
+                    font-size: 24px;
                 }
-                .detail-row {
-                    flex-direction: column;
-                    align-items: flex-start;
-                    gap: 4px;
+                .meeting-quick-info {
+                    padding: 20px 12px;
                 }
-                .action-button {
-                    padding: 12px 24px;
+                .join-section {
+                    padding: 20px 12px;
+                }
+                .join-button {
+                    padding: 14px 24px;
                     font-size: 14px;
                 }
-                .quick-action {
-                    padding: 16px;
+                .preparation-section, .device-check {
+                    padding: 20px 12px;
                 }
-                .security-tips, .warning-box {
-                    padding: 16px 12px;
+                .quick-actions {
+                    grid-template-columns: 1fr;
                 }
                 .footer {
                     padding: 20px 12px;
@@ -508,125 +569,136 @@
             <!-- Header -->
             <div class="header">
                 <div class="logo">
-                    <img src="{{ body.logo_url }}" alt="Let's Catch Up Logo" />
+                    <img src="{{LOGO_URL}}" alt="Let's Catch Up Logo" />
                 </div>
                 <div class="brand-title">Let's Catch Up</div>
                 <div class="brand-subtitle">Learning & Communication Platform</div>
-                <div class="success-badge">Password Reset Successful</div>
+                <div class="reminder-badge">Meeting Reminder</div>
             </div>
 
             <!-- Content -->
             <div class="content">
-                <div class="success-icon-container">
-                    <div class="success-icon">✓</div>
-                </div>
-
-                <h1 class="success-title">🎉 Password Successfully Reset!</h1>
-                <p class="success-subtitle">
-                    Your password has been updated successfully. Your account is now secure with your new password.
+                <h1 class="reminder-title">⏰ Meeting Starting Soon!</h1>
+                <p class="reminder-subtitle">
+                    {{PARTICIPANT_NAME}}, your meeting is about to begin. Don't miss it!
                 </p>
 
-                <!-- Success Info Box -->
-                <div class="info-box">
-                    <div class="info-title">🔐 Password Reset Confirmation</div>
-                    <div class="info-text">
-                        Your password reset was completed successfully. You can now sign in to your account using your
-                        new password.
+                <!-- Urgency Box -->
+                <div class="urgency-box {{URGENCY_CLASS}}">
+                    <div class="urgency-title {{URGENCY_CLASS}}">
+                        {{URGENCY_ICON}} Meeting Starts In
                     </div>
+                    <div class="time-remaining">{{TIME_REMAINING}}</div>
+                    <div class="time-label {{URGENCY_CLASS}}">{{TIME_LABEL}}</div>
+                </div>
 
-                    <div class="reset-details">
-                        <div class="detail-row">
-                            <span class="detail-label">Account Email</span>
-                            <span class="detail-value">{{ body.email }}</span>
+                <!-- Meeting Quick Info -->
+                <div class="meeting-quick-info">
+                    <div class="meeting-name">{{MEETING_NAME}}</div>
+
+                    <div class="quick-info-grid">
+                        <div class="quick-info-item">
+                            <div class="info-icon">📅</div>
+                            <div class="info-label">Date</div>
+                            <div class="info-value">{{MEETING_DATE}}</div>
                         </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Reset Date</span>
-                            <span class="detail-value">{{ body.reset_date }}</span>
+                        <div class="quick-info-item">
+                            <div class="info-icon">⏰</div>
+                            <div class="info-label">Time</div>
+                            <div class="info-value">{{MEETING_TIME}}</div>
                         </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Reset Time</span>
-                            <span class="detail-value">{{ body.reset_time }}</span>
+                        <div class="quick-info-item">
+                            <div class="info-icon">⏱️</div>
+                            <div class="info-label">Duration</div>
+                            <div class="info-value">{{MEETING_DURATION}}</div>
                         </div>
-                        <div class="detail-row">
-                            <span class="detail-label">IP Address</span>
-                            <span class="detail-value">{{ body.ip_address }}</span>
+                        <div class="quick-info-item">
+                            <div class="info-icon">👤</div>
+                            <div class="info-label">Host</div>
+                            <div class="info-value">{{HOST_NAME}}</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Action Button -->
-                <div style="text-align: center">
-                    <a href="{{ body.login_url }}" class="action-button"> 🚀 Sign In to Your Account </a>
+                <!-- Join Section -->
+                <div class="join-section">
+                    <div class="join-title">🎥 Ready to Join?</div>
+                    <div style="margin: 16px 0;">
+                        <a href="{{MEETING_URL}}" class="join-button">🚀 Join Meeting Now</a>
+                    </div>
                 </div>
 
-                <!-- Security Tips -->
-                <div class="security-tips">
-                    <div class="security-title">🛡️ Keep Your Account Secure</div>
-                    <ul class="security-list">
-                        <li>Remember your new password and store it safely</li>
-                        <li>Don't share your login credentials with anyone</li>
-                        <li>Enable two-factor authentication if available</li>
-                        <li>Sign out from shared or public computers</li>
-                        <li>Report any suspicious account activity immediately</li>
+                <!-- Preparation Checklist -->
+                <div class="preparation-section">
+                    <div class="preparation-title">✅ Last-Minute Checklist</div>
+                    <ul class="checklist">
+                        <li class="checklist-item">Check your internet connection</li>
+                        <li class="checklist-item">Test your camera and microphone</li>
+                        <li class="checklist-item">Find a quiet location</li>
+                        <li class="checklist-item">Have meeting materials ready</li>
+                        <li class="checklist-item">Close unnecessary applications</li>
                     </ul>
                 </div>
 
-                <!-- Warning Box -->
-                <div class="warning-box">
-                    <div class="warning-title">⚠️ Didn't Reset Your Password?</div>
-                    <div class="warning-text">
-                        If you didn't request this password reset, your account may be compromised. Please contact our
-                        support team immediately and consider changing your password again.
+                <!-- Device Check -->
+                <div class="device-check">
+                    <div class="device-title">🔧 Technical Check</div>
+                    <div class="device-text">
+                        Having technical issues? Test your camera and microphone before the meeting starts.
                     </div>
+                    {{#if DEVICE_TEST_URL}}
+                    <a href="{{DEVICE_TEST_URL}}" class="test-button">🎯 Test My Device</a>
+                    {{/if}}
                 </div>
 
                 <!-- Quick Actions -->
                 <div class="quick-actions">
-                    <a href="{{ body.dashboard_url }}" class="quick-action">
-                        <div class="quick-action-icon">🏠</div>
-                        <div class="quick-action-title">Dashboard</div>
-                        <div class="quick-action-desc">Access your main dashboard</div>
+                    <a href="{{MEETING_URL}}" class="quick-action">
+                        <div class="quick-action-icon">🎥</div>
+                        <div class="quick-action-title">Join Now</div>
+                        <div class="quick-action-desc">Start the meeting</div>
                     </a>
 
-                    <a href="{{ body.profile_url }}" class="quick-action">
-                        <div class="quick-action-icon">👤</div>
-                        <div class="quick-action-title">Profile Settings</div>
-                        <div class="quick-action-desc">Update your profile</div>
+                    <a href="{{CALENDAR_URL}}" class="quick-action">
+                        <div class="quick-action-icon">📅</div>
+                        <div class="quick-action-title">Calendar</div>
+                        <div class="quick-action-desc">View schedule</div>
                     </a>
 
-                    <a href="{{ body.security_url }}" class="quick-action">
-                        <div class="quick-action-icon">🔐</div>
-                        <div class="quick-action-title">Security Settings</div>
-                        <div class="quick-action-desc">Manage account security</div>
+                    {{#if MEETING_MATERIALS_URL}}
+                    <a href="{{MEETING_MATERIALS_URL}}" class="quick-action">
+                        <div class="quick-action-icon">📋</div>
+                        <div class="quick-action-title">Materials</div>
+                        <div class="quick-action-desc">Meeting docs</div>
                     </a>
+                    {{/if}}
 
-                    <a href="{{ body.support_url }}" class="quick-action">
+                    <a href="{{SUPPORT_URL}}" class="quick-action">
                         <div class="quick-action-icon">💬</div>
-                        <div class="quick-action-title">Get Help</div>
-                        <div class="quick-action-desc">Contact support team</div>
+                        <div class="quick-action-title">Support</div>
+                        <div class="quick-action-desc">Get help</div>
                     </a>
                 </div>
             </div>
 
             <!-- Footer -->
             <div class="footer">
-                <div class="footer-title">Your Account is Secure</div>
+                <div class="footer-title">Meeting Support</div>
                 <div class="footer-text">
-                    We take your account security seriously. If you have any concerns or need assistance, our support
-                    team is here to help.
+                    Having trouble joining? Our technical support team is ready to assist you.
                 </div>
 
                 <div class="footer-links">
-                    <a href="{{ body.support_url }}" class="footer-link">Contact Support</a>
-                    <a href="{{ body.security_center_url }}" class="footer-link">Security Center</a>
-                    <a href="{{ body.help_url }}" class="footer-link">Help Center</a>
-                    <a href="{{ body.website_url }}" class="footer-link">Visit Website</a>
+                    <a href="{{TECH_SUPPORT_URL}}" class="footer-link">Technical Support</a>
+                    <a href="{{MEETING_HELP_URL}}" class="footer-link">Meeting Help</a>
+                    <a href="{{DASHBOARD_URL}}" class="footer-link">Dashboard</a>
+                    <a href="{{WEBSITE_URL}}" class="footer-link">Visit Website</a>
                 </div>
 
                 <div class="footer-copy">
                     © 2025 KANDHUGULE CONSULTANCY SERVICES PRIVATE LIMITED. All Rights Reserved.<br />
-                    This email was sent to {{ body.email }}. If you received this email by mistake, please contact
-                    support.
+                    This meeting reminder was sent to {{EMAIL}}. To manage your reminder preferences,
+                    <a href="{{NOTIFICATION_SETTINGS_URL}}" style="color: #55dad7">click here</a>.
                 </div>
             </div>
         </div>

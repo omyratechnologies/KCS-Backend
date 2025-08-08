@@ -178,12 +178,16 @@ export class AuthService {
         }
 
         const dbUser = (await User.find({
-            user_id: session[0].user_id,
+            id: session[0].user_id,
         })) as {
             rows: IUser[];
         };
 
         const user = dbUser.rows;
+
+        if (user.length === 0) {
+            throw new Error("User not found");
+        }
 
         // use existing session_id
         return {
