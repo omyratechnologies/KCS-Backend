@@ -494,4 +494,7 @@ app.get(
     ExamController.getExaminationsByDate
 );
 
+// Mount exam timetable routes
+app.route("/timetable", (await import("./exam_timetable.route")).default);
+
 export default app;
