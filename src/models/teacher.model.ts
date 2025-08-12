@@ -8,7 +8,13 @@ interface ITeacherData {
     user_id: string;
     subjects: string[];
     classes: string[];
-    meta_data: object;
+    meta_data: {
+        rating?: number;
+        degree?: string;
+        experience_years?: number;
+        specialization?: string[];
+        [key: string]: unknown;
+    };
     created_at: Date;
     updated_at: Date;
 }
@@ -18,6 +24,15 @@ const TeacherSchema = new Schema({
     user_id: { type: String, required: true },
     subjects: { type: [String], required: false },
     classes: { type: [String], required: false },
+    meta_data: { 
+        type: Object, 
+        default: {
+            rating: 0.0,
+            degree: "",
+            experience_years: 0,
+            specialization: []
+        }
+    },
     created_at: { type: Date, default: () => new Date() },
     updated_at: { type: Date, default: () => new Date() },
 });

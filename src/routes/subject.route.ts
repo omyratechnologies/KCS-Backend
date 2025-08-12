@@ -3,6 +3,7 @@ import { describeRoute } from "hono-openapi";
 import { resolver, validator as zValidator } from "hono-openapi/zod";
 
 import { SubjectController } from "@/controllers/subject.controller";
+import { SubjectMaterialsController } from "@/controllers/subject_materials.controller";
 import {
     createSubjectRequestBodySchema,
     createSubjectResponseSchema,
@@ -14,6 +15,17 @@ import {
     updateSubjectRequestBodySchema,
     updateSubjectResponseSchema,
 } from "@/schema/subject";
+import {
+    assignTeacherSchema,
+    createMaterialSchema,
+    updateMaterialSchema,
+    materialsListResponseSchema,
+    materialResponseSchema,
+    subjectDetailsResponseSchema,
+    downloadResponseSchema,
+    teacherAssignmentResponseSchema,
+    errorResponseSchema
+} from "@/schema/subject_materials";
 
 const app = new Hono();
 
@@ -300,6 +312,417 @@ app.get(
         },
     }),
     SubjectController.getAllClassesForASubjectById
+);
+
+// Subject Materials Routes
+
+// Get subject with detailed breakdown
+app.get(
+    "/:subject_id/details",
+    describeRoute({
+        tags: ["Subject Materials"],
+        operationId: "getSubjectDetails",
+        summary: "Get subject with detailed breakdown",
+        description: "Retrieves a subject with material counts and teacher information",
+        parameters: [
+            {
+                name: "subject_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Subject ID"
+            }
+        ],
+        responses: {
+            200: {
+                description: "Subject details retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(subjectDetailsResponseSchema)
+                    }
+                }
+            },
+            400: {
+                description: "Subject not found",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema)
+                    }
+                }
+            }
+        }
+    }),
+    SubjectMaterialsController.getSubjectDetails
+);
+
+// Get materials by type
+app.get(
+    "/:subject_id/materials/:material_type",
+    describeRoute({
+        tags: ["Subject Materials"],
+        operationId: "getMaterialsByType",
+        summary: "Get materials by type",
+        description: "Retrieves all materials of a specific type for a subject",
+        parameters: [
+            {
+                name: "subject_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Subject ID"
+            },
+            {
+                name: "material_type",
+                in: "path",
+                required: true,
+                schema: { type: "string", enum: ["pdfs", "videos", "worksheets", "presentations"] },
+                description: "Type of materials to retrieve"
+            }
+        ],
+        responses: {
+            200: {
+                description: "Materials retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(materialsListResponseSchema)
+                    }
+                }
+            }
+        }
+    }),
+    SubjectMaterialsController.getMaterialsByType
+);
+
+// Add material
+app.post(
+    "/:subject_id/materials/:material_type",
+    describeRoute({
+        tags: ["Subject Materials"],
+        operationId: "addMaterial",
+        summary: "Add material to subject",
+        description: "Adds a new material to a subject",
+        parameters: [
+            {
+                name: "subject_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Subject ID"
+            },
+            {
+                name: "material_type",
+                in: "path",
+                required: true,
+                schema: { type: "string", enum: ["pdfs", "videos", "worksheets", "presentations"] },
+                description: "Type of material to add"
+            }
+        ],
+        responses: {
+            200: {
+                description: "Material added successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(teacherAssignmentResponseSchema)
+                    }
+                }
+            }
+        }
+    }),
+    zValidator("json", createMaterialSchema),
+    SubjectMaterialsController.addMaterial
+);
+
+// Get single material
+app.get(
+    "/:subject_id/materials/:material_type/:material_id",
+    describeRoute({
+        tags: ["Subject Materials"],
+        operationId: "getMaterial",
+        summary: "Get single material",
+        description: "Retrieves a specific material by ID",
+        parameters: [
+            {
+                name: "subject_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Subject ID"
+            },
+            {
+                name: "material_type",
+                in: "path",
+                required: true,
+                schema: { type: "string", enum: ["pdfs", "videos", "worksheets", "presentations"] },
+                description: "Type of material"
+            },
+            {
+                name: "material_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Material ID"
+            }
+        ],
+        responses: {
+            200: {
+                description: "Material retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(materialResponseSchema)
+                    }
+                }
+            }
+        }
+    }),
+    SubjectMaterialsController.getMaterial
+);
+
+// Update material
+app.put(
+    "/:subject_id/materials/:material_type/:material_id",
+    describeRoute({
+        tags: ["Subject Materials"],
+        operationId: "updateMaterial",
+        summary: "Update material",
+        description: "Updates a specific material",
+        parameters: [
+            {
+                name: "subject_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Subject ID"
+            },
+            {
+                name: "material_type",
+                in: "path",
+                required: true,
+                schema: { type: "string", enum: ["pdfs", "videos", "worksheets", "presentations"] },
+                description: "Type of material"
+            },
+            {
+                name: "material_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Material ID"
+            }
+        ],
+        responses: {
+            200: {
+                description: "Material updated successfully",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                success: { type: "boolean" },
+                                data: { type: "object" },
+                                message: { type: "string" }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }),
+    SubjectMaterialsController.updateMaterial
+);
+
+// Delete material
+app.delete(
+    "/:subject_id/materials/:material_type/:material_id",
+    describeRoute({
+        tags: ["Subject Materials"],
+        operationId: "deleteMaterial",
+        summary: "Delete material",
+        description: "Deletes a specific material",
+        parameters: [
+            {
+                name: "subject_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Subject ID"
+            },
+            {
+                name: "material_type",
+                in: "path",
+                required: true,
+                schema: { type: "string", enum: ["pdfs", "videos", "worksheets", "presentations"] },
+                description: "Type of material"
+            },
+            {
+                name: "material_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Material ID"
+            }
+        ],
+        responses: {
+            200: {
+                description: "Material deleted successfully",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                success: { type: "boolean" },
+                                data: { type: "object" },
+                                message: { type: "string" }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }),
+    SubjectMaterialsController.deleteMaterial
+);
+
+// Download material
+app.post(
+    "/:subject_id/materials/:material_type/:material_id/download",
+    describeRoute({
+        tags: ["Subject Materials"],
+        operationId: "downloadMaterial",
+        summary: "Download material",
+        description: "Initiates material download and increments download count",
+        parameters: [
+            {
+                name: "subject_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Subject ID"
+            },
+            {
+                name: "material_type",
+                in: "path",
+                required: true,
+                schema: { type: "string", enum: ["pdfs", "videos", "worksheets", "presentations"] },
+                description: "Type of material"
+            },
+            {
+                name: "material_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Material ID"
+            }
+        ],
+        responses: {
+            200: {
+                description: "Download initiated successfully",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                success: { type: "boolean" },
+                                data: {
+                                    type: "object",
+                                    properties: {
+                                        download_url: { type: "string" },
+                                        title: { type: "string" },
+                                        size: { type: "string" }
+                                    }
+                                },
+                                message: { type: "string" }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }),
+    SubjectMaterialsController.downloadMaterial
+);
+
+// Teacher Management Routes
+
+// Assign teacher to subject
+app.post(
+    "/:subject_id/teachers",
+    describeRoute({
+        tags: ["Subject Teachers"],
+        operationId: "assignTeacher",
+        summary: "Assign teacher to subject",
+        description: "Assigns a teacher to a subject with role and schedule",
+        parameters: [
+            {
+                name: "subject_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Subject ID"
+            }
+        ],
+        responses: {
+            200: {
+                description: "Teacher assigned successfully",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                success: { type: "boolean" },
+                                data: { type: "object" },
+                                message: { type: "string" }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }),
+    SubjectMaterialsController.assignTeacher
+);
+
+// Remove teacher from subject
+app.delete(
+    "/:subject_id/teachers/:teacher_id",
+    describeRoute({
+        tags: ["Subject Teachers"],
+        operationId: "removeTeacher",
+        summary: "Remove teacher from subject",
+        description: "Removes a teacher assignment from a subject",
+        parameters: [
+            {
+                name: "subject_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Subject ID"
+            },
+            {
+                name: "teacher_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Teacher ID"
+            }
+        ],
+        responses: {
+            200: {
+                description: "Teacher removed successfully",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                success: { type: "boolean" },
+                                data: { type: "object" },
+                                message: { type: "string" }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }),
+    SubjectMaterialsController.removeTeacher
 );
 
 export default app;
