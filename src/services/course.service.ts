@@ -972,6 +972,395 @@ export class CourseService {
         }
     }
 
+    // ==================== COURSE ANNOUNCEMENTS ====================
+
+    /**
+     * Create course announcement and notify all students
+     */
+    static async createCourseAnnouncement(
+        course_id: string,
+        campus_id: string,
+        user_id: string,
+        announcementData: {
+            title: string;
+            content: string;
+            type?: "general" | "urgent" | "reminder" | "assignment" | "exam";
+            priority?: "low" | "normal" | "high" | "urgent";
+            visibility?: "all" | "students" | "instructors";
+            expires_at?: string;
+            send_push?: boolean;
+            send_email?: boolean;
+        }
+    ) {
+        try {
+            const course = await this.findCourseById(course_id, campus_id);
+            if (!course) {
+                throw new Error("Course not found");
+            }
+
+            // Check if user has permission to create announcements
+            const isInstructor = course.instructor_ids?.includes(user_id);
+            const isCreator = course.created_by === user_id;
+            
+            if (!isInstructor && !isCreator) {
+                throw new Error("Only course instructors can create announcements");
+            }
+
+            const announcementId = nanoid();
+            const now = new Date();
+
+            // Create announcement object
+            const announcement = {
+                id: announcementId,
+                title: announcementData.title,
+                content: announcementData.content,
+                type: announcementData.type || "general",
+                priority: announcementData.priority || "normal",
+                visibility: announcementData.visibility || "all",
+                created_by: user_id,
+                created_by_name: "Course Instructor", // We'd fetch this from user data in real implementation
+                created_at: now,
+                updated_at: now,
+                expires_at: announcementData.expires_at ? new Date(announcementData.expires_at) : undefined,
+                is_active: true,
+                push_sent: false,
+                email_sent: false,
+                read_by: [],
+            };
+
+            // Update course with new announcement
+            const currentAnnouncements = course.meta_data?.course_announcements || [];
+            const updatedAnnouncements = [announcement, ...currentAnnouncements];
+
+            await this.updateCourseById(
+                course_id,
+                {
+                    meta_data: {
+                        ...course.meta_data,
+                        course_announcements: updatedAnnouncements,
+                    },
+                    updated_at: now,
+                },
+                campus_id
+            );
+
+            // Send push notifications to all enrolled students immediately
+            const { SocketService } = await import("@/services/socket.service");
+            
+            const notificationResult = await SocketService.sendCourseAnnouncementNotification(course_id, {
+                id: announcementId,
+                title: announcementData.title,
+                content: announcementData.content,
+                courseName: course.title,
+                priority: announcementData.priority || "normal",
+                createdBy: user_id,
+                createdAt: now,
+            });
+
+            return {
+                success: true,
+                data: {
+                    announcement,
+                    course_id,
+                    course_title: course.title,
+                    notification_stats: notificationResult,
+                },
+                message: `Course announcement published and sent to ${notificationResult.notifiedStudents} students`,
+            };
+        } catch (error) {
+            throw new Error(`Failed to create course announcement: ${error}`);
+        }
+    }
+
+    /**
+     * Create campus-wide announcement and notify all students
+     */
+    static async createCampusAnnouncement(
+        campus_id: string,
+        user_id: string,
+        announcementData: {
+            title: string;
+            content: string;
+            priority?: "low" | "normal" | "high" | "urgent";
+            target_audience?: "all" | "students" | "teachers";
+            expires_at?: string;
+        }
+    ) {
+        try {
+            const announcementId = nanoid();
+            const now = new Date();
+
+            // Create announcement object
+            const announcement = {
+                id: announcementId,
+                title: announcementData.title,
+                content: announcementData.content,
+                priority: announcementData.priority || "normal",
+                target_audience: announcementData.target_audience || "all",
+                created_by: user_id,
+                created_at: now,
+                expires_at: announcementData.expires_at ? new Date(announcementData.expires_at) : undefined,
+                is_active: true,
+                views_count: 0,
+                interactions_count: 0,
+                campus_id,
+            };
+
+            // TODO: Save to a campus_announcements model if you have one
+            // For now, we'll use the notification system directly
+
+            // Send push notifications to all students in campus
+            const { SocketService } = await import("@/services/socket.service");
+            
+            const notificationResult = await SocketService.sendAnnouncementPushNotification(campus_id, {
+                id: announcementId,
+                title: announcementData.title,
+                content: announcementData.content,
+                priority: announcementData.priority || "normal",
+                createdBy: user_id,
+                createdAt: now,
+            });
+
+            return {
+                success: true,
+                data: {
+                    announcement,
+                    campus_id,
+                    notification_stats: notificationResult,
+                },
+                message: `Campus announcement published and sent to ${notificationResult.notifiedStudents} students`,
+            };
+        } catch (error) {
+            throw new Error(`Failed to create campus announcement: ${error}`);
+        }
+    }
+
+    /**
+     * Get course announcements
+     */
+    static async getCourseAnnouncements(
+        course_id: string,
+        campus_id: string,
+        user_id?: string,
+        filters: {
+            active_only?: boolean;
+            limit?: number;
+            offset?: number;
+        } = {}
+    ) {
+        try {
+            const course = await this.findCourseById(course_id, campus_id);
+            if (!course) {
+                throw new Error("Course not found");
+            }
+
+            let announcements = course.meta_data?.course_announcements || [];
+            
+            // Apply filters
+            if (filters.active_only) {
+                const now = new Date();
+                announcements = announcements.filter((ann: any) => {
+                    const isActive = ann.is_active;
+                    const notExpired = !ann.expires_at || new Date(ann.expires_at) > now;
+                    const isScheduled = new Date(ann.scheduled_at) <= now;
+                    return isActive && notExpired && isScheduled;
+                });
+            }
+
+            // Sort by creation date (newest first)
+            announcements.sort((a: any, b: any) => 
+                new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+            );
+
+            // Apply pagination
+            const offset = filters.offset || 0;
+            const limit = filters.limit || 20;
+            const paginatedAnnouncements = announcements.slice(offset, offset + limit);
+
+            // Mark announcements as viewed if user is provided
+            if (user_id && paginatedAnnouncements.length > 0) {
+                // Increment view count for displayed announcements
+                const updatedAnnouncements = announcements.map((ann: any) => {
+                    if (paginatedAnnouncements.find((p: any) => p.id === ann.id)) {
+                        return { ...ann, views_count: (ann.views_count || 0) + 1 };
+                    }
+                    return ann;
+                });
+
+                // Update course with incremented view counts
+                await this.updateCourseById(
+                    course_id,
+                    {
+                        meta_data: {
+                            ...course.meta_data,
+                            course_announcements: updatedAnnouncements,
+                        },
+                    },
+                    campus_id
+                );
+            }
+
+            return {
+                success: true,
+                data: {
+                    announcements: paginatedAnnouncements,
+                    total_count: announcements.length,
+                    pagination: {
+                        offset,
+                        limit,
+                        total: announcements.length,
+                        has_more: offset + limit < announcements.length,
+                    },
+                    course_info: {
+                        id: course.id,
+                        title: course.title,
+                    },
+                },
+                message: "Course announcements retrieved successfully",
+            };
+        } catch (error) {
+            throw new Error(`Failed to get course announcements: ${error}`);
+        }
+    }
+
+    /**
+     * Update course announcement
+     */
+    static async updateCourseAnnouncement(
+        course_id: string,
+        announcement_id: string,
+        campus_id: string,
+        user_id: string,
+        updateData: Partial<{
+            title: string;
+            content: string;
+            priority: "low" | "normal" | "high" | "urgent";
+            is_active: boolean;
+            expires_at: Date;
+        }>
+    ) {
+        try {
+            const course = await this.findCourseById(course_id, campus_id);
+            if (!course) {
+                throw new Error("Course not found");
+            }
+
+            const announcements = course.meta_data?.course_announcements || [];
+            const announcementIndex = announcements.findIndex((ann: any) => ann.id === announcement_id);
+            
+            if (announcementIndex === -1) {
+                throw new Error("Announcement not found");
+            }
+
+            const announcement = announcements[announcementIndex];
+            
+            // Check permission
+            if (announcement.created_by !== user_id) {
+                const isInstructor = course.instructor_ids?.includes(user_id);
+                const isCreator = course.created_by === user_id;
+                
+                if (!isInstructor && !isCreator) {
+                    throw new Error("Only the announcement creator or course instructors can update this announcement");
+                }
+            }
+
+            // Update announcement
+            const updatedAnnouncement = {
+                ...announcement,
+                ...updateData,
+                updated_at: new Date(),
+                updated_by: user_id,
+            };
+
+            // Update announcements array
+            const updatedAnnouncements = [...announcements];
+            updatedAnnouncements[announcementIndex] = updatedAnnouncement;
+
+            await this.updateCourseById(
+                course_id,
+                {
+                    meta_data: {
+                        ...course.meta_data,
+                        course_announcements: updatedAnnouncements,
+                    },
+                    updated_at: new Date(),
+                },
+                campus_id
+            );
+
+            return {
+                success: true,
+                data: {
+                    announcement: updatedAnnouncement,
+                    course_id,
+                },
+                message: "Course announcement updated successfully",
+            };
+        } catch (error) {
+            throw new Error(`Failed to update course announcement: ${error}`);
+        }
+    }
+
+    /**
+     * Delete course announcement
+     */
+    static async deleteCourseAnnouncement(
+        course_id: string,
+        announcement_id: string,
+        campus_id: string,
+        user_id: string
+    ) {
+        try {
+            const course = await this.findCourseById(course_id, campus_id);
+            if (!course) {
+                throw new Error("Course not found");
+            }
+
+            const announcements = course.meta_data?.course_announcements || [];
+            const announcement = announcements.find((ann: any) => ann.id === announcement_id);
+            
+            if (!announcement) {
+                throw new Error("Announcement not found");
+            }
+
+            // Check permission
+            if (announcement.created_by !== user_id) {
+                const isInstructor = course.instructor_ids?.includes(user_id);
+                const isCreator = course.created_by === user_id;
+                
+                if (!isInstructor && !isCreator) {
+                    throw new Error("Only the announcement creator or course instructors can delete this announcement");
+                }
+            }
+
+            // Remove announcement from array
+            const updatedAnnouncements = announcements.filter((ann: any) => ann.id !== announcement_id);
+
+            await this.updateCourseById(
+                course_id,
+                {
+                    meta_data: {
+                        ...course.meta_data,
+                        course_announcements: updatedAnnouncements,
+                    },
+                    updated_at: new Date(),
+                },
+                campus_id
+            );
+
+            return {
+                success: true,
+                data: {
+                    deleted_announcement_id: announcement_id,
+                    course_id,
+                },
+                message: "Course announcement deleted successfully",
+            };
+        } catch (error) {
+            throw new Error(`Failed to delete course announcement: ${error}`);
+        }
+    }
+
     // ==================== ENROLLMENT MANAGEMENT ====================
 
     /**
@@ -2616,22 +3005,22 @@ export class CourseService {
         let score = 0;
         
         // Base score from watch time
-        if (progressData.current_time > 0) score += 20;
+        if (progressData.current_time > 0) {score += 20;}
         
         // Focus bonus
-        if (progressData.is_focused) score += 20;
+        if (progressData.is_focused) {score += 20;}
         
         // Playback speed consideration
-        if (progressData.playback_speed >= 0.75 && progressData.playback_speed <= 1.5) score += 20;
+        if (progressData.playback_speed >= 0.75 && progressData.playback_speed <= 1.5) {score += 20;}
         
         // Buffer health (connection quality)
-        if (progressData.buffer_health > 80) score += 20;
-        else if (progressData.buffer_health > 50) score += 10;
+        if (progressData.buffer_health > 80) {score += 20;}
+        else if (progressData.buffer_health > 50) {score += 10;}
         
         // Completion percentage
         const completionPct = (progressData.current_time / progressData.total_duration) * 100;
-        if (completionPct > 80) score += 20;
-        else if (completionPct > 50) score += 10;
+        if (completionPct > 80) {score += 20;}
+        else if (completionPct > 50) {score += 10;}
         
         return Math.min(100, score);
     }
@@ -2645,7 +3034,7 @@ export class CourseService {
         // Get lecture completion criteria
         const lectureResult = await CourseLecture.findById(lecture_id);
         
-        if (!lectureResult) return;
+        if (!lectureResult) {return;}
         
         const criteria = lectureResult.completion_criteria || {};
         const minWatchPercentage = criteria.minimum_watch_percentage || 80;
@@ -2675,7 +3064,7 @@ export class CourseService {
 
     // Additional helper methods would be implemented here...
     private static calculateOverallEngagementScore(progressData: any[]): number {
-        if (progressData.length === 0) return 0;
+        if (progressData.length === 0) {return 0;}
         
         const avgEngagement = progressData.reduce((sum, p) => {
             return sum + (p.interaction_data?.engagement_score || 0);

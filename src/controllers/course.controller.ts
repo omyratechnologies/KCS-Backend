@@ -1517,4 +1517,244 @@ export class CourseController {
             );
         }
     };
+
+    // ==================== COURSE ANNOUNCEMENTS ====================
+
+    /**
+     * Create course announcement and send push notifications
+     * Course instructors only
+     */
+    public static readonly createCourseAnnouncement = async (ctx: Context) => {
+        try {
+            const course_id = ctx.req.param("course_id");
+            const campus_id = ctx.get("campus_id");
+            const user_id = ctx.get("user_id");
+            const announcementData = await ctx.req.json();
+
+            if (!course_id) {
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Course ID is required",
+                    },
+                    400
+                );
+            }
+
+            const result = await CourseService.createCourseAnnouncement(
+                course_id,
+                campus_id,
+                user_id,
+                announcementData
+            );
+
+            return ctx.json(
+                {
+                    success: true,
+                    data: result.data,
+                    message: result.message,
+                },
+                201
+            );
+        } catch (error) {
+            console.error("Error creating course announcement:", error);
+            return ctx.json(
+                {
+                    success: false,
+                    error: error instanceof Error ? error.message : "Failed to create course announcement",
+                },
+                500
+            );
+        }
+    };
+
+    /**
+     * Create campus-wide announcement and send push notifications
+     * Admins only
+     */
+    public static readonly createCampusAnnouncement = async (ctx: Context) => {
+        try {
+            const campus_id = ctx.get("campus_id");
+            const user_id = ctx.get("user_id");
+            const user_type = ctx.get("user_type");
+            const announcementData = await ctx.req.json();
+
+            if (!["Admin", "Super Admin"].includes(user_type)) {
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Only admins can create campus-wide announcements",
+                    },
+                    403
+                );
+            }
+
+            const result = await CourseService.createCampusAnnouncement(
+                campus_id,
+                user_id,
+                announcementData
+            );
+
+            return ctx.json(
+                {
+                    success: true,
+                    data: result.data,
+                    message: result.message,
+                },
+                201
+            );
+        } catch (error) {
+            console.error("Error creating campus announcement:", error);
+            return ctx.json(
+                {
+                    success: false,
+                    error: error instanceof Error ? error.message : "Failed to create campus announcement",
+                },
+                500
+            );
+        }
+    };
+
+    /**
+     * Get course announcements
+     * All enrolled users can view
+     */
+    public static readonly getCourseAnnouncements = async (ctx: Context) => {
+        try {
+            const course_id = ctx.req.param("course_id");
+            const campus_id = ctx.get("campus_id");
+            const user_id = ctx.get("user_id");
+
+            const query = ctx.req.query();
+            const filters = {
+                active_only: query.active_only === "true",
+                limit: query.limit ? Number.parseInt(query.limit as string) : 20,
+                offset: query.offset ? Number.parseInt(query.offset as string) : 0,
+            };
+
+            if (!course_id) {
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Course ID is required",
+                    },
+                    400
+                );
+            }
+
+            const result = await CourseService.getCourseAnnouncements(
+                course_id,
+                campus_id,
+                user_id,
+                filters
+            );
+
+            return ctx.json({
+                success: true,
+                data: result.data,
+                message: result.message,
+            });
+        } catch (error) {
+            console.error("Error getting course announcements:", error);
+            return ctx.json(
+                {
+                    success: false,
+                    error: error instanceof Error ? error.message : "Failed to get course announcements",
+                },
+                500
+            );
+        }
+    };
+
+    /**
+     * Update course announcement
+     * Only announcement creator or course instructors
+     */
+    public static readonly updateCourseAnnouncement = async (ctx: Context) => {
+        try {
+            const course_id = ctx.req.param("course_id");
+            const announcement_id = ctx.req.param("announcement_id");
+            const campus_id = ctx.get("campus_id");
+            const user_id = ctx.get("user_id");
+            const updateData = await ctx.req.json();
+
+            if (!course_id || !announcement_id) {
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Course ID and Announcement ID are required",
+                    },
+                    400
+                );
+            }
+
+            const result = await CourseService.updateCourseAnnouncement(
+                course_id,
+                announcement_id,
+                campus_id,
+                user_id,
+                updateData
+            );
+
+            return ctx.json({
+                success: true,
+                data: result.data,
+                message: result.message,
+            });
+        } catch (error) {
+            console.error("Error updating course announcement:", error);
+            return ctx.json(
+                {
+                    success: false,
+                    error: error instanceof Error ? error.message : "Failed to update course announcement",
+                },
+                500
+            );
+        }
+    };
+
+    /**
+     * Delete course announcement
+     * Only announcement creator or course instructors
+     */
+    public static readonly deleteCourseAnnouncement = async (ctx: Context) => {
+        try {
+            const course_id = ctx.req.param("course_id");
+            const announcement_id = ctx.req.param("announcement_id");
+            const campus_id = ctx.get("campus_id");
+            const user_id = ctx.get("user_id");
+
+            if (!course_id || !announcement_id) {
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Course ID and Announcement ID are required",
+                    },
+                    400
+                );
+            }
+
+            const result = await CourseService.deleteCourseAnnouncement(
+                course_id,
+                announcement_id,
+                campus_id,
+                user_id
+            );
+
+            return ctx.json({
+                success: true,
+                data: result.data,
+                message: result.message,
+            });
+        } catch (error) {
+            console.error("Error deleting course announcement:", error);
+            return ctx.json(
+                {
+                    success: false,
+                    error: error instanceof Error ? error.message : "Failed to delete course announcement",
+                },
+                500
+            );
+        }
+    };
 }

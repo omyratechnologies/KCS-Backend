@@ -725,6 +725,257 @@ export class SocketService {
     }
 
     /**
+     * Send push notification to all students via WebSocket
+     * Optimized for React Native integration
+     */
+    public static async sendAnnouncementPushNotification(
+        campusId: string,
+        announcement: {
+            id: string;
+            title: string;
+            content: string;
+            courseId?: string;
+            courseName?: string;
+            priority: "low" | "normal" | "high" | "urgent";
+            createdBy: string;
+            createdAt: Date;
+        }
+    ): Promise<{
+        success: boolean;
+        totalStudents: number;
+        notifiedStudents: number;
+        failedNotifications: number;
+    }> {
+        try {
+            // Import User model dynamically to avoid circular dependencies
+            const { User } = await import("@/models/user.model");
+
+            // Get all active students from the campus
+            const studentsResult = await User.find({
+                campus_id: campusId,
+                user_type: "Student",
+                is_active: true,
+                is_deleted: false,
+            });
+
+            const students = studentsResult.rows || [];
+            let notifiedStudents = 0;
+            let failedNotifications = 0;
+
+            // Prepare notification payload optimized for React Native
+            const notificationPayload = {
+                type: "announcement",
+                subType: announcement.courseId ? "course_announcement" : "campus_announcement",
+                data: {
+                    id: announcement.id,
+                    title: announcement.title,
+                    body: announcement.content.substring(0, 200) + (announcement.content.length > 200 ? "..." : ""),
+                    fullContent: announcement.content,
+                    courseId: announcement.courseId,
+                    courseName: announcement.courseName,
+                    priority: announcement.priority,
+                    createdBy: announcement.createdBy,
+                    createdAt: announcement.createdAt.toISOString(),
+                    campus_id: campusId,
+                    // React Native specific fields
+                    sound: announcement.priority === "urgent" ? "default" : "notification",
+                    badge: 1,
+                    category: "announcement",
+                    // Additional metadata for mobile app
+                    actionable: true,
+                    actions: [
+                        {
+                            id: "view",
+                            title: "View",
+                            foreground: true,
+                        },
+                        {
+                            id: "dismiss",
+                            title: "Dismiss",
+                            foreground: false,
+                        },
+                    ],
+                },
+                timestamp: new Date().toISOString(),
+            };
+
+            // Send notification to all connected students
+            for (const student of students) {
+                try {
+                    const socketId = this.userSockets.get(student.id);
+                    if (socketId) {
+                        const socket = this.activeSockets.get(socketId);
+                        if (socket && socket.data.userType === "Student") {
+                            // Send real-time notification
+                            socket.emit("push_notification", notificationPayload);
+                            notifiedStudents++;
+                        } else {
+                            failedNotifications++;
+                        }
+                    } else {
+                        // Student is offline - in a real app, you'd queue this for FCM/APNs
+                        failedNotifications++;
+                    }
+                } catch (error) {
+                    console.error(`Failed to notify student ${student.id}:`, error);
+                    failedNotifications++;
+                }
+            }
+
+            // Broadcast to all connected sockets in campus as fallback
+            this.broadcastToCampus(campusId, "announcement_broadcast", {
+                ...notificationPayload,
+                broadcast: true,
+            });
+
+            console.log(
+                `📢 Announcement notification sent: ${notifiedStudents}/${students.length} students notified`
+            );
+
+            return {
+                success: true,
+                totalStudents: students.length,
+                notifiedStudents,
+                failedNotifications,
+            };
+        } catch (error) {
+            console.error("Error sending announcement push notification:", error);
+            return {
+                success: false,
+                totalStudents: 0,
+                notifiedStudents: 0,
+                failedNotifications: 0,
+            };
+        }
+    }
+
+    /**
+     * Broadcast message to all users in a specific campus
+     */
+    public static broadcastToCampus(campusId: string, event: string, data: any): void {
+        try {
+            for (const [socketId, socket] of this.activeSockets) {
+                if (socket.data.campusId === campusId) {
+                    socket.emit(event, data);
+                }
+            }
+        } catch (error) {
+            console.error("Error broadcasting to campus:", error);
+        }
+    }
+
+    /**
+     * Send course-specific announcement to enrolled students
+     */
+    public static async sendCourseAnnouncementNotification(
+        courseId: string,
+        announcement: {
+            id: string;
+            title: string;
+            content: string;
+            courseName: string;
+            priority: "low" | "normal" | "high" | "urgent";
+            createdBy: string;
+            createdAt: Date;
+        }
+    ): Promise<{
+        success: boolean;
+        totalStudents: number;
+        notifiedStudents: number;
+        failedNotifications: number;
+    }> {
+        try {
+            // Import CourseEnrollment model dynamically
+            const { CourseEnrollment } = await import("@/models/course_enrollment.model");
+
+            // Get all active enrollments for the course
+            const enrollmentsResult = await CourseEnrollment.find({
+                course_id: courseId,
+                enrollment_status: "active",
+            });
+
+            const enrollments = enrollmentsResult.rows || [];
+            let notifiedStudents = 0;
+            let failedNotifications = 0;
+
+            // Prepare notification payload
+            const notificationPayload = {
+                type: "course_announcement",
+                subType: "course_specific",
+                data: {
+                    id: announcement.id,
+                    title: `${announcement.courseName}: ${announcement.title}`,
+                    body: announcement.content.substring(0, 200) + (announcement.content.length > 200 ? "..." : ""),
+                    fullContent: announcement.content,
+                    courseId: courseId,
+                    courseName: announcement.courseName,
+                    priority: announcement.priority,
+                    createdBy: announcement.createdBy,
+                    createdAt: announcement.createdAt.toISOString(),
+                    // React Native specific fields
+                    sound: announcement.priority === "urgent" ? "default" : "notification",
+                    badge: 1,
+                    category: "course_announcement",
+                    actionable: true,
+                    actions: [
+                        {
+                            id: "view_course",
+                            title: "View Course",
+                            foreground: true,
+                        },
+                        {
+                            id: "dismiss",
+                            title: "Dismiss",
+                            foreground: false,
+                        },
+                    ],
+                },
+                timestamp: new Date().toISOString(),
+            };
+
+            // Send notification to all enrolled students
+            for (const enrollment of enrollments) {
+                try {
+                    const socketId = this.userSockets.get(enrollment.user_id);
+                    if (socketId) {
+                        const socket = this.activeSockets.get(socketId);
+                        if (socket && socket.data.userType === "Student") {
+                            socket.emit("push_notification", notificationPayload);
+                            notifiedStudents++;
+                        } else {
+                            failedNotifications++;
+                        }
+                    } else {
+                        failedNotifications++;
+                    }
+                } catch (error) {
+                    console.error(`Failed to notify enrolled student ${enrollment.user_id}:`, error);
+                    failedNotifications++;
+                }
+            }
+
+            console.log(
+                `📚 Course announcement sent: ${notifiedStudents}/${enrollments.length} enrolled students notified`
+            );
+
+            return {
+                success: true,
+                totalStudents: enrollments.length,
+                notifiedStudents,
+                failedNotifications,
+            };
+        } catch (error) {
+            console.error("Error sending course announcement notification:", error);
+            return {
+                success: false,
+                totalStudents: 0,
+                notifiedStudents: 0,
+                failedNotifications: 0,
+            };
+        }
+    }
+
+    /**
      * Get real-time statistics
      */
     public static getStats(): {
