@@ -53,29 +53,82 @@ const sendMeetingInvitations = async (
     meeting_url: string
 ): Promise<void> => {
     try {
-        // Get participant user details
-        const participantUsers = await Promise.all(
-            participants.map(async (participantId) => {
-                try {
-                    return await User.findById(participantId);
-                } catch (error) {
-                    MeetingErrorMonitor.logError("sendInvitations:userNotFound", error as Error, {
-                        meeting_id: meeting.id,
-                        participant_id: participantId,
-                    });
-                    return null;
+        // Validate email addresses and prepare invitation data
+        const validParticipants = participants.map((participantIdentifier) => {
+            const isEmail = participantIdentifier.includes('@');
+            
+            if (isEmail) {
+                // Basic email validation
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (emailRegex.test(participantIdentifier)) {
+                    return {
+                        email: participantIdentifier,
+                        name: participantIdentifier.split('@')[0], // Use email prefix as default name
+                        isRegisteredUser: false // We'll try to find if they're registered
+                    };
                 }
+            } else {
+                // If it's a user ID, we still need to get their email
+                return {
+                    userId: participantIdentifier,
+                    email: null,
+                    name: null,
+                    isRegisteredUser: true
+                };
+            }
+            return null;
+        }).filter(Boolean);
+
+        // For user IDs, get their email addresses
+        const participantData = await Promise.all(
+            validParticipants.map(async (participant) => {
+                if (!participant) return null;
+                
+                if (participant.userId) {
+                    try {
+                        const user = await User.findById(participant.userId);
+                        if (user && user.email) {
+                            return {
+                                email: user.email,
+                                name: `${user.first_name} ${user.last_name}`,
+                                isRegisteredUser: true
+                            };
+                        }
+                    } catch (error) {
+                        MeetingErrorMonitor.logError("sendInvitations:userLookupFailed", error as Error, {
+                            meeting_id: meeting.id,
+                            participant_id: participant.userId,
+                        });
+                    }
+                } else if (participant.email) {
+                    // Try to find if this email belongs to a registered user for better name
+                    try {
+                        const userResult = await User.find({ email: participant.email });
+                        if (userResult.rows && userResult.rows.length > 0) {
+                            const user = userResult.rows[0];
+                            return {
+                                email: participant.email,
+                                name: `${user.first_name} ${user.last_name}`,
+                                isRegisteredUser: true
+                            };
+                        }
+                    } catch {
+                        // Ignore error, use email as is
+                    }
+                    return participant;
+                }
+                return null;
             })
         );
 
-        // Send invitations to valid participants
+        // Send invitations to all valid email addresses
         await Promise.all(
-            participantUsers.map(async (participant) => {
+            participantData.filter(Boolean).map(async (participant) => {
                 if (!participant || !participant.email) return;
 
                 try {
                     const invitationData: MeetingInvitationEmailData = {
-                        participant_name: `${participant.first_name} ${participant.last_name}`,
+                        participant_name: participant.name || participant.email.split('@')[0],
                         meeting_name: meeting.meeting_name,
                         meeting_description: meeting.meeting_description,
                         meeting_date: meeting.meeting_start_time.toLocaleDateString("en-IN", {
@@ -109,6 +162,7 @@ const sendMeetingInvitations = async (
                     MeetingErrorMonitor.logError("sendInvitations:emailFailed", emailError as Error, {
                         meeting_id: meeting.id,
                         participant_email: participant.email,
+                        is_registered_user: participant.isRegisteredUser,
                     });
                     // Continue with other invitations
                 }
@@ -133,27 +187,84 @@ const sendMeetingCancellations = async (
     cancellation_reason?: string
 ): Promise<void> => {
     try {
-        // Get participant user details
-        const participantUsers = await Promise.all(
-            participants.map(async (participantId) => {
-                try {
-                    return await User.findById(participantId);
-                } catch (error) {
-                    return null;
+        // Validate email addresses and prepare cancellation data
+        const validParticipants = participants.map((participantIdentifier) => {
+            const isEmail = participantIdentifier.includes('@');
+            
+            if (isEmail) {
+                // Basic email validation
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (emailRegex.test(participantIdentifier)) {
+                    return {
+                        email: participantIdentifier,
+                        name: participantIdentifier.split('@')[0], // Use email prefix as default name
+                        isRegisteredUser: false
+                    };
                 }
+            } else {
+                // If it's a user ID, we need to get their email
+                return {
+                    userId: participantIdentifier,
+                    email: null,
+                    name: null,
+                    isRegisteredUser: true
+                };
+            }
+            return null;
+        }).filter(Boolean);
+
+        // For user IDs, get their email addresses
+        const participantData = await Promise.all(
+            validParticipants.map(async (participant) => {
+                if (!participant) return null;
+                
+                if (participant.userId) {
+                    try {
+                        const user = await User.findById(participant.userId);
+                        if (user && user.email) {
+                            return {
+                                email: user.email,
+                                name: `${user.first_name} ${user.last_name}`,
+                                isRegisteredUser: true
+                            };
+                        }
+                    } catch (error) {
+                        MeetingErrorMonitor.logError("sendCancellations:userLookupFailed", error as Error, {
+                            meeting_id: meeting.id,
+                            participant_id: participant.userId,
+                        });
+                    }
+                } else if (participant.email) {
+                    // Try to find if this email belongs to a registered user for better name
+                    try {
+                        const userResult = await User.find({ email: participant.email });
+                        if (userResult.rows && userResult.rows.length > 0) {
+                            const user = userResult.rows[0];
+                            return {
+                                email: participant.email,
+                                name: `${user.first_name} ${user.last_name}`,
+                                isRegisteredUser: true
+                            };
+                        }
+                    } catch {
+                        // Ignore error, use email as is
+                    }
+                    return participant;
+                }
+                return null;
             })
         );
 
         const now = new Date();
 
-        // Send cancellation notifications to valid participants
+        // Send cancellation notifications to all valid email addresses
         await Promise.all(
-            participantUsers.map(async (participant) => {
+            participantData.filter(Boolean).map(async (participant) => {
                 if (!participant || !participant.email) return;
 
                 try {
                     const cancellationData: MeetingCancellationEmailData = {
-                        participant_name: `${participant.first_name} ${participant.last_name}`,
+                        participant_name: participant.name || participant.email.split('@')[0],
                         meeting_name: meeting.meeting_name,
                         meeting_date: meeting.meeting_start_time.toLocaleDateString("en-IN", {
                             weekday: "long",
