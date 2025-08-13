@@ -1,0 +1,70 @@
+FROM oven/bun:1.2.15-slim AS builder
+
+# Install minimal dependencies for building
+USER root
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    build-essential \
+    python3 \
+    python3-dev \
+    git \
+    curl \
+    ca-certificates && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json bun.lock ./
+
+# Install dependencies with bun (which handles most build requirements)
+RUN bun install
+
+# Copy source code
+COPY . .
+
+# Build the application
+RUN bun run build
+
+# Production stage - use the same base for consistency
+FROM oven/bun:1.2.15-slim
+
+USER root
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    addgroup --gid 1001 --system bunuser && \
+    adduser --uid 1001 --system bunuser --gid 1001
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json bun.lock ./
+
+# Install only production dependencies
+RUN bun install --production && \
+    chown -R bunuser:bunuser /app
+
+# Copy built application from builder stage
+COPY --from=builder --chown=bunuser:bunuser /app/dist ./dist
+COPY --from=builder --chown=bunuser:bunuser /app/src ./src
+COPY --from=builder --chown=bunuser:bunuser /app/tsconfig.json ./tsconfig.json
+
+# Create necessary directories
+RUN mkdir -p logs uploads recordings && \
+    chown -R bunuser:bunuser /app
+
+USER bunuser
+
+# Expose ports for HTTP API and Socket.IO
+EXPOSE 4500 4501
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:4500/api/health || exit 1
+
+CMD ["bun", "start"]

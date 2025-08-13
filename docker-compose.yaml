@@ -18,7 +18,7 @@ services:
     api:
         build:
             context: .
-            dockerfile: Dockerfile
+            dockerfile: ${DOCKERFILE:-Dockerfile}
         container_name: kcs-api
         ports:
             - "4500:4500" # HTTP API

@@ -15,7 +15,7 @@ const logger = pino({
         pid: false,
         hostname: false,
     },
-    timestamp: pino.stdTimeFunctions.isoTime,
+    timestamp: () => `,"time":"${new Date().toISOString()}"`,
     formatters: {
         level: (label) => {
             return { level: label };
