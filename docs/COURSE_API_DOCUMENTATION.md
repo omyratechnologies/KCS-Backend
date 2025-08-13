@@ -216,7 +216,7 @@ GET /courses?status=published&category=Programming&page=1&limit=10&search_query=
 
 ### 3. Get Course by ID
 
-Retrieves detailed course information including sections, lectures, and user progress.
+Retrieves detailed course information including sections and lectures. Returns **course data only** - no enrollment information.
 
 **Endpoint:** `GET /courses/{course_id}`
 
@@ -224,11 +224,7 @@ Retrieves detailed course information including sections, lectures, and user pro
 
 - `course_id`: Unique course identifier
 
-**Query Parameters:**
-
-```
-user_id=user_123    # Optional: Include user's progress data
-```
+**Note:** This endpoint returns only course metadata. For enrollment information, use `/courses/{course_id}/enrollment`
 
 **Response (200 OK):**
 
@@ -287,13 +283,7 @@ user_id=user_123    # Optional: Include user's progress data
                 "email": "john@example.com",
                 "profile_image": "https://example.com/profile.jpg"
             }
-        ],
-        "enrollment_info": {
-            "id": "enrollment_789",
-            "enrollment_status": "active",
-            "progress_percentage": 25,
-            "enrollment_date": "2025-07-15T09:00:00Z"
-        }
+        ]
     },
     "message": "Course retrieved successfully"
 }
@@ -552,7 +542,71 @@ Enrolls a user in a course with business logic validation.
 }
 ```
 
-### 2. Get User's Enrolled Courses
+### 2. Get Course Enrollment
+
+Retrieves the authenticated user's enrollment information for a specific course.
+
+**Endpoint:** `GET /courses/{course_id}/enrollment`
+
+**Path Parameters:**
+
+- `course_id`: Unique course identifier
+
+**Response (200 OK):**
+
+```json
+{
+    "success": true,
+    "data": {
+        "id": "enrollment_456",
+        "course_id": "course_789",
+        "user_id": "user_123",
+        "campus_id": "campus_123",
+        "enrollment_type": "paid",
+        "enrollment_status": "active",
+        "progress_percentage": 35,
+        "enrollment_date": "2025-07-15T09:00:00Z",
+        "payment_status": "completed",
+        "certificate_issued": false,
+        "course_details": {
+            "id": "course_789",
+            "title": "Master Node.js from scratch",
+            "thumbnail": "https://example.com/thumbnail.jpg",
+            "category": "Programming",
+            "difficulty_level": "intermediate",
+            "estimated_duration_hours": 25,
+            "rating": 4.8
+        },
+        "progress_details": {
+            "total_lectures": 43,
+            "completed_lectures": 15,
+            "time_remaining_hours": 16.25,
+            "total_watch_time_hours": 8.75
+        },
+        "access_details": {
+            "total_lectures": 43,
+            "completed_lectures": 15,
+            "completed_lecture_ids": ["lec_1", "lec_2", "lec_3"],
+            "bookmarked_lectures": ["lec_5", "lec_12"],
+            "notes_count": 8,
+            "quiz_attempts": 3,
+            "assignment_submissions": 2
+        }
+    },
+    "message": "Course enrollment retrieved successfully"
+}
+```
+
+**Error Response (404 Not Found):**
+
+```json
+{
+    "success": false,
+    "error": "User is not enrolled in this course"
+}
+```
+
+### 3. Get User's Enrolled Courses
 
 Retrieves all courses a user is enrolled in.
 

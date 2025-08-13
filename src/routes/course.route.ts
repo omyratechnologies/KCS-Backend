@@ -166,7 +166,7 @@ app.get(
     describeRoute({
         operationId: "getCourseById",
         summary: "Get course by ID",
-        description: "Get detailed course information including sections, lectures, and user progress (if enrolled).",
+        description: "Get detailed course information including sections and lectures. Course data only - no enrollment information.",
         tags: ["Courses"],
         parameters: [
             {
@@ -780,6 +780,45 @@ app.put(
 );
 
 // ==================== STUDENT ENROLLMENT & PROGRESS ====================
+
+app.get(
+    "/:course_id/enrollment",
+    describeRoute({
+        operationId: "getCourseEnrollment",
+        summary: "Get user's enrollment for a course",
+        description: "Get the authenticated user's enrollment information and progress for a specific course.",
+        tags: ["Courses"],
+        parameters: [
+            {
+                name: "course_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Course ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Enrollment information retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(successResponseSchema),
+                    },
+                },
+            },
+            404: {
+                description: "Course not found or user not enrolled",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    roleMiddleware("view_enrolled_courses"),
+    CourseController.getCourseEnrollment
+);
 
 app.post(
     "/:course_id/enroll",

@@ -106,7 +106,8 @@ export class CourseController {
                 );
             }
 
-            const result = await CourseService.getCourseById(course_id, campus_id, user_id);
+            // Never include enrollment data in course details - keep them separate
+            const result = await CourseService.getCourseById(course_id, campus_id);
 
             // Check if user can access this course
             if (
@@ -870,6 +871,44 @@ export class CourseController {
                 {
                     success: false,
                     error: error instanceof Error ? error.message : "Failed to enroll in course",
+                },
+                500
+            );
+        }
+    };
+
+    /**
+     * Get user's enrollment for a specific course
+     */
+    public static readonly getCourseEnrollment = async (ctx: Context) => {
+        try {
+            const course_id = ctx.req.param("course_id");
+            const user_id = ctx.get("user_id");
+            const campus_id = ctx.get("campus_id");
+
+            if (!course_id) {
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "Course ID is required",
+                    },
+                    400
+                );
+            }
+
+            const result = await CourseService.getUserCourseEnrollment(course_id, user_id, campus_id);
+
+            return ctx.json({
+                success: true,
+                data: result.data,
+                message: result.message,
+            });
+        } catch (error) {
+            console.error("Error getting course enrollment:", error);
+            return ctx.json(
+                {
+                    success: false,
+                    error: error instanceof Error ? error.message : "Failed to get course enrollment",
                 },
                 500
             );

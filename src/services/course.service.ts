@@ -256,8 +256,9 @@ export class CourseService {
 
     /**
      * Get course by ID with detailed information
+     * Returns ONLY course data - no enrollment information
      */
-    static async getCourseById(course_id: string, campus_id: string, user_id?: string) {
+    static async getCourseById(course_id: string, campus_id: string) {
         try {
             // Use find with id filter instead of findById for better compatibility with different ID formats
             const courseResults = await Course.find({
@@ -289,35 +290,10 @@ export class CourseService {
 
                     const lectures = lecturesResult.rows.sort((a, b) => a.lecture_order - b.lecture_order);
 
-                    // If user is provided, get their progress for each lecture
-                    let lecturesWithProgress = lectures;
-                    if (user_id) {
-                        lecturesWithProgress = await Promise.all(
-                            lectures.map(async (lecture) => {
-                                const progressResult = await CourseProgress.find({
-                                    user_id,
-                                    lecture_id: lecture.id,
-                                });
-
-                                const progress = progressResult.rows[0];
-                                return {
-                                    ...lecture,
-                                    user_progress: progress
-                                        ? {
-                                              progress_status: progress.progress_status,
-                                              completion_percentage: progress.completion_percentage,
-                                              last_accessed_at: progress.last_accessed_at,
-                                              resume_position_seconds: progress.resume_position_seconds,
-                                          }
-                                        : null,
-                                };
-                            })
-                        );
-                    }
-
+                    // Return lectures without any user progress - keep course data clean
                     return {
                         ...section,
-                        lectures: lecturesWithProgress,
+                        lectures: lectures,
                         lecture_count: lectures.length,
                         total_duration_minutes: lectures.reduce(
                             (sum, lecture) => sum + lecture.estimated_duration_minutes,
@@ -326,16 +302,6 @@ export class CourseService {
                     };
                 })
             );
-
-            // Get enrollment info if user is provided
-            let enrollmentInfo = null;
-            if (user_id) {
-                const enrollmentResult = await CourseEnrollment.find({
-                    user_id,
-                    course_id,
-                });
-                enrollmentInfo = enrollmentResult.rows[0] || null;
-            }
 
             // Get instructor details
             const instructorDetails = await Promise.all(
@@ -372,7 +338,7 @@ export class CourseService {
                         0
                     ),
                     instructors: instructorDetails.filter(Boolean),
-                    enrollment_info: enrollmentInfo,
+                    // REMOVED: enrollment_info - keep course and enrollment data separate
                 },
                 message: "Course retrieved successfully",
             };
@@ -1072,6 +1038,75 @@ export class CourseService {
             };
         } catch (error) {
             throw new Error(`Failed to enroll in course: ${error}`);
+        }
+    }
+
+    /**
+     * Get user's enrollment for a specific course
+     */
+    static async getUserCourseEnrollment(course_id: string, user_id: string, campus_id: string) {
+        try {
+            // Check if course exists
+            const course = await this.findCourseById(course_id, campus_id);
+            if (!course) {
+                throw new Error("Course not found");
+            }
+
+            // Find user's enrollment
+            const enrollmentResult = await CourseEnrollment.find({
+                course_id,
+                user_id,
+                campus_id,
+            });
+
+            if (!enrollmentResult.rows || enrollmentResult.rows.length === 0) {
+                throw new Error("User is not enrolled in this course");
+            }
+
+            const enrollment = enrollmentResult.rows[0];
+
+            // Get total lectures and completed count for progress calculation
+            const lecturesResult = await CourseLecture.find({
+                course_id,
+                is_published: true,
+            });
+            const totalLectures = lecturesResult.rows.length;
+
+            // Calculate time remaining based on watch progress
+            const progressResult = await CourseProgress.find({
+                course_id,
+                user_id,
+            });
+            const totalWatchTime = progressResult.rows.reduce((sum, p) => sum + p.watch_time_seconds, 0);
+            const estimatedRemainingHours =
+                course && course.estimated_duration_hours
+                    ? Math.max(0, course.estimated_duration_hours - totalWatchTime / 3600)
+                    : 0;
+
+            return {
+                success: true,
+                data: {
+                    ...enrollment,
+                    course_details: {
+                        id: course.id,
+                        title: course.title,
+                        thumbnail: course.thumbnail,
+                        category: course.category,
+                        difficulty_level: course.difficulty_level,
+                        estimated_duration_hours: course.estimated_duration_hours,
+                        rating: course.rating,
+                    },
+                    progress_details: {
+                        total_lectures: totalLectures,
+                        completed_lectures: enrollment.access_details?.completed_lectures || 0,
+                        time_remaining_hours: estimatedRemainingHours,
+                        total_watch_time_hours: totalWatchTime / 3600,
+                    },
+                },
+                message: "Course enrollment retrieved successfully",
+            };
+        } catch (error) {
+            throw new Error(`Failed to get course enrollment: ${error}`);
         }
     }
 

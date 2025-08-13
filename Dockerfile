@@ -16,7 +16,9 @@ RUN apt-get update && apt-get install -y \
     libssl-dev \
     nodejs \
     npm \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/cache/apt/archives/*
 
 WORKDIR /app
 
@@ -36,26 +38,25 @@ COPY . .
 RUN bun run build
 
 # Production stage
-FROM oven/bun:1.2.15
+FROM oven/bun:1.2.15-alpine
 
 USER root
-RUN apt-get update && apt-get install -y \
+RUN apk add --no-cache \
     curl \
-    build-essential \
+    build-base \
     python3 \
-    python3-pip \
     python3-dev \
     git \
     cmake \
     make \
     gcc \
     g++ \
-    libuv1-dev \
-    libssl-dev \
+    libuv-dev \
+    openssl-dev \
     nodejs \
     npm \
-    && rm -rf /var/lib/apt/lists/* \
-    && groupadd -r bunuser && useradd -r -g bunuser bunuser
+    && addgroup -g 1001 -S bunuser \
+    && adduser -S bunuser -u 1001
 
 WORKDIR /app
 
