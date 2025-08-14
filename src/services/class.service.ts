@@ -10,22 +10,27 @@ import { UserService } from "./users.service";
 
 export class ClassService {
     public async getClassById(id: string) {
-        try {
-            const classData = await Class.findById(id);
+        const classData = await Class.findById(id);
 
-            if (!classData) {
-                throw new Error("Class not found");
-            }
+        if (!classData) {
+            throw new Error("Class not found");
+        }
 
-            return {
-                ...classData,
-                // only send response teacher data (Name, email, phone) to response
-                class_teacher: classData.teacher_ids
-                    ? await Promise.all(
-                          classData.teacher_ids.map(async (teacherId) => {
+        // Check if class is active and not deleted
+        if (!classData.is_active || classData.is_deleted) {
+            throw new Error("Class is inactive or deleted");
+        }
+
+        return {
+            ...classData,
+            // only send response teacher data (Name, email, phone) to response
+            class_teacher: classData.teacher_ids
+                ? await Promise.all(
+                      classData.teacher_ids.map(async (teacherId) => {
+                          try {
                               const teacher = await TeacherService.getTeacherById(teacherId);
                               if (!teacher) {
-                                  throw new Error(`Teacher with ID ${teacherId} not found`);
+                                  return null;
                               }
                               return {
                                   id: teacher.id,
@@ -34,16 +39,20 @@ export class ClassService {
                                   email: teacher.teacher_profile.email,
                                   phone: teacher.teacher_profile.phone,
                               };
-                          })
-                      )
-                    : [],
-                // only send response student data (Name, email, phone) to response
-                class_students: classData.student_ids
-                    ? await Promise.all(
-                          classData.student_ids.map(async (studentId) => {
+                          } catch {
+                              return null;
+                          }
+                      })
+                  ).then(teachers => teachers.filter(Boolean))
+                : [],
+            // only send response student data (Name, email, phone) to response
+            class_students: classData.student_ids
+                ? await Promise.all(
+                      classData.student_ids.map(async (studentId) => {
+                          try {
                               const student = await UserService.getUser(studentId);
                               if (!student) {
-                                  throw new Error(`Student with ID ${studentId} not found`);
+                                  return null;
                               }
                               return {
                                   id: student.id,
@@ -52,14 +61,13 @@ export class ClassService {
                                   email: student.email,
                                   phone: student.phone,
                               };
-                          })
-                      )
-                    : [],
-            };
-        } catch (error) {
-            console.error("Error fetching class by ID:", error);
-            return null;
-        }
+                          } catch {
+                              return null;
+                          }
+                      })
+                  ).then(students => students.filter(Boolean))
+                : [],
+        };
     }
 
     public async getAllClassByCampusId(campusId: string): Promise<IClassData[]> {
