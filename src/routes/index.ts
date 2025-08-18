@@ -15,6 +15,7 @@ import documentStoreoute from "@/routes/document_store.route";
 import examRoute from "@/routes/exam.route";
 import feeRoute from "@/routes/fee.route";
 import healthRoute from "@/routes/health.route";
+import leaveRoute from "@/routes/leave.route";
 import libraryRoute from "@/routes/library.route";
 import meetingRoute from "@/routes/meeting.route";
 import messagesRoute from "@/routes/message.route";
@@ -57,6 +58,7 @@ app.route("/assignments", assignmentRoute); // New unified assignment routes
 app.route("/document-store", documentStoreoute);
 app.route("/exam", examRoute);
 app.route("/fee", feeRoute);
+app.route("/leave", leaveRoute);
 app.route("/timetable", timetableRoute);
 app.route("/notification", notificationRoute);
 app.route("/messages", messagesRoute);
