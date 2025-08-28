@@ -23,6 +23,12 @@ chatRouter.post('/rooms/:room_id/messages', ChatController.sendMessage);
 // Get messages from a chat room
 chatRouter.get('/rooms/:room_id/messages', ChatController.getMessages);
 
+// Delete a message
+chatRouter.delete('/messages/:message_id', ChatController.deleteMessage);
+
+// Get deleted messages from a room (Teachers, Admins, Super Admins only)
+chatRouter.get('/rooms/:room_id/deleted-messages', ChatController.getDeletedMessages);
+
 // Get available contacts for messaging
 chatRouter.get('/contacts', ChatController.getAvailableContacts);
 

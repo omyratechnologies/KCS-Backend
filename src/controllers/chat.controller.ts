@@ -2,6 +2,7 @@ import { Context } from "hono";
 import { ChatService } from "../services/chat.service";
 import { ChatValidationService } from "../services/chat_validation.service";
 import { WebSocketChatService } from "../services/websocket_chat.service";
+import log, { LogTypes } from "../libs/logger";
 
 export class ChatController {
     /**
@@ -78,7 +79,7 @@ export class ChatController {
                 }, 400);
             }
         } catch (error) {
-            console.error('Create group chat controller error:', error);
+            log(`Create group chat controller error: ${error}`, LogTypes.ERROR, "CHAT_CONTROLLER");
             return ctx.json({
                 success: false,
                 error: `Failed to create group chat: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -430,6 +431,96 @@ export class ChatController {
             return ctx.json({
                 success: false,
                 error: "Failed to validate group creation"
+            }, 500);
+        }
+    };
+
+    /**
+     * Delete a message
+     * Students can delete their own messages
+     * Teachers can delete their own and student messages
+     */
+    public static readonly deleteMessage = async (ctx: Context) => {
+        try {
+            const campus_id = ctx.get("campus_id");
+            const user_id = ctx.get("user_id");
+            const user_type = ctx.get("user_type");
+            const message_id = ctx.req.param('message_id');
+
+            if (!message_id) {
+                return ctx.json({
+                    success: false,
+                    error: "Message ID is required"
+                }, 400);
+            }
+
+            const result = await ChatService.deleteMessage(user_id, message_id, campus_id, user_type);
+
+            if (result.success) {
+                return ctx.json({
+                    success: true,
+                    message: "Message deleted successfully"
+                });
+            } else {
+                return ctx.json({
+                    success: false,
+                    error: result.error
+                }, 400);
+            }
+        } catch (error) {
+            log(`Delete message controller error: ${error}`, LogTypes.ERROR, "CHAT_CONTROLLER");
+            return ctx.json({
+                success: false,
+                error: "Failed to delete message"
+            }, 500);
+        }
+    };
+
+    /**
+     * Get deleted messages for a room (Teachers, Admins, Super Admins only)
+     */
+    public static readonly getDeletedMessages = async (ctx: Context) => {
+        try {
+            const campus_id = ctx.get("campus_id");
+            const user_id = ctx.get("user_id");
+            const user_type = ctx.get("user_type");
+            const room_id = ctx.req.param('room_id');
+
+            if (!room_id) {
+                return ctx.json({
+                    success: false,
+                    error: "Room ID is required"
+                }, 400);
+            }
+
+            const query = ctx.req.query();
+            const page = query.page ? Number.parseInt(query.page as string, 10) : 1;
+            const limit = query.limit ? Number.parseInt(query.limit as string, 10) : 50;
+
+            const result = await ChatService.getDeletedMessages(user_id, campus_id, user_type, {
+                room_id,
+                page,
+                limit
+            });
+
+            if (result.success) {
+                return ctx.json({
+                    success: true,
+                    data: result.data,
+                    pagination: result.pagination,
+                    message: "Deleted messages retrieved successfully"
+                });
+            } else {
+                return ctx.json({
+                    success: false,
+                    error: result.error
+                }, 403);
+            }
+        } catch (error) {
+            log(`Get deleted messages controller error: ${error}`, LogTypes.ERROR, "CHAT_CONTROLLER");
+            return ctx.json({
+                success: false,
+                error: "Failed to get deleted messages"
             }, 500);
         }
     };

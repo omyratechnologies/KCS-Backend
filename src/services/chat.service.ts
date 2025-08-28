@@ -6,6 +6,7 @@ import { Teacher } from "../models/teacher.model";
 import { User } from "../models/user.model";
 import { ClassSubject } from "../models/class_subject.model";
 import { ChatValidationService } from "./chat_validation.service";
+import log, { LogTypes } from "../libs/logger";
 
 export class ChatService {
     /**
@@ -107,7 +108,7 @@ export class ChatService {
                 return { success: false, error: validation.reason };
             }
 
-            let roomName = groupData.name;
+            const roomName = groupData.name;
 
             switch (groupData.room_type) {
                 case "class_group": {
@@ -160,7 +161,7 @@ export class ChatService {
             });
             return { success: true, data: room };
         } catch (error) {
-            console.error("Group chat room creation error:", error);
+            log(`Group chat room creation error: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
             return {
                 success: false,
                 error: `Failed to create group chat room: ${error instanceof Error ? error.message : "Unknown error"}`,
@@ -183,7 +184,7 @@ export class ChatService {
         }
     ): Promise<{ success: boolean; data?: IChatMessage; error?: string }> {
         try {
-            let room_id = messageData.room_id;
+            const room_id = messageData.room_id;
 
             if (!room_id) {
                 return { success: false, error: "Either room_id or recipient_id is required" };
@@ -334,7 +335,7 @@ export class ChatService {
 
             return { success: true, data: userRooms };
         } catch (error) {
-            console.error("Error getting chat rooms:", error);
+            log(`Error getting chat rooms: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
             return {
                 success: false,
                 error: `Failed to get chat rooms: ${error instanceof Error ? error.message : "Unknown error"}`,
@@ -385,6 +386,165 @@ export class ChatService {
             return { success: true };
         } catch {
             return { success: false, error: "Failed to update user status" };
+        }
+    }
+
+    /**
+     * Delete a message
+     * Students can delete their own messages
+     * Teachers can delete their own messages and student messages
+     */
+    public static async deleteMessage(
+        user_id: string,
+        message_id: string,
+        campus_id: string,
+        user_type: string
+    ): Promise<{ success: boolean; error?: string }> {
+        try {
+            // Find the message
+            const message = await ChatMessage.findById(message_id);
+
+            if (!message) {
+                return { success: false, error: "Message not found" };
+            }
+
+            // Check if message belongs to the same campus
+            if (message.campus_id !== campus_id) {
+                return { success: false, error: "Message not found in your campus" };
+            }
+
+            // Check if message is already deleted
+            if (message.is_deleted) {
+                return { success: false, error: "Message is already deleted" };
+            }
+
+            // Permission check
+            const canDelete = this.canUserDeleteMessage(user_id, message, user_type);
+            if (!canDelete.allowed) {
+                return { success: false, error: canDelete.reason };
+            }
+
+            // Update the message to mark as deleted
+            await ChatMessage.replaceById(message_id, {
+                ...message,
+                is_deleted: true,
+                updated_at: new Date(),
+            });
+
+            return { success: true };
+        } catch (error) {
+            log(`Delete message error: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
+            return {
+                success: false,
+                error: `Failed to delete message: ${error instanceof Error ? error.message : "Unknown error"}`,
+            };
+        }
+    }
+
+    /**
+     * Check if user can delete a specific message
+     */
+    private static canUserDeleteMessage(
+        user_id: string,
+        message: IChatMessage,
+        user_type: string
+    ): { allowed: boolean; reason?: string } {
+        // Users can always delete their own messages
+        if (message.sender_id === user_id) {
+            return { allowed: true };
+        }
+
+        // Teachers can delete student messages
+        if (user_type === "Teacher") {
+            return { allowed: true };
+        }
+
+        // Admins and Super Admins can delete any message
+        if (["Admin", "Super Admin"].includes(user_type)) {
+            return { allowed: true };
+        }
+
+        // Students cannot delete other users' messages
+        return { 
+            allowed: false, 
+            reason: "You can only delete your own messages" 
+        };
+    }
+
+    /**
+     * Get deleted messages for a room (Teachers, Admins, Super Admins only)
+     */
+    public static async getDeletedMessages(
+        user_id: string,
+        campus_id: string,
+        user_type: string,
+        options: {
+            room_id: string;
+            page?: number;
+            limit?: number;
+        }
+    ): Promise<{
+        success: boolean;
+        data?: IChatMessage[];
+        pagination?: { page: number; limit: number; total: number };
+        error?: string;
+    }> {
+        try {
+            // Check permissions - only Teachers, Admins, and Super Admins can access
+            if (!["Teacher", "Admin", "Super Admin"].includes(user_type)) {
+                return {
+                    success: false,
+                    error: "Access denied. Only teachers and admins can view deleted messages"
+                };
+            }
+
+            // Verify the room exists and user has access
+            const room = await ChatRoom.findById(options.room_id);
+            if (!room || room.campus_id !== campus_id) {
+                return {
+                    success: false,
+                    error: "Room not found or access denied"
+                };
+            }
+
+            // For teachers, verify they have access to this room
+            if (user_type === "Teacher" && !room.members.includes(user_id)) {
+                return {
+                    success: false,
+                    error: "Access denied. You are not a member of this room"
+                };
+            }
+
+            const page = options.page || 1;
+            const limit = options.limit || 50;
+            const skip = (page - 1) * limit;
+
+            // Get deleted messages for the room
+            const deletedMessages = await ChatMessage.find({
+                campus_id,
+                room_id: options.room_id,
+                is_deleted: true, // Only get deleted messages
+            }, {
+                sort: { updated_at: "DESC" }, // Sort by when they were deleted
+                limit,
+                skip,
+            });
+
+            return {
+                success: true,
+                data: deletedMessages.rows || [],
+                pagination: {
+                    page,
+                    limit,
+                    total: deletedMessages.rows?.length || 0,
+                },
+            };
+        } catch (error) {
+            log(`Get deleted messages error: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
+            return {
+                success: false,
+                error: `Failed to get deleted messages: ${error instanceof Error ? error.message : "Unknown error"}`,
+            };
         }
     }
 

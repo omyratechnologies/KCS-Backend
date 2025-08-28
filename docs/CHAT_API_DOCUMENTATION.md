@@ -334,6 +334,133 @@ Authorization: Bearer <jwt_token>
 }
 ```
 
+### Delete Message
+
+Delete a message. Students can delete their own messages, teachers can delete any message.
+
+**Endpoint:** `DELETE /messages/:message_id`
+
+**Headers:**
+```http
+Authorization: Bearer <jwt_token>
+```
+
+**URL Parameters:**
+- `message_id`: ID of the message to delete
+
+**Permission Rules:**
+- Students: Can only delete their own messages
+- Teachers: Can delete their own messages and student messages
+- Admins: Can delete any message
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Message deleted successfully"
+}
+```
+
+**Error Responses:**
+```json
+{
+  "success": false,
+  "error": "Message not found"
+}
+```
+
+```json
+{
+  "success": false,
+  "error": "You can only delete your own messages"
+}
+```
+
+```json
+{
+  "success": false,
+  "error": "Message is already deleted"
+}
+```
+
+### Get Deleted Messages
+
+Get deleted messages from a chat room. Only teachers, admins, and super admins can access this endpoint.
+
+**Endpoint:** `GET /rooms/:room_id/deleted-messages`
+
+**Headers:**
+```http
+Authorization: Bearer <jwt_token>
+```
+
+**URL Parameters:**
+- `room_id`: ID of the chat room
+
+**Query Parameters:**
+- `page`: Page number (default: 1)
+- `limit`: Messages per page (default: 50)
+
+**Permission Requirements:**
+- Teachers: Can view deleted messages from rooms they are members of
+- Admins: Can view deleted messages from any room in their campus
+- Super Admins: Can view deleted messages from any room
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "msg_123456",
+      "campus_id": "campus_001",
+      "room_id": "room_789012",
+      "sender_id": "user_001",
+      "message_type": "text",
+      "content": "This message was deleted",
+      "file_url": null,
+      "reply_to": null,
+      "is_edited": false,
+      "is_deleted": true,
+      "is_seen": false,
+      "seen_by": [],
+      "delivered_to": [],
+      "meta_data": {},
+      "created_at": "2025-08-26T10:30:00Z",
+      "updated_at": "2025-08-26T10:35:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 50,
+    "total": 5
+  },
+  "message": "Deleted messages retrieved successfully"
+}
+```
+
+**Error Responses:**
+```json
+{
+  "success": false,
+  "error": "Access denied. Only teachers and admins can view deleted messages"
+}
+```
+
+```json
+{
+  "success": false,
+  "error": "Room not found or access denied"
+}
+```
+
+```json
+{
+  "success": false,
+  "error": "Access denied. You are not a member of this room"
+}
+```
+
 ---
 
 ## Contacts & Validation APIs
@@ -802,6 +929,20 @@ curl -X POST "http://localhost:3000/api/v1/chat/groups" \
     "description": "Mathematics study group",
     "members": ["student_001", "student_002"]
   }'
+```
+
+### Delete Message
+
+```bash
+curl -X DELETE "http://localhost:3000/api/v1/chat/messages/msg_123456" \
+  -H "Authorization: Bearer <jwt_token>"
+```
+
+### Get Deleted Messages (Teacher/Admin Only)
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/chat/rooms/room_123/deleted-messages?page=1&limit=20" \
+  -H "Authorization: Bearer <teacher_jwt_token>"
 ```
 
 ---
