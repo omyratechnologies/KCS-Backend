@@ -33,6 +33,7 @@ import tmpRoute from "@/routes/temp.route";
 import timetableRoute from "@/routes/timetable.route";
 import uploadRoute from "@/routes/upload.route";
 import usersRoute from "@/routes/users.route";
+import { videoCallRoutes } from "@/routes/video_call.routes";
 
 const app = new Hono();
 
@@ -49,6 +50,7 @@ app.route("/dashboard", dashboardRoute);
 app.route("/user", usersRoute);
 app.route("/campus", campusesRoute);
 app.route("/chat", chatRoute);
+app.route("/video-calls", videoCallRoutes);
 app.route("/attendance", attendanceRoute);
 app.route("/class", classRoute);
 app.route("/courses", courseRoute);
