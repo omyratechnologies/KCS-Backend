@@ -2,6 +2,8 @@ import { Class } from "@/models/class.model";
 import { ExamTimetable } from "@/models/exam_timetable.model";
 import { ExamTerm } from "@/models/exam_term.model";
 import { Subject } from "@/models/subject.model";
+import { Teacher } from "@/models/teacher.model";
+import { User } from "@/models/user.model";
 
 export class ExamTimetableService {
     // Create exam timetable
@@ -137,22 +139,49 @@ export class ExamTimetableService {
 
         // Enrich subjects with subject details
         const enrichedSubjects = await Promise.all(
-            timetable.subjects.map(async (subjectSchedule: {
-                subject_id: string;
-                exam_date: Date;
-                start_time: string;
-                end_time: string;
-                room?: string;
-                invigilator_ids?: string[];
-            }) => {
-                const subject = await Subject.findById(subjectSchedule.subject_id);
-                return {
-                    ...subjectSchedule,
-                    subject_code: subject?.code || "Unknown Code",
-                    subject_name: subject?.name || "Unknown Subject",
-                    credits: (subject?.meta_data as { credits?: number })?.credits || 0,
-                };
-            })
+            timetable.subjects.map(
+                async (subjectSchedule: {
+                    subject_id: string;
+                    exam_date: Date;
+                    start_time: string;
+                    end_time: string;
+                    room?: string;
+                    invigilator_ids?: string[];
+                }) => {
+                    const subject = await Subject.findById(subjectSchedule.subject_id);
+                    
+                    // Enrich invigilators with teacher details
+                    let invigilators: Array<{ id: string; name: string }> = [];
+                    if (subjectSchedule.invigilator_ids?.length) {
+                        invigilators = await Promise.all(
+                            subjectSchedule.invigilator_ids.map(async (invigilatorId: string) => {
+                                const teacher = await Teacher.findById(invigilatorId);
+                                if (teacher?.user_id) {
+                                    const user = await User.findById(teacher.user_id);
+                                    return {
+                                        id: invigilatorId,
+                                        name: user 
+                                            ? `${user.first_name} ${user.last_name}`
+                                            : "Unknown Teacher",
+                                    };
+                                }
+                                return {
+                                    id: invigilatorId,
+                                    name: "Unknown Teacher",
+                                };
+                            })
+                        );
+                    }
+                    
+                    return {
+                        ...subjectSchedule,
+                        subject_code: subject?.code || "Unknown Code",
+                        subject_name: subject?.name || "Unknown Subject",
+                        credits: (subject?.meta_data as { credits?: number })?.credits || 0,
+                        invigilators,
+                    };
+                }
+            )
         );
 
         return {
@@ -180,6 +209,12 @@ export class ExamTimetableService {
 
     // Get exam timetables by exam term
     public static readonly getExamTimetablesByExamTerm = async (exam_term_id: string) => {
+        // check if exam term exists
+        const examTermExists = await ExamTerm.findById(exam_term_id);
+        if (!examTermExists) {
+            throw new Error("Exam term not found");
+        }
+
         const examTimetables = await ExamTimetable.find({
             exam_term_id,
             is_deleted: false,
@@ -342,15 +377,19 @@ export class ExamTimetableService {
 
     // Get exam timetable for a specific class
     public static readonly getExamTimetableByClass = async (campus_id: string, class_id: string) => {
+        // check if class exists
+        const classExists = await Class.findById(class_id);
+        if (!classExists) {
+            throw new Error("Class not found");
+        }
+
         const examTimetables = await ExamTimetable.find({
             campus_id,
             is_deleted: false,
             is_published: true,
         });
 
-        const filteredTimetables = examTimetables.rows.filter((timetable) =>
-            timetable.class_ids.includes(class_id)
-        );
+        const filteredTimetables = examTimetables.rows.filter((timetable) => timetable.class_ids.includes(class_id));
 
         // Enrich with related data
         const enrichedTimetables = await Promise.all(
