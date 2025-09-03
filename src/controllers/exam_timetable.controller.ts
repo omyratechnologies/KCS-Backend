@@ -70,6 +70,14 @@ export class ExamTimetableController {
         try {
             const campus_id = ctx.get("campus_id");
 
+            if (!campus_id) {
+                return ctx.json({
+                    success: false,
+                    data: null,
+                    message: "Campus ID is required. For Super Admin, provide campus_id query parameter",
+                }, 400);
+            }
+
             const examTimetables = await ExamTimetableService.getExamTimetablesByCampus(campus_id);
 
             return ctx.json({

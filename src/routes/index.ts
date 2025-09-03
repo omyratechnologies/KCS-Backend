@@ -13,6 +13,7 @@ import curriculumRoute from "@/routes/curriculum.route";
 import dashboardRoute from "@/routes/dashboard.route";
 import documentStoreoute from "@/routes/document_store.route";
 import examRoute from "@/routes/exam.route";
+import examTimetableRoute from "@/routes/exam_timetable.route";
 import feeRoute from "@/routes/fee.route";
 import healthRoute from "@/routes/health.route";
 import libraryRoute from "@/routes/library.route";
@@ -56,6 +57,7 @@ app.route("/library", libraryRoute);
 app.route("/assignments", assignmentRoute); // New unified assignment routes
 app.route("/document-store", documentStoreoute);
 app.route("/exam", examRoute);
+app.route("/exam/timetable", examTimetableRoute);
 app.route("/fee", feeRoute);
 app.route("/timetable", timetableRoute);
 app.route("/notification", notificationRoute);

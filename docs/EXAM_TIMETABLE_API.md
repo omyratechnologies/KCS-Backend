@@ -59,7 +59,7 @@ Based on the provided image, each exam timetable includes:
 - Create a new exam timetable
 
 #### Get All Exam Timetables
-- **GET** `/api/exam/timetable`
+- **GET** `/api/exam/timetable/all`
 - Retrieve all exam timetables for the campus
 
 #### Get Exam Timetable by ID
