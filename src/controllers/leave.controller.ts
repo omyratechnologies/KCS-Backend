@@ -319,6 +319,31 @@ export class LeaveController {
     };
     
     /**
+     * Get a specific leave type by ID
+     */
+    public static readonly getLeaveTypeById = async (ctx: Context) => {
+        try {
+            const campus_id = ctx.get("campus_id");
+            const { leave_type_id } = ctx.req.param();
+            
+            const leaveType = await LeaveService.getLeaveTypeById(campus_id, leave_type_id);
+            
+            return ctx.json({
+                success: true,
+                data: leaveType,
+            });
+        } catch (error) {
+            return ctx.json(
+                {
+                    success: false,
+                    error: error instanceof Error ? error.message : "Failed to fetch leave type",
+                },
+                error instanceof Error && error.message === "Leave type not found or has been deactivated" ? 404 : 500
+            );
+        }
+    };
+    
+    /**
      * Update a leave type
      */
     public static readonly updateLeaveType = async (ctx: Context) => {
@@ -481,6 +506,32 @@ export class LeaveController {
                 {
                     success: false,
                     error: error instanceof Error ? error.message : "Failed to cancel leave request",
+                },
+                500
+            );
+        }
+    };
+    
+    /**
+     * Delete a leave type (Hard delete with safety checks)
+     */
+    public static readonly deleteLeaveType = async (ctx: Context) => {
+        try {
+            const campus_id = ctx.get("campus_id");
+            const leave_type_id = ctx.req.param("leave_type_id");
+            
+            const result = await LeaveService.deleteLeaveType(campus_id, leave_type_id);
+            
+            return ctx.json({
+                success: true,
+                data: result,
+                message: "Leave type deleted successfully",
+            });
+        } catch (error) {
+            return ctx.json(
+                {
+                    success: false,
+                    error: error instanceof Error ? error.message : "Failed to delete leave type",
                 },
                 500
             );

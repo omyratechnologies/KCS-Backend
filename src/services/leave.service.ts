@@ -333,6 +333,20 @@ export class LeaveService {
         return leaveTypes;
     }
     
+    static async getLeaveTypeById(campus_id: string, leave_type_id: string) {
+        const leaveType = await LeaveType.findOne({ 
+            id: leave_type_id,
+            campus_id, 
+            is_active: true 
+        });
+        
+        if (!leaveType) {
+            throw new Error("Leave type not found or has been deactivated");
+        }
+        
+        return leaveType;
+    }
+    
     static async updateLeaveType(
         campus_id: string,
         leave_type_id: string,
@@ -359,6 +373,67 @@ export class LeaveService {
         });
         
         return updatedLeaveType;
+    }
+    
+    /**
+     * Delete a leave type (Hard delete with safety checks)
+     */
+    static async deleteLeaveType(campus_id: string, leave_type_id: string) {
+        // Step 1: Verify the leave type exists and belongs to this campus
+        const leaveType = await LeaveType.findById(leave_type_id);
+        if (!leaveType || leaveType.campus_id !== campus_id) {
+            throw new Error("Leave type not found");
+        }
+        
+        // Step 2: Check if any leave requests have ever been made with this leave type
+        const requestsQuery = await LeaveRequest.find({
+            campus_id,
+            leave_type_id
+        });
+        const requests = Array.isArray(requestsQuery) ? requestsQuery : requestsQuery.rows || [];
+        
+        if (requests.length > 0) {
+            const pendingRequests = requests.filter(req => req.status === "Pending");
+            const historyRequests = requests.filter(req => req.status !== "Pending");
+            
+            if (pendingRequests.length > 0) {
+                throw new Error(`Cannot delete leave type. There are ${pendingRequests.length} pending leave request(s) using this leave type. Please approve, reject, or cancel them first.`);
+            }
+            
+            if (historyRequests.length > 0) {
+                throw new Error(`Cannot delete leave type. There are ${historyRequests.length} historical leave request(s) using this leave type. Deleting would break data integrity. Consider deactivating instead.`);
+            }
+        }
+        
+        // Step 3: Check if any leave balances exist for this leave type
+        const balancesQuery = await LeaveBalance.find({
+            campus_id,
+            leave_type_id
+        });
+        const balances = Array.isArray(balancesQuery) ? balancesQuery : balancesQuery.rows || [];
+        
+        if (balances.length > 0) {
+            // Check if any balances have been used (used_days > 0)
+            const usedBalances = balances.filter(balance => balance.used_days > 0);
+            
+            if (usedBalances.length > 0) {
+                throw new Error(`Cannot delete leave type. There are ${usedBalances.length} user(s) who have used leave days from this leave type. Deleting would break data integrity. Consider deactivating instead.`);
+            }
+            
+            // If no balances have been used, we can safely delete them
+            for (const balance of balances) {
+                await LeaveBalance.removeById(balance.id);
+            }
+        }
+        
+        // Step 4: Safe to delete the leave type
+        await LeaveType.removeById(leave_type_id);
+        
+        return {
+            ...leaveType,
+            deleted_at: new Date(),
+            message: `Leave type '${leaveType.name}' has been permanently deleted along with ${balances.length} unused balance record(s).`
+        };
     }
     
     // ======================= LEAVE BALANCE METHODS =======================

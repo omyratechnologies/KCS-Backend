@@ -70,7 +70,84 @@ Body: {
 ```
 POST /leave/admin/types           # Create leave type
 PUT /leave/admin/types/:id        # Update leave type
+DELETE /leave/admin/types/:id     # Hard delete leave type (with safety checks)
 GET /leave/types                  # Get all leave types (public)
+GET /leave/types/:id              # Get specific leave type by ID (public)
+```
+
+#### Get Leave Type by ID
+```
+GET /leave/types/:leave_type_id
+```
+**Description:** Retrieve a specific leave type by its ID.
+
+**Response Examples:**
+
+*Successful Response:*
+```json
+{
+  "success": true,
+  "data": {
+    "_type": "leave_types",
+    "campus_id": "c9d4a236-d83e-44d3-9a93-e43dee385314",
+    "carry_forward_allowed": true,
+    "color": "#ef4444",
+    "created_at": "2025-08-18T09:18:11.614Z",
+    "default_allocation": 8,
+    "description": "Medical emergencies",
+    "icon": "🤒",
+    "id": "cca92992-8763-42cf-91b4-de695c1b700b",
+    "is_active": true,
+    "max_carry_forward": 10,
+    "name": "Sick Leave",
+    "requires_approval": true,
+    "updated_at": "2025-08-18T09:18:11.614Z"
+  }
+}
+```
+
+*Not Found Response:*
+```json
+{
+  "success": false,
+  "error": "document not found"
+}
+```
+
+#### Hard Delete Leave Type
+```
+DELETE /leave/admin/types/:leave_type_id
+```
+**Safety Features:**
+- Only deletes leave types with NO historical usage (no approved/rejected requests ever)
+- Only deletes leave types with NO pending requests
+- Automatically cleans up unused leave balance records
+- Admin-only access with proper authentication
+
+**Response Examples:**
+
+*Protected Leave Type (has usage):*
+```json
+{
+  "success": false,
+  "message": "Cannot delete leave type as it has pending requests or historical usage",
+  "data": {
+    "pending_requests": 1,
+    "total_requests": 2
+  }
+}
+```
+
+*Successful Deletion:*
+```json
+{
+  "success": true,
+  "message": "Leave type deleted successfully",
+  "data": {
+    "deleted_at": "2025-09-04T04:49:42.831Z",
+    "message": "Leave type 'Test Type' has been permanently deleted along with 0 unused balance record(s)."
+  }
+}
 ```
 
 ### Student/Teacher Endpoints

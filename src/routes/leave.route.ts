@@ -376,6 +376,44 @@ app.get(
     LeaveController.getLeaveTypes
 );
 
+app.get(
+    "/types/:leave_type_id",
+    describeRoute({
+        operationId: "getLeaveTypeById",
+        summary: "Get leave type by ID",
+        description: "Get a specific leave type by its ID.",
+        tags: ["Leave - General"],
+        parameters: [
+            {
+                name: "leave_type_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Leave type ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Leave type retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(getLeaveTypesResponseSchema),
+                    },
+                },
+            },
+            404: {
+                description: "Leave type not found",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    LeaveController.getLeaveTypeById
+);
+
 app.put(
     "/admin/types/:leave_type_id",
     describeRoute({
@@ -405,6 +443,61 @@ app.put(
     }),
     roleMiddleware("update_subject"), // Using existing admin permission
     LeaveController.updateLeaveType
+);
+
+app.delete(
+    "/admin/types/:leave_type_id",
+    describeRoute({
+        operationId: "deleteLeaveType",
+        summary: "Delete leave type",
+        description: "Permanently delete a leave type. Admin only. Can only be deleted if no leave requests have ever been made with this type and no leave balances have been used.",
+        tags: ["Leave - Admin"],
+        parameters: [
+            {
+                name: "leave_type_id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Leave type ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Leave type deleted successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(successResponseSchema),
+                    },
+                },
+            },
+            400: {
+                description: "Cannot delete - leave type is in use",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+            404: {
+                description: "Leave type not found",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    roleMiddleware("delete_users"), // Using existing admin permission for delete operations
+    LeaveController.deleteLeaveType
 );
 
 // ======================= STUDENT/TEACHER ROUTES =======================
