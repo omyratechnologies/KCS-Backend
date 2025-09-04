@@ -58,7 +58,7 @@ export class SocketService {
                     return next(new Error("Invalid token"));
                 }
 
-                const { user_id, user_type, campus_id } = tokenData.payload as any;
+                const { user_id, user_type, campus_id } = tokenData as any;
 
                 // Get user data
                 const user = await UserService.getUser(user_id);
