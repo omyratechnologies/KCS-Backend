@@ -3,6 +3,7 @@ import { describeRoute } from "hono-openapi";
 import { resolver, validator as zValidator } from "hono-openapi/zod";
 
 import { ExamTimetableController } from "@/controllers/exam_timetable.controller";
+import { authMiddleware } from "@/middlewares/auth.middleware";
 import { roleMiddleware } from "@/middlewares/role.middleware";
 import {
     checkScheduleConflictsRequestBodySchema,
@@ -52,12 +53,13 @@ app.post(
 );
 
 // Get all exam timetables (Admin only)
+// Note: Using /all instead of / to avoid route conflicts
 app.get(
-    "/",
+    "/all",
     describeRoute({
-        operationId: "getExamTimetables",
+        operationId: "getAllExamTimetables",
         summary: "Get all exam timetables",
-        description: "Retrieves all exam timetables for the campus (Admin only)",
+        description: "Retrieves all active exam timetables for the campus (Admin only)",
         tags: ["Exam Timetable"],
         responses: {
             200: {
@@ -78,7 +80,6 @@ app.get(
             },
         },
     }),
-    roleMiddleware("get_assignment"),
     ExamTimetableController.getExamTimetables
 );
 
