@@ -32,8 +32,8 @@ RUN cd node_modules/mediasoup && \
 
 # Verify the worker was built successfully and list the contents
 RUN ls -la node_modules/mediasoup/worker/out/Release/ && \
-    file node_modules/mediasoup/worker/out/Release/mediasoup-worker && \
-    chmod +x node_modules/mediasoup/worker/out/Release/mediasoup-worker
+    chmod +x node_modules/mediasoup/worker/out/Release/mediasoup-worker && \
+    echo "MediaSoup worker binary verified and made executable"
 
 # Copy source code
 COPY . .
