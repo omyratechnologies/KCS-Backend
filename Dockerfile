@@ -30,7 +30,8 @@ RUN apt-get update && \
     gcc \
     g++ \
     python3 \
-    python3-dev && \
+    python3-dev \
+    python3-pip && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
