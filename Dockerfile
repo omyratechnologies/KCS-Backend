@@ -41,16 +41,16 @@ COPY . .
 # Build the application
 RUN bun run build
 
-# Production stage
-FROM oven/bun:1.2.15-alpine
+# Production stage - Use same base image as builder for MediaSoup compatibility
+FROM oven/bun:1.2.15
 
 USER root
-RUN apk add --no-cache \
-    curl \
-    nodejs \
-    npm && \
-    addgroup -g 1001 -S bunuser && \
-    adduser -S bunuser -u 1001
+RUN apt-get update && \
+    apt-get install -y curl nodejs npm && \
+    groupadd -r bunuser && \
+    useradd -r -g bunuser bunuser && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -62,6 +62,11 @@ COPY --from=builder --chown=bunuser:bunuser /app/dist ./dist
 COPY --from=builder --chown=bunuser:bunuser /app/src ./src
 COPY --from=builder --chown=bunuser:bunuser /app/tsconfig.json ./tsconfig.json
 COPY --from=builder --chown=bunuser:bunuser /app/node_modules ./node_modules
+
+# Verify MediaSoup worker binary exists in production stage
+RUN ls -la node_modules/mediasoup/worker/out/Release/ && \
+    chmod +x node_modules/mediasoup/worker/out/Release/mediasoup-worker && \
+    echo "Production MediaSoup worker binary verified"
 
 # Change ownership of the copied files
 RUN chown -R bunuser:bunuser /app
