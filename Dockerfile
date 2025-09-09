@@ -11,9 +11,10 @@ COPY package.json bun.lock ./
 # Install bun dependencies
 RUN bun install
 
-# Update package lists and install build dependencies including curl
+# Update package lists and install build dependencies including curl and pip
 RUN apt-get update && \
-    apt-get install -y curl build-essential cmake make gcc g++ python3 python3-dev git libuv1-dev libssl-dev pkg-config && \
+    apt-get install -y curl build-essential cmake make gcc g++ python3 python3-dev python3-pip git libuv1-dev libssl-dev pkg-config && \
+    pip3 install --upgrade pip setuptools wheel && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
