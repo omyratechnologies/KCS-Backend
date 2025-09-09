@@ -24,11 +24,16 @@ RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Build MediaSoup worker binary
-RUN cd node_modules/mediasoup && npm run worker:build
+# Build MediaSoup worker binary with verbose output
+RUN cd node_modules/mediasoup && \
+    echo "Building MediaSoup worker..." && \
+    npm run worker:build --verbose && \
+    echo "MediaSoup worker build completed"
 
-# Verify the worker was built successfully
-RUN ls -la node_modules/mediasoup/worker/out/Release/mediasoup-worker
+# Verify the worker was built successfully and list the contents
+RUN ls -la node_modules/mediasoup/worker/out/Release/ && \
+    file node_modules/mediasoup/worker/out/Release/mediasoup-worker && \
+    chmod +x node_modules/mediasoup/worker/out/Release/mediasoup-worker
 
 # Copy source code
 COPY . .
@@ -42,16 +47,6 @@ FROM oven/bun:1.2.15-alpine
 USER root
 RUN apk add --no-cache \
     curl \
-    build-base \
-    python3 \
-    python3-dev \
-    git \
-    cmake \
-    make \
-    gcc \
-    g++ \
-    libuv-dev \
-    openssl-dev \
     nodejs \
     npm && \
     addgroup -g 1001 -S bunuser && \
@@ -62,15 +57,14 @@ WORKDIR /app
 # Copy package files
 COPY package.json bun.lock ./
 
-# Install only production dependencies
-RUN bun install --production && \
-    chown -R bunuser:bunuser /app/node_modules
-
-# Copy built application and source files from builder stage
+# Copy built application and dependencies from builder stage FIRST
 COPY --from=builder --chown=bunuser:bunuser /app/dist ./dist
 COPY --from=builder --chown=bunuser:bunuser /app/src ./src
 COPY --from=builder --chown=bunuser:bunuser /app/tsconfig.json ./tsconfig.json
-COPY --from=builder --chown=bunuser:bunuser /app/node_modules/mediasoup/worker ./node_modules/mediasoup/worker
+COPY --from=builder --chown=bunuser:bunuser /app/node_modules ./node_modules
+
+# Change ownership of the copied files
+RUN chown -R bunuser:bunuser /app
 
 USER bunuser
 
