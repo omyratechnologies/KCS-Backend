@@ -3,6 +3,12 @@ import { ParentFeedControlService } from "@/services/parent_feed_control.service
 
 export class ParentFeedControlController {
 
+    // Helper method to validate UUID format
+    private static isValidUUID(uuid: string): boolean {
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        return uuidRegex.test(uuid);
+    }
+
     // Get current feed access status for a student
     public static readonly getStudentFeedStatus = async (ctx: Context) => {
         try {
@@ -10,11 +16,20 @@ export class ParentFeedControlController {
             const user_type = ctx.get("user_type");
             const { student_id } = ctx.req.param();
 
+            // Validate user type
             if (user_type !== "Parent") {
                 return ctx.json({
                     success: false,
                     error: "Only parents can check feed access status"
                 }, 403);
+            }
+
+            // Validate student_id format
+            if (!student_id || !this.isValidUUID(student_id)) {
+                return ctx.json({
+                    success: false,
+                    error: "Invalid student ID format"
+                }, 400);
             }
 
             // Get the current control setting and access status
@@ -46,6 +61,7 @@ export class ParentFeedControlController {
             const { student_id } = ctx.req.param();
             const data = await ctx.req.json();
 
+            // Validate user type
             if (user_type !== "Parent") {
                 return ctx.json({
                     success: false,
@@ -53,6 +69,15 @@ export class ParentFeedControlController {
                 }, 403);
             }
 
+            // Validate student_id format
+            if (!student_id || !this.isValidUUID(student_id)) {
+                return ctx.json({
+                    success: false,
+                    error: "Invalid student ID format"
+                }, 400);
+            }
+
+            // Validate request body
             if (typeof data.feed_access_enabled !== "boolean") {
                 return ctx.json({
                     success: false,

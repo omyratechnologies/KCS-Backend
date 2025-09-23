@@ -1,16 +1,48 @@
 import { ParentFeedControl, type IParentFeedControl } from "@/models/parent_feed_control.model";
+import { UserService } from "@/services/users.service";
 
 export class ParentFeedControlService {
     
+    // Helper method to validate UUID format
+    private static isValidUUID(uuid: string): boolean {
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        return uuidRegex.test(uuid);
+    }
+
+    // Helper method to validate parent-student relationship
+    private static async validateParentStudentRelationship(parent_id: string, student_id: string): Promise<void> {
+        try {
+            const students = await UserService.getStudentForParent(parent_id);
+            
+            // Check both id and user_id fields to handle both database ID and user ID cases
+            // This ensures compatibility regardless of which ID format is being used
+            const isValidRelationship = students.some(student => 
+                student.id === student_id || student.user_id === student_id
+            );
+            
+            if (!isValidRelationship) {
+                throw new Error("You are not authorized to control this student's feed access");
+            }
+        } catch (error) {
+            if (error instanceof Error) {
+                throw new Error(`Parent-student relationship validation failed: ${error.message}`);
+            }
+            throw new Error("Failed to validate parent-student relationship");
+        }
+    }
+    
     // Get feed control settings for a specific parent-student pair
     public static readonly getFeedControl = async (parent_id: string, student_id: string): Promise<IParentFeedControl | null> => {
-        // TEMPORARILY BYPASSING RELATIONSHIP CHECK FOR TESTING
-        // TODO: In production, uncomment this verification:
-        // const students = await UserService.getStudentForParent(parent_id);
-        // const isValidRelationship = students.some(student => student.id === student_id);
-        // if (!isValidRelationship) {
-        //     throw new Error("Invalid parent-student relationship");
-        // }
+        // Validate UUID formats
+        if (!this.isValidUUID(parent_id)) {
+            throw new Error("Invalid parent ID format");
+        }
+        if (!this.isValidUUID(student_id)) {
+            throw new Error("Invalid student ID format");
+        }
+
+        // Validate parent-student relationship
+        await this.validateParentStudentRelationship(parent_id, student_id);
 
         const data = await ParentFeedControl.find({
             parent_id,
@@ -27,28 +59,38 @@ export class ParentFeedControlService {
         campus_id: string,
         feed_access_enabled: boolean
     ): Promise<IParentFeedControl> => {
-        // TEMPORARILY BYPASSING RELATIONSHIP CHECK FOR TESTING
-        // TODO: In production, uncomment this verification:
-        // const students = await UserService.getStudentForParent(parent_id);
-        // const isValidRelationship = students.some(student => student.id === student_id);
-        // if (!isValidRelationship) {
-        //     throw new Error("Invalid parent-student relationship");
-        // }
+        // Validate UUID formats
+        if (!this.isValidUUID(parent_id)) {
+            throw new Error("Invalid parent ID format");
+        }
+        if (!this.isValidUUID(student_id)) {
+            throw new Error("Invalid student ID format");
+        }
+        if (!this.isValidUUID(campus_id)) {
+            throw new Error("Invalid campus ID format");
+        }
+
+        // Validate parent-student relationship
+        await this.validateParentStudentRelationship(parent_id, student_id);
 
         // Check if a control record already exists
-        const existingControl = await this.getFeedControl(parent_id, student_id);
+        const existingControl = await ParentFeedControl.find({
+            parent_id,
+            student_id
+        });
 
-        if (existingControl) {
+        if (existingControl.rows.length > 0) {
             // Update existing record
+            const existing = existingControl.rows[0];
             const updatedData: Partial<IParentFeedControl> = {
                 feed_access_enabled,
                 updated_at: new Date()
             };
 
-            await ParentFeedControl.updateById(existingControl.id, updatedData);
+            await ParentFeedControl.updateById(existing.id, updatedData);
             
             // Fetch and return the updated record
-            const updatedControl = await ParentFeedControl.findById(existingControl.id);
+            const updatedControl = await ParentFeedControl.findById(existing.id);
             return updatedControl;
         } else {
             // Create new record
