@@ -19,6 +19,7 @@ import feeRoute from "@/routes/fee.route";
 import healthRoute from "@/routes/health.route";
 import leaveRoute from "@/routes/leave.route";
 import libraryRoute from "@/routes/library.route";
+import locationsRoute from "@/routes/locations.route";
 import meetingRoute from "@/routes/meeting.route";
 import messagesRoute from "@/routes/message.route";
 import notificationRoute from "@/routes/notification.route";
@@ -43,6 +44,7 @@ const app = new Hono();
 app.route("/tmp", tmpRoute);
 app.route("/auth", authRoute);
 app.route("/health", healthRoute); // Health endpoints accessible without authentication
+app.route("/locations", locationsRoute); // Public locations API
 
 // Apply authentication middleware to all routes below this point
 app.use(authMiddleware());
