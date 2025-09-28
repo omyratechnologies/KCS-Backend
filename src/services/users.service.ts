@@ -329,4 +329,48 @@ export class UserService {
 
         return data.rows;
     };
+
+    // Get users with advanced filtering for admin panel
+    public static readonly getUsersWithFilter = async (
+        filter: Record<string, unknown>,
+        options: {
+            limit?: number;
+            skip?: number;
+            sort?: Record<string, "ASC" | "DESC">;
+        } = {}
+    ): Promise<IUser[]> => {
+        const findOptions: FindOptions = {
+            sort: options.sort || { created_at: "DESC" },
+            limit: options.limit || 100,
+            skip: options.skip || 0,
+            select: [
+                "id",
+                "user_id",
+                "email",
+                "first_name",
+                "last_name",
+                "phone",
+                "address",
+                "last_login",
+                "meta_data",
+                "is_active",
+                "is_deleted",
+                "user_type",
+                "campus_id",
+                "created_at",
+                "updated_at",
+            ],
+        };
+
+        const data: { rows: IUser[] } = await User.find(filter, findOptions);
+        return data.rows;
+    };
+
+    // Get users count with filtering for pagination
+    public static readonly getUsersCount = async (
+        filter: Record<string, unknown>
+    ): Promise<number> => {
+        const data = await User.find(filter, { limit: 0 });
+        return data.meta?.total || 0;
+    };
 }

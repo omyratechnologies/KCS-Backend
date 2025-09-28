@@ -1030,4 +1030,62 @@ export class AttendanceService {
             );
         }
     };
+
+    // Get attendance records with user details for admin download
+    public static readonly getAttendanceWithUserDetails = async (
+        filter: Record<string, unknown>,
+        options: {
+            limit?: number;
+            skip?: number;
+            sort?: Record<string, "ASC" | "DESC">;
+        } = {}
+    ) => {
+        const findOptions = {
+            sort: options.sort || { date: "DESC", created_at: "DESC" },
+            limit: options.limit || 1000,
+            skip: options.skip || 0,
+        };
+
+        // Get attendance records
+        const attendanceData = await Attendance.find(filter, findOptions);
+        
+        if (!attendanceData.rows || attendanceData.rows.length === 0) {
+            return [];
+        }
+
+        // Get unique user IDs to fetch user details
+        const userIds = [...new Set(attendanceData.rows.map(record => record.user_id))];
+        
+        // Import User model to get user details
+        const { User } = await import("@/models/user.model");
+        
+        // Get user details for all user IDs
+        const userData = await User.find(
+            { user_id: { $in: userIds } },
+            {
+                select: ["user_id", "first_name", "last_name", "email", "user_type"]
+            }
+        );
+
+        // Create a map for quick user lookup
+        const userMap = new Map();
+        userData.rows.forEach(user => {
+            userMap.set(user.user_id, {
+                user_name: `${user.first_name} ${user.last_name}`,
+                email: user.email,
+                user_type: user.user_type
+            });
+        });
+
+        // Combine attendance records with user details
+        return attendanceData.rows.map(record => {
+            const userDetails = userMap.get(record.user_id) || {};
+            return {
+                ...record,
+                user_name: userDetails.user_name || "Unknown User",
+                user_email: userDetails.email || "N/A",
+                user_type: record.user_type || userDetails.user_type || "Student"
+            };
+        });
+    };
 }

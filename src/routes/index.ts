@@ -31,6 +31,7 @@ import studentRecordRoute from "@/routes/student_record.route";
 import subjectRoute from "@/routes/subject.route";
 import superAdminRoute from "@/routes/super_admin.routes";
 import syllabusRoute from "@/routes/syllabus.route";
+import adminUserManagementRoute from "@/routes/admin.user.management.route";
 import teacherRoute from "@/routes/teacher.route";
 import tmpRoute from "@/routes/temp.route";
 import timetableRoute from "@/routes/timetable.route";
@@ -81,5 +82,6 @@ app.route("/parent", parentRoute);
 app.route("/payment", paymentRoute);
 app.route("/payment-settlement", paymentSettlementRoute);
 app.route("/super-admin", superAdminRoute);
+app.route("/admin", adminUserManagementRoute);
 
 export default app;

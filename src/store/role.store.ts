@@ -111,6 +111,10 @@ export const actionMap: {
         "create_users",
         "update_users",
         "delete_users",
+        "admin_user_management",
+        "admin_download_students",
+        "admin_download_teachers",
+        "admin_download_attendance",
         "create_campus",
         "get_all_campus",
         "get_campus",
@@ -181,6 +185,10 @@ export const actionMap: {
         "update_campus",
         "delete_campus",
         "create_users",
+        "admin_user_management",
+        "admin_download_students",
+        "admin_download_teachers",
+        "admin_download_attendance",
         // Course content permissions (Super Admin level - all permissions)
         "create_course",
         "update_course",
@@ -274,6 +282,11 @@ const actionNameSchema = z.union([
     // Parent assignment actions
     z.literal("parent_get_student_assignments"),
     z.literal("parent_get_student_performance"),
+    // Admin user management actions
+    z.literal("admin_user_management"),
+    z.literal("admin_download_students"),
+    z.literal("admin_download_teachers"),
+    z.literal("admin_download_attendance"),
     // Course content management actions
     z.literal("view_course_content"),
     z.literal("view_course_materials"),
