@@ -86,16 +86,14 @@ export class ExamTimetableController {
                 message: "Exam timetables retrieved successfully",
             });
         } catch (error) {
-            if (error instanceof Error) {
-                return ctx.json(
-                    {
-                        success: false,
-                        data: null,
-                        message: error.message,
-                    },
-                    500
-                );
-            }
+            return ctx.json(
+                {
+                    success: false,
+                    data: null,
+                    message: error instanceof Error ? error.message : "An unknown error occurred",
+                },
+                500
+            );
         }
     };
 
@@ -283,16 +281,14 @@ export class ExamTimetableController {
                 message: "Exam timetable deleted successfully",
             });
         } catch (error) {
-            if (error instanceof Error) {
-                return ctx.json(
-                    {
-                        success: false,
-                        data: null,
-                        message: error.message,
-                    },
-                    500
-                );
-            }
+            return ctx.json(
+                {
+                    success: false,
+                    data: null,
+                    message: error instanceof Error ? error.message : "An unknown error occurred",
+                },
+                500
+            );
         }
     };
 
@@ -392,7 +388,7 @@ export class ExamTimetableController {
                 exclude_id?: string;
             } = await ctx.req.json();
 
-            const conflicts = await ExamTimetableService.checkScheduleConflicts(
+            const conflictResult = await ExamTimetableService.checkScheduleConflicts(
                 campus_id,
                 new Date(exam_date),
                 start_time,
@@ -402,11 +398,8 @@ export class ExamTimetableController {
 
             return ctx.json({
                 success: true,
-                data: {
-                    has_conflicts: conflicts.length > 0,
-                    conflicts,
-                },
-                message: conflicts.length > 0 ? "Schedule conflicts found" : "No schedule conflicts",
+                data: conflictResult,
+                message: conflictResult.has_conflicts ? "Schedule conflicts found" : "No schedule conflicts",
             });
         } catch (error) {
             if (error instanceof Error) {

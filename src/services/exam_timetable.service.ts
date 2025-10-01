@@ -92,6 +92,11 @@ export class ExamTimetableService {
             is_deleted: false,
         });
 
+        // Check if no results found
+        if (!examTimetables || !examTimetables.rows || examTimetables.rows.length === 0) {
+            return [];
+        }
+
         // Enrich with exam term, class, and subject information
         const enrichedTimetables = await Promise.all(
             examTimetables.rows.map(async (timetable) => {
@@ -126,75 +131,123 @@ export class ExamTimetableService {
         created_at: Date;
         updated_at: Date;
     }) => {
-        const examTerm = await ExamTerm.findById(timetable.exam_term_id);
-        const classes = await Promise.all(
-            timetable.class_ids.map(async (class_id: string) => {
-                const classInfo = await Class.findById(class_id);
-                return {
-                    id: class_id,
-                    name: classInfo?.name || "Unknown Class",
-                };
-            })
-        );
-
-        // Enrich subjects with subject details
-        const enrichedSubjects = await Promise.all(
-            timetable.subjects.map(
-                async (subjectSchedule: {
-                    subject_id: string;
-                    exam_date: Date;
-                    start_time: string;
-                    end_time: string;
-                    room?: string;
-                    invigilator_ids?: string[];
-                }) => {
-                    const subject = await Subject.findById(subjectSchedule.subject_id);
-                    
-                    // Enrich invigilators with teacher details
-                    let invigilators: Array<{ id: string; name: string }> = [];
-                    if (subjectSchedule.invigilator_ids?.length) {
-                        invigilators = await Promise.all(
-                            subjectSchedule.invigilator_ids.map(async (invigilatorId: string) => {
-                                const teacher = await Teacher.findById(invigilatorId);
-                                if (teacher?.user_id) {
-                                    const user = await User.findById(teacher.user_id);
-                                    return {
-                                        id: invigilatorId,
-                                        name: user 
-                                            ? `${user.first_name} ${user.last_name}`
-                                            : "Unknown Teacher",
-                                    };
-                                }
-                                return {
-                                    id: invigilatorId,
-                                    name: "Unknown Teacher",
-                                };
-                            })
-                        );
+        try {
+            const examTerm = await ExamTerm.findById(timetable.exam_term_id);
+            const classes = await Promise.all(
+                (timetable.class_ids || []).map(async (class_id: string) => {
+                    try {
+                        const classInfo = await Class.findById(class_id);
+                        return {
+                            id: class_id,
+                            name: classInfo?.name || "Unknown Class",
+                        };
+                    } catch (error) {
+                        return {
+                            id: class_id,
+                            name: "Unknown Class",
+                        };
                     }
-                    
-                    return {
-                        ...subjectSchedule,
-                        subject_code: subject?.code || "Unknown Code",
-                        subject_name: subject?.name || "Unknown Subject",
-                        credits: (subject?.meta_data as { credits?: number })?.credits || 0,
-                        invigilators,
-                    };
-                }
-            )
-        );
+                })
+            );
 
-        return {
-            ...timetable,
-            exam_term: {
-                id: examTerm?.id,
-                name: examTerm?.name || "Unknown Term",
-                start_date: examTerm?.start_date,
-                end_date: examTerm?.end_date,
-            },
-            classes,
-            subjects: enrichedSubjects,
-        };
+            // Enrich subjects with subject details
+            const enrichedSubjects = await Promise.all(
+                (timetable.subjects || []).map(
+                    async (subjectSchedule: {
+                        subject_id: string;
+                        exam_date: Date;
+                        start_time: string;
+                        end_time: string;
+                        room?: string;
+                        invigilator_ids?: string[];
+                    }) => {
+                        try {
+                            const subject = await Subject.findById(subjectSchedule.subject_id);
+                            
+                            // Enrich invigilators with teacher details
+                            let invigilators: Array<{ id: string; name: string }> = [];
+                            if (subjectSchedule.invigilator_ids?.length) {
+                                invigilators = await Promise.all(
+                                    subjectSchedule.invigilator_ids.map(async (invigilatorId: string) => {
+                                        try {
+                                            const teacher = await Teacher.findById(invigilatorId);
+                                            if (teacher?.user_id) {
+                                                const user = await User.findById(teacher.user_id);
+                                                return {
+                                                    id: invigilatorId,
+                                                    name: user 
+                                                        ? `${user.first_name} ${user.last_name}`
+                                                        : "Unknown Teacher",
+                                                };
+                                            }
+                                            return {
+                                                id: invigilatorId,
+                                                name: "Unknown Teacher",
+                                            };
+                                        } catch (error) {
+                                            return {
+                                                id: invigilatorId,
+                                                name: "Unknown Teacher",
+                                            };
+                                        }
+                                    })
+                                );
+                            }
+                            
+                            return {
+                                ...subjectSchedule,
+                                subject_code: subject?.code || "Unknown Code",
+                                subject_name: subject?.name || "Unknown Subject",
+                                credits: (subject?.meta_data as { credits?: number })?.credits || 0,
+                                invigilators,
+                            };
+                        } catch (error) {
+                            return {
+                                ...subjectSchedule,
+                                subject_code: "Unknown Code",
+                                subject_name: "Unknown Subject",
+                                credits: 0,
+                                invigilators: [],
+                            };
+                        }
+                    }
+                )
+            );
+
+            return {
+                ...timetable,
+                exam_term: {
+                    id: examTerm?.id,
+                    name: examTerm?.name || "Unknown Term",
+                    start_date: examTerm?.start_date,
+                    end_date: examTerm?.end_date,
+                },
+                classes,
+                subjects: enrichedSubjects,
+            };
+        } catch (error) {
+            // If enrichment fails, return basic timetable data
+            return {
+                ...timetable,
+                exam_term: {
+                    id: timetable.exam_term_id,
+                    name: "Unknown Term",
+                    start_date: null,
+                    end_date: null,
+                },
+                classes: (timetable.class_ids || []).map(id => ({
+                    id,
+                    name: "Unknown Class"
+                })),
+                subjects: (timetable.subjects || []).map(subject => ({
+                    ...subject,
+                    subject_code: "Unknown Code",
+                    subject_name: "Unknown Subject",
+                    credits: 0,
+                    invigilators: [],
+                })),
+            };
+        }
     };
 
     // Get exam timetable by ID
@@ -220,6 +273,11 @@ export class ExamTimetableService {
             is_deleted: false,
         });
 
+        // Check if no results found
+        if (!examTimetables || !examTimetables.rows || examTimetables.rows.length === 0) {
+            return [];
+        }
+
         // Enrich with related data
         const enrichedTimetables = await Promise.all(
             examTimetables.rows.map(async (timetable) => {
@@ -237,6 +295,11 @@ export class ExamTimetableService {
             is_published: true,
             is_deleted: false,
         });
+
+        // Check if no results found
+        if (!examTimetables || !examTimetables.rows || examTimetables.rows.length === 0) {
+            return [];
+        }
 
         // Enrich with related data
         const enrichedTimetables = await Promise.all(
@@ -389,7 +452,19 @@ export class ExamTimetableService {
             is_published: true,
         });
 
-        const filteredTimetables = examTimetables.rows.filter((timetable) => timetable.class_ids.includes(class_id));
+        // Check if no results found
+        if (!examTimetables || !examTimetables.rows || examTimetables.rows.length === 0) {
+            return [];
+        }
+
+        const filteredTimetables = examTimetables.rows.filter((timetable) => 
+            timetable.class_ids && timetable.class_ids.includes(class_id)
+        );
+
+        // Check if no filtered results
+        if (filteredTimetables.length === 0) {
+            return [];
+        }
 
         // Enrich with related data
         const enrichedTimetables = await Promise.all(
@@ -421,6 +496,14 @@ export class ExamTimetableService {
             conflicting_time: string;
         }> = [];
 
+        // Check if no results found
+        if (!examTimetables || !examTimetables.rows || examTimetables.rows.length === 0) {
+            return {
+                has_conflicts: false,
+                conflicts: [],
+            };
+        }
+
         for (const timetable of examTimetables.rows) {
             if (exclude_id && timetable.id === exclude_id) {
                 continue;
@@ -444,6 +527,9 @@ export class ExamTimetableService {
             }
         }
 
-        return conflicts;
+        return {
+            has_conflicts: conflicts.length > 0,
+            conflicts,
+        };
     };
 }
