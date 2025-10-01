@@ -45,6 +45,7 @@
     "@types/uuid": "^10.0.0",
     "@types/ws": "^8.18.1",
     "esbuild": "^0.25.5",
+    "firebase-admin": "^13.5.0",
     "hono": "^4.7.11",
     "hono-openapi": "^0.4.8",
     "hyperflake": "^0.1.4",

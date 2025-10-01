@@ -3,6 +3,7 @@ import { ClassNotification, IClassNotificationData } from "@/models/class_notifi
 import { IParentNotificationData, ParentNotification } from "@/models/parent_notification.model";
 import { IStudentNotificationData, StudentNotification } from "@/models/student_notification.model";
 import { ITeacherNotificationData, TeacherNotification } from "@/models/teacher_notification.model";
+import { PushNotificationService } from "./push_notification.service";
 
 export class NotificationService {
     // create campus wide notification
@@ -14,7 +15,8 @@ export class NotificationService {
             meta_data: object;
         }
     ) => {
-        return await CampusWideNotification.create({
+        // Create the notification in database
+        const notification = await CampusWideNotification.create({
             campus_id,
             ...data,
             is_active: true,
@@ -22,6 +24,26 @@ export class NotificationService {
             created_at: new Date(),
             updated_at: new Date(),
         });
+
+        // Send push notification to all users in the campus
+        try {
+            await PushNotificationService.sendCampusWideNotification({
+                title: data.title,
+                message: data.message,
+                notification_type: "campus_wide",
+                campus_id: campus_id,
+                data: {
+                    notification_id: notification.id,
+                    type: "announcement",
+                    priority: "high",
+                },
+            });
+        } catch {
+            // Log error but don't fail the notification creation
+            // This ensures the notification is still created even if push notification fails
+        }
+
+        return notification;
     };
 
     // get all campus wide notifications by campus id

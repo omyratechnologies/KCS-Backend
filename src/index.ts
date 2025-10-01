@@ -7,6 +7,7 @@ import log, { LogTypes } from "@/libs/logger";
 import { UploadFactory } from "@/libs/s3/upload.factory";
 import { SocketService } from "@/services/socket.service";
 import { WebRTCService } from "@/services/webrtc.service";
+import { FirebaseService } from "@/services/firebase.service";
 import { config } from "@/utils/env";
 
 // Create HTTP server for Socket.IO integration
@@ -60,6 +61,14 @@ async function initializeServices() {
             log("✅ Upload client initialized", LogTypes.LOGS, "INIT");
         } catch (error) {
             log(`⚠️ Upload client initialization failed, continuing without file upload features: ${error}`, LogTypes.ERROR, "INIT");
+        }
+
+        // Initialize Firebase for push notifications
+        try {
+            FirebaseService.initialize();
+            log("✅ Firebase service initialized for push notifications", LogTypes.LOGS, "INIT");
+        } catch (error) {
+            log(`⚠️ Firebase initialization failed, continuing without push notification features: ${error}`, LogTypes.ERROR, "INIT");
         }
 
         // Initialize WebRTC service for real-time video conferencing

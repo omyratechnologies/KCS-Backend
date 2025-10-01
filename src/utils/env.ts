@@ -37,6 +37,9 @@ export const env = z.object({
     // GetStream Configuration
     GETSTREAM_API_KEY: z.string(),
     GETSTREAM_API_SECRET: z.string(),
+    // Firebase Configuration
+    FIREBASE_PROJECT_ID: z.string().optional(),
+    FIREBASE_SERVICE_ACCOUNT_KEY: z.string().optional(),
 });
 
 export type Env = z.infer<typeof env>;
