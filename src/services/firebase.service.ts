@@ -13,6 +13,26 @@ export class FirebaseService {
     private static initialized = false;
 
     /**
+     * Convert all data values to strings (Firebase requirement)
+     */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private static stringifyData(data?: Record<string, any>): Record<string, string> {
+        if (!data) {
+            return {};
+        }
+        
+        const stringData: Record<string, string> = {};
+        for (const [key, value] of Object.entries(data)) {
+            if (typeof value === 'object' && value !== null) {
+                stringData[key] = JSON.stringify(value);
+            } else {
+                stringData[key] = String(value);
+            }
+        }
+        return stringData;
+    }
+
+    /**
      * Check if Firebase is initialized
      */
     public static isInitialized(): boolean {
@@ -105,7 +125,7 @@ export class FirebaseService {
                     body: payload.message,
                 },
                 data: {
-                    ...payload.data,
+                    ...this.stringifyData(payload.data),
                     title: payload.title,
                     message: payload.message,
                     timestamp: new Date().toISOString(),
@@ -188,7 +208,7 @@ export class FirebaseService {
                     body: payload.message,
                 },
                 data: {
-                    ...payload.data,
+                    ...this.stringifyData(payload.data),
                     title: payload.title,
                     message: payload.message,
                     timestamp: new Date().toISOString(),

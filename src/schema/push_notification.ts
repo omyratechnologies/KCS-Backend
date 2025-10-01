@@ -80,6 +80,50 @@ export const getUserDeviceTokensResponseSchema = z
     })
     .openapi({ ref: "GetUserDeviceTokensResponse" });
 
+// Class notification
+export const sendClassNotificationRequestBodySchema = z
+    .object({
+        class_id: z.string().openapi({ 
+            example: "550e8400-e29b-41d4-a716-446655440000",
+            description: "ID of the class to send notification to"
+        }),
+        title: z.string().openapi({ 
+            example: "Class Assignment",
+            description: "Notification title"
+        }),
+        message: z.string().openapi({ 
+            example: "New assignment posted for Math class",
+            description: "Notification message"
+        }),
+        data: z.record(z.string(), z.any()).optional().openapi({
+            example: { 
+                assignment_id: "123",
+                due_date: "2025-10-15",
+                priority: "high"
+            },
+            description: "Additional custom data to send with notification"
+        }),
+    })
+    .openapi({ ref: "SendClassNotificationRequest" });
+
+export const sendClassNotificationResponseSchema = z
+    .object({
+        success: z.boolean().openapi({ example: true }),
+        data: z.object({
+            success: z.boolean().openapi({ example: true }),
+            total_recipients: z.number().openapi({ example: 30 }),
+            successful_sends: z.number().openapi({ example: 28 }),
+            failed_sends: z.number().openapi({ example: 2 }),
+            details: z.object({
+                tokens_sent: z.number().openapi({ example: 30 }),
+                topic_sent: z.boolean().openapi({ example: true }),
+                invalid_tokens: z.array(z.string()).openapi({ example: [] }),
+                errors: z.array(z.string()).openapi({ example: [] }),
+            }),
+        }),
+    })
+    .openapi({ ref: "SendClassNotificationResponse" });
+
 // Test notification
 export const sendTestNotificationRequestBodySchema = z
     .object({

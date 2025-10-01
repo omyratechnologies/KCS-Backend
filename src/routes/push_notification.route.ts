@@ -7,11 +7,14 @@ import {
     registerDeviceTokenResponseSchema,
     unregisterDeviceTokenRequestBodySchema,
     getUserDeviceTokensResponseSchema,
+    sendClassNotificationRequestBodySchema,
+    sendClassNotificationResponseSchema,
     sendTestNotificationRequestBodySchema,
     sendTestNotificationResponseSchema,
     cleanupOldTokensResponseSchema,
     errorResponseSchema,
 } from "@/schema/push_notification";
+import { roleMiddleware } from "@/middlewares/role.middleware";
 
 const app = new Hono();
 
@@ -105,6 +108,46 @@ app.get(
         },
     }),
     PushNotificationController.getUserDeviceTokens
+);
+
+// Send notification to specific class (Teacher/Admin only)
+app.post(
+    "/send-to-class",
+    describeRoute({
+        operationId: "sendClassNotification",
+        summary: "Send notification to a specific class",
+        description: "Send push notification to all students in a specific class (Teacher or Admin only)",
+        tags: ["Push Notifications - Teacher/Admin"],
+        responses: {
+            200: {
+                description: "Class notification sent successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(sendClassNotificationResponseSchema),
+                    },
+                },
+            },
+            400: {
+                description: "Bad request",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+            403: {
+                description: "Unauthorized - Teacher or Admin access required",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    roleMiddleware("send_class_notification"),
+    zValidator("json", sendClassNotificationRequestBodySchema),
+    PushNotificationController.sendClassNotification
 );
 
 // Send test notification (admin only)

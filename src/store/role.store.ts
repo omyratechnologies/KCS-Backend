@@ -89,6 +89,8 @@ export const actionMap: {
         "view_enrollment_analytics",
         "customize_course_settings",
         "reorder_course_content",
+        // Push notification permissions
+        "send_class_notification",
     ],
     Staff: ["get_user", "get_users", "create_users", "update_users", "delete_users", "get_assignment"],
     Principal: [
@@ -104,6 +106,8 @@ export const actionMap: {
         "admin_assignment_overview",
         "admin_assignment_analytics",
         "admin_bulk_assignment_operations",
+        // Push notification permissions
+        "send_class_notification",
     ],
     Admin: [
         "get_user",
@@ -173,6 +177,8 @@ export const actionMap: {
         "import_course_content",
         "clone_courses",
         "manage_course_prerequisites",
+        // Push notification permissions
+        "send_class_notification",
     ],
     "Super Admin": [
         "create_campus",
@@ -225,6 +231,8 @@ export const actionMap: {
         "cross_campus_course_management",
         "platform_analytics",
         "course_compliance_management",
+        // Push notification permissions
+        "send_class_notification",
     ],
     Public: [],
 };
@@ -358,6 +366,8 @@ const actionNameSchema = z.union([
     z.literal("export_student_reports"),
     z.literal("customize_course_settings"),
     z.literal("reorder_course_content"),
+    // Push notification permissions
+    z.literal("send_class_notification"),
 ]);
 
 export type ActionType = z.infer<typeof actionNameSchema>;

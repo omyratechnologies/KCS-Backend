@@ -45,6 +45,9 @@ October 1, 2025
 - `POST /api/push-notification/unregister-token`: Unregister device
 - `GET /api/push-notification/device-tokens`: Get user's device tokens
 
+#### Teacher/Admin Endpoints
+- `POST /api/push-notification/send-to-class`: Send notification to specific class (Teacher or Admin only)
+
 #### Admin Endpoints
 - `POST /api/push-notification/test`: Send test notification
 - `POST /api/push-notification/cleanup-tokens`: Clean up old tokens
@@ -131,7 +134,25 @@ Content-Type: application/json
 }
 ```
 
-### 3. Send Test Notification (Admin Only)
+### 3. Send Notification to Specific Class (Teacher/Admin Only)
+```bash
+POST /api/push-notification/send-to-class
+Authorization: Bearer <teacher_or_admin_token>
+Content-Type: application/json
+
+{
+  "class_id": "550e8400-e29b-41d4-a716-446655440000",
+  "title": "Class Assignment Posted",
+  "message": "New assignment has been posted for Math class. Due date: October 15",
+  "data": {
+    "assignment_id": "123",
+    "due_date": "2025-10-15",
+    "priority": "high"
+  }
+}
+```
+
+### 4. Send Test Notification (Admin Only)
 ```bash
 POST /api/push-notification/test
 Authorization: Bearer <admin_token>

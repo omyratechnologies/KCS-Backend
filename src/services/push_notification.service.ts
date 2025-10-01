@@ -80,6 +80,74 @@ export class PushNotificationService {
     }
 
     /**
+     * Send push notification to a specific class
+     */
+    public static async sendClassNotification(payload: PushNotificationPayload): Promise<PushNotificationResult> {
+        try {
+            if (!payload.class_id) {
+                return {
+                    success: false,
+                    total_recipients: 0,
+                    successful_sends: 0,
+                    failed_sends: 0,
+                    details: {
+                        tokens_sent: 0,
+                        topic_sent: false,
+                        invalid_tokens: [],
+                        errors: ["Class ID is required for class notifications"],
+                    },
+                };
+            }
+
+            // Send to class topic
+            const topicName = `class_${payload.class_id}`;
+            const topicResult = await FirebaseService.sendToTopic({
+                title: payload.title,
+                message: payload.message,
+                data: {
+                    notification_type: payload.notification_type,
+                    campus_id: payload.campus_id,
+                    class_id: payload.class_id,
+                    ...payload.data,
+                },
+                topic: topicName,
+            });
+
+            // Also send to individual tokens for better reliability
+            const tokenResult = await this.sendToDeviceTokens(payload);
+
+            return {
+                success: topicResult.success || tokenResult.success,
+                total_recipients: tokenResult.total_recipients,
+                successful_sends: tokenResult.successful_sends,
+                failed_sends: tokenResult.failed_sends,
+                details: {
+                    tokens_sent: tokenResult.details.tokens_sent,
+                    topic_sent: topicResult.success,
+                    invalid_tokens: tokenResult.details.invalid_tokens,
+                    errors: [
+                        ...(topicResult.error ? [topicResult.error] : []),
+                        ...tokenResult.details.errors
+                    ],
+                },
+            };
+        } catch {
+            return {
+                success: false,
+                total_recipients: 0,
+                successful_sends: 0,
+                failed_sends: 0,
+                details: {
+                    tokens_sent: 0,
+                    topic_sent: false,
+                    invalid_tokens: [],
+                    errors: ["Error sending class notification"],
+                },
+            };
+        }
+    }
+
+    /**
      * Send push notification to specific users
      */
     public static async sendToSpecificUsers(payload: PushNotificationPayload): Promise<PushNotificationResult> {
@@ -185,7 +253,56 @@ export class PushNotificationService {
 
             // Get users based on filters
             const usersResult = await User.find(userFilters);
-            const users = usersResult.rows || [];
+            let users = usersResult.rows || [];
+
+            if (users.length === 0) {
+                return [];
+            }
+
+            // Filter by class_id if provided (for class-specific notifications)
+            if (payload.class_id) {
+                users = users.filter(user => {
+                    try {
+                        // Check if user has meta_data.classes array containing the class_id
+                        if (user.meta_data) {
+                            let metaData: Record<string, unknown>;
+                            
+                            // Handle case where meta_data is stored as array of characters
+                            if (typeof user.meta_data === 'object' && !Array.isArray(user.meta_data)) {
+                                // Try to reconstruct JSON string from character array
+                                const values = Object.values(user.meta_data);
+                                if (values.length > 0 && typeof values[0] === 'string') {
+                                    let jsonString = values.join('');
+                                    
+                                    // Try to extract valid JSON if there's extra data after it
+                                    // Look for closing brace of JSON object
+                                    const jsonEndIndex = jsonString.indexOf('}');
+                                    if (jsonEndIndex > -1) {
+                                        jsonString = jsonString.substring(0, jsonEndIndex + 1);
+                                    }
+                                    
+                                    metaData = JSON.parse(jsonString) as Record<string, unknown>;
+                                } else {
+                                    metaData = user.meta_data as Record<string, unknown>;
+                                }
+                            } else if (typeof user.meta_data === 'string') {
+                                metaData = JSON.parse(user.meta_data) as Record<string, unknown>;
+                            } else {
+                                metaData = user.meta_data as Record<string, unknown>;
+                            }
+                            
+                            const classes = metaData.classes;
+                            if (Array.isArray(classes)) {
+                                return classes.includes(payload.class_id);
+                            }
+                        }
+                    } catch {
+                        // If parsing fails, exclude this user silently
+                        // Meta_data format may be invalid, but filtering continues
+                    }
+                    return false;
+                });
+            }
 
             if (users.length === 0) {
                 return [];

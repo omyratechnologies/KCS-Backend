@@ -176,6 +176,69 @@ export class PushNotificationController {
     };
 
     /**
+     * Send notification to a specific class (Teacher/Admin only)
+     */
+    public static readonly sendClassNotification = async (ctx: Context) => {
+        try {
+            const user_type = ctx.get("user_type");
+            const campus_id = ctx.get("campus_id");
+
+            // Only allow teachers and admins
+            if (!["Teacher", "Admin", "Super Admin"].includes(user_type)) {
+                return ctx.json({ error: "Unauthorized - Teacher or Admin access required" }, 403);
+            }
+
+            const {
+                class_id,
+                title,
+                message,
+                data,
+            }: {
+                class_id: string;
+                title: string;
+                message: string;
+                data?: Record<string, string | number | boolean>;
+            } = await ctx.req.json();
+
+            if (!class_id || !title || !message) {
+                return ctx.json(
+                    {
+                        success: false,
+                        message: "class_id, title, and message are required",
+                    },
+                    400
+                );
+            }
+
+            const result = await PushNotificationService.sendClassNotification({
+                title,
+                message,
+                notification_type: "class",
+                campus_id,
+                class_id,
+                target_user_types: ["Student"], // Send to students in the class
+                data: {
+                    ...data,
+                    sender_type: user_type,
+                },
+            });
+
+            return ctx.json({
+                success: result.success,
+                data: result,
+            });
+        } catch (error) {
+            return ctx.json(
+                {
+                    success: false,
+                    message: error instanceof Error ? error.message : "Unknown error",
+                },
+                500
+            );
+        }
+    };
+
+    /**
      * Clean up old device tokens (admin only)
      */
     public static readonly cleanupOldTokens = async (ctx: Context) => {
