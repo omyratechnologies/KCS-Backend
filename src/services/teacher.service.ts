@@ -1,6 +1,11 @@
 import { Class, IClassData } from "@/models/class.model";
 import { ISubject, Subject } from "@/models/subject.model";
 import { ITeacherData, Teacher } from "@/models/teacher.model";
+import { ClassSubject } from "@/models/class_subject.model";
+import { Timetable } from "@/models/time_table.model";
+import { Assignment } from "@/models/assignment.model";
+import { Meeting } from "@/models/meeting.model";
+import infoLogs, { LogTypes } from "@/libs/logger";
 
 import { UserService } from "./users.service";
 
@@ -42,11 +47,12 @@ export class TeacherService {
 
                     // Update the user with the new meta_data (will be converted to JSON string by validation)
                     await UserService.updateUsers(teacherData.user_id, {
+                        // biome-ignore lint/suspicious/noExplicitAny: meta_data can be any JSON-serializable type
                         meta_data: updatedMetaData as any,
                     });
                 }
             } catch (error) {
-                console.error(`Failed to update user meta_data with teacher_id: ${error}`);
+                infoLogs(`Failed to update user meta_data with teacher_id: ${error}`, LogTypes.ERROR, "TEACHER_SERVICE");
                 // Don't throw error here as teacher creation was successful
                 // Just log the error for debugging
             }
@@ -95,7 +101,7 @@ export class TeacherService {
         let teacher_profile;
         try {
             teacher_profile = await UserService.getUser(teacher.user_id);
-        } catch (error) {
+        } catch {
             // Teacher exists but user profile is missing - skip this teacher
             return null;
         }
@@ -141,38 +147,148 @@ export class TeacherService {
             throw new Error("Teacher not found");
         }
 
-        // Remove teacher_id from user's meta_data before deleting teacher
-        if (teacher.user_id) {
-            try {
-                const user = await UserService.getUser(teacher.user_id);
-                if (user) {
-                    // Parse existing meta_data if it's a string, otherwise use as object
-                    let existingMetaData = {};
-                    if (typeof user.meta_data === "string") {
-                        try {
-                            existingMetaData = JSON.parse(user.meta_data);
-                        } catch {
-                            existingMetaData = {};
-                        }
-                    } else if (user.meta_data && typeof user.meta_data === "object") {
-                        existingMetaData = user.meta_data;
+        // ============================================================
+        // CASCADE DELETION: Remove all teacher relations
+        // ============================================================
+
+        try {
+            // 1. Remove teacher from Classes (class_teacher_id and teacher_ids array)
+            // Note: Fetch all classes and filter in code since Ottoman $or with $in may not work as expected
+            const allClasses = await Class.find({
+                is_deleted: false
+            });
+
+            if (allClasses.rows && allClasses.rows.length > 0) {
+                for (const classItem of allClasses.rows) {
+                    // Check if this class references the teacher
+                    const hasTeacherAsClassTeacher = classItem.class_teacher_id === id;
+                    const hasTeacherInArray = classItem.teacher_ids && classItem.teacher_ids.includes(id);
+
+                    if (!hasTeacherAsClassTeacher && !hasTeacherInArray) {
+                        continue; // Skip this class, no updates needed
                     }
 
-                    // Remove teacher_id from meta_data
-                    delete (existingMetaData as any).teacher_id;
+                    const updates: Partial<IClassData> = {
+                        updated_at: new Date()
+                    };
 
-                    // Update the user with the updated meta_data
-                    await UserService.updateUsers(teacher.user_id, {
-                        meta_data: existingMetaData as any,
+                    // Clear class_teacher_id if it matches the deleted teacher
+                    if (hasTeacherAsClassTeacher) {
+                        updates.class_teacher_id = "";
+                    }
+
+                    // Remove teacher from teacher_ids array
+                    if (hasTeacherInArray) {
+                        updates.teacher_ids = classItem.teacher_ids.filter(tid => tid !== id);
+                    }
+
+                    await Class.updateById(classItem.id, updates);
+                }
+            }
+
+            // 2. Delete ClassSubject entries for this teacher
+            const classSubjects = await ClassSubject.find({
+                teacher_id: id
+            });
+
+            if (classSubjects.rows && classSubjects.rows.length > 0) {
+                for (const classSubject of classSubjects.rows) {
+                    await ClassSubject.removeById(classSubject.id);
+                }
+            }
+
+            // 3. Delete Timetable entries for this teacher
+            const timetableEntries = await Timetable.find({
+                teacher_id: id,
+                is_deleted: false
+            });
+
+            if (timetableEntries.rows && timetableEntries.rows.length > 0) {
+                for (const timetableEntry of timetableEntries.rows) {
+                    await Timetable.updateById(timetableEntry.id, {
+                        is_deleted: true,
+                        updated_at: new Date()
                     });
                 }
-            } catch (error) {
-                console.error(`Failed to remove teacher_id from user meta_data: ${error}`);
-                // Don't throw error here as we still want to delete the teacher
-                // Just log the error for debugging
             }
+
+            // 4. Mark Assignments created by this teacher as deleted (soft delete)
+            // Assignments use user_id which is the teacher's user_id
+            if (teacher.user_id) {
+                const assignments = await Assignment.find({
+                    user_id: teacher.user_id
+                });
+
+                if (assignments.rows && assignments.rows.length > 0) {
+                    for (const assignment of assignments.rows) {
+                        // Soft delete to preserve student submissions
+                        await Assignment.updateById(assignment.id, {
+                            meta_data: {
+                                ...assignment.meta_data,
+                                deleted_teacher_id: id,
+                                deletion_timestamp: new Date().toISOString(),
+                                deletion_reason: "Teacher account deleted"
+                            },
+                            updated_at: new Date()
+                        });
+                    }
+                }
+
+                // 5. Mark Meetings created by this teacher
+                const meetings = await Meeting.find({
+                    creator_id: teacher.user_id,
+                    is_deleted: false
+                });
+
+                if (meetings.rows && meetings.rows.length > 0) {
+                    for (const meeting of meetings.rows) {
+                        await Meeting.updateById(meeting.id, {
+                            is_deleted: true,
+                            meeting_status: "cancelled",
+                            updated_at: new Date()
+                        });
+                    }
+                }
+            }
+
+            // 6. Remove teacher_id from user's meta_data
+            if (teacher.user_id) {
+                try {
+                    const user = await UserService.getUser(teacher.user_id);
+                    if (user) {
+                        // Parse existing meta_data if it's a string, otherwise use as object
+                        let existingMetaData: Record<string, unknown> = {};
+                        if (typeof user.meta_data === "string") {
+                            try {
+                                existingMetaData = JSON.parse(user.meta_data);
+                            } catch {
+                                existingMetaData = {};
+                            }
+                        } else if (user.meta_data && typeof user.meta_data === "object") {
+                            existingMetaData = user.meta_data as Record<string, unknown>;
+                        }
+
+                        // Remove teacher_id from meta_data
+                        delete existingMetaData.teacher_id;
+
+                        // Update the user with the updated meta_data
+                        await UserService.updateUsers(teacher.user_id, {
+                            // biome-ignore lint/suspicious/noExplicitAny: meta_data can be any JSON-serializable type
+                            meta_data: existingMetaData as any
+                        });
+                    }
+                } catch (userError) {
+                    // Log but don't throw - we still want to delete the teacher
+                    infoLogs(`Failed to remove teacher_id from user meta_data: ${userError}`, LogTypes.ERROR, "TEACHER_SERVICE");
+                }
+            }
+
+        } catch (cascadeError) {
+            // Log cascade deletion errors but continue with teacher deletion
+            infoLogs(`Cascade deletion warnings for teacher ${id}: ${cascadeError}`, LogTypes.ERROR, "TEACHER_SERVICE");
         }
 
+        // Finally, delete the teacher record
         const deletedTeacher = await Teacher.removeById(id);
         if (!deletedTeacher) {
             throw new Error("Teacher not deleted");
