@@ -53,14 +53,124 @@ app.get(
     describeRoute({
         operationId: "getAllTeachers",
         summary: "Get all teachers",
-        description: "Retrieves all teachers for the current campus",
+        description: "Retrieves all teachers for the current campus with pagination and filtering support",
         tags: ["Teacher"],
+        parameters: [
+            {
+                name: "page",
+                in: "query",
+                required: false,
+                schema: { type: "number", default: 1 },
+                description: "Page number for pagination",
+            },
+            {
+                name: "limit",
+                in: "query",
+                required: false,
+                schema: { type: "number", default: 20 },
+                description: "Number of items per page",
+            },
+            {
+                name: "search",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+                description: "Search term to filter teachers by name, email, user_id, or phone",
+            },
+            {
+                name: "user_id",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+                description: "Filter by user ID",
+            },
+            {
+                name: "email",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+                description: "Filter by email",
+            },
+            {
+                name: "name",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+                description: "Filter by name (first or last name)",
+            },
+            {
+                name: "is_active",
+                in: "query",
+                required: false,
+                schema: { type: "boolean" },
+                description: "Filter by active status",
+            },
+            {
+                name: "class_id",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+                description: "Filter by class ID - returns teachers assigned to this class",
+            },
+            {
+                name: "from",
+                in: "query",
+                required: false,
+                schema: { type: "string", format: "date" },
+                description: "Filter teachers created from this date (ISO 8601 format: YYYY-MM-DD)",
+                example: "2024-01-01",
+            },
+            {
+                name: "to",
+                in: "query",
+                required: false,
+                schema: { type: "string", format: "date" },
+                description: "Filter teachers created up to this date (ISO 8601 format: YYYY-MM-DD)",
+                example: "2024-12-31",
+            },
+            {
+                name: "sort_by",
+                in: "query",
+                required: false,
+                schema: { type: "string", default: "updated_at" },
+                description: "Field to sort by (e.g., updated_at, created_at)",
+            },
+            {
+                name: "sort_order",
+                in: "query",
+                required: false,
+                schema: { type: "string", enum: ["asc", "desc"], default: "desc" },
+                description: "Sort order (ascending or descending)",
+            },
+        ],
         responses: {
             200: {
-                description: "List of teachers",
+                description: "List of teachers with pagination",
                 content: {
                     "application/json": {
-                        schema: resolver(getTeachersResponseSchema),
+                        schema: {
+                            type: "object",
+                            properties: {
+                                success: { type: "boolean" },
+                                data: {
+                                    type: "array",
+                                    items: {
+                                        type: "object",
+                                    },
+                                },
+                                pagination: {
+                                    type: "object",
+                                    properties: {
+                                        current_page: { type: "number" },
+                                        per_page: { type: "number" },
+                                        total_items: { type: "number" },
+                                        total_pages: { type: "number" },
+                                        has_next: { type: "boolean" },
+                                        has_previous: { type: "boolean" },
+                                    },
+                                },
+                            },
+                        },
                     },
                 },
             },

@@ -5,6 +5,7 @@ import { FindOptions } from "ottoman";
 
 import infoLogs, { LogTypes } from "@/libs/logger";
 import { sendWelcomeEmail } from "@/libs/mailer";
+import { Class } from "@/models/class.model";
 import { IUser, User } from "@/models/user.model";
 
 import { CampusService } from "./campuses.service";
@@ -328,5 +329,179 @@ export class UserService {
         }
 
         return data.rows;
+    };
+
+    // Get Users with pagination and filtering
+    public static readonly getUsersWithFilters = async (
+        campus_id: string,
+        filters: {
+            page?: number;
+            limit?: number;
+            user_type?: string;
+            search?: string;
+            user_id?: string;
+            email?: string;
+            name?: string;
+            phone?: string;
+            is_active?: boolean;
+            is_deleted?: boolean;
+            from?: Date;
+            to?: Date;
+            sort_by?: string;
+            sort_order?: "asc" | "desc";
+            academic_year?: string;
+            class_id?: string;
+        } = {}
+    ) => {
+        const {
+            page = 1,
+            limit = 20,
+            user_type,
+            search,
+            user_id,
+            email,
+            name,
+            phone,
+            is_active,
+            is_deleted = false,
+            from,
+            to,
+            sort_by = "created_at",
+            sort_order = "desc",
+            academic_year,
+            class_id,
+        } = filters;
+
+        // Build filter object
+        const filter: any = { campus_id };
+        if (user_type) {
+            filter.user_type = user_type;
+        }
+        if (is_deleted !== undefined) {
+            filter.is_deleted = is_deleted;
+        }
+
+        const options: FindOptions = {
+            sort: {
+                [sort_by]: sort_order === "asc" ? "ASC" : "DESC",
+            },
+            select: [
+                "id",
+                "user_id",
+                "email",
+                "first_name",
+                "last_name",
+                "phone",
+                "address",
+                "last_login",
+                "meta_data",
+                "is_active",
+                "is_deleted",
+                "user_type",
+                "campus_id",
+                "created_at",
+                "updated_at",
+            ],
+        };
+
+        const data: {
+            rows: IUser[];
+        } = await User.find(filter, options);
+
+        let users = data.rows;
+
+        // Apply additional filters
+        if (user_id) {
+            users = users.filter((u) => u.user_id?.toLowerCase().includes(user_id.toLowerCase()));
+        }
+
+        if (email) {
+            users = users.filter((u) => u.email?.toLowerCase().includes(email.toLowerCase()));
+        }
+
+        if (name) {
+            const nameLower = name.toLowerCase();
+            users = users.filter((u) => {
+                const fullName = `${u.first_name || ''} ${u.last_name || ''}`.toLowerCase();
+                return fullName.includes(nameLower) ||
+                       u.first_name?.toLowerCase().includes(nameLower) ||
+                       u.last_name?.toLowerCase().includes(nameLower);
+            });
+        }
+
+        if (phone) {
+            users = users.filter((u) => u.phone?.includes(phone));
+        }
+
+        if (is_active !== undefined) {
+            users = users.filter((u) => u.is_active === is_active);
+        }
+
+        // Date range filtering
+        if (from) {
+            users = users.filter((u) => {
+                const createdAt = new Date(u.created_at);
+                return createdAt >= from;
+            });
+        }
+
+        if (to) {
+            users = users.filter((u) => {
+                const createdAt = new Date(u.created_at);
+                // Include the entire day by setting time to end of day
+                const endOfDay = new Date(to);
+                endOfDay.setHours(23, 59, 59, 999);
+                return createdAt <= endOfDay;
+            });
+        }
+
+        if (search) {
+            const searchLower = search.toLowerCase();
+            users = users.filter((u) => {
+                const fullName = `${u.first_name || ''} ${u.last_name || ''}`.toLowerCase();
+                return fullName.includes(searchLower) ||
+                       u.email?.toLowerCase().includes(searchLower) ||
+                       u.user_id?.toLowerCase().includes(searchLower) ||
+                       u.phone?.includes(search) ||
+                       u.address?.toLowerCase().includes(searchLower);
+            });
+        }
+
+        // Filter by class enrollment if academic_year and class_id are provided
+        if (academic_year && class_id) {
+            const classData = await Class.findOne({
+                campus_id,
+                academic_year,
+                id: class_id,
+                is_active: true,
+                is_deleted: false,
+            });
+
+            if (classData && classData.student_ids && classData.student_ids.length > 0) {
+                const enrolledStudentIds = new Set(classData.student_ids);
+                users = users.filter((u) => enrolledStudentIds.has(u.id));
+            } else {
+                // No students enrolled in this class
+                users = [];
+            }
+        }
+
+        const totalUsers = users.length;
+
+        // Apply pagination
+        const skip = (page - 1) * limit;
+        const paginatedUsers = users.slice(skip, skip + limit);
+
+        return {
+            users: paginatedUsers,
+            pagination: {
+                current_page: page,
+                per_page: limit,
+                total_items: totalUsers,
+                total_pages: Math.ceil(totalUsers / limit),
+                has_next: page < Math.ceil(totalUsers / limit),
+                has_previous: page > 1,
+            },
+        };
     };
 }

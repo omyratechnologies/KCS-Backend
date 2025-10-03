@@ -101,6 +101,167 @@ app.get(
 );
 
 app.get(
+    "/students",
+    describeRoute({
+        tags: ["Users"],
+        operationId: "getStudents",
+        summary: "Get all students",
+        description: "Retrieves all students for the current campus with pagination and filtering support",
+        parameters: [
+            {
+                name: "page",
+                in: "query",
+                required: false,
+                schema: { type: "number", default: 1 },
+                description: "Page number for pagination",
+            },
+            {
+                name: "limit",
+                in: "query",
+                required: false,
+                schema: { type: "number", default: 20 },
+                description: "Number of items per page",
+            },
+            {
+                name: "search",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+                description: "Search term to filter students by name, email, user_id, phone, or address",
+            },
+            {
+                name: "user_id",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+                description: "Filter by user ID",
+            },
+            {
+                name: "email",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+                description: "Filter by email",
+            },
+            {
+                name: "name",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+                description: "Filter by name (first or last name)",
+            },
+            {
+                name: "phone",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+                description: "Filter by phone number",
+            },
+            {
+                name: "is_active",
+                in: "query",
+                required: false,
+                schema: { type: "boolean" },
+                description: "Filter by active status",
+            },
+            {
+                name: "from",
+                in: "query",
+                required: false,
+                schema: { type: "string", format: "date" },
+                description: "Filter students created from this date (ISO 8601 format: YYYY-MM-DD)",
+                example: "2024-01-01",
+            },
+            {
+                name: "to",
+                in: "query",
+                required: false,
+                schema: { type: "string", format: "date" },
+                description: "Filter students created up to this date (ISO 8601 format: YYYY-MM-DD)",
+                example: "2024-12-31",
+            },
+            {
+                name: "sort_by",
+                in: "query",
+                required: false,
+                schema: { type: "string", default: "created_at" },
+                description: "Field to sort by (e.g., created_at, first_name, email)",
+            },
+            {
+                name: "sort_order",
+                in: "query",
+                required: false,
+                schema: { type: "string", enum: ["asc", "desc"], default: "desc" },
+                description: "Sort order (ascending or descending)",
+            },
+            {
+                name: "academic_year",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+                description: "Filter students enrolled in a specific academic year. Must be provided together with class_id.",
+                example: "2024-2025",
+            },
+            {
+                name: "class_id",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+                description: "Filter students enrolled in a specific class. Must be provided together with academic_year.",
+                example: "29562c3d-9ea8-420f-b3dc-b9dc8cab623d",
+            },
+        ],
+        responses: {
+            200: {
+                description: "List of students with pagination",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                success: { type: "boolean" },
+                                data: {
+                                    type: "array",
+                                    items: {
+                                        type: "object",
+                                    },
+                                },
+                                pagination: {
+                                    type: "object",
+                                    properties: {
+                                        current_page: { type: "number" },
+                                        per_page: { type: "number" },
+                                        total_items: { type: "number" },
+                                        total_pages: { type: "number" },
+                                        has_next: { type: "boolean" },
+                                        has_previous: { type: "boolean" },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            400: {
+                description: "Bad request",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                success: { type: "boolean" },
+                                message: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    UsersController.getStudents
+);
+
+app.get(
     "/i/:id",
     describeRoute({
         tags: ["Users"],

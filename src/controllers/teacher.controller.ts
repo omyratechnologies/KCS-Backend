@@ -26,8 +26,29 @@ export class TeacherController {
     public static readonly getAllTeachers = async (ctx: Context) => {
         try {
             const campus_id = ctx.get("campus_id");
-            const teachers = await TeacherService.getAllTeachers(campus_id);
-            return ctx.json(teachers);
+            const query = ctx.req.query();
+
+            const filters = {
+                page: query.page ? Number.parseInt(query.page) : 1,
+                limit: query.limit ? Number.parseInt(query.limit) : 20,
+                search: query.search as string,
+                user_id: query.user_id as string,
+                email: query.email as string,
+                name: query.name as string,
+                is_active: query.is_active ? query.is_active === "true" : undefined,
+                class_id: query.class_id as string,
+                from: query.from ? new Date(query.from) : undefined,
+                to: query.to ? new Date(query.to) : undefined,
+                sort_by: query.sort_by as string,
+                sort_order: (query.sort_order as "asc" | "desc") || "desc",
+            };
+
+            const result = await TeacherService.getAllTeachers(campus_id, filters);
+            return ctx.json({
+                success: true,
+                data: result.teachers,
+                pagination: result.pagination,
+            });
         } catch (error) {
             if (error instanceof Error) {
                 return ctx.json({

@@ -61,8 +61,39 @@ export class TeacherService {
         return teacher;
     }
 
-    // Get all teachers for a campus
-    public static async getAllTeachers(campusId: string) {
+    // Get all teachers for a campus with pagination and filters
+    public static async getAllTeachers(
+        campusId: string,
+        filters: {
+            page?: number;
+            limit?: number;
+            search?: string;
+            user_id?: string;
+            email?: string;
+            name?: string;
+            is_active?: boolean;
+            class_id?: string;
+            from?: Date;
+            to?: Date;
+            sort_by?: string;
+            sort_order?: "asc" | "desc";
+        } = {}
+    ) {
+        const {
+            page = 1,
+            limit = 20,
+            search,
+            user_id,
+            email,
+            name,
+            is_active,
+            class_id,
+            from,
+            to,
+            sort_by = "updated_at",
+            sort_order = "desc",
+        } = filters;
+
         const teachers: {
             rows: ITeacherData[];
         } = await Teacher.find(
@@ -71,23 +102,113 @@ export class TeacherService {
             },
             {
                 sort: {
-                    updated_at: "DESC",
+                    [sort_by]: sort_order === "asc" ? "ASC" : "DESC",
                 },
             }
         );
 
         if (teachers.rows.length === 0) {
-            return [];
+            return {
+                teachers: [],
+                pagination: {
+                    current_page: page,
+                    per_page: limit,
+                    total_items: 0,
+                    total_pages: 0,
+                    has_next: false,
+                    has_previous: false,
+                },
+            };
         }
 
+        // Get full teacher details
         const resultPromises = teachers.rows.map((teacher) => {
             return this.getTeacherById(teacher.id);
         });
 
         const result = await Promise.all(resultPromises);
         // Filter out null results (teachers with missing user profiles)
-        const validTeachers = result.filter((teacher) => teacher !== null);
-        return validTeachers;
+        const validTeachers = result.filter((teacher): teacher is NonNullable<typeof teacher> => teacher !== null);
+
+        // Apply filters
+        let filteredTeachers = validTeachers;
+
+        if (user_id) {
+            filteredTeachers = filteredTeachers.filter((t) => t.user_id === user_id);
+        }
+
+        if (email) {
+            filteredTeachers = filteredTeachers.filter((t) => 
+                t.teacher_profile?.email?.toLowerCase().includes(email.toLowerCase())
+            );
+        }
+
+        if (name) {
+            const nameLower = name.toLowerCase();
+            filteredTeachers = filteredTeachers.filter((t) => {
+                const fullName = `${t.teacher_profile?.first_name || ''} ${t.teacher_profile?.last_name || ''}`.toLowerCase();
+                return fullName.includes(nameLower) || 
+                       t.teacher_profile?.first_name?.toLowerCase().includes(nameLower) ||
+                       t.teacher_profile?.last_name?.toLowerCase().includes(nameLower);
+            });
+        }
+
+        if (is_active !== undefined) {
+            filteredTeachers = filteredTeachers.filter((t) => t.teacher_profile?.is_active === is_active);
+        }
+
+        if (class_id) {
+            filteredTeachers = filteredTeachers.filter((t) => 
+                t.classes && Array.isArray(t.classes) && t.classes.includes(class_id)
+            );
+        }
+
+        // Date range filtering
+        if (from) {
+            filteredTeachers = filteredTeachers.filter((t) => {
+                const createdAt = new Date(t.created_at);
+                return createdAt >= from;
+            });
+        }
+
+        if (to) {
+            filteredTeachers = filteredTeachers.filter((t) => {
+                const createdAt = new Date(t.created_at);
+                // Include the entire day by setting time to end of day
+                const endOfDay = new Date(to);
+                endOfDay.setHours(23, 59, 59, 999);
+                return createdAt <= endOfDay;
+            });
+        }
+
+        if (search) {
+            const searchLower = search.toLowerCase();
+            filteredTeachers = filteredTeachers.filter((t) => {
+                const fullName = `${t.teacher_profile?.first_name || ''} ${t.teacher_profile?.last_name || ''}`.toLowerCase();
+                return fullName.includes(searchLower) ||
+                       t.teacher_profile?.email?.toLowerCase().includes(searchLower) ||
+                       t.teacher_profile?.user_id?.toLowerCase().includes(searchLower) ||
+                       t.teacher_profile?.phone?.includes(search);
+            });
+        }
+
+        const totalTeachers = filteredTeachers.length;
+
+        // Apply pagination
+        const skip = (page - 1) * limit;
+        const paginatedTeachers = filteredTeachers.slice(skip, skip + limit);
+
+        return {
+            teachers: paginatedTeachers,
+            pagination: {
+                current_page: page,
+                per_page: limit,
+                total_items: totalTeachers,
+                total_pages: Math.ceil(totalTeachers / limit),
+                has_next: page < Math.ceil(totalTeachers / limit),
+                has_previous: page > 1,
+            },
+        };
     }
 
     // Get a teacher by ID
