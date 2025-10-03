@@ -40,6 +40,8 @@ export const actionMap: {
         "view_student_progress",
         "view_assignment_progress",
         "view_academic_summary",
+        // Report card permissions
+        "student_view_report_card",
     ],
     Parent: [
         "get_user",
@@ -53,6 +55,8 @@ export const actionMap: {
         "monitor_study_time",
         "view_course_completion_reports",
         "access_parent_dashboard",
+        // Report card permissions
+        "parent_view_report_card",
     ],
     Teacher: [
         "get_user",
@@ -95,6 +99,11 @@ export const actionMap: {
         "view_enrollment_analytics",
         "customize_course_settings",
         "reorder_course_content",
+        // Report card permissions
+        "teacher_view_report_card",
+        "teacher_generate_report_card",
+        "teacher_update_report_card",
+        "teacher_publish_report_card",
     ],
     Staff: ["get_user", "get_users", "create_users", "update_users", "delete_users", "get_assignment"],
     Principal: [
@@ -110,6 +119,11 @@ export const actionMap: {
         "admin_assignment_overview",
         "admin_assignment_analytics",
         "admin_bulk_assignment_operations",
+        // Report card permissions
+        "teacher_view_report_card",
+        "teacher_generate_report_card",
+        "teacher_update_report_card",
+        "teacher_publish_report_card",
     ],
     Admin: [
         "get_user",
@@ -183,6 +197,12 @@ export const actionMap: {
         "view_course_progress",
         "view_assignment_progress",
         "view_academic_summary",
+        // Report card permissions
+        "teacher_view_report_card",
+        "teacher_generate_report_card",
+        "teacher_update_report_card",
+        "teacher_publish_report_card",
+        "admin_finalize_report_card",
     ],
     "Super Admin": [
         "create_campus",
@@ -239,6 +259,12 @@ export const actionMap: {
         "view_course_progress",
         "view_assignment_progress",
         "view_academic_summary",
+        // Report card permissions
+        "teacher_view_report_card",
+        "teacher_generate_report_card",
+        "teacher_update_report_card",
+        "teacher_publish_report_card",
+        "admin_finalize_report_card",
     ],
     Public: [],
 };
@@ -375,6 +401,14 @@ const actionNameSchema = z.union([
     z.literal("export_student_reports"),
     z.literal("customize_course_settings"),
     z.literal("reorder_course_content"),
+    // Report card permissions
+    z.literal("student_view_report_card"),
+    z.literal("parent_view_report_card"),
+    z.literal("teacher_view_report_card"),
+    z.literal("teacher_generate_report_card"),
+    z.literal("teacher_update_report_card"),
+    z.literal("teacher_publish_report_card"),
+    z.literal("admin_finalize_report_card"),
 ]);
 
 export type ActionType = z.infer<typeof actionNameSchema>;
