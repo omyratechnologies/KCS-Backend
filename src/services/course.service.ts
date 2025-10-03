@@ -1,7 +1,7 @@
 import { nanoid } from "napi-nanoid";
 
 import { Course, ICourseData } from "@/models/course.model";
-import { CourseCertificate, ICourseCertificateData } from "@/models/course_certificate.model";
+import { CourseCertificate } from "@/models/course_certificate.model";
 import { CourseEnrollment, ICourseEnrollmentData } from "@/models/course_enrollment.model";
 import { CourseLecture, ICourseLectureData } from "@/models/course_lecture.model";
 import { CourseProgress, ICourseProgressData } from "@/models/course_progress.model";
@@ -16,15 +16,15 @@ export class CourseService {
      */
     private static async findCourseById(course_id: string, campus_id?: string): Promise<ICourseData | null> {
         try {
-            const query: any = { id: course_id };
+            const query: { id: string; campus_id?: string } = { id: course_id };
             if (campus_id) {
                 query.campus_id = campus_id;
             }
 
             const result = await Course.find(query);
             return result.rows && result.rows.length > 0 ? result.rows[0] : null;
-        } catch (error) {
-            console.error(`Error finding course by ID ${course_id}:`, error);
+        } catch {
+            // Error finding course by ID
             return null;
         }
     }
@@ -37,26 +37,21 @@ export class CourseService {
         updateData: Partial<ICourseData>,
         campus_id?: string
     ): Promise<ICourseData | null> {
-        try {
-            const query: any = { id: course_id };
-            if (campus_id) {
-                query.campus_id = campus_id;
-            }
-
-            const existingResult = await Course.find(query);
-            if (!existingResult.rows || existingResult.rows.length === 0) {
-                throw new Error("Course not found for update");
-            }
-
-            const existing = existingResult.rows[0];
-            const updated = { ...existing, ...updateData };
-
-            // Use replaceById for Ottoman compatibility
-            return await Course.replaceById(course_id, updated);
-        } catch (error) {
-            console.error(`Error updating course by ID ${course_id}:`, error);
-            throw error;
+        const query: { id: string; campus_id?: string } = { id: course_id };
+        if (campus_id) {
+            query.campus_id = campus_id;
         }
+
+        const existingResult = await Course.find(query);
+        if (!existingResult.rows || existingResult.rows.length === 0) {
+            throw new Error("Course not found for update");
+        }
+
+        const existing = existingResult.rows[0];
+        const updated = { ...existing, ...updateData };
+
+        // Use replaceById for Ottoman compatibility
+        return await Course.replaceById(course_id, updated);
     }
 
     // ==================== COURSE MANAGEMENT ====================
@@ -66,6 +61,13 @@ export class CourseService {
      */
     static async createCourse(campus_id: string, created_by: string, courseData: Partial<ICourseData>) {
         try {
+            // Sync prerequisites and requirements fields
+            if (courseData.prerequisites && !courseData.requirements) {
+                courseData.requirements = courseData.prerequisites;
+            } else if (courseData.requirements && !courseData.prerequisites) {
+                courseData.prerequisites = courseData.requirements;
+            }
+
             const course = await Course.create({
                 id: nanoid(),
                 campus_id,
@@ -202,13 +204,19 @@ export class CourseService {
             // Apply pagination
             const paginatedCourses = courses.slice(skip, skip + limit);
 
+            // Ensure prerequisites field is populated for backward compatibility
+            const coursesWithPrerequisites = paginatedCourses.map(course => ({
+                ...course,
+                prerequisites: course.prerequisites || course.requirements || [],
+            }));
+
             // Get course statistics
             const stats = await this.getCourseStatistics(campus_id);
 
             return {
                 success: true,
                 data: {
-                    courses: paginatedCourses,
+                    courses: coursesWithPrerequisites,
                     pagination: {
                         current_page: page,
                         per_page: limit,
@@ -319,8 +327,7 @@ export class CourseService {
                                   profile_image: userResult.meta_data?.profile_image,
                               }
                             : null;
-                    } catch (error) {
-                        console.error(`Error finding instructor ${instructor_id}:`, error);
+                    } catch {
                         return null;
                     }
                 })
@@ -330,6 +337,7 @@ export class CourseService {
                 success: true,
                 data: {
                     ...courseResult,
+                    prerequisites: courseResult.prerequisites || courseResult.requirements || [],
                     sections: sectionsWithLectures,
                     total_sections: sections.length,
                     total_lectures: sectionsWithLectures.reduce((sum, section) => sum + section.lectures.length, 0),
@@ -355,6 +363,13 @@ export class CourseService {
             const existingCourse = await this.findCourseById(course_id, campus_id);
             if (!existingCourse) {
                 throw new Error("Course not found");
+            }
+
+            // Sync prerequisites and requirements fields
+            if (updateData.prerequisites && !updateData.requirements) {
+                updateData.requirements = updateData.prerequisites;
+            } else if (updateData.requirements && !updateData.prerequisites) {
+                updateData.prerequisites = updateData.requirements;
             }
 
             const updatedCourse = await this.updateCourseById(
@@ -623,7 +638,7 @@ export class CourseService {
     /**
      * Delete course section (soft delete by archiving)
      */
-    static async deleteCourseSection(section_id: string, campus_id: string, user_id: string) {
+    static async deleteCourseSection(section_id: string, campus_id: string, _user_id: string) {
         try {
             // Get existing section
             const sectionResult = await CourseSection.find({
@@ -737,7 +752,7 @@ export class CourseService {
             }
 
             // Get user progress if user is provided
-            let userProgress: any = null;
+            let userProgress: ICourseProgressData | null = null;
             if (user_id) {
                 const progressResult = await CourseProgress.find({
                     user_id,
@@ -746,7 +761,7 @@ export class CourseService {
 
                 const progress = progressResult.rows[0];
                 userProgress = progress
-                    ? {
+                    ? ({
                           progress_status: progress.progress_status,
                           completion_percentage: progress.completion_percentage,
                           last_accessed_at: progress.last_accessed_at,
@@ -754,7 +769,7 @@ export class CourseService {
                           watch_time_seconds: progress.watch_time_seconds,
                           notes: progress.notes,
                           interaction_data: progress.interaction_data,
-                      }
+                      } as unknown as ICourseProgressData)
                     : null;
             }
 
@@ -830,7 +845,7 @@ export class CourseService {
     /**
      * Delete course lecture (soft delete by archiving)
      */
-    static async deleteCourseLecture(lecture_id: string, campus_id: string, user_id: string) {
+    static async deleteCourseLecture(lecture_id: string, campus_id: string, _user_id: string) {
         try {
             // Get existing lecture
             const lectureResult = await CourseLecture.find({
@@ -1127,7 +1142,7 @@ export class CourseService {
             const { status, progress, page = 1, limit = 20 } = filters;
 
             // Build query conditions
-            const queryConditions: any = { user_id, campus_id };
+            const queryConditions: { user_id: string; campus_id: string; enrollment_status?: string } = { user_id, campus_id };
             if (status) {
                 queryConditions.enrollment_status = status;
             }
@@ -1246,8 +1261,6 @@ export class CourseService {
             if (enrollmentResult.rows.length === 0) {
                 throw new Error("User is not enrolled in this course");
             }
-
-            const enrollment = enrollmentResult.rows[0];
 
             // Get or create progress record
             const existingProgressResult = await CourseProgress.find({
@@ -1385,8 +1398,8 @@ export class CourseService {
                     }
                 }
             }
-        } catch (error) {
-            console.error("Failed to update enrollment progress:", error);
+        } catch {
+            // Failed to update enrollment progress
         }
     }
 
@@ -1394,8 +1407,7 @@ export class CourseService {
      * Generate course certificate
      */
     private static async generateCourseCertificate(course_id: string, user_id: string, enrollment_id: string) {
-        try {
-            const course = await this.findCourseById(course_id);
+        const course = await this.findCourseById(course_id);
             // Note: User and CourseEnrollment may also need similar fixes if they have ID format issues
             const userResult = await User.find({ id: user_id });
             const user = userResult.rows && userResult.rows.length > 0 ? userResult.rows[0] : null;
@@ -1472,10 +1484,6 @@ export class CourseService {
             });
 
             return certificate;
-        } catch (error) {
-            console.error("Failed to generate certificate:", error);
-            throw error;
-        }
     }
 
     /**
@@ -1664,16 +1672,18 @@ export class CourseService {
     /**
      * Helper method to find next lecture to watch
      */
-    private static findNextLecture(sections: any[]) {
+    private static findNextLecture(sections: Array<{ lectures: Array<{ progress_status?: string; id: string; title: string }> }>) {
         for (const section of sections) {
             for (const lecture of section.lectures) {
-                if (lecture.status === "not_started" || lecture.status === "in_progress") {
+                const lec = lecture as unknown as { progress_status?: string; id: string; title: string; status?: string; resume_position_seconds?: number; estimated_duration_minutes?: number };
+                if (lec.progress_status === "not_started" || lec.progress_status === "in_progress") {
+                    const sec = section as unknown as { title?: string };
                     return {
-                        lecture_id: lecture.id,
-                        lecture_title: lecture.title,
-                        section_title: section.title,
-                        resume_position_seconds: lecture.resume_position_seconds,
-                        estimated_duration_minutes: lecture.estimated_duration_minutes,
+                        lecture_id: lec.id,
+                        lecture_title: lec.title,
+                        section_title: sec.title || "Unknown Section",
+                        resume_position_seconds: lec.resume_position_seconds || 0,
+                        estimated_duration_minutes: lec.estimated_duration_minutes || 0,
                     };
                 }
             }
@@ -1734,14 +1744,14 @@ export class CourseService {
                     send_reminders: scheduleData.send_reminders !== false,
                     created_at: new Date(),
                     last_reminder_sent: null,
-                } as any,
+                },
                 updated_at: new Date(),
             });
 
             return {
                 success: true,
                 data: {
-                    learning_schedule: (updatedEnrollment as any).learning_schedule,
+                    learning_schedule: (updatedEnrollment as unknown as { learning_schedule?: Record<string, unknown> }).learning_schedule,
                     recommendations: {
                         daily_study_minutes: recommendedDailyMinutes,
                         estimated_completion_date: scheduleData.target_completion_date,
@@ -1866,7 +1876,7 @@ export class CourseService {
      * Helper methods for learning statistics
      */
     private static calculateDailyActivity(
-        progressRecords: any[],
+        progressRecords: Array<{ updated_at: Date; watch_time_seconds: number; progress_status?: string }>,
         startDate: Date,
         endDate: Date
     ): Array<{
@@ -1938,8 +1948,8 @@ export class CourseService {
     }
 
     private static calculateAchievements(
-        enrollments: any[],
-        progressRecords: any[],
+        enrollments: Array<{ enrollment_status: string }>,
+        progressRecords: Array<{ progress_status?: string }>,
         totalWatchTime: number
     ): Array<{
         type: string;
@@ -2143,7 +2153,7 @@ export class CourseService {
         lecture_id: string,
         user_id: string,
         campus_id: string,
-        progressData: any
+        progressData: Partial<ICourseProgressData> & { current_time?: number; total_duration?: number; is_focused?: boolean; playback_speed?: number; buffer_health?: number }
     ) {
         try {
             // Check if user is enrolled
@@ -2167,12 +2177,15 @@ export class CourseService {
             const now = new Date();
 
             // Calculate enhanced metrics
-            const watchPercentage = (progressData.current_time / progressData.total_duration) * 100;
+            const currentTime = progressData.current_time || 0;
+            const totalDuration = progressData.total_duration || 1;
+            const watchPercentage = (currentTime / totalDuration) * 100;
             const isNearCompletion = watchPercentage >= 95;
-            const engagementScore = this.calculateEngagementScore(progressData);
+            const engagementScore = currentTime > 0 && totalDuration > 0 ? this.calculateEngagementScore({ current_time: currentTime, total_duration: totalDuration, is_focused: progressData.is_focused, playback_speed: progressData.playback_speed, buffer_health: progressData.buffer_health }) : 0;
 
             if (existingProgressResult.rows.length === 0) {
                 // Create new progress record with enhanced tracking
+                const extendedData = progressData as unknown as { is_playing?: boolean; quality?: string };
                 progress = await CourseProgress.create({
                     id: nanoid(),
                     course_id,
@@ -2180,14 +2193,14 @@ export class CourseService {
                     lecture_id,
                     campus_id,
                     progress_status: watchPercentage > 0 ? "in_progress" : "not_started",
-                    watch_time_seconds: Math.max(0, progressData.current_time || 0),
-                    total_duration_seconds: progressData.total_duration || 0,
+                    watch_time_seconds: Math.max(0, currentTime),
+                    total_duration_seconds: totalDuration,
                     completion_percentage: Math.min(100, watchPercentage),
                     first_accessed_at: now,
                     last_accessed_at: now,
-                    resume_position_seconds: progressData.current_time || 0,
+                    resume_position_seconds: currentTime,
                     interaction_data: {
-                        play_count: progressData.is_playing ? 1 : 0,
+                        play_count: extendedData.is_playing ? 1 : 0,
                         pause_count: 0,
                         seek_count: 0,
                         speed_changes: 0,
@@ -2203,13 +2216,13 @@ export class CourseService {
                     notes: [],
                     device_info: {
                         device_type: "web",
-                        connection_quality: progressData.buffer_health > 80 ? "good" : progressData.buffer_health > 50 ? "fair" : "poor",
+                        connection_quality: (progressData.buffer_health || 0) > 80 ? "good" : (progressData.buffer_health || 0) > 50 ? "fair" : "poor",
                     },
                     meta_data: {
                         auto_tracking_enabled: true,
                         quality_metrics: {
                             buffer_health: progressData.buffer_health || 100,
-                            quality_level: progressData.quality || "auto",
+                            quality_level: extendedData.quality || "auto",
                         },
                     },
                     created_at: now,
@@ -2263,27 +2276,27 @@ export class CourseService {
         course_id: string,
         user_id: string,
         campus_id: string,
-        batchData: any
+        batchData: { updates: Array<{ lecture_id: string; progress_data: Partial<ICourseProgressData> }> }
     ) {
         try {
             const results: Array<{
                 lecture_id: string;
                 success: boolean;
-                data?: any;
+                data?: Record<string, unknown>;
                 error?: string;
             }> = [];
             
             for (const update of batchData.updates) {
+                const extendedUpdate = update as unknown as { lecture_id: string; time_watched_seconds?: number; total_duration?: number };
                 try {
                     const result = await this.updateRealtimeProgress(
                         course_id,
-                        update.lecture_id,
+                        extendedUpdate.lecture_id,
                         user_id,
                         campus_id,
                         {
-                            current_time: update.time_watched_seconds,
-                            total_duration: update.total_duration || 0,
-                            is_playing: false,
+                            current_time: extendedUpdate.time_watched_seconds || 0,
+                            total_duration: extendedUpdate.total_duration || 0,
                             is_focused: true,
                             playback_speed: 1,
                         }
@@ -2307,7 +2320,7 @@ export class CourseService {
                     batch_results: results,
                     successful_updates: results.filter(r => r.success).length,
                     failed_updates: results.filter(r => !r.success).length,
-                    session_id: batchData.session_id,
+                    session_id: (batchData as unknown as { session_id?: string }).session_id || "unknown",
                 },
                 message: "Batch progress updated successfully",
             };
@@ -2328,7 +2341,8 @@ export class CourseService {
             }
 
             const course = courseResult;
-            const config = (course.meta_data as any)?.auto_completion_config || {
+            const metaData = course.meta_data as unknown as { auto_completion_config?: Record<string, unknown> };
+            const config = metaData?.auto_completion_config || {
                 auto_completion_enabled: true,
                 minimum_engagement_percentage: 75,
                 smart_detection_enabled: true,
@@ -2370,7 +2384,7 @@ export class CourseService {
         course_id: string,
         campus_id: string,
         user_id: string,
-        configData: any
+        configData: Partial<{ auto_completion_enabled: boolean; minimum_engagement_percentage: number; smart_detection_enabled: boolean }>
     ) {
         try {
             const courseResult = await Course.findById(course_id);
@@ -2391,7 +2405,7 @@ export class CourseService {
                 meta_data: {
                     ...course.meta_data,
                     auto_completion_config: {
-                        ...(course.meta_data as any)?.auto_completion_config,
+                        ...course.meta_data?.auto_completion_config,
                         ...configData,
                         last_updated_by: user_id,
                         last_updated_at: new Date(),
@@ -2404,7 +2418,7 @@ export class CourseService {
                 success: true,
                 data: {
                     course_id,
-                    updated_config: (updatedCourse.meta_data as any).auto_completion_config,
+                    updated_config: updatedCourse.meta_data?.auto_completion_config,
                 },
                 message: "Auto-completion configuration updated successfully",
             };
@@ -2417,16 +2431,16 @@ export class CourseService {
      * Get personalized learning analytics
      */
     static async getLearningAnalytics(
-        course_id: string,
-        user_id: string,
-        campus_id: string,
-        timeframe: string
+        _course_id: string,
+        _user_id: string,
+        _campus_id: string,
+        _timeframe: string
     ) {
         try {
             // Check enrollment
             const enrollmentResult = await CourseEnrollment.find({
-                course_id,
-                user_id,
+                course_id: _course_id,
+                user_id: _user_id,
                 enrollment_status: "active",
             });
 
@@ -2437,16 +2451,15 @@ export class CourseService {
             const enrollment = enrollmentResult.rows[0];
 
             // Get progress data
-            const progressResult = await CourseProgress.find({ course_id, user_id });
+            const progressResult = await CourseProgress.find({ course_id: _course_id, user_id: _user_id });
             const progressData = progressResult.rows;
 
             // Calculate metrics
             const totalWatchTime = progressData.reduce((sum, p) => sum + p.watch_time_seconds, 0);
             const completedLectures = progressData.filter(p => p.progress_status === "completed").length;
-            const totalLectures = progressData.length;
             
             // Get course lectures for total count
-            const lecturesResult = await CourseLecture.find({ course_id, is_published: true });
+            const lecturesResult = await CourseLecture.find({ course_id: _course_id, is_published: true });
             const totalCourseLectures = lecturesResult.rows.length;
 
             const engagementScore = this.calculateOverallEngagementScore(progressData);
@@ -2456,15 +2469,15 @@ export class CourseService {
             return {
                 success: true,
                 data: {
-                    user_id,
-                    course_id,
+                    user_id: _user_id,
+                    course_id: _course_id,
                     overall_progress: {
                         completion_percentage: enrollment.progress_percentage,
                         time_spent_hours: Math.round((totalWatchTime / 3600) * 10) / 10,
                         lectures_completed: completedLectures,
                         total_lectures: totalCourseLectures,
-                        current_streak_days: await this.calculateLearningStreak(user_id, course_id),
-                        longest_streak_days: await this.calculateUserLongestStreak(user_id, course_id),
+                        current_streak_days: await this.calculateLearningStreak(_user_id, _course_id),
+                        longest_streak_days: await this.calculateUserLongestStreak(_user_id, _course_id),
                         estimated_completion_date: this.estimateCompletionDate(enrollment, progressData),
                     },
                     engagement_metrics: {
@@ -2485,7 +2498,7 @@ export class CourseService {
                     predictions: {
                         completion_likelihood: this.predictCompletionLikelihood(enrollment, progressData),
                         at_risk_of_dropping: this.assessDropoutRisk(enrollment, progressData),
-                        recommended_study_schedule: this.generateStudySchedule(user_id, course_id, progressData),
+                        recommended_study_schedule: this.generateStudySchedule(_user_id, _course_id, progressData),
                         next_optimal_session_time: this.predictOptimalStudyTime(progressData),
                     },
                 },
@@ -2503,7 +2516,7 @@ export class CourseService {
         course_id: string,
         user_id: string,
         campus_id: string,
-        recommendationType: string
+        _recommendationType: string
     ) {
         try {
             // Get user progress and analytics
@@ -2629,8 +2642,8 @@ export class CourseService {
             return {
                 success: true,
                 data: {
-                    total_watch_time_seconds: analytics.totalWatchTime,
-                    total_watch_time_hours: Math.round((analytics.totalWatchTime / 3600) * 10) / 10,
+                    total_watch_time_seconds: (analytics as { totalWatchTime: number }).totalWatchTime,
+                    total_watch_time_hours: Math.round(((analytics as { totalWatchTime: number }).totalWatchTime / 3600) * 10) / 10,
                     average_session_duration_minutes: analytics.averageSessionDuration,
                     watch_time_by_period: analytics.watchTimeByPeriod,
                     engagement_patterns: analytics.engagementPatterns,
@@ -2647,46 +2660,61 @@ export class CourseService {
 
     // ==================== HELPER METHODS ====================
 
-    private static calculateEngagementScore(progressData: any): number {
+    private static calculateEngagementScore(progressData: { current_time: number; is_focused?: boolean; playback_speed?: number; buffer_health?: number; total_duration: number }): number {
         let score = 0;
         
         // Base score from watch time
-        if (progressData.current_time > 0) score += 20;
+        if (progressData.current_time > 0) {
+            score += 20;
+        }
         
         // Focus bonus
-        if (progressData.is_focused) score += 20;
+        if (progressData.is_focused) {
+            score += 20;
+        }
         
         // Playback speed consideration
-        if (progressData.playback_speed >= 0.75 && progressData.playback_speed <= 1.5) score += 20;
+        if (progressData.playback_speed && progressData.playback_speed >= 0.75 && progressData.playback_speed <= 1.5) {
+            score += 20;
+        }
         
         // Buffer health (connection quality)
-        if (progressData.buffer_health > 80) score += 20;
-        else if (progressData.buffer_health > 50) score += 10;
+        if (progressData.buffer_health && progressData.buffer_health > 80) {
+            score += 20;
+        } else if (progressData.buffer_health && progressData.buffer_health > 50) {
+            score += 10;
+        }
         
         // Completion percentage
         const completionPct = (progressData.current_time / progressData.total_duration) * 100;
-        if (completionPct > 80) score += 20;
-        else if (completionPct > 50) score += 10;
+        if (completionPct > 80) {
+            score += 20;
+        } else if (completionPct > 50) {
+            score += 10;
+        }
         
         return Math.min(100, score);
     }
 
     private static async autoCompleteIfCriteriaMet(
-        course_id: string,
+        _course_id: string,
         lecture_id: string,
-        user_id: string,
-        progress: any
+        _user_id: string,
+        progress: { completion_percentage: number }
     ): Promise<void> {
         // Get lecture completion criteria
         const lectureResult = await CourseLecture.findById(lecture_id);
         
-        if (!lectureResult) return;
+        if (!lectureResult) {
+            return;
+        }
         
         const criteria = lectureResult.completion_criteria || {};
         const minWatchPercentage = criteria.minimum_watch_percentage || 80;
         
         if (progress.completion_percentage >= minWatchPercentage) {
-            await CourseProgress.updateById(progress.id, {
+            const progressWithId = progress as unknown as { id: string };
+            await CourseProgress.updateById(progressWithId.id, {
                 progress_status: "completed",
                 completed_at: new Date(),
                 updated_at: new Date(),
@@ -2695,10 +2723,10 @@ export class CourseService {
     }
 
     private static async getNextLectureRecommendation(
-        course_id: string,
-        current_lecture_id: string,
-        user_id: string
-    ): Promise<any> {
+        _course_id: string,
+        _current_lecture_id: string,
+        _user_id: string
+    ): Promise<{ has_next: boolean; next_lecture_id: string; estimated_duration_minutes: number; difficulty_level: string }> {
         // Implementation for getting next lecture recommendation
         return {
             has_next: true,
@@ -2709,106 +2737,109 @@ export class CourseService {
     }
 
     // Additional helper methods would be implemented here...
-    private static calculateOverallEngagementScore(progressData: any[]): number {
-        if (progressData.length === 0) return 0;
+    private static calculateOverallEngagementScore(progressData: Array<{ engagement_score?: number }>): number {
+        if (progressData.length === 0) {
+            return 0;
+        }
         
         const avgEngagement = progressData.reduce((sum, p) => {
-            return sum + (p.interaction_data?.engagement_score || 0);
+            const progressWithInteraction = p as unknown as { engagement_score?: number; interaction_data?: { engagement_score?: number } };
+            return sum + (progressWithInteraction.interaction_data?.engagement_score || progressWithInteraction.engagement_score || 0);
         }, 0) / progressData.length;
         
         return Math.round(avgEngagement);
     }
 
-    private static calculateConsistencyScore(progressData: any[]): number {
+    private static calculateConsistencyScore(_progressData: Array<Record<string, unknown>>): number {
         // Implementation for consistency score calculation
         return 75; // Placeholder
     }
 
-    private static calculateAttentionScore(progressData: any[]): number {
+    private static calculateAttentionScore(_progressData: Array<Record<string, unknown>>): number {
         // Implementation for attention score calculation
         return 80; // Placeholder
     }
 
-    private static async calculateLearningStreak(user_id: string, course_id: string): Promise<number> {
+    private static async calculateLearningStreak(_user_id: string, _course_id: string): Promise<number> {
         // Implementation for learning streak calculation
         return 5; // Placeholder
     }
 
-    private static async calculateUserLongestStreak(user_id: string, course_id: string): Promise<number> {
+    private static async calculateUserLongestStreak(_user_id: string, _course_id: string): Promise<number> {
         // Implementation for longest streak calculation
         return 12; // Placeholder
     }
 
-    private static estimateCompletionDate(enrollment: any, progressData: any[]): string {
+    private static estimateCompletionDate(_enrollment: Record<string, unknown>, _progressData: Array<Record<string, unknown>>): string {
         // Implementation for completion date estimation
         const now = new Date();
         now.setDate(now.getDate() + 30); // Estimate 30 days
         return now.toISOString();
     }
 
-    private static calculateAverageSessionDuration(progressData: any[]): number {
+    private static calculateAverageSessionDuration(_progressData: Array<Record<string, unknown>>): number {
         // Implementation for average session duration
         return 25; // Placeholder: 25 minutes
     }
 
-    private static calculateInteractionFrequency(progressData: any[]): number {
+    private static calculateInteractionFrequency(_progressData: Array<Record<string, unknown>>): number {
         // Implementation for interaction frequency
         return 8.5; // Placeholder
     }
 
-    private static identifyPreferredTimeSlots(progressData: any[]): string[] {
+    private static identifyPreferredTimeSlots(_progressData: Array<Record<string, unknown>>): string[] {
         // Implementation for time slot identification
         return ["09:00-11:00", "19:00-21:00"]; // Placeholder
     }
 
-    private static calculateAveragePlaybackSpeed(progressData: any[]): number {
+    private static calculateAveragePlaybackSpeed(_progressData: Array<Record<string, unknown>>): number {
         // Implementation for average playback speed
         return 1.25; // Placeholder
     }
 
-    private static findMostReplayedSections(progressData: any[]): any[] {
+    private static findMostReplayedSections(_progressData: Array<Record<string, unknown>>): Array<Record<string, unknown>> {
         // Implementation for most replayed sections
         return []; // Placeholder
     }
 
-    private static identifyDevicePreferences(progressData: any[]): string[] {
+    private static identifyDevicePreferences(_progressData: Array<Record<string, unknown>>): string[] {
         // Implementation for device preferences
         return ["web", "mobile"]; // Placeholder
     }
 
-    private static predictCompletionLikelihood(enrollment: any, progressData: any[]): number {
+    private static predictCompletionLikelihood(_enrollment: Record<string, unknown>, _progressData: Array<Record<string, unknown>>): number {
         // Implementation for completion likelihood prediction
         return 85; // Placeholder: 85% likelihood
     }
 
-    private static assessDropoutRisk(enrollment: any, progressData: any[]): boolean {
+    private static assessDropoutRisk(_enrollment: Record<string, unknown>, _progressData: Array<Record<string, unknown>>): boolean {
         // Implementation for dropout risk assessment
         return false; // Placeholder
     }
 
-    private static generateStudySchedule(user_id: string, course_id: string, progressData: any[]): any[] {
+    private static generateStudySchedule(_user_id: string, _course_id: string, _progressData: Array<Record<string, unknown>>): Array<Record<string, unknown>> {
         // Implementation for study schedule generation
         return []; // Placeholder
     }
 
-    private static predictOptimalStudyTime(progressData: any[]): string {
+    private static predictOptimalStudyTime(_progressData: Array<Record<string, unknown>>): string {
         // Implementation for optimal study time prediction
         const now = new Date();
         now.setHours(19, 0, 0, 0); // 7 PM
         return now.toISOString();
     }
 
-    private static async getNextRecommendedLectures(course_id: string, user_id: string): Promise<any[]> {
+    private static async getNextRecommendedLectures(_course_id: string, _user_id: string): Promise<Array<Record<string, unknown>>> {
         // Implementation for next recommended lectures
         return []; // Placeholder
     }
 
-    private static getOptimalSessionLength(analytics: any): number {
+    private static getOptimalSessionLength(_analytics: Record<string, unknown>): number {
         // Implementation for optimal session length
         return 30; // Placeholder: 30 minutes
     }
 
-    private static generateBreakRecommendations(analytics: any): any[] {
+    private static generateBreakRecommendations(_analytics: Record<string, unknown>): Array<Record<string, unknown>> {
         // Implementation for break recommendations
         return [
             {
@@ -2819,12 +2850,12 @@ export class CourseService {
         ];
     }
 
-    private static getBestStudyTime(analytics: any): string {
+    private static getBestStudyTime(_analytics: Record<string, unknown>): string {
         // Implementation for best study time
         return "19:00-20:00"; // Placeholder
     }
 
-    private static generatePersonalizedTips(analytics: any): any[] {
+    private static generatePersonalizedTips(_analytics: Record<string, unknown>): Array<Record<string, unknown>> {
         // Implementation for personalized tips
         return [
             {
@@ -2836,22 +2867,22 @@ export class CourseService {
         ];
     }
 
-    private static suggestDifficultyAdjustment(analytics: any): string {
+    private static suggestDifficultyAdjustment(_analytics: Record<string, unknown>): string {
         // Implementation for difficulty adjustment suggestion
         return "same"; // Placeholder
     }
 
-    private static suggestAdditionalResources(course_id: string, analytics: any): any[] {
+    private static suggestAdditionalResources(_course_id: string, _analytics: Record<string, unknown>): Array<Record<string, unknown>> {
         // Implementation for additional resources suggestion
         return []; // Placeholder
     }
 
-    private static async findNextAvailableLecture(course_id: string, user_id: string): Promise<any> {
+    private static async findNextAvailableLecture(_course_id: string, _user_id: string): Promise<Record<string, unknown> | null> {
         // Implementation for finding next lecture
         return null; // Placeholder
     }
 
-    private static processWatchTimeData(progressData: any[], granularity: string): any {
+    private static processWatchTimeData(progressData: Array<{ watch_time_seconds: number }>, _granularity: string): Record<string, unknown> {
         // Implementation for processing watch time data
         return {
             totalWatchTime: progressData.reduce((sum, p) => sum + p.watch_time_seconds, 0),

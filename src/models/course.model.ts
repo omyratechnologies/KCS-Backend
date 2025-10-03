@@ -23,6 +23,7 @@ export interface ICourseData {
     discount_price?: number;
     currency: string;
     requirements: string[];
+    prerequisites?: string[]; // Alias for requirements for backward compatibility
     learning_objectives: string[];
     target_audience: string[];
     tags: string[];
@@ -112,6 +113,7 @@ const CourseSchema = new Schema({
     discount_price: { type: Number },
     currency: { type: String, default: "INR" },
     requirements: { type: [String], default: [] },
+    prerequisites: { type: [String], default: [] },
     learning_objectives: { type: [String], default: [] },
     target_audience: { type: [String], default: [] },
     tags: { type: [String], default: [] },
