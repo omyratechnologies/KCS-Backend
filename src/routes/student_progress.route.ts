@@ -20,6 +20,89 @@ const app = new Hono();
 app.use("*", authMiddleware());
 
 // ======================= STUDENT PROGRESS ROUTES =======================
+// NOTE: Specific routes MUST come before parametric routes (:student_id)
+
+// Get academic summary for the authenticated student
+app.get(
+    "/summary",
+    describeRoute({
+        operationId: "getStudentAcademicSummary",
+        summary: "Get academic summary",
+        description: "Get overall academic performance summary for the authenticated student.",
+        tags: ["Student Progress"],
+        responses: {
+            200: {
+                description: "Academic summary retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(academicSummaryResponseSchema),
+                    },
+                },
+            },
+            403: {
+                description: "Insufficient permissions",
+                content: {
+                    "application/json": {
+                        schema: resolver(progressErrorResponseSchema),
+                    },
+                },
+            },
+            500: {
+                description: "Internal server error",
+                content: {
+                    "application/json": {
+                        schema: resolver(progressErrorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    roleMiddleware("view_academic_summary"),
+    StudentProgressController.getAcademicSummary
+);
+
+// Get assignment progress for the authenticated student
+app.get(
+    "/assignments",
+    describeRoute({
+        operationId: "getStudentAssignmentProgress",
+        summary: "Get assignment progress",
+        description: "Get assignment progress summary for the authenticated student.",
+        tags: ["Student Progress"],
+        responses: {
+            200: {
+                description: "Assignment progress retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(z.object({
+                            success: z.boolean(),
+                            data: assignmentProgressSchema,
+                            message: z.string(),
+                        })),
+                    },
+                },
+            },
+            403: {
+                description: "Insufficient permissions",
+                content: {
+                    "application/json": {
+                        schema: resolver(progressErrorResponseSchema),
+                    },
+                },
+            },
+            500: {
+                description: "Internal server error",
+                content: {
+                    "application/json": {
+                        schema: resolver(progressErrorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    roleMiddleware("view_assignment_progress"),
+    StudentProgressController.getAssignmentProgress
+);
 
 // Get comprehensive student progress (own progress or by student_id for authorized users)
 app.get(
@@ -27,7 +110,7 @@ app.get(
     describeRoute({
         operationId: "getStudentProgress",
         summary: "Get comprehensive student progress",
-        description: "Get comprehensive progress information for the authenticated student including courses, assignments, and performance metrics.",
+        description: "Get comprehensive progress information for the authenticated student including courses, assignments, quizzes, attendance and performance metrics.",
         tags: ["Student Progress"],
         responses: {
             200: {

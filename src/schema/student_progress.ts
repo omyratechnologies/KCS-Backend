@@ -29,6 +29,24 @@ export const assignmentProgressSchema = z.object({
     average_grade: z.number(),
 });
 
+export const quizProgressSchema = z.object({
+    total_quizzes: z.number(),
+    attempted: z.number(),
+    completed: z.number(),
+    completion_rate: z.number().min(0).max(100),
+    average_score: z.number().min(0).max(100),
+    highest_score: z.number().min(0).max(100),
+});
+
+export const attendanceProgressSchema = z.object({
+    total_days: z.number(),
+    present: z.number(),
+    absent: z.number(),
+    late: z.number(),
+    leave: z.number(),
+    attendance_percentage: z.number().min(0).max(100),
+});
+
 export const performanceMetricsSchema = z.object({
     total_study_hours: z.number(),
     engagement_score: z.number().min(0).max(100),
@@ -40,6 +58,8 @@ export const studentProgressSummarySchema = z.object({
     overall_progress: overallProgressSchema,
     courses: courseProgressSchema,
     assignments: assignmentProgressSchema,
+    quizzes: quizProgressSchema,
+    attendance: attendanceProgressSchema,
     performance_metrics: performanceMetricsSchema,
 });
 
@@ -92,6 +112,16 @@ export const academicSummarySchema = z.object({
         total_assignments: z.number(),
         completion_rate: z.number(),
         average_grade: z.number(),
+    }),
+    quiz_summary: z.object({
+        total_quizzes: z.number(),
+        completion_rate: z.number(),
+        average_score: z.number(),
+    }),
+    attendance_summary: z.object({
+        total_days: z.number(),
+        attendance_percentage: z.number(),
+        present_days: z.number(),
     }),
     performance_summary: z.object({
         total_study_hours: z.number(),
