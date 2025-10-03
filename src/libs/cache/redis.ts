@@ -54,4 +54,12 @@ export class Cache {
     public static readonly get = async (key: string) => {
         return await this.redis.get(key);
     };
+
+    public static readonly expire = async (key: string, seconds: number) => {
+        return await this.redis.expire(key, seconds);
+    };
+
+    public static readonly setex = async (key: string, seconds: number, value: string) => {
+        return await this.redis.setex(key, seconds, value);
+    };
 }

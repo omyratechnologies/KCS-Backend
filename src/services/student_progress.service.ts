@@ -1,6 +1,8 @@
 import { ClassService } from "./class.service";
 import { CourseService } from "./course.service";
 
+import { Cache } from "@/libs/cache/redis";
+
 // Import models
 import { CourseEnrollment } from "@/models/course_enrollment.model";
 import { CourseProgress } from "@/models/course_progress.model";
@@ -173,12 +175,23 @@ export class StudentProgressService {
     }
 
     /**
-     * Get comprehensive student progress
+     * Get comprehensive student progress - WITH CACHING
      */
     static async getComprehensiveProgress(
         student_id: string,
         campus_id: string
     ): Promise<StudentProgressSummary> {
+        // Try cache first (5 minute TTL)
+        const cacheKey = `progress:full:${student_id}:${campus_id}`;
+        try {
+            const cached = await Cache.get(cacheKey);
+            if (cached) {
+                return JSON.parse(cached);
+            }
+        } catch {
+            // Cache miss or error, continue to fetch
+        }
+
         try {
             // Parallelize all data fetching for better performance
             const [
@@ -202,7 +215,7 @@ export class StudentProgressService {
             // Calculate overall progress
             const overallProgress = this.calculateOverallProgress(courseProgress, assignmentProgress);
 
-            return {
+            const result = {
                 student_info: studentInfo,
                 overall_progress: overallProgress,
                 courses: courseProgress,
@@ -212,6 +225,15 @@ export class StudentProgressService {
                 performance_metrics: performanceMetrics,
                 recent_activity: recentActivity,
             };
+
+            // Cache for 5 minutes
+            try {
+                await Cache.setex(cacheKey, 300, JSON.stringify(result));
+            } catch {
+                // Cache set failed, but return result anyway
+            }
+
+            return result;
 
         } catch (error) {
             // Error getting comprehensive progress
@@ -838,9 +860,20 @@ export class StudentProgressService {
     }
 
     /**
-     * Get academic summary (combination of key metrics)
+     * Get academic summary (combination of key metrics) - WITH CACHING
      */
     static async getAcademicSummary(student_id: string, campus_id: string) {
+        // Try cache first (5 minute TTL)
+        const cacheKey = `progress:summary:${student_id}:${campus_id}`;
+        try {
+            const cached = await Cache.get(cacheKey);
+            if (cached) {
+                return JSON.parse(cached);
+            }
+        } catch {
+            // Cache miss or error, continue to fetch
+        }
+
         // Parallelize all data fetching for better performance
         const [
             courseProgress,
@@ -858,7 +891,7 @@ export class StudentProgressService {
         
         const overallProgress = this.calculateOverallProgress(courseProgress, assignmentProgress);
 
-        return {
+        const result = {
             overall_progress: overallProgress,
             course_summary: {
                 total_enrolled: courseProgress.total_enrolled,
@@ -886,5 +919,14 @@ export class StudentProgressService {
                 current_streak: performanceMetrics.study_streak.current_streak,
             },
         };
+
+        // Cache for 5 minutes (300 seconds)
+        try {
+            await Cache.setex(cacheKey, 300, JSON.stringify(result));
+        } catch {
+            // Cache set failed, but return result anyway
+        }
+
+        return result;
     }
 }
