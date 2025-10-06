@@ -1,0 +1,67 @@
+name: Deploy to Development Server
+
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to EC2 Dev Server
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 13.202.79.48
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            
+            echo "🚀 Starting deployment..."
+            
+            # Navigate to project directory
+            cd /home/ubuntu/KCS-Backend
+            
+            # Pull latest changes
+            echo "📥 Pulling latest changes..."
+            git fetch origin
+            git reset --hard origin/dev
+            
+            # Install dependencies
+            echo "📦 Installing dependencies..."
+            bun install
+            
+            # Build the application
+            echo "🔨 Building application..."
+            bun run build
+            
+            # Restart the service
+            echo "♻️  Restarting application service..."
+            sudo systemctl restart kcs-backend
+            
+            # Wait for service to start
+            echo "⏳ Waiting for service to start..."
+            sleep 10
+            
+            # Health check
+            echo "🏥 Running health check..."
+            HEALTH_STATUS=$(curl -s http://localhost:4500/api/health | jq -r '.status')
+            
+            if [ "$HEALTH_STATUS" = "healthy" ]; then
+              echo "✅ Deployment successful! Application is healthy."
+              curl -s http://localhost:4500/api/health | jq .
+            else
+              echo "❌ Deployment failed! Application is not healthy."
+              echo "Service status:"
+              sudo systemctl status kcs-backend --no-pager -l
+              exit 1
+            fi
+            
+            echo "🎉 Deployment completed successfully!"
