@@ -26,6 +26,9 @@ jobs:
             
             echo "🚀 Starting deployment..."
             
+            # Add Bun to PATH
+            export PATH="$HOME/.bun/bin:$PATH"
+            
             # Navigate to project directory
             cd /home/ubuntu/KCS-Backend
             
@@ -36,11 +39,11 @@ jobs:
             
             # Install dependencies
             echo "📦 Installing dependencies..."
-            ~/.bun/bin/bun install
+            bun install
             
             # Build the application
             echo "🔨 Building application..."
-            ~/.bun/bin/bun run build
+            bun run build
             
             # Restart the service
             echo "♻️  Restarting application service..."
