@@ -439,18 +439,38 @@ export class ExamTimetableService {
     };
 
     // Get exam timetable for a specific class
-    public static readonly getExamTimetableByClass = async (campus_id: string, class_id: string) => {
+    public static readonly getExamTimetableByClass = async (campus_id: string, class_id: string, isAdmin: boolean = false, isSuperAdmin: boolean = false) => {
         // check if class exists
         const classExists = await Class.findById(class_id);
         if (!classExists) {
             throw new Error("Class not found");
         }
 
-        const examTimetables = await ExamTimetable.find({
-            campus_id,
+        // Security check: Verify the class belongs to the requesting user's campus
+        // Super Admin has unrestricted access to all campuses
+        if (!isSuperAdmin && classExists.campus_id !== campus_id) {
+            throw new Error("Access denied: This class does not belong to your campus");
+        }
+
+        // For Super Admin accessing other campuses, use the class's actual campus_id
+        const queryCampusId = isSuperAdmin ? classExists.campus_id : campus_id;
+
+        // Build query - admins see all timetables, others see only published ones
+        const query: {
+            campus_id: string;
+            is_deleted: boolean;
+            is_published?: boolean;
+        } = {
+            campus_id: queryCampusId,
             is_deleted: false,
-            is_published: true,
-        });
+        };
+
+        // Only filter by is_published for non-admin users
+        if (!isAdmin) {
+            query.is_published = true;
+        }
+
+        const examTimetables = await ExamTimetable.find(query);
 
         // Check if no results found
         if (!examTimetables || !examTimetables.rows || examTimetables.rows.length === 0) {

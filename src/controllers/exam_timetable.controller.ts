@@ -349,8 +349,13 @@ export class ExamTimetableController {
         try {
             const campus_id = ctx.get("campus_id");
             const class_id = ctx.req.param("class_id");
+            const user_type = ctx.get("user_type");
 
-            const examTimetables = await ExamTimetableService.getExamTimetableByClass(campus_id, class_id);
+            // Check if user is admin (Admin or Super Admin can see all timetables)
+            const isAdmin = user_type === "Admin" || user_type === "Super Admin";
+            const isSuperAdmin = user_type === "Super Admin";
+
+            const examTimetables = await ExamTimetableService.getExamTimetableByClass(campus_id, class_id, isAdmin, isSuperAdmin);
 
             return ctx.json({
                 success: true,
