@@ -13,6 +13,7 @@ import courseRoute from "@/routes/course.route";
 import curriculumRoute from "@/routes/curriculum.route";
 import dashboardRoute from "@/routes/dashboard.route";
 import documentStoreoute from "@/routes/document_store.route";
+import eventMediaGalleryRoute from "@/routes/event_media_gallery.route";
 import examRoute from "@/routes/exam.route";
 import examTimetableRoute from "@/routes/exam_timetable.route";
 import feedRoute from "@/routes/feed.route";
@@ -67,6 +68,7 @@ app.route("/subject", subjectRoute);
 app.route("/library", libraryRoute);
 app.route("/assignments", assignmentRoute); // New unified assignment routes
 app.route("/document-store", documentStoreoute);
+app.route("/event-media", eventMediaGalleryRoute);
 app.route("/exam", examRoute);
 app.route("/exam/timetable", examTimetableRoute);
 app.route("/feeds", feedRoute); // New feeds API
