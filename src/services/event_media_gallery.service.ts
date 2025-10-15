@@ -147,7 +147,7 @@ export class EventMediaGalleryService {
         }
     ): Promise<IEventMediaGallery | null> {
         try {
-            const eventMedia = await EventMediaGallery.findById(id);
+            const eventMedia: any = await EventMediaGallery.findById(id);
 
             if (!eventMedia) {
                 return null;
