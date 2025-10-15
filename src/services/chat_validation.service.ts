@@ -30,35 +30,54 @@ export class ChatValidationService {
                 return { canSend: false, reason: "Users must be from the same campus" };
             }
 
-            // Teachers can message anyone in campus
-            if (senderProfile.user_type === "Teacher") {
+            const senderType = senderProfile.user_type;
+            const recipientType = recipientProfile.user_type;
+
+            // Admins and Super Admins can message anyone (admins, teachers, students, parents)
+            if (["Admin", "Super Admin"].includes(senderType)) {
                 return { canSend: true };
             }
 
-            // Students can message teachers
-            if (senderProfile.user_type === "Student" && recipientProfile.user_type === "Teacher") {
+            // Teachers can message anyone (teachers, admin, students, parents)
+            if (senderType === "Teacher") {
                 return { canSend: true };
             }
 
-            // Students can only message students in same class
-            if (senderProfile.user_type === "Student" && recipientProfile.user_type === "Student") {
-                const senderClassId = await this.getUserClassId(sender_user_id, campus_id);
-                const recipientClassId = await this.getUserClassId(recipient_user_id, campus_id);
-                
-                if (!senderClassId || !recipientClassId) {
-                    return { canSend: false, reason: "Class information not found" };
-                }
-
-                if (senderClassId === recipientClassId) {
+            // Students can message teachers and other students
+            if (senderType === "Student") {
+                // Students can message teachers
+                if (recipientType === "Teacher") {
                     return { canSend: true };
-                } else {
-                    return { canSend: false, reason: "Students can only message classmates" };
                 }
+                
+                // Students can only message students in same class
+                if (recipientType === "Student") {
+                    const senderClassId = await this.getUserClassId(sender_user_id, campus_id);
+                    const recipientClassId = await this.getUserClassId(recipient_user_id, campus_id);
+                    
+                    if (!senderClassId || !recipientClassId) {
+                        return { canSend: false, reason: "Class information not found" };
+                    }
+
+                    if (senderClassId === recipientClassId) {
+                        return { canSend: true };
+                    } else {
+                        return { canSend: false, reason: "Students can only message classmates" };
+                    }
+                }
+
+                // Students cannot message parents or admins
+                return { canSend: false, reason: "Students can only message teachers and classmates" };
             }
 
-            // Admins and Super Admins can message anyone
-            if (["Admin", "Super Admin"].includes(senderProfile.user_type)) {
-                return { canSend: true };
+            // Parents can message teachers and students
+            if (senderType === "Parent") {
+                if (["Teacher", "Student"].includes(recipientType)) {
+                    return { canSend: true };
+                }
+                
+                // Parents cannot message admins or other parents
+                return { canSend: false, reason: "Parents can only message teachers and students" };
             }
 
             return { canSend: false, reason: "Messaging not allowed between these user types" };
@@ -71,7 +90,7 @@ export class ChatValidationService {
 
     /**
      * Check if user can create a group
-     * Note: This assumes teacherMiddleware has already validated teacher status
+     * Teachers and Admins can create groups
      */
     public static async canCreateGroup(
         user_id: string,
@@ -85,8 +104,22 @@ export class ChatValidationService {
         teacherData?: ITeacherData // Optional: pass teacher data from middleware to avoid DB call
     ): Promise<{ canCreate: boolean; reason?: string }> {
         try {
-            // For custom groups, teachers can always create them
-            // Use provided teacher data or fetch it
+            // Get user profile to check user type
+            const userProfile = await this.getUserProfile(user_id, campus_id);
+            if (!userProfile) {
+                return { canCreate: false, reason: "User not found" };
+            }
+
+            // Admins and Super Admins can create any type of group
+            if (["Admin", "Super Admin"].includes(userProfile.user_type)) {
+                if (!members || members.length === 0) {
+                    return { canCreate: false, reason: "At least one member is required" };
+                }
+                // Admins can create all group types without additional validation
+                return { canCreate: true };
+            }
+
+            // For teachers, validate based on group type
             let teacher = teacherData;
             if (!teacher) {
                 teacher = await Teacher.findOne({
@@ -292,48 +325,47 @@ export class ChatValidationService {
 
             let availableUsers: { id: string; user_id: string; first_name: string; last_name: string; user_type: string; email: string; is_active: boolean; is_deleted: boolean; campus_id?: string; class_name?: string; subject?: string }[] = [];
 
-            if (userProfile.user_type === "Teacher") {
-                // Teachers can message everyone in campus (all students and all teachers)
+            const userType = userProfile.user_type;
+
+            if (["Admin", "Super Admin"].includes(userType)) {
+                // Admins can message everyone: admins, teachers, students, parents
                 const allUsers = await User.find({
                     campus_id,
                     is_active: true,
                     is_deleted: false
                 });
                 
-                // Filter out self manually
+                // Filter out self
                 availableUsers = (allUsers.rows || []).filter(user => user.id !== user_id);
 
-                // Add class information for students only (skip expensive teacher lookups for performance)
-                const studentPromises = availableUsers
-                    .filter(user => user.user_type === "Student")
-                    .map(async (user) => {
-                        try {
-                            const studentClassId = await this.getUserClassId(user.id, campus_id);
-                            if (studentClassId) {
-                                const classData = await Class.findById(studentClassId);
-                                user.class_name = classData?.name || "Unknown Class";
-                            }
-                        } catch (error) {
-                            log(`Error processing student ${user.id}: ${error}`, LogTypes.ERROR, "CHAT_VALIDATION");
-                            // Continue without class data
-                        }
-                    });
+                // Add class information for students
+                await this.addClassInfoToUsers(availableUsers.filter(u => u.user_type === "Student"), campus_id);
 
-                // Process all student class lookups in parallel
-                await Promise.all(studentPromises);
+            } else if (userType === "Teacher") {
+                // Teachers can message everyone: teachers, admin, students, parents
+                const allUsers = await User.find({
+                    campus_id,
+                    is_active: true,
+                    is_deleted: false
+                });
+                
+                // Filter out self
+                availableUsers = (allUsers.rows || []).filter(user => user.id !== user_id);
 
-                // For teachers, just add a generic subject (skip individual lookups for performance)
+                // Add class information for students
+                await this.addClassInfoToUsers(availableUsers.filter(u => u.user_type === "Student"), campus_id);
+
+                // For teachers in the list, just add a generic subject
                 availableUsers.forEach(user => {
                     if (user.user_type === "Teacher") {
-                        user.subject = "General"; // Skip expensive teacher data lookups
+                        user.subject = "General";
                     }
                 });
-            } else if (userProfile.user_type === "Student") {
-                // Students can only message:
-                // 1. All teachers in their campus
-                // 2. Only classmates from the same class
+
+            } else if (userType === "Student") {
+                // Students can message: teachers and students (from same class)
                 try {
-                    // Get teachers first (always available for students)
+                    // Get all teachers
                     const allTeachers = await User.find({
                         campus_id,
                         user_type: "Teacher",
@@ -341,14 +373,13 @@ export class ChatValidationService {
                         is_deleted: false
                     });
 
-                    // Add teachers with generic subject
                     const teachers = (allTeachers.rows || []).map(teacher => ({
                         ...teacher,
                         subject: "General"
                     }));
                     availableUsers.push(...teachers);
 
-                    // Try to get classmates if user has a class
+                    // Get classmates from same class
                     try {
                         const userClassId = await this.getUserClassId(user_id, campus_id);
                         
@@ -357,7 +388,6 @@ export class ChatValidationService {
                             const classmateIds = classData?.student_ids?.filter(id => id !== user_id) || [];
                             
                             if (classmateIds.length > 0) {
-                                // Get student users and filter for classmates
                                 const allStudents = await User.find({
                                     campus_id,
                                     user_type: "Student",
@@ -377,22 +407,47 @@ export class ChatValidationService {
                         }
                     } catch (classError) {
                         log(`Non-critical: Error fetching classmates for student ${user_id}: ${classError}`, LogTypes.LOGS, "CHAT_VALIDATION");
-                        // Continue without classmates - at least they can message teachers
                     }
                 } catch (studentError) {
                     log(`Error in student contact processing for ${user_id}: ${studentError}`, LogTypes.ERROR, "CHAT_VALIDATION");
                     return { users: [], error: "Failed to get student contacts" };
                 }
-            } else if (["Admin", "Super Admin"].includes(userProfile.user_type)) {
-                // Admins can message everyone
-                const allUsers = await User.find({
-                    campus_id,
-                    is_active: true,
-                    is_deleted: false
-                });
-                
-                // Filter out self manually
-                availableUsers = (allUsers.rows || []).filter(user => user.id !== user_id);
+
+            } else if (userType === "Parent") {
+                // Parents can message: teachers and students
+                try {
+                    // Get all teachers
+                    const allTeachers = await User.find({
+                        campus_id,
+                        user_type: "Teacher",
+                        is_active: true,
+                        is_deleted: false
+                    });
+
+                    const teachers = (allTeachers.rows || []).map(teacher => ({
+                        ...teacher,
+                        subject: "General"
+                    }));
+                    availableUsers.push(...teachers);
+
+                    // Get all students
+                    const allStudents = await User.find({
+                        campus_id,
+                        user_type: "Student",
+                        is_active: true,
+                        is_deleted: false
+                    });
+
+                    const students = (allStudents.rows || []);
+                    
+                    // Add class information to students
+                    await this.addClassInfoToUsers(students, campus_id);
+                    
+                    availableUsers.push(...students);
+                } catch (parentError) {
+                    log(`Error in parent contact processing for ${user_id}: ${parentError}`, LogTypes.ERROR, "CHAT_VALIDATION");
+                    return { users: [], error: "Failed to get parent contacts" };
+                }
             }
 
             // Remove sensitive data and organize by type
@@ -409,15 +464,23 @@ export class ChatValidationService {
 
             // Sort users by type and name for better UX
             const sortedUsers = sanitizedUsers.sort((a, b) => {
-                // First sort by user type (Teachers first, then Students)
-                if (a.user_type !== b.user_type) {
-                    if (a.user_type === "Teacher") {
-                        return -1;
-                    }
-                    if (b.user_type === "Teacher") {
-                        return 1;
-                    }
+                // Define priority order for user types
+                const typePriority: { [key: string]: number } = {
+                    "Admin": 1,
+                    "Super Admin": 1,
+                    "Teacher": 2,
+                    "Student": 3,
+                    "Parent": 4
+                };
+
+                const aPriority = typePriority[a.user_type] || 5;
+                const bPriority = typePriority[b.user_type] || 5;
+
+                // First sort by user type priority
+                if (aPriority !== bPriority) {
+                    return aPriority - bPriority;
                 }
+
                 // Then sort by name
                 const nameA = `${a.first_name} ${a.last_name}`.toLowerCase();
                 const nameB = `${b.first_name} ${b.last_name}`.toLowerCase();
@@ -425,8 +488,32 @@ export class ChatValidationService {
             });
 
             return { users: sortedUsers };
-        } catch {
+        } catch (error) {
+            log(`Error in getAvailableContacts: ${error}`, LogTypes.ERROR, "CHAT_VALIDATION");
             return { users: [], error: "Failed to get contacts" };
         }
+    }
+
+    /**
+     * Helper method to add class information to student users
+     */
+    private static async addClassInfoToUsers(
+        students: { id: string; class_name?: string }[],
+        campus_id: string
+    ): Promise<void> {
+        const studentPromises = students.map(async (student) => {
+            try {
+                const studentClassId = await this.getUserClassId(student.id, campus_id);
+                if (studentClassId) {
+                    const classData = await Class.findById(studentClassId);
+                    student.class_name = classData?.name || "Unknown Class";
+                }
+            } catch (error) {
+                log(`Error processing student ${student.id}: ${error}`, LogTypes.ERROR, "CHAT_VALIDATION");
+                // Continue without class data
+            }
+        });
+
+        await Promise.all(studentPromises);
     }
 }

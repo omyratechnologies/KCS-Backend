@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { ChatController } from '../controllers/chat.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
-import { teacherMiddleware } from '../middlewares/teacher.middleware';
+import { teacherOrAdminMiddleware } from '../middlewares/teacher_or_admin.middleware';
 
 const chatRouter = new Hono();
 
@@ -11,8 +11,8 @@ chatRouter.use('*', authMiddleware());
 // Get all chat rooms for authenticated user
 chatRouter.get('/rooms', ChatController.getChatRooms);
 
-// Create a new group chat (Teachers only)
-chatRouter.post('/groups', teacherMiddleware(), ChatController.createGroupChat);
+// Create a new group chat (Teachers and Admins only)
+chatRouter.post('/groups', teacherOrAdminMiddleware(), ChatController.createGroupChat);
 
 // Create/get personal chat room
 chatRouter.post('/personal', ChatController.createPersonalChat);

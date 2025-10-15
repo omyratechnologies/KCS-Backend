@@ -37,7 +37,7 @@ export class ChatController {
 
     /**
      * Create a new group chat
-     * Note: Teacher validation is handled by teacherMiddleware
+     * Note: Teacher/Admin validation is handled by teacherOrAdminMiddleware
      */
     public static readonly createGroupChat = async (ctx: Context) => {
         try {
@@ -215,23 +215,66 @@ export class ChatController {
             const contacts = {
                 teachers: result.users.filter(user => user.user_type === "Teacher"),
                 students: result.users.filter(user => user.user_type === "Student"),
-                admins: result.users.filter(user => user.user_type === "Admin"),
+                admins: result.users.filter(user => ["Admin", "Super Admin"].includes(user.user_type)),
+                parents: result.users.filter(user => user.user_type === "Parent"),
             };
 
-            // For students, rename the students array to "classmates" since they can only see same-class students
-            const responseData = user_type === "Student" ? {
-                teachers: contacts.teachers,
-                classmates: contacts.students,
-                total_teachers: contacts.teachers.length,
-                total_classmates: contacts.students.length
-            } : {
-                teachers: contacts.teachers,
-                students: contacts.students,
-                admins: contacts.admins,
-                total_teachers: contacts.teachers.length,
-                total_students: contacts.students.length,
-                total_admins: contacts.admins.length
-            };
+            // Customize response based on user type
+            let responseData: Record<string, unknown>;
+
+            if (user_type === "Student") {
+                // Students see teachers and classmates
+                responseData = {
+                    teachers: contacts.teachers,
+                    classmates: contacts.students,
+                    total_teachers: contacts.teachers.length,
+                    total_classmates: contacts.students.length
+                };
+            } else if (user_type === "Parent") {
+                // Parents see teachers and students
+                responseData = {
+                    teachers: contacts.teachers,
+                    students: contacts.students,
+                    total_teachers: contacts.teachers.length,
+                    total_students: contacts.students.length
+                };
+            } else if (["Admin", "Super Admin"].includes(user_type)) {
+                // Admins see everyone
+                responseData = {
+                    teachers: contacts.teachers,
+                    students: contacts.students,
+                    admins: contacts.admins,
+                    parents: contacts.parents,
+                    total_teachers: contacts.teachers.length,
+                    total_students: contacts.students.length,
+                    total_admins: contacts.admins.length,
+                    total_parents: contacts.parents.length
+                };
+            } else if (user_type === "Teacher") {
+                // Teachers see everyone
+                responseData = {
+                    teachers: contacts.teachers,
+                    students: contacts.students,
+                    admins: contacts.admins,
+                    parents: contacts.parents,
+                    total_teachers: contacts.teachers.length,
+                    total_students: contacts.students.length,
+                    total_admins: contacts.admins.length,
+                    total_parents: contacts.parents.length
+                };
+            } else {
+                // Default response for other user types
+                responseData = {
+                    teachers: contacts.teachers,
+                    students: contacts.students,
+                    admins: contacts.admins,
+                    parents: contacts.parents,
+                    total_teachers: contacts.teachers.length,
+                    total_students: contacts.students.length,
+                    total_admins: contacts.admins.length,
+                    total_parents: contacts.parents.length
+                };
+            }
 
             return ctx.json({
                 success: true,
