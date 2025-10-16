@@ -51,18 +51,8 @@ export interface ICourseData {
             id: string;
             title: string;
             content: string;
-            type: "general" | "urgent" | "reminder" | "assignment" | "exam";
-            priority: "low" | "normal" | "high" | "urgent";
-            visibility: "all" | "students" | "instructors";
-            created_by: string;
-            created_by_name: string;
             created_at: Date;
-            updated_at: Date;
-            expires_at?: Date;
             is_active: boolean;
-            push_sent: boolean;
-            email_sent?: boolean;
-            read_by?: string[];
         }>;
         analytics?: {
             view_count: number;
