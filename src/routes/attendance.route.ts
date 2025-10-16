@@ -176,7 +176,7 @@ app.get(
         tags: ["Attendance"],
         operationId: "getAttendanceByClassId",
         summary: "Get all attendance records for a class",
-        description: "Retrieves all attendance records for a specific class",
+        description: "Retrieves all attendance records for a specific class with optional filters",
         parameters: [
             {
                 name: "class_id",
@@ -196,6 +196,56 @@ app.get(
                     format: "date-time",
                 },
                 description: "Optional: Filter by specific date (ISO 8601 format)",
+            },
+            {
+                name: "user_id",
+                in: "query",
+                required: false,
+                schema: {
+                    type: "string",
+                },
+                description: "Optional: Filter by specific user ID",
+            },
+            {
+                name: "from",
+                in: "query",
+                required: false,
+                schema: {
+                    type: "string",
+                    format: "date",
+                },
+                description: "Optional: Filter from date (YYYY-MM-DD format)",
+            },
+            {
+                name: "to",
+                in: "query",
+                required: false,
+                schema: {
+                    type: "string",
+                    format: "date",
+                },
+                description: "Optional: Filter to date (YYYY-MM-DD format)",
+            },
+            {
+                name: "page",
+                in: "query",
+                required: false,
+                schema: {
+                    type: "integer",
+                    minimum: 1,
+                    default: 1,
+                },
+                description: "Optional: Page number for pagination",
+            },
+            {
+                name: "limit",
+                in: "query",
+                required: false,
+                schema: {
+                    type: "integer",
+                    minimum: 1,
+                },
+                description: "Optional: Number of records per page (defaults to all)",
             },
         ],
         responses: {
