@@ -24,6 +24,7 @@ export { CourseProgress } from "./course_progress.model";
 export { CourseSection } from "./course_section.model";
 export { Curriculum } from "./curriculum.model";
 export { DocumentStore } from "./document_store.model";
+export { EventMediaGallery } from "./event_media_gallery.model";
 export { ExamTerm } from "./exam_term.model";
 export { Examination } from "./examination.model";
 export { Fee } from "./fee.model";

@@ -451,4 +451,19 @@ export class TeacherService {
         const subjectData = await Promise.all(subjectPromises);
         return subjectData.filter((subject) => subject !== null);
     }
+
+    // Get teacher by user ID
+    public static async getTeacherByUserId(userId: string): Promise<ITeacherData | null> {
+        const teachers: {
+            rows: ITeacherData[];
+        } = await Teacher.find({
+            user_id: userId
+        });
+
+        if (teachers.rows.length === 0) {
+            return null;
+        }
+
+        return teachers.rows[0];
+    }
 }

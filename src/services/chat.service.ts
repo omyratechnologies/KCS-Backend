@@ -1,10 +1,7 @@
 import { ChatRoom, IChatRoom } from "../models/chat_room.model";
 import { ChatMessage, IChatMessage } from "../models/chat_message.model";
 import { UserChatStatus } from "../models/user_chat_status.model";
-import { Class } from "../models/class.model";
-import { Teacher } from "../models/teacher.model";
 import { User } from "../models/user.model";
-import { ClassSubject } from "../models/class_subject.model";
 import { ChatValidationService } from "./chat_validation.service";
 import log, { LogTypes } from "../libs/logger";
 
@@ -43,9 +40,13 @@ export class ChatService {
             }
             // Get user names for room name
             const [user1, user2] = await Promise.all([
-                User.index.findByUserId(user1_id),
-                User.index.findByUserId(user2_id),
+                User.findById(user1_id),
+                User.findById(user2_id),
             ]);
+
+            if (!user1 || !user2) {
+                return { success: false, error: "One or both users not found" };
+            }
 
             const roomName = `${user1.first_name} ${user1.last_name} & ${user2.first_name} ${user2.last_name}`;
 
@@ -75,7 +76,7 @@ export class ChatService {
 
     /**
      * Create a group chat room
-     * Note: This assumes teacherMiddleware has already validated teacher status
+     * Note: Teacher/Admin validation is handled by teacherOrAdminMiddleware
      */
     public static async createGroupChatRoom(
         creator_user_id: string,

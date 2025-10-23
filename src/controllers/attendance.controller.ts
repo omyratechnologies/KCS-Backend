@@ -240,8 +240,14 @@ export class AttendanceController {
 
         // Get class_id from path parameter
         const class_id = ctx.req.param("class_id");
-        // Get optional date from query parameter
+        
+        // Get optional query parameters
         const date = ctx.req.query("date");
+        const user_id = ctx.req.query("user_id");
+        const from = ctx.req.query("from");
+        const to = ctx.req.query("to");
+        const page = ctx.req.query("page");
+        const limit = ctx.req.query("limit");
 
         if (!class_id) {
             return ctx.json({ error: "class_id path parameter is required" }, 400);
@@ -259,7 +265,53 @@ export class AttendanceController {
                 attendance = await AttendanceService.getAttendanceByClassId(campus_id, class_id);
             }
 
-            return ctx.json(attendance);
+            // Apply additional filters
+            let filteredAttendance = attendance;
+
+            // Filter by user_id
+            if (user_id) {
+                filteredAttendance = filteredAttendance.filter((record) => record.user_id === user_id);
+            }
+
+            // Filter by date range (from and to)
+            if (from) {
+                const fromDate = new Date(from);
+                if (!Number.isNaN(fromDate.getTime())) {
+                    filteredAttendance = filteredAttendance.filter((record) => {
+                        const recordDate = new Date(record.date);
+                        return recordDate >= fromDate;
+                    });
+                }
+            }
+
+            if (to) {
+                const toDate = new Date(to);
+                if (!Number.isNaN(toDate.getTime())) {
+                    filteredAttendance = filteredAttendance.filter((record) => {
+                        const recordDate = new Date(record.date);
+                        return recordDate <= toDate;
+                    });
+                }
+            }
+
+            // Apply pagination
+            const pageNum = page ? parseInt(page, 10) : 1;
+            const limitNum = limit ? parseInt(limit, 10) : filteredAttendance.length;
+
+            const startIndex = (pageNum - 1) * limitNum;
+            const endIndex = startIndex + limitNum;
+
+            const paginatedAttendance = filteredAttendance.slice(startIndex, endIndex);
+
+            return ctx.json({
+                data: paginatedAttendance,
+                pagination: {
+                    total: filteredAttendance.length,
+                    page: pageNum,
+                    limit: limitNum,
+                    totalPages: Math.ceil(filteredAttendance.length / limitNum),
+                },
+            });
         } catch (error) {
             return ctx.json(
                 {
