@@ -3,6 +3,7 @@ import { ChatMessage, IChatMessage } from "../models/chat_message.model";
 import { UserChatStatus } from "../models/user_chat_status.model";
 import { User } from "../models/user.model";
 import { ChatValidationService } from "./chat_validation.service";
+import { SocketService } from "./socket.service";
 import log, { LogTypes } from "../libs/logger";
 
 export class ChatService {
@@ -67,6 +68,22 @@ export class ChatService {
                 created_at: new Date(),
                 updated_at: new Date(),
             });
+
+            // 🔔 Broadcast new personal chat creation to the recipient
+            try {
+                SocketService.notifyChatUser(user2_id, {
+                    type: "new_chat",
+                    data: {
+                        roomId: room.id,
+                        roomName,
+                        initiatedBy: user1_id,
+                        initiatorName: `${user1.first_name} ${user1.last_name}`
+                    }
+                });
+                log(`✅ Notified user ${user2_id} about new chat room ${room.id}`, LogTypes.LOGS, "CHAT_SERVICE");
+            } catch (error) {
+                log(`⚠️ Failed to send WebSocket notification: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
+            }
 
             return { success: true, data: room };
         } catch (e) {
@@ -160,6 +177,27 @@ export class ChatService {
                 created_at: new Date(),
                 updated_at: new Date(),
             });
+
+            // 🔔 Notify all members about the new group chat
+            try {
+                for (const memberId of groupData.members) {
+                    if (memberId !== creator_user_id) {
+                        SocketService.notifyChatUser(memberId, {
+                            type: "room_created",
+                            data: {
+                                roomId: room.id,
+                                roomName: room.name,
+                                roomType: room.room_type,
+                                createdBy: creator_user_id
+                            }
+                        });
+                    }
+                }
+                log(`✅ Notified ${groupData.members.length} members about new group ${room.id}`, LogTypes.LOGS, "CHAT_SERVICE");
+            } catch (error) {
+                log(`⚠️ Failed to send group creation notifications: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
+            }
+
             return { success: true, data: room };
         } catch (error) {
             log(`Group chat room creation error: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
@@ -230,6 +268,26 @@ export class ChatService {
                     },
                     updated_at: new Date(),
                 });
+            }
+
+            // 🚀 REAL-TIME BROADCAST: Send message to all room members via WebSocket
+            try {
+                SocketService.broadcastChatMessage(room_id, {
+                    id: message.id,
+                    room_id: message.room_id,
+                    sender_id: message.sender_id,
+                    content: message.content,
+                    message_type: message.message_type,
+                    file_url: message.file_url,
+                    reply_to: message.reply_to,
+                    created_at: message.created_at,
+                    is_edited: message.is_edited,
+                    is_deleted: message.is_deleted
+                });
+                log(`✅ Broadcasted message ${message.id} to room ${room_id}`, LogTypes.LOGS, "CHAT_SERVICE");
+            } catch (error) {
+                log(`⚠️ Failed to broadcast message via WebSocket: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
+                // Don't fail the whole operation if WebSocket broadcast fails
             }
 
             return { success: true, data: message };
@@ -384,6 +442,19 @@ export class ChatService {
                 });
             }
 
+            // 🚀 REAL-TIME BROADCAST: Notify all users about status change
+            try {
+                SocketService.broadcastUserStatus(user_id, {
+                    isOnline: status.is_online,
+                    lastSeen: new Date(),
+                    typingInRoom: status.typing_in_room,
+                    statusMessage: status.status_message
+                });
+                log(`✅ Broadcasted status update for user ${user_id}`, LogTypes.LOGS, "CHAT_SERVICE");
+            } catch (error) {
+                log(`⚠️ Failed to broadcast user status: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
+            }
+
             return { success: true };
         } catch {
             return { success: false, error: "Failed to update user status" };
@@ -431,6 +502,16 @@ export class ChatService {
                 is_deleted: true,
                 updated_at: new Date(),
             });
+
+            // 🚀 REAL-TIME BROADCAST: Notify room members about message deletion
+            try {
+                if (message.room_id) {
+                    SocketService.broadcastMessageDeleted(message.room_id, message_id, user_id);
+                    log(`✅ Broadcasted message deletion ${message_id} in room ${message.room_id}`, LogTypes.LOGS, "CHAT_SERVICE");
+                }
+            } catch (error) {
+                log(`⚠️ Failed to broadcast message deletion: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
+            }
 
             return { success: true };
         } catch (error) {

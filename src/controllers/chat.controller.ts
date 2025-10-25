@@ -1,7 +1,7 @@
 import { Context } from "hono";
 import { ChatService } from "../services/chat.service";
 import { ChatValidationService } from "../services/chat_validation.service";
-import { WebSocketChatService } from "../services/websocket_chat.service";
+import { SocketService } from "../services/socket.service";
 import log, { LogTypes } from "../libs/logger";
 
 export class ChatController {
@@ -342,11 +342,15 @@ export class ChatController {
                 }, 403);
             }
 
-            const stats = WebSocketChatService.getStats();
+            const stats = SocketService.getChatStats();
 
             return ctx.json({
                 success: true,
-                data: stats,
+                data: {
+                    ...stats,
+                    message: "Real-time chat statistics",
+                    timestamp: new Date().toISOString()
+                },
                 message: "WebSocket statistics retrieved successfully"
             });
         } catch {

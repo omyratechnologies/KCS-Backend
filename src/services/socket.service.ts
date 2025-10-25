@@ -101,7 +101,8 @@ export class SocketService {
 
         // Register event handlers
         this.registerMeetingEvents(socket);
-        this.registerChatEvents(socket);
+        this.registerMeetingChatEvents(socket); // Renamed from registerChatEvents
+        this.registerGeneralChatEvents(socket); // NEW: General chat system
         this.registerWebRTCEvents(socket);
         this.registerPresenceEvents(socket);
 
@@ -304,9 +305,9 @@ export class SocketService {
     }
 
     /**
-     * Register chat events
+     * Register meeting chat events (chat within meetings)
      */
-    private static registerChatEvents(socket: Socket): void {
+    private static registerMeetingChatEvents(socket: Socket): void {
         const { userId, userName } = socket.data;
 
         // Send chat message
@@ -382,6 +383,158 @@ export class SocketService {
                 userName: socket.data.userName,
                 typing,
             });
+        });
+    }
+
+    /**
+     * Register general chat system events (separate from meeting chat)
+     */
+    private static registerGeneralChatEvents(socket: Socket): void {
+        const { userId, userName, campusId } = socket.data;
+
+        // Join chat rooms
+        socket.on("join-chat-rooms", async (data: { roomIds: string[] }) => {
+            try {
+                const { roomIds } = data;
+                
+                // Join all specified rooms
+                for (const roomId of roomIds) {
+                    await socket.join(`chat_room_${roomId}`);
+                }
+                
+                socket.emit("chat-rooms-joined", { 
+                    success: true, 
+                    rooms: roomIds,
+                    message: "Successfully joined chat rooms" 
+                });
+                
+                console.log(`✅ ${userName} joined ${roomIds.length} chat rooms`);
+            } catch (error) {
+                console.error("Error joining chat rooms:", error);
+                socket.emit("chat-rooms-joined", { 
+                    success: false, 
+                    error: "Failed to join chat rooms" 
+                });
+            }
+        });
+
+        // Leave chat room
+        socket.on("leave-chat-room", async (data: { roomId: string }) => {
+            try {
+                const { roomId } = data;
+                await socket.leave(`chat_room_${roomId}`);
+                
+                socket.emit("chat-room-left", { 
+                    success: true, 
+                    roomId 
+                });
+                
+                console.log(`👋 ${userName} left chat room ${roomId}`);
+            } catch (error) {
+                console.error("Error leaving chat room:", error);
+            }
+        });
+
+        // Send chat message (will be called from ChatService, this is for direct WebSocket messages)
+        socket.on("send-chat-message", async (data: { 
+            roomId: string; 
+            content: string; 
+            messageType?: string;
+            replyTo?: string;
+            tempId?: string;
+        }) => {
+            try {
+                const { roomId, content, messageType = 'text', replyTo, tempId } = data;
+                
+                // Verify user is in the room (this should be validated by ChatService)
+                const rooms = [...socket.rooms];
+                if (!rooms.includes(`chat_room_${roomId}`)) {
+                    socket.emit("error", { message: "Not in chat room" });
+                    return;
+                }
+
+                // Emit acknowledgment (actual message saving is done via REST API + ChatService)
+                socket.emit("chat-message-acknowledged", { 
+                    success: true, 
+                    roomId,
+                    tempId: tempId || null
+                });
+                
+            } catch (error) {
+                console.error("Error with chat message:", error);
+                socket.emit("error", { message: "Failed to process chat message" });
+            }
+        });
+
+        // Typing indicator for chat
+        socket.on("chat-typing", (data: { roomId: string; isTyping: boolean }) => {
+            const { roomId, isTyping } = data;
+            
+            socket.to(`chat_room_${roomId}`).emit("chat-user-typing", {
+                userId,
+                userName,
+                roomId,
+                isTyping,
+                timestamp: new Date().toISOString()
+            });
+        });
+
+        // Mark messages as seen
+        socket.on("mark-messages-seen", async (data: { roomId: string; messageIds: string[] }) => {
+            try {
+                const { roomId, messageIds } = data;
+                
+                // Broadcast to room that messages were seen
+                socket.to(`chat_room_${roomId}`).emit("messages-seen", {
+                    userId,
+                    roomId,
+                    messageIds,
+                    timestamp: new Date().toISOString()
+                });
+                
+                socket.emit("messages-seen-acknowledged", { 
+                    success: true, 
+                    roomId, 
+                    messageIds 
+                });
+            } catch (error) {
+                console.error("Error marking messages seen:", error);
+            }
+        });
+
+        // User status update (online/away/busy)
+        socket.on("update-chat-status", (data: { status: "online" | "away" | "busy" }) => {
+            const { status } = data;
+            
+            // Broadcast status to all users who have chats with this user
+            socket.broadcast.emit("chat-user-status-changed", {
+                userId,
+                status,
+                timestamp: new Date().toISOString()
+            });
+        });
+
+        // Request online users in a room
+        socket.on("get-room-online-users", async (data: { roomId: string }) => {
+            try {
+                const { roomId } = data;
+                const roomSockets = await this.io.in(`chat_room_${roomId}`).fetchSockets();
+                
+                const onlineUsers = roomSockets.map(s => ({
+                    userId: s.data.userId,
+                    userName: s.data.userName,
+                    userType: s.data.userType
+                }));
+                
+                socket.emit("room-online-users", {
+                    roomId,
+                    users: onlineUsers,
+                    count: onlineUsers.length
+                });
+            } catch (error) {
+                console.error("Error getting online users:", error);
+                socket.emit("error", { message: "Failed to get online users" });
+            }
         });
     }
 
@@ -674,6 +827,94 @@ export class SocketService {
     }
 
     /**
+     * Broadcast message to a chat room
+     */
+    public static broadcastToChatRoom(roomId: string, event: string, data: any): void {
+        this.io.to(`chat_room_${roomId}`).emit(event, data);
+    }
+
+    /**
+     * Broadcast new chat message to room members
+     */
+    public static broadcastChatMessage(roomId: string, message: any): void {
+        this.io.to(`chat_room_${roomId}`).emit("new-chat-message", {
+            type: "new_message",
+            data: message,
+            timestamp: new Date().toISOString()
+        });
+    }
+
+    /**
+     * Broadcast message deletion to room members
+     */
+    public static broadcastMessageDeleted(roomId: string, messageId: string, deletedBy: string): void {
+        this.io.to(`chat_room_${roomId}`).emit("chat-message-deleted", {
+            type: "message_deleted",
+            data: {
+                messageId,
+                deletedBy,
+                timestamp: new Date().toISOString()
+            }
+        });
+    }
+
+    /**
+     * Broadcast user status change (online/offline/typing)
+     */
+    public static broadcastUserStatus(userId: string, status: {
+        isOnline?: boolean;
+        lastSeen?: Date;
+        typingInRoom?: string;
+        statusMessage?: string;
+    }): void {
+        this.io.emit("chat-user-status-update", {
+            userId,
+            ...status,
+            timestamp: new Date().toISOString()
+        });
+    }
+
+    /**
+     * Send notification to specific user (for new chat, mentions, etc.)
+     */
+    public static notifyChatUser(userId: string, notification: {
+        type: "new_chat" | "new_message" | "mention" | "room_created";
+        data: any;
+    }): void {
+        const socketId = this.userSockets.get(userId);
+        if (socketId) {
+            const socket = this.activeSockets.get(socketId);
+            if (socket) {
+                socket.emit("chat-notification", {
+                    ...notification,
+                    timestamp: new Date().toISOString()
+                });
+            }
+        }
+    }
+
+    /**
+     * Get online users in a specific chat room
+     */
+    public static async getChatRoomOnlineUsers(roomId: string): Promise<Array<{
+        userId: string;
+        userName: string;
+        userType: string;
+    }>> {
+        try {
+            const roomSockets = await this.io.in(`chat_room_${roomId}`).fetchSockets();
+            return roomSockets.map(socket => ({
+                userId: socket.data.userId,
+                userName: socket.data.userName,
+                userType: socket.data.userType
+            }));
+        } catch (error) {
+            console.error("Error getting chat room online users:", error);
+            return [];
+        }
+    }
+
+    /**
      * Notify all participants in a meeting (like Microsoft Teams notifications)
      */
     public static async notifyMeetingParticipants(
@@ -725,17 +966,34 @@ export class SocketService {
     }
 
     /**
-     * Get real-time statistics
+     * Get real-time statistics (including chat)
      */
     public static getStats(): {
         connectedUsers: number;
         activeMeetings: number;
         totalSockets: number;
+        activeChatRooms?: number;
     } {
         return {
             connectedUsers: this.userSockets.size,
             activeMeetings: this.meetingParticipants.size,
             totalSockets: this.activeSockets.size,
+            activeChatRooms: 0 // Will be calculated dynamically if needed
+        };
+    }
+
+    /**
+     * Get detailed chat statistics
+     */
+    public static getChatStats(): {
+        totalConnections: number;
+        totalUsers: number;
+        activeChatRooms: number;
+    } {
+        return {
+            totalConnections: this.activeSockets.size,
+            totalUsers: this.userSockets.size,
+            activeChatRooms: 0 // Can be enhanced to track active chat rooms
         };
     }
 }
