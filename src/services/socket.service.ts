@@ -859,6 +859,65 @@ export class SocketService {
     }
 
     /**
+     * Broadcast message seen status to room members
+     */
+    public static broadcastMessageSeen(roomId: string, messageId: string, seenBy: string): void {
+        this.io.to(`chat_room_${roomId}`).emit("chat-message-seen", {
+            type: "message_seen",
+            data: {
+                messageId,
+                seenBy,
+                timestamp: new Date().toISOString()
+            }
+        });
+    }
+
+    /**
+     * Broadcast message edited to room members
+     */
+    public static broadcastMessageEdited(roomId: string, messageId: string, newContent: string, editedBy: string): void {
+        this.io.to(`chat_room_${roomId}`).emit("chat-message-edited", {
+            type: "message_edited",
+            data: {
+                messageId,
+                newContent,
+                editedBy,
+                timestamp: new Date().toISOString()
+            }
+        });
+    }
+
+    /**
+     * Broadcast message reaction to room members
+     */
+    public static broadcastMessageReaction(roomId: string, messageId: string, emoji: string, userId: string, action: 'add' | 'remove'): void {
+        this.io.to(`chat_room_${roomId}`).emit("chat-message-reaction", {
+            type: "message_reaction",
+            data: {
+                messageId,
+                emoji,
+                userId,
+                action,
+                timestamp: new Date().toISOString()
+            }
+        });
+    }
+
+    /**
+     * Broadcast message delivered status to room members
+     */
+    public static broadcastMessageDelivered(roomId: string, messageId: string, deliveredTo: string): void {
+        this.io.to(`chat_room_${roomId}`).emit("chat-message-delivered", {
+            type: "message_delivered",
+            data: {
+                messageId,
+                deliveredTo,
+                timestamp: new Date().toISOString()
+            }
+        });
+    }
+
+    /**
      * Broadcast user status change (online/offline/typing)
      */
     public static broadcastUserStatus(userId: string, status: {

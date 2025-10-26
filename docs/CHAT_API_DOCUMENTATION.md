@@ -383,6 +383,391 @@ Authorization: Bearer <jwt_token>
 }
 ```
 
+### Mark Message as Seen
+
+Mark a message as seen by the authenticated user. This updates the message's `is_seen` flag and adds the user to the `seen_by` array.
+
+**Endpoint:** `PUT /messages/:message_id/seen`
+
+**Headers:**
+```http
+Authorization: Bearer <jwt_token>
+```
+
+**URL Parameters:**
+- `message_id`: ID of the message to mark as seen
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Message marked as seen"
+}
+```
+
+**Behavior:**
+- Sender cannot mark their own message as seen (silent success)
+- If message is already seen by the user, returns success without changes
+- Broadcasts real-time notification to the sender via WebSocket
+- Only room members can mark messages as seen
+- Updates `seen_at` timestamp
+
+**Error Responses:**
+```json
+{
+  "success": false,
+  "error": "Message not found"
+}
+```
+
+```json
+{
+  "success": false,
+  "error": "Access denied to this message"
+}
+```
+
+```json
+{
+  "success": false,
+  "error": "Cannot mark deleted message as seen"
+}
+```
+
+### Edit Message
+
+Edit the content of a message. Only the sender can edit their own messages within 15 minutes of sending.
+
+**Endpoint:** `PUT /messages/:message_id`
+
+**Headers:**
+```http
+Authorization: Bearer <jwt_token>
+Content-Type: application/json
+```
+
+**URL Parameters:**
+- `message_id`: ID of the message to edit
+
+**Request Body:**
+```json
+{
+  "content": "Updated message content"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "msg_123456",
+    "content": "Updated message content",
+    "is_edited": true,
+    "edited_at": "2025-10-26T11:45:00Z",
+    "updated_at": "2025-10-26T11:45:00Z"
+  },
+  "message": "Message edited successfully"
+}
+```
+
+**Permission Rules:**
+- Only sender can edit their own messages
+- Must be edited within 15 minutes of sending
+- Cannot edit deleted messages
+- Content must be 1-10,000 characters
+
+**Error Responses:**
+```json
+{
+  "success": false,
+  "error": "You can only edit your own messages"
+}
+```
+
+```json
+{
+  "success": false,
+  "error": "Messages can only be edited within 15 minutes of sending"
+}
+```
+
+```json
+{
+  "success": false,
+  "error": "Message content cannot be empty"
+}
+```
+
+### Add Reaction to Message
+
+Add an emoji reaction to a message.
+
+**Endpoint:** `POST /messages/:message_id/reactions/:emoji`
+
+**Headers:**
+```http
+Authorization: Bearer <jwt_token>
+```
+
+**URL Parameters:**
+- `message_id`: ID of the message
+- `emoji`: Emoji to add (URL-encoded if necessary)
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Reaction added successfully"
+}
+```
+
+**Behavior:**
+- Users can react to any message in rooms they're members of
+- If user already reacted with same emoji, returns success without changes
+- Broadcasts real-time notification via WebSocket
+- Cannot react to deleted messages
+
+**Error Responses:**
+```json
+{
+  "success": false,
+  "error": "Invalid emoji"
+}
+```
+
+```json
+{
+  "success": false,
+  "error": "Access denied to this message"
+}
+```
+
+### Remove Reaction from Message
+
+Remove an emoji reaction from a message.
+
+**Endpoint:** `DELETE /messages/:message_id/reactions/:emoji`
+
+**Headers:**
+```http
+Authorization: Bearer <jwt_token>
+```
+
+**URL Parameters:**
+- `message_id`: ID of the message
+- `emoji`: Emoji to remove (URL-encoded if necessary)
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Reaction removed successfully"
+}
+```
+
+**Behavior:**
+- Users can only remove their own reactions
+- If reaction doesn't exist, returns success without changes
+- Broadcasts real-time notification via WebSocket
+
+### Mark Message as Delivered
+
+Mark a message as delivered to the authenticated user.
+
+**Endpoint:** `PUT /messages/:message_id/delivered`
+
+**Headers:**
+```http
+Authorization: Bearer <jwt_token>
+```
+
+**URL Parameters:**
+- `message_id`: ID of the message to mark as delivered
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Message marked as delivered"
+}
+```
+
+**Behavior:**
+- Sender cannot mark their own message as delivered (silent success)
+- If message is already delivered to user, returns success without changes
+- Broadcasts real-time notification to the sender via WebSocket
+- Only room members can mark messages as delivered
+
+**Error Responses:**
+```json
+{
+  "success": false,
+  "error": "Message not found"
+}
+```
+
+```json
+{
+  "success": false,
+  "error": "Access denied to this message"
+}
+```
+
+### Get Unread Message Count
+
+Get unread message counts for a specific room or all rooms.
+
+**Endpoint:** `GET /unread-count`
+
+**Headers:**
+```http
+Authorization: Bearer <jwt_token>
+```
+
+**Query Parameters:**
+- `room_id` (optional): Get count for specific room only
+
+**Response (Specific Room):**
+```json
+{
+  "success": true,
+  "data": {
+    "unread_count": 5
+  },
+  "message": "Unread count retrieved successfully"
+}
+```
+
+**Response (All Rooms):**
+```json
+{
+  "success": true,
+  "data": {
+    "rooms": [
+      {
+        "room_id": "room_123",
+        "unread_count": 5
+      },
+      {
+        "room_id": "room_456",
+        "unread_count": 0
+      }
+    ]
+  },
+  "message": "Unread count retrieved successfully"
+}
+```
+
+**Behavior:**
+- Only counts messages sent by other users (not own messages)
+- Only counts non-deleted messages
+- User must be a member of the room
+
+**Error Responses:**
+```json
+{
+  "success": false,
+  "error": "Room not found or access denied"
+}
+```
+
+### Search Messages
+
+Search through message history with various filters.
+
+**Endpoint:** `GET /messages/search`
+
+**Headers:**
+```http
+Authorization: Bearer <jwt_token>
+```
+
+**Query Parameters:**
+- `q`: Search query (searches in message content)
+- `room_id`: Filter by specific room
+- `sender_id`: Filter by sender
+- `message_type`: Filter by type (text, image, file, audio, system)
+- `from_date`: Filter from date (ISO 8601 format)
+- `to_date`: Filter to date (ISO 8601 format)
+- `page`: Page number (default: 1)
+- `limit`: Results per page (default: 50, max: 100)
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "msg_123456",
+      "room_id": "room_789012",
+      "sender_id": "user_001",
+      "content": "Search result message",
+      "message_type": "text",
+      "created_at": "2025-10-26T10:30:00Z",
+      "is_edited": false,
+      "is_deleted": false
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 50,
+    "total": 15
+  },
+  "message": "Messages retrieved successfully"
+}
+```
+
+**Behavior:**
+- Only searches in rooms user is a member of
+- Case-insensitive content search
+- Excludes deleted messages
+- Results sorted by created_at descending
+
+**Error Responses:**
+```json
+{
+  "success": false,
+  "error": "Access denied to this room"
+}
+```
+
+### Get Deleted Messages
+```json
+{
+  "success": true,
+  "message": "Message marked as seen"
+}
+```
+
+**Behavior:**
+- Sender cannot mark their own message as seen (silent success)
+- If message is already seen by the user, returns success without changes
+- Broadcasts real-time notification to the sender via WebSocket
+- Only room members can mark messages as seen
+
+**Error Responses:**
+```json
+{
+  "success": false,
+  "error": "Message not found"
+}
+```
+
+```json
+{
+  "success": false,
+  "error": "Access denied to this message"
+}
+```
+
+```json
+{
+  "success": false,
+  "error": "Cannot mark deleted message as seen"
+}
+```
+
 ### Get Deleted Messages
 
 Get deleted messages from a chat room. Only teachers, admins, and super admins can access this endpoint.
@@ -938,6 +1323,62 @@ curl -X DELETE "http://localhost:3000/api/v1/chat/messages/msg_123456" \
   -H "Authorization: Bearer <jwt_token>"
 ```
 
+### Mark Message as Seen
+
+```bash
+curl -X PUT "http://localhost:3000/api/v1/chat/messages/msg_123456/seen" \
+  -H "Authorization: Bearer <jwt_token>"
+```
+
+### Edit Message
+
+```bash
+curl -X PUT "http://localhost:3000/api/v1/chat/messages/msg_123456" \
+  -H "Authorization: Bearer <jwt_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"content": "Updated message content"}'
+```
+
+### Add Reaction to Message
+
+```bash
+curl -X POST "http://localhost:3000/api/v1/chat/messages/msg_123456/reactions/👍" \
+  -H "Authorization: Bearer <jwt_token>"
+```
+
+### Remove Reaction from Message
+
+```bash
+curl -X DELETE "http://localhost:3000/api/v1/chat/messages/msg_123456/reactions/👍" \
+  -H "Authorization: Bearer <jwt_token>"
+```
+
+### Mark Message as Delivered
+
+```bash
+curl -X PUT "http://localhost:3000/api/v1/chat/messages/msg_123456/delivered" \
+  -H "Authorization: Bearer <jwt_token>"
+```
+
+### Get Unread Message Count
+
+```bash
+# For all rooms
+curl -X GET "http://localhost:3000/api/v1/chat/unread-count" \
+  -H "Authorization: Bearer <jwt_token>"
+
+# For specific room
+curl -X GET "http://localhost:3000/api/v1/chat/unread-count?room_id=room_123" \
+  -H "Authorization: Bearer <jwt_token>"
+```
+
+### Search Messages
+
+```bash
+curl -X GET "http://localhost:3000/api/v1/chat/messages/search?q=hello&room_id=room_123&page=1&limit=20" \
+  -H "Authorization: Bearer <jwt_token>"
+```
+
 ### Get Deleted Messages (Teacher/Admin Only)
 
 ```bash
@@ -958,16 +1399,25 @@ curl -X GET "http://localhost:3000/api/v1/chat/rooms/room_123/deleted-messages?p
 - ✅ Comprehensive error handling and validation
 - ✅ Campus-based multi-tenant isolation
 - ✅ Performance optimization (5-6s → <1s response times)
+- ✅ Message read receipts (seen status tracking)
+- ✅ Message delivery status tracking
+- ✅ Message editing (15-minute window)
+- ✅ Message reactions/emojis (add/remove)
+- ✅ Message search functionality with filters
+- ✅ Unread message count (global and per-room)
+- ✅ Comprehensive input validation with Zod schemas
 
 ### Future Enhancements
-- 📋 Message read receipts
 - 📋 Typing indicators
-- 📋 Message reactions/emojis
-- 📋 File upload and sharing
-- 📋 Message search functionality
-- 📋 Push notifications
+- 📋 File upload and sharing with validation
+- 📋 Push notifications integration
 - 📋 Message encryption
 - 📋 Video/audio calling integration
+- 📋 Message pinning
+- 📋 User blocking
+- 📋 Rate limiting for message sending
+- 📋 Message forwarding
+- 📋 Mention system (@username)
 
 ---
 

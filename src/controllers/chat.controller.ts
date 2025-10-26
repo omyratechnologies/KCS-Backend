@@ -571,4 +571,282 @@ export class ChatController {
             }, 500);
         }
     };
+
+    /**
+     * Mark a message as seen by the authenticated user
+     */
+    public static readonly markMessageAsSeen = async (ctx: Context) => {
+        try {
+            const campus_id = ctx.get("campus_id");
+            const user_id = ctx.get("user_id");
+            const message_id = ctx.req.param('message_id');
+
+            if (!message_id) {
+                return ctx.json({
+                    success: false,
+                    error: "Message ID is required"
+                }, 400);
+            }
+
+            const result = await ChatService.markMessageAsSeen(user_id, message_id, campus_id);
+
+            if (result.success) {
+                return ctx.json({
+                    success: true,
+                    message: "Message marked as seen"
+                });
+            } else {
+                return ctx.json({
+                    success: false,
+                    error: result.error
+                }, 400);
+            }
+        } catch (error) {
+            log(`Mark message as seen controller error: ${error}`, LogTypes.ERROR, "CHAT_CONTROLLER");
+            return ctx.json({
+                success: false,
+                error: "Failed to mark message as seen"
+            }, 500);
+        }
+    };
+
+    /**
+     * Edit a message
+     */
+    public static readonly editMessage = async (ctx: Context) => {
+        try {
+            const campus_id = ctx.get("campus_id");
+            const user_id = ctx.get("user_id");
+            const message_id = ctx.req.param('message_id');
+
+            if (!message_id) {
+                return ctx.json({
+                    success: false,
+                    error: "Message ID is required"
+                }, 400);
+            }
+
+            const { content } = await ctx.req.json();
+
+            if (!content) {
+                return ctx.json({
+                    success: false,
+                    error: "Message content is required"
+                }, 400);
+            }
+
+            const result = await ChatService.editMessage(user_id, message_id, campus_id, content);
+
+            if (result.success) {
+                return ctx.json({
+                    success: true,
+                    data: result.data,
+                    message: "Message edited successfully"
+                });
+            } else {
+                return ctx.json({
+                    success: false,
+                    error: result.error
+                }, 400);
+            }
+        } catch (error) {
+            log(`Edit message controller error: ${error}`, LogTypes.ERROR, "CHAT_CONTROLLER");
+            return ctx.json({
+                success: false,
+                error: "Failed to edit message"
+            }, 500);
+        }
+    };
+
+    /**
+     * Add reaction to a message
+     */
+    public static readonly addReaction = async (ctx: Context) => {
+        try {
+            const campus_id = ctx.get("campus_id");
+            const user_id = ctx.get("user_id");
+            const message_id = ctx.req.param('message_id');
+            const emoji = ctx.req.param('emoji');
+
+            if (!message_id || !emoji) {
+                return ctx.json({
+                    success: false,
+                    error: "Message ID and emoji are required"
+                }, 400);
+            }
+
+            const result = await ChatService.addReaction(user_id, message_id, campus_id, emoji);
+
+            if (result.success) {
+                return ctx.json({
+                    success: true,
+                    message: "Reaction added successfully"
+                });
+            } else {
+                return ctx.json({
+                    success: false,
+                    error: result.error
+                }, 400);
+            }
+        } catch (error) {
+            log(`Add reaction controller error: ${error}`, LogTypes.ERROR, "CHAT_CONTROLLER");
+            return ctx.json({
+                success: false,
+                error: "Failed to add reaction"
+            }, 500);
+        }
+    };
+
+    /**
+     * Remove reaction from a message
+     */
+    public static readonly removeReaction = async (ctx: Context) => {
+        try {
+            const campus_id = ctx.get("campus_id");
+            const user_id = ctx.get("user_id");
+            const message_id = ctx.req.param('message_id');
+            const emoji = ctx.req.param('emoji');
+
+            if (!message_id || !emoji) {
+                return ctx.json({
+                    success: false,
+                    error: "Message ID and emoji are required"
+                }, 400);
+            }
+
+            const result = await ChatService.removeReaction(user_id, message_id, campus_id, emoji);
+
+            if (result.success) {
+                return ctx.json({
+                    success: true,
+                    message: "Reaction removed successfully"
+                });
+            } else {
+                return ctx.json({
+                    success: false,
+                    error: result.error
+                }, 400);
+            }
+        } catch (error) {
+            log(`Remove reaction controller error: ${error}`, LogTypes.ERROR, "CHAT_CONTROLLER");
+            return ctx.json({
+                success: false,
+                error: "Failed to remove reaction"
+            }, 500);
+        }
+    };
+
+    /**
+     * Mark message as delivered
+     */
+    public static readonly markMessageAsDelivered = async (ctx: Context) => {
+        try {
+            const campus_id = ctx.get("campus_id");
+            const user_id = ctx.get("user_id");
+            const message_id = ctx.req.param('message_id');
+
+            if (!message_id) {
+                return ctx.json({
+                    success: false,
+                    error: "Message ID is required"
+                }, 400);
+            }
+
+            const result = await ChatService.markMessageAsDelivered(user_id, message_id, campus_id);
+
+            if (result.success) {
+                return ctx.json({
+                    success: true,
+                    message: "Message marked as delivered"
+                });
+            } else {
+                return ctx.json({
+                    success: false,
+                    error: result.error
+                }, 400);
+            }
+        } catch (error) {
+            log(`Mark message as delivered controller error: ${error}`, LogTypes.ERROR, "CHAT_CONTROLLER");
+            return ctx.json({
+                success: false,
+                error: "Failed to mark message as delivered"
+            }, 500);
+        }
+    };
+
+    /**
+     * Get unread message count
+     */
+    public static readonly getUnreadCount = async (ctx: Context) => {
+        try {
+            const campus_id = ctx.get("campus_id");
+            const user_id = ctx.get("user_id");
+            const room_id = ctx.req.query('room_id') as string;
+
+            const result = await ChatService.getUnreadCount(user_id, campus_id, room_id);
+
+            if (result.success) {
+                return ctx.json({
+                    success: true,
+                    data: room_id ? { unread_count: result.count } : { rooms: result.rooms },
+                    message: "Unread count retrieved successfully"
+                });
+            } else {
+                return ctx.json({
+                    success: false,
+                    error: result.error
+                }, 400);
+            }
+        } catch (error) {
+            log(`Get unread count controller error: ${error}`, LogTypes.ERROR, "CHAT_CONTROLLER");
+            return ctx.json({
+                success: false,
+                error: "Failed to get unread count"
+            }, 500);
+        }
+    };
+
+    /**
+     * Search messages
+     */
+    public static readonly searchMessages = async (ctx: Context) => {
+        try {
+            const campus_id = ctx.get("campus_id");
+            const user_id = ctx.get("user_id");
+
+            const query = ctx.req.query();
+            const options = {
+                query: query.q as string,
+                room_id: query.room_id as string,
+                sender_id: query.sender_id as string,
+                from_date: query.from_date ? new Date(query.from_date as string) : undefined,
+                to_date: query.to_date ? new Date(query.to_date as string) : undefined,
+                message_type: query.message_type as string,
+                page: query.page ? Number.parseInt(query.page as string, 10) : 1,
+                limit: query.limit ? Number.parseInt(query.limit as string, 10) : 50,
+            };
+
+            const result = await ChatService.searchMessages(user_id, campus_id, options);
+
+            if (result.success) {
+                return ctx.json({
+                    success: true,
+                    data: result.data,
+                    pagination: result.pagination,
+                    message: "Messages retrieved successfully"
+                });
+            } else {
+                return ctx.json({
+                    success: false,
+                    error: result.error
+                }, 400);
+            }
+        } catch (error) {
+            log(`Search messages controller error: ${error}`, LogTypes.ERROR, "CHAT_CONTROLLER");
+            return ctx.json({
+                success: false,
+                error: "Failed to search messages"
+            }, 500);
+        }
+    };
 }

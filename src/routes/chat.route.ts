@@ -26,6 +26,27 @@ chatRouter.get('/rooms/:room_id/messages', ChatController.getMessages);
 // Delete a message
 chatRouter.delete('/messages/:message_id', ChatController.deleteMessage);
 
+// Edit a message
+chatRouter.put('/messages/:message_id', ChatController.editMessage);
+
+// Mark a message as seen
+chatRouter.put('/messages/:message_id/seen', ChatController.markMessageAsSeen);
+
+// Mark a message as delivered
+chatRouter.put('/messages/:message_id/delivered', ChatController.markMessageAsDelivered);
+
+// Add reaction to a message
+chatRouter.post('/messages/:message_id/reactions/:emoji', ChatController.addReaction);
+
+// Remove reaction from a message
+chatRouter.delete('/messages/:message_id/reactions/:emoji', ChatController.removeReaction);
+
+// Search messages
+chatRouter.get('/messages/search', ChatController.searchMessages);
+
+// Get unread message count
+chatRouter.get('/unread-count', ChatController.getUnreadCount);
+
 // Get deleted messages from a room (Teachers, Admins, Super Admins only)
 chatRouter.get('/rooms/:room_id/deleted-messages', ChatController.getDeletedMessages);
 

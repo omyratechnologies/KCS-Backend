@@ -631,6 +631,560 @@ export class ChatService {
     }
 
     /**
+     * Mark message as seen by a user
+     */
+    public static async markMessageAsSeen(
+        user_id: string,
+        message_id: string,
+        campus_id: string
+    ): Promise<{ success: boolean; error?: string }> {
+        try {
+            // Find the message
+            const message = await ChatMessage.findById(message_id);
+
+            if (!message) {
+                return { success: false, error: "Message not found" };
+            }
+
+            // Check if message belongs to the same campus
+            if (message.campus_id !== campus_id) {
+                return { success: false, error: "Message not found in your campus" };
+            }
+
+            // Check if message is deleted
+            if (message.is_deleted) {
+                return { success: false, error: "Cannot mark deleted message as seen" };
+            }
+
+            // Verify user has access to this room
+            if (message.room_id) {
+                const room = await ChatRoom.findById(message.room_id);
+                if (!room || !room.members.includes(user_id)) {
+                    return { success: false, error: "Access denied to this message" };
+                }
+            }
+
+            // Don't allow sender to mark their own message as seen
+            if (message.sender_id === user_id) {
+                return { success: true }; // Silent success - sender's own message
+            }
+
+            // Check if already seen by this user
+            if (message.seen_by && message.seen_by.includes(user_id)) {
+                return { success: true }; // Already seen
+            }
+
+            // Add user to seen_by array and update is_seen flag with timestamp
+            const updatedSeenBy = [...(message.seen_by || []), user_id];
+            const now = new Date();
+            
+            await ChatMessage.replaceById(message_id, {
+                ...message,
+                is_seen: true,
+                seen_by: updatedSeenBy,
+                seen_at: now,
+                updated_at: now,
+            });
+
+            // 🚀 REAL-TIME BROADCAST: Notify sender about message being seen
+            try {
+                if (message.room_id) {
+                    SocketService.broadcastMessageSeen(message.room_id, message_id, user_id);
+                    log(`✅ Broadcasted message seen ${message_id} by user ${user_id}`, LogTypes.LOGS, "CHAT_SERVICE");
+                }
+            } catch (error) {
+                log(`⚠️ Failed to broadcast message seen status: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
+            }
+
+            return { success: true };
+        } catch (error) {
+            log(`Mark message as seen error: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
+            return {
+                success: false,
+                error: `Failed to mark message as seen: ${error instanceof Error ? error.message : "Unknown error"}`,
+            };
+        }
+    }
+
+    /**
+     * Edit a message
+     * Only sender can edit their own messages within a time limit
+     */
+    public static async editMessage(
+        user_id: string,
+        message_id: string,
+        campus_id: string,
+        new_content: string
+    ): Promise<{ success: boolean; data?: IChatMessage; error?: string }> {
+        try {
+            // Find the message
+            const message = await ChatMessage.findById(message_id);
+
+            if (!message) {
+                return { success: false, error: "Message not found" };
+            }
+
+            // Check if message belongs to the same campus
+            if (message.campus_id !== campus_id) {
+                return { success: false, error: "Message not found in your campus" };
+            }
+
+            // Check if message is deleted
+            if (message.is_deleted) {
+                return { success: false, error: "Cannot edit deleted message" };
+            }
+
+            // Only sender can edit their message
+            if (message.sender_id !== user_id) {
+                return { success: false, error: "You can only edit your own messages" };
+            }
+
+            // Optional: Add time limit for editing (e.g., 15 minutes)
+            const fifteenMinutes = 15 * 60 * 1000;
+            const messageAge = Date.now() - new Date(message.created_at).getTime();
+            if (messageAge > fifteenMinutes) {
+                return { success: false, error: "Messages can only be edited within 15 minutes of sending" };
+            }
+
+            // Validate new content
+            if (!new_content || new_content.trim().length === 0) {
+                return { success: false, error: "Message content cannot be empty" };
+            }
+
+            if (new_content.length > 10000) {
+                return { success: false, error: "Message content too long (max 10000 characters)" };
+            }
+
+            // Update the message
+            const now = new Date();
+            const updatedMessage = await ChatMessage.replaceById(message_id, {
+                ...message,
+                content: new_content.trim(),
+                is_edited: true,
+                edited_at: now,
+                updated_at: now,
+            });
+
+            // 🚀 REAL-TIME BROADCAST: Notify room members about message edit
+            try {
+                if (message.room_id) {
+                    SocketService.broadcastMessageEdited(message.room_id, message_id, new_content.trim(), user_id);
+                    log(`✅ Broadcasted message edit ${message_id} in room ${message.room_id}`, LogTypes.LOGS, "CHAT_SERVICE");
+                }
+            } catch (error) {
+                log(`⚠️ Failed to broadcast message edit: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
+            }
+
+            return { success: true, data: updatedMessage };
+        } catch (error) {
+            log(`Edit message error: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
+            return {
+                success: false,
+                error: `Failed to edit message: ${error instanceof Error ? error.message : "Unknown error"}`,
+            };
+        }
+    }
+
+    /**
+     * Add reaction to a message
+     */
+    public static async addReaction(
+        user_id: string,
+        message_id: string,
+        campus_id: string,
+        emoji: string
+    ): Promise<{ success: boolean; error?: string }> {
+        try {
+            // Find the message
+            const message = await ChatMessage.findById(message_id);
+
+            if (!message) {
+                return { success: false, error: "Message not found" };
+            }
+
+            // Check if message belongs to the same campus
+            if (message.campus_id !== campus_id) {
+                return { success: false, error: "Message not found in your campus" };
+            }
+
+            // Check if message is deleted
+            if (message.is_deleted) {
+                return { success: false, error: "Cannot react to deleted message" };
+            }
+
+            // Verify user has access to this room
+            if (message.room_id) {
+                const room = await ChatRoom.findById(message.room_id);
+                if (!room || !room.members.includes(user_id)) {
+                    return { success: false, error: "Access denied to this message" };
+                }
+            }
+
+            // Validate emoji (basic validation)
+            if (!emoji || emoji.trim().length === 0 || emoji.length > 10) {
+                return { success: false, error: "Invalid emoji" };
+            }
+
+            // Get current reactions
+            const reactions = message.meta_data?.reactions || {};
+            const userReactions = reactions[emoji] || [];
+
+            // Check if user already reacted with this emoji
+            if (userReactions.includes(user_id)) {
+                return { success: true }; // Already reacted
+            }
+
+            // Add user to reaction
+            userReactions.push(user_id);
+            reactions[emoji] = userReactions;
+
+            // Update message
+            await ChatMessage.replaceById(message_id, {
+                ...message,
+                meta_data: {
+                    ...message.meta_data,
+                    reactions,
+                },
+                updated_at: new Date(),
+            });
+
+            // 🚀 REAL-TIME BROADCAST: Notify room members about reaction
+            try {
+                if (message.room_id) {
+                    SocketService.broadcastMessageReaction(message.room_id, message_id, emoji, user_id, 'add');
+                    log(`✅ Broadcasted reaction ${emoji} on message ${message_id}`, LogTypes.LOGS, "CHAT_SERVICE");
+                }
+            } catch (error) {
+                log(`⚠️ Failed to broadcast message reaction: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
+            }
+
+            return { success: true };
+        } catch (error) {
+            log(`Add reaction error: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
+            return {
+                success: false,
+                error: `Failed to add reaction: ${error instanceof Error ? error.message : "Unknown error"}`,
+            };
+        }
+    }
+
+    /**
+     * Remove reaction from a message
+     */
+    public static async removeReaction(
+        user_id: string,
+        message_id: string,
+        campus_id: string,
+        emoji: string
+    ): Promise<{ success: boolean; error?: string }> {
+        try {
+            // Find the message
+            const message = await ChatMessage.findById(message_id);
+
+            if (!message) {
+                return { success: false, error: "Message not found" };
+            }
+
+            // Check if message belongs to the same campus
+            if (message.campus_id !== campus_id) {
+                return { success: false, error: "Message not found in your campus" };
+            }
+
+            // Get current reactions
+            const reactions = message.meta_data?.reactions || {};
+            const userReactions = reactions[emoji] || [];
+
+            // Check if user has this reaction
+            if (!userReactions.includes(user_id)) {
+                return { success: true }; // Already removed
+            }
+
+            // Remove user from reaction
+            reactions[emoji] = userReactions.filter((id: string) => id !== user_id);
+
+            // Remove emoji key if no users left
+            if (reactions[emoji].length === 0) {
+                delete reactions[emoji];
+            }
+
+            // Update message
+            await ChatMessage.replaceById(message_id, {
+                ...message,
+                meta_data: {
+                    ...message.meta_data,
+                    reactions,
+                },
+                updated_at: new Date(),
+            });
+
+            // 🚀 REAL-TIME BROADCAST: Notify room members about reaction removal
+            try {
+                if (message.room_id) {
+                    SocketService.broadcastMessageReaction(message.room_id, message_id, emoji, user_id, 'remove');
+                    log(`✅ Broadcasted reaction removal ${emoji} on message ${message_id}`, LogTypes.LOGS, "CHAT_SERVICE");
+                }
+            } catch (error) {
+                log(`⚠️ Failed to broadcast message reaction removal: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
+            }
+
+            return { success: true };
+        } catch (error) {
+            log(`Remove reaction error: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
+            return {
+                success: false,
+                error: `Failed to remove reaction: ${error instanceof Error ? error.message : "Unknown error"}`,
+            };
+        }
+    }
+
+    /**
+     * Mark message as delivered to a user
+     */
+    public static async markMessageAsDelivered(
+        user_id: string,
+        message_id: string,
+        campus_id: string
+    ): Promise<{ success: boolean; error?: string }> {
+        try {
+            // Find the message
+            const message = await ChatMessage.findById(message_id);
+
+            if (!message) {
+                return { success: false, error: "Message not found" };
+            }
+
+            // Check if message belongs to the same campus
+            if (message.campus_id !== campus_id) {
+                return { success: false, error: "Message not found in your campus" };
+            }
+
+            // Check if message is deleted
+            if (message.is_deleted) {
+                return { success: false, error: "Cannot mark deleted message as delivered" };
+            }
+
+            // Verify user has access to this room
+            if (message.room_id) {
+                const room = await ChatRoom.findById(message.room_id);
+                if (!room || !room.members.includes(user_id)) {
+                    return { success: false, error: "Access denied to this message" };
+                }
+            }
+
+            // Don't allow sender to mark their own message as delivered
+            if (message.sender_id === user_id) {
+                return { success: true }; // Silent success - sender's own message
+            }
+
+            // Check if already delivered to this user
+            if (message.delivered_to && message.delivered_to.includes(user_id)) {
+                return { success: true }; // Already delivered
+            }
+
+            // Add user to delivered_to array
+            const updatedDeliveredTo = [...(message.delivered_to || []), user_id];
+            
+            await ChatMessage.replaceById(message_id, {
+                ...message,
+                delivered_to: updatedDeliveredTo,
+                updated_at: new Date(),
+            });
+
+            // 🚀 REAL-TIME BROADCAST: Notify sender about message delivery
+            try {
+                if (message.room_id) {
+                    SocketService.broadcastMessageDelivered(message.room_id, message_id, user_id);
+                    log(`✅ Broadcasted message delivered ${message_id} to user ${user_id}`, LogTypes.LOGS, "CHAT_SERVICE");
+                }
+            } catch (error) {
+                log(`⚠️ Failed to broadcast message delivery status: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
+            }
+
+            return { success: true };
+        } catch (error) {
+            log(`Mark message as delivered error: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
+            return {
+                success: false,
+                error: `Failed to mark message as delivered: ${error instanceof Error ? error.message : "Unknown error"}`,
+            };
+        }
+    }
+
+    /**
+     * Get unread message count for a room
+     */
+    public static async getUnreadCount(
+        user_id: string,
+        campus_id: string,
+        room_id?: string
+    ): Promise<{ success: boolean; count?: number; rooms?: Array<{ room_id: string; unread_count: number }>; error?: string }> {
+        try {
+            if (room_id) {
+                // Get unread count for specific room
+                const room = await ChatRoom.findById(room_id);
+                if (!room || !room.members.includes(user_id) || room.campus_id !== campus_id) {
+                    return { success: false, error: "Room not found or access denied" };
+                }
+
+                const messages = await ChatMessage.find({
+                    room_id,
+                    campus_id,
+                    is_deleted: false,
+                    sender_id: { $ne: user_id }, // Not sent by this user
+                });
+
+                // Count messages where user hasn't seen them
+                const unreadCount = (messages.rows || []).filter(
+                    (msg: IChatMessage) => !msg.seen_by || !msg.seen_by.includes(user_id)
+                ).length;
+
+                return { success: true, count: unreadCount };
+            } else {
+                // Get unread counts for all rooms
+                const userRooms = await this.getUserChatRooms(user_id, campus_id);
+                if (!userRooms.success || !userRooms.data) {
+                    return { success: false, error: "Failed to get user rooms" };
+                }
+
+                const roomCounts = await Promise.all(
+                    userRooms.data.map(async (room) => {
+                        const messages = await ChatMessage.find({
+                            room_id: room.id,
+                            campus_id,
+                            is_deleted: false,
+                            sender_id: { $ne: user_id },
+                        });
+
+                        const unreadCount = (messages.rows || []).filter(
+                            (msg: IChatMessage) => !msg.seen_by || !msg.seen_by.includes(user_id)
+                        ).length;
+
+                        return { room_id: room.id, unread_count: unreadCount };
+                    })
+                );
+
+                return { success: true, rooms: roomCounts };
+            }
+        } catch (error) {
+            log(`Get unread count error: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
+            return {
+                success: false,
+                error: `Failed to get unread count: ${error instanceof Error ? error.message : "Unknown error"}`,
+            };
+        }
+    }
+
+    /**
+     * Search messages
+     */
+    public static async searchMessages(
+        user_id: string,
+        campus_id: string,
+        options: {
+            query?: string;
+            room_id?: string;
+            sender_id?: string;
+            from_date?: Date;
+            to_date?: Date;
+            message_type?: string;
+            page?: number;
+            limit?: number;
+        }
+    ): Promise<{
+        success: boolean;
+        data?: IChatMessage[];
+        pagination?: { page: number; limit: number; total: number };
+        error?: string;
+    }> {
+        try {
+            const page = options.page || 1;
+            const limit = options.limit || 50;
+
+            // Get all rooms user has access to
+            const userRooms = await this.getUserChatRooms(user_id, campus_id);
+            if (!userRooms.success || !userRooms.data) {
+                return { success: false, error: "Failed to get user rooms" };
+            }
+
+            const accessibleRoomIds = userRooms.data.map(room => room.id);
+
+            // Build query filter
+            const filter: Record<string, unknown> = {
+                campus_id,
+                is_deleted: false,
+            };
+
+            // Filter by accessible rooms
+            if (options.room_id) {
+                if (!accessibleRoomIds.includes(options.room_id)) {
+                    return { success: false, error: "Access denied to this room" };
+                }
+                filter.room_id = options.room_id;
+            } else {
+                // Only search in accessible rooms
+                filter.room_id = { $in: accessibleRoomIds };
+            }
+
+            if (options.sender_id) {
+                filter.sender_id = options.sender_id;
+            }
+
+            if (options.message_type) {
+                filter.message_type = options.message_type;
+            }
+
+            // Fetch messages
+            const messages = await ChatMessage.find(filter, {
+                sort: { created_at: "DESC" },
+            });
+
+            let results = messages.rows || [];
+
+            // Filter by text content (case-insensitive)
+            if (options.query) {
+                const queryLower = options.query.toLowerCase();
+                results = results.filter((msg: IChatMessage) =>
+                    msg.content.toLowerCase().includes(queryLower)
+                );
+            }
+
+            // Filter by date range
+            if (options.from_date) {
+                results = results.filter((msg: IChatMessage) =>
+                    new Date(msg.created_at) >= options.from_date!
+                );
+            }
+
+            if (options.to_date) {
+                results = results.filter((msg: IChatMessage) =>
+                    new Date(msg.created_at) <= options.to_date!
+                );
+            }
+
+            // Apply pagination
+            const total = results.length;
+            const skip = (page - 1) * limit;
+            const paginatedResults = results.slice(skip, skip + limit);
+
+            return {
+                success: true,
+                data: paginatedResults,
+                pagination: {
+                    page,
+                    limit,
+                    total,
+                },
+            };
+        } catch (error) {
+            log(`Search messages error: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
+            return {
+                success: false,
+                error: `Failed to search messages: ${error instanceof Error ? error.message : "Unknown error"}`,
+            };
+        }
+    }
+
+    /**
      * Get class group members
      */
     // private static async getClassGroupMembers(
