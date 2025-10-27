@@ -107,6 +107,67 @@ app.get(
     PushNotificationController.getUserDeviceTokens
 );
 
+// Get all campus device tokens (Admin only)
+app.get(
+    "/campus-tokens",
+    describeRoute({
+        operationId: "getCampusDeviceTokens",
+        summary: "Get all campus device tokens",
+        description: "Retrieve all device tokens for the campus with optional filters (Admin only)",
+        tags: ["Push Notifications - Admin"],
+        parameters: [
+            {
+                name: "is_active",
+                in: "query",
+                required: false,
+                schema: { type: "boolean" },
+                description: "Filter by active status (true/false)",
+            },
+            {
+                name: "device_type",
+                in: "query",
+                required: false,
+                schema: { type: "string", enum: ["android", "ios", "web"] },
+                description: "Filter by device type",
+            },
+            {
+                name: "user_id",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+                description: "Filter by specific user ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Campus device tokens retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(getUserDeviceTokensResponseSchema),
+                    },
+                },
+            },
+            403: {
+                description: "Unauthorized - Admin access required",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+            500: {
+                description: "Internal server error",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    PushNotificationController.getCampusDeviceTokens
+);
+
 // Send test notification (admin only)
 app.post(
     "/test",

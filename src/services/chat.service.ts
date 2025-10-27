@@ -4,6 +4,7 @@ import { UserChatStatus } from "../models/user_chat_status.model";
 import { User } from "../models/user.model";
 import { ChatValidationService } from "./chat_validation.service";
 import { SocketService } from "./socket.service";
+import { PushNotificationService } from "./push_notification.service";
 import log, { LogTypes } from "../libs/logger";
 
 export class ChatService {
@@ -288,6 +289,14 @@ export class ChatService {
             } catch (error) {
                 log(`⚠️ Failed to broadcast message via WebSocket: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
                 // Don't fail the whole operation if WebSocket broadcast fails
+            }
+
+            // 📱 PUSH NOTIFICATIONS: Send to offline/inactive room members
+            try {
+                await this.sendChatPushNotification(message, sender_id, room_id, campus_id);
+            } catch (error) {
+                log(`⚠️ Failed to send push notification: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
+                // Don't fail the whole operation if push notification fails
             }
 
             return { success: true, data: message };
@@ -1213,4 +1222,118 @@ export class ChatService {
     //         return { success: false, error: "Failed to get class members" };
     //     }
     // }
+
+    /**
+     * Send push notification for new chat message
+     * Only sends to users who are:
+     * - Not currently connected via WebSocket
+     * - Not actively viewing the chat room
+     * - Have push notifications enabled
+     */
+    private static async sendChatPushNotification(
+        message: IChatMessage,
+        sender_id: string,
+        room_id: string,
+        campus_id: string
+    ): Promise<void> {
+        try {
+            // Get room details to find recipients
+            const room = await ChatRoom.findById(room_id);
+            if (!room) {
+                log(`Room ${room_id} not found for push notification`, LogTypes.ERROR, "CHAT_SERVICE");
+                return;
+            }
+
+            // Get sender info for notification display
+            const senderResult = await User.find({ id: sender_id });
+            const sender = senderResult.rows?.[0];
+            const senderName = sender 
+                ? `${sender.first_name} ${sender.last_name}`.trim() 
+                : "Someone";
+
+            // Get all room members except the sender
+            const recipientIds = room.members.filter(memberId => memberId !== sender_id);
+
+            if (recipientIds.length === 0) {
+                return;
+            }
+
+            // Get online users in this chat room (those actively viewing)
+            const onlineUsersInRoom = SocketService.getOnlineUsersInChatRoom(room_id);
+
+            // Filter out online users who are actively viewing the chat
+            const offlineRecipients = recipientIds.filter(
+                userId => !onlineUsersInRoom.includes(userId)
+            );
+
+            if (offlineRecipients.length === 0) {
+                log(`All recipients are online in room ${room_id}, skipping push notification`, LogTypes.LOGS, "CHAT_SERVICE");
+                return;
+            }
+
+            // Prepare notification content
+            let notificationTitle: string;
+            let notificationBody: string;
+
+            if (room.room_type === "personal") {
+                // Personal chat: Show sender name
+                notificationTitle = senderName;
+                notificationBody = message.message_type === "text" 
+                    ? message.content 
+                    : `Sent a ${message.message_type}`;
+            } else {
+                // Group chat: Show sender name + group name
+                notificationTitle = room.name;
+                notificationBody = `${senderName}: ${
+                    message.message_type === "text" 
+                        ? message.content 
+                        : `Sent a ${message.message_type}`
+                }`;
+            }
+
+            // Truncate message if too long
+            if (notificationBody.length > 100) {
+                notificationBody = notificationBody.substring(0, 97) + "...";
+            }
+
+            // Send push notification
+            const result = await PushNotificationService.sendToSpecificUsers({
+                title: notificationTitle,
+                message: notificationBody,
+                notification_type: "class", // Using 'class' as it's closest to group messaging
+                campus_id,
+                target_users: offlineRecipients,
+                data: {
+                    type: "chat_message",
+                    chat_type: room.room_type,
+                    room_id,
+                    message_id: message.id,
+                    sender_id,
+                    sender_name: senderName,
+                    message_type: message.message_type,
+                    timestamp: new Date().toISOString(),
+                },
+            });
+
+            if (result.success) {
+                log(
+                    `✅ Push notification sent for message ${message.id} to ${result.successful_sends}/${offlineRecipients.length} recipients`,
+                    LogTypes.LOGS,
+                    "CHAT_SERVICE"
+                );
+            } else {
+                log(
+                    `❌ Push notification failed for message ${message.id}: ${result.details.errors.join(", ")}`,
+                    LogTypes.ERROR,
+                    "CHAT_SERVICE"
+                );
+            }
+        } catch (error) {
+            log(
+                `❌ Error sending chat push notification: ${error instanceof Error ? error.message : "Unknown error"}`,
+                LogTypes.ERROR,
+                "CHAT_SERVICE"
+            );
+        }
+    }
 }

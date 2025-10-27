@@ -1055,4 +1055,27 @@ export class SocketService {
             activeChatRooms: 0 // Can be enhanced to track active chat rooms
         };
     }
+
+    /**
+     * Get list of user IDs who are currently online in a specific chat room
+     * A user is considered "in room" if they have an active WebSocket connection
+     * and are joined to the room
+     */
+    public static getOnlineUsersInChatRoom(roomId: string): string[] {
+        const roomName = `chat_room_${roomId}`;
+        const onlineUsers: string[] = [];
+
+        // Iterate through all connected sockets to find users in this room
+        this.io.sockets.sockets.forEach((socket) => {
+            // Check if socket is in the room
+            if (socket.rooms.has(roomName)) {
+                const userId = socket.data?.user_id;
+                if (userId && !onlineUsers.includes(userId)) {
+                    onlineUsers.push(userId);
+                }
+            }
+        });
+
+        return onlineUsers;
+    }
 }

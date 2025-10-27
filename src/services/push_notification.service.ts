@@ -351,7 +351,46 @@ export class PushNotificationService {
             });
 
             return result.rows || [];
-        } catch {
+        } catch (error) {
+            console.error("Error fetching user device tokens:", error);
+            return [];
+        }
+    }
+
+    /**
+     * Get all device tokens for a campus (Admin only)
+     */
+    public static async getCampusDeviceTokens(
+        campus_id: string,
+        filters?: {
+            is_active?: boolean;
+            device_type?: "android" | "ios" | "web";
+            user_id?: string;
+        }
+    ): Promise<IUserDeviceToken[]> {
+        try {
+            const query: Record<string, unknown> = {
+                campus_id,
+            };
+
+            // Apply optional filters
+            if (filters?.is_active !== undefined) {
+                query.is_active = filters.is_active;
+            }
+
+            if (filters?.device_type) {
+                query.device_type = filters.device_type;
+            }
+
+            if (filters?.user_id) {
+                query.user_id = filters.user_id;
+            }
+
+            const result = await UserDeviceToken.find(query);
+
+            return result.rows || [];
+        } catch (error) {
+            console.error("Error fetching campus device tokens:", error);
             return [];
         }
     }

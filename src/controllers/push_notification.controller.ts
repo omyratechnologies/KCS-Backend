@@ -116,6 +116,58 @@ export class PushNotificationController {
     };
 
     /**
+     * Get all campus device tokens (Admin only)
+     */
+    public static readonly getCampusDeviceTokens = async (ctx: Context) => {
+        try {
+            const user_type = ctx.get("user_type");
+            const campus_id = ctx.get("campus_id");
+
+            // Only allow admins to view all campus tokens
+            if (!["Admin", "Super Admin"].includes(user_type)) {
+                return ctx.json({ success: false, message: "Unauthorized - Admin access required" }, 403);
+            }
+
+            // Get query parameters for filtering
+            const { is_active, device_type, user_id } = ctx.req.query();
+
+            const filters: {
+                is_active?: boolean;
+                device_type?: "android" | "ios" | "web";
+                user_id?: string;
+            } = {};
+
+            if (is_active !== undefined) {
+                filters.is_active = is_active === "true" || is_active === "1";
+            }
+
+            if (device_type && ["android", "ios", "web"].includes(device_type as string)) {
+                filters.device_type = device_type as "android" | "ios" | "web";
+            }
+
+            if (user_id) {
+                filters.user_id = user_id as string;
+            }
+
+            const tokens = await PushNotificationService.getCampusDeviceTokens(campus_id, filters);
+
+            return ctx.json({
+                success: true,
+                data: tokens,
+                total: tokens.length,
+            });
+        } catch (error) {
+            return ctx.json(
+                {
+                    success: false,
+                    message: error instanceof Error ? error.message : "Unknown error",
+                },
+                500
+            );
+        }
+    };
+
+    /**
      * Send a test push notification (admin only)
      */
     public static readonly sendTestNotification = async (ctx: Context) => {
