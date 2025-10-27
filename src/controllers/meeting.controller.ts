@@ -1126,15 +1126,21 @@ export class MeetingController {
                 );
             }
 
-            // Check password if required
-            if (meeting.meeting_password && meeting.meeting_password !== meeting_password) {
-                return ctx.json(
-                    {
-                        success: false,
-                        message: "Invalid meeting password",
-                    },
-                    401
-                );
+            // ✅ FIXED: Password only required for guests, not invited participants
+            // Invited participants (creator/participant by ID/email) don't need password
+            const isInvitedParticipant = isCreator || isParticipantById || isParticipantByEmail;
+            
+            // Only check password if user is a guest (not invited) and meeting has password
+            if (!isInvitedParticipant && allowsGuests && meeting.meeting_password) {
+                if (meeting.meeting_password !== meeting_password) {
+                    return ctx.json(
+                        {
+                            success: false,
+                            message: "Invalid meeting password",
+                        },
+                        401
+                    );
+                }
             }
 
             // Check if meeting is active
