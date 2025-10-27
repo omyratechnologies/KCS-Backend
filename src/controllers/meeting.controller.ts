@@ -1,6 +1,7 @@
 import { Context } from "hono";
 
 import { IMeetingData } from "@/models/meeting.model";
+import { User } from "@/models/user.model";
 import { MeetingService } from "@/services/meeting.service";
 import { SocketService } from "@/services/socket.service";
 import { WebRTCService } from "@/services/webrtc.service";
@@ -119,14 +120,14 @@ export class MeetingController {
     };
 
     /**
-     * Get all meetings with real-time status
+     * Get all meetings where user is creator or participant
      */
     public static readonly getAllMeetings = async (ctx: Context) => {
         try {
             const campus_id = ctx.get("campus_id");
-            const creator_id = ctx.get("user_id");
+            const user_id = ctx.get("user_id");
 
-            const meetings = await MeetingService.getAllMeetings(campus_id, creator_id);
+            const meetings = await MeetingService.getAllMeetings(campus_id, user_id);
 
             return ctx.json({
                 success: true,
@@ -146,13 +147,56 @@ export class MeetingController {
     };
 
     /**
-     * Get meeting by ID with full details
+     * Get meeting by ID with full details (with access control)
      */
     public static readonly getMeetingById = async (ctx: Context) => {
         try {
             const { meeting_id } = ctx.req.param();
+            const user_id = ctx.get("user_id");
+            const campus_id = ctx.get("campus_id");
 
             const meeting = await MeetingService.getMeetingById(meeting_id);
+
+            // ✅ SECURITY: Check campus isolation
+            if (meeting.campus_id !== campus_id) {
+                return ctx.json(
+                    {
+                        success: false,
+                        message: "Access denied - meeting not found in your campus",
+                    },
+                    403
+                );
+            }
+
+            // ✅ SECURITY: Check if user has access to this meeting
+            // User must be either creator or participant
+            const isCreator = meeting.creator_id === user_id;
+            const isParticipantById = meeting.participants?.includes(user_id);
+
+            // Check email-based participation
+            let isParticipantByEmail = false;
+            if (!isParticipantById && !isCreator) {
+                try {
+                    const user = await User.findById(user_id);
+                    if (user?.email) {
+                        isParticipantByEmail = meeting.participants?.includes(user.email) || false;
+                    }
+                } catch (error) {
+                    console.warn("Failed to check email participation:", error);
+                }
+            }
+
+            const hasAccess = isCreator || isParticipantById || isParticipantByEmail;
+
+            if (!hasAccess) {
+                return ctx.json(
+                    {
+                        success: false,
+                        message: "Access denied - you are not a participant in this meeting",
+                    },
+                    403
+                );
+            }
 
             // Add real-time statistics if meeting is live
             let liveStats: any = null;
@@ -196,13 +240,16 @@ export class MeetingController {
 
     /**
      * Get meetings where user is a participant
+     * @deprecated Use getAllMeetings instead - same functionality
      */
     public static readonly getMeetingByParticipantId = async (ctx: Context) => {
         try {
             const participant_id = ctx.get("user_id");
+            const campus_id = ctx.get("campus_id");
 
-            const meetings = await MeetingService.getMeetingByParticipantId(participant_id);
+            const meetings = await MeetingService.getMeetingByParticipantId(participant_id, campus_id);
 
+            // ✅ FIXED: Consistent response - always return success with data (even if empty)
             return ctx.json({
                 success: true,
                 data: meetings,
@@ -213,9 +260,9 @@ export class MeetingController {
             return ctx.json(
                 {
                     success: false,
-                    message: error instanceof Error ? error.message : "No meetings found",
+                    message: error instanceof Error ? error.message : "Failed to fetch meetings",
                 },
-                404
+                500
             );
         }
     };
@@ -1044,6 +1091,36 @@ export class MeetingController {
                     {
                         success: false,
                         message: "Access denied",
+                    },
+                    403
+                );
+            }
+
+            // ✅ SECURITY: Validate user is invited to this meeting
+            // User must be either creator, participant (by ID or email), or guests must be allowed
+            const isCreator = meeting.creator_id === user_id;
+            const isParticipantById = meeting.participants?.includes(user_id);
+            const allowsGuests = meeting.allow_guests === true;
+
+            let isParticipantByEmail = false;
+            if (!isParticipantById && !isCreator && !allowsGuests) {
+                try {
+                    const user = await User.findById(user_id);
+                    if (user?.email) {
+                        isParticipantByEmail = meeting.participants?.includes(user.email) || false;
+                    }
+                } catch (error) {
+                    console.warn("Failed to check email participation:", error);
+                }
+            }
+
+            const hasAccess = isCreator || isParticipantById || isParticipantByEmail || allowsGuests;
+
+            if (!hasAccess) {
+                return ctx.json(
+                    {
+                        success: false,
+                        message: "Access denied: You are not invited to this meeting",
                     },
                     403
                 );

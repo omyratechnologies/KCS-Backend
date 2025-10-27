@@ -524,25 +524,57 @@ export class MeetingService {
     };
 
     /**
-     * Get all meetings by campus and creator with real-time status
+     * Get all meetings by campus where user is creator or participant
      */
-    public static readonly getAllMeetings = async (campus_id: string, creator_id: string): Promise<IMeetingData[]> => {
+    public static readonly getAllMeetings = async (campus_id: string, user_id: string): Promise<IMeetingData[]> => {
         try {
-            const meetings = await Meeting.find(
-                { campus_id, creator_id, is_deleted: false },
+            // Get user details to check email
+            let userEmail: string | null = null;
+            try {
+                const user = await User.findById(user_id);
+                userEmail = user?.email || null;
+            } catch (error) {
+                MeetingErrorMonitor.logError("getAllMeetings:userLookup", error as Error, {
+                    user_id,
+                });
+            }
+
+            // Get all meetings in the campus (not deleted)
+            const allMeetings = await Meeting.find(
+                { campus_id, is_deleted: false },
                 {
                     sort: { updated_at: "DESC" },
                 }
             );
 
-            // Return empty array if no meetings found - this is valid
-            if (meetings.rows.length === 0) {
+            // Return empty array if no meetings found
+            if (allMeetings.rows.length === 0) {
                 return [];
             }
 
+            // Filter meetings where user is creator or participant
+            const relevantMeetings = allMeetings.rows.filter((meeting) => {
+                // User is the creator
+                if (meeting.creator_id === user_id) {
+                    return true;
+                }
+
+                // User is in the participants list (by user_id)
+                if (meeting.participants && meeting.participants.includes(user_id)) {
+                    return true;
+                }
+
+                // User is in the participants list (by email)
+                if (userEmail && meeting.participants && meeting.participants.includes(userEmail)) {
+                    return true;
+                }
+
+                return false;
+            });
+
             // Enhance with real-time participant counts
             return await Promise.all(
-                meetings.rows.map(async (meeting) => {
+                relevantMeetings.map(async (meeting) => {
                     try {
                         if (meeting.meeting_status === "live") {
                             const liveParticipants = await MeetingParticipant.find({
@@ -564,7 +596,7 @@ export class MeetingService {
         } catch (error) {
             MeetingErrorMonitor.logError("getAllMeetings", error as Error, {
                 campus_id,
-                creator_id,
+                user_id,
             });
             throw error;
         }
@@ -617,23 +649,43 @@ export class MeetingService {
 
     /**
      * Get meetings where user is a participant
+     * @deprecated Use getAllMeetings instead - this method has the same functionality
+     * This method is maintained for backward compatibility
      */
-    public static readonly getMeetingByParticipantId = async (participant_id: string): Promise<IMeetingData[]> => {
-        const meetings = await Meeting.find(
-            {
-                participants: participant_id,
-                is_deleted: false,
-            },
-            {
-                sort: { updated_at: "DESC" },
-            }
-        );
-
-        if (meetings.rows.length === 0) {
-            throw new Error("Meetings not found");
+    public static readonly getMeetingByParticipantId = async (
+        participant_id: string, 
+        campus_id?: string
+    ): Promise<IMeetingData[]> => {
+        // Get user's email for email-based participant matching
+        let user_email: string | undefined;
+        try {
+            const user = await User.findById(participant_id);
+            user_email = user?.email;
+        } catch (error) {
+            console.warn("Failed to fetch user email for participant matching:", error);
         }
 
-        return meetings.rows;
+        // Fetch all meetings in the campus (or all if no campus specified)
+        const query: any = { is_deleted: false };
+        if (campus_id) {
+            query.campus_id = campus_id;
+        }
+
+        const meetings = await Meeting.find(query, {
+            sort: { updated_at: "DESC" },
+        });
+
+        // Filter meetings where user is creator OR participant (by ID or email)
+        const userMeetings = meetings.rows.filter((meeting: any) => {
+            const isCreator = meeting.creator_id === participant_id;
+            const isParticipantById = meeting.participants?.includes(participant_id);
+            const isParticipantByEmail = user_email && meeting.participants?.includes(user_email);
+            
+            return isCreator || isParticipantById || isParticipantByEmail;
+        });
+
+        // ✅ FIXED: Return empty array instead of throwing error for consistency
+        return userMeetings;
     };
 
     /**
