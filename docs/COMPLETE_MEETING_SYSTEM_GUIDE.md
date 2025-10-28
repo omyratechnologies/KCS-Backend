@@ -1,9 +1,9 @@
 # Complete Meeting System Guide
 
-**Version:** 2.1  
-**Last Updated:** October 27, 2025  
+**Version:** 2.2  
+**Last Updated:** October 29, 2025  
 **System:** KCS Real-time Video Conferencing Platform  
-**Security Status:** ✅ All Critical Issues Fixed
+**Security Status:** ✅ All Critical Issues Fixed + WebSocket Enhancements
 
 ---
 
@@ -2121,6 +2121,146 @@ All error responses follow consistent structure:
 
 ## Recent Updates & Security Fixes
 
+### October 29, 2025 - WebSocket Meeting Join Enhancements
+
+**Critical fixes to WebSocket meeting join functionality for multi-participant support.**
+
+#### ✅ Enhancement #1: Accept userId and userName in Payload (IMPLEMENTED)
+
+**Change:** The `join-meeting` WebSocket event now accepts `userId` and `userName` parameters from the client payload.
+
+**Before:**
+```typescript
+socket.on("join-meeting", async (data: { 
+  meetingId: string; 
+  meeting_password?: string 
+})
+```
+
+**After:**
+```typescript
+socket.on("join-meeting", async (data: { 
+  meetingId: string; 
+  userId?: string;        // NEW
+  userName?: string;      // NEW
+  meeting_password?: string 
+})
+```
+
+**Impact:** Frontend can now explicitly provide user identification, improving compatibility and allowing fallback to auth-based data.
+
+---
+
+#### ✅ Enhancement #2: Unique Session-Based ParticipantId (IMPLEMENTED)
+
+**Change:** ParticipantId generation changed from database-generated ID to session-based unique identifier.
+
+**Before:**
+```typescript
+const participant = await MeetingParticipant.create(participantData);
+const participantId = participant.id; // Database ID
+```
+
+**After:**
+```typescript
+const participantId = `${meetingId}_${userId}_${Date.now()}`;
+const participant = await MeetingParticipant.create({
+    ...participantData,
+    peer_connection_id: participantId  // Session-based ID
+});
+```
+
+**Impact:** Each join session gets a unique ID. If the same user rejoins, they get a NEW participantId, preventing conflicts and enabling proper rejoin handling.
+
+---
+
+#### ✅ Enhancement #3: Media Status in Broadcasts (IMPLEMENTED)
+
+**Change:** `participant-joined` broadcast now includes initial media status.
+
+**Before:**
+```typescript
+socket.to(meetingId).emit("participant-joined", {
+    participantId,
+    userName,
+    userId,
+    permissions
+});
+```
+
+**After:**
+```typescript
+socket.to(meetingId).emit("participant-joined", {
+    participantId,
+    userName,
+    userId,
+    audio: true,      // NEW
+    video: true,      // NEW
+    screen: false,    // NEW
+    permissions
+});
+```
+
+**Impact:** Existing participants immediately see the new joiner's media status without additional queries.
+
+---
+
+#### ✅ Enhancement #4: Correct ParticipantId in Participant-Left (IMPLEMENTED)
+
+**Change:** `participant-left` event now uses session-based participantId instead of userId.
+
+**Before:**
+```typescript
+socket.to(meetingId).emit("participant-left", {
+    participantId: userId,  // ❌ Using userId
+    userName
+});
+```
+
+**After:**
+```typescript
+const participant = await MeetingParticipant.findOne({
+    meeting_id: meetingId,
+    socket_id: socket.id
+});
+const participantId = participant?.peer_connection_id || userId;
+
+socket.to(meetingId).emit("participant-left", {
+    participantId: participantId,  // ✅ Session-based ID
+    userName
+});
+```
+
+**Impact:** Participants are correctly identified and removed using their session ID.
+
+---
+
+#### ✅ Enhancement #5: Improved getMeetingParticipants (IMPLEMENTED)
+
+**Change:** `getMeetingParticipants` now returns properly formatted participant objects with media status.
+
+**Before:**
+```typescript
+return participants.rows || [];
+```
+
+**After:**
+```typescript
+return (participants.rows || []).map((p: any) => ({
+    participantId: p.peer_connection_id || p.id,
+    userId: p.user_id,
+    userName: p.participant_name,
+    audio: p.media_status?.audio_enabled ?? true,
+    video: p.media_status?.video_enabled ?? true,
+    screen: p.media_status?.screen_sharing ?? false,
+    permissions: p.permissions
+}));
+```
+
+**Impact:** New joiners receive complete participant information including current media states.
+
+---
+
 ### October 27, 2025 - Security Audit & Complete Fix Deployment
 
 A comprehensive security audit was completed, identifying and fixing 5 critical issues. All issues have been resolved and deployed.
@@ -2402,7 +2542,8 @@ For more detailed information about the security fixes:
 
 *This document covers the complete KCS Meeting System API and WebSocket implementation. For code examples and integration guides, please refer to the developer documentation.*
 
-**Document Version:** 2.1  
-**Last Updated:** October 27, 2025  
+**Document Version:** 2.2  
+**Last Updated:** October 29, 2025  
 **Security Update:** October 27, 2025 - All critical issues fixed  
+**WebSocket Enhancement:** October 29, 2025 - Multi-participant join support  
 **Next Review:** January 2026

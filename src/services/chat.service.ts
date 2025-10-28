@@ -641,6 +641,8 @@ export class ChatService {
 
     /**
      * Mark message as seen by a user
+     * When a user sees a message, mark ALL previous unseen messages in that conversation as seen
+     * This clears the unread count for both users in the conversation
      */
     public static async markMessageAsSeen(
         user_id: string,
@@ -666,8 +668,9 @@ export class ChatService {
             }
 
             // Verify user has access to this room
+            let room: any = null;
             if (message.room_id) {
-                const room = await ChatRoom.findById(message.room_id);
+                room = await ChatRoom.findById(message.room_id);
                 if (!room || !room.members.includes(user_id)) {
                     return { success: false, error: "Access denied to this message" };
                 }
@@ -678,28 +681,76 @@ export class ChatService {
                 return { success: true }; // Silent success - sender's own message
             }
 
-            // Check if already seen by this user
-            if (message.seen_by && message.seen_by.includes(user_id)) {
-                return { success: true }; // Already seen
-            }
-
-            // Add user to seen_by array and update is_seen flag with timestamp
-            const updatedSeenBy = [...(message.seen_by || []), user_id];
-            const now = new Date();
-            
-            await ChatMessage.replaceById(message_id, {
-                ...message,
-                is_seen: true,
-                seen_by: updatedSeenBy,
-                seen_at: now,
-                updated_at: now,
+            // 🔥 NEW BEHAVIOR: Mark ALL unseen messages in this conversation as seen
+            // Get all unseen messages in the room that were sent before or at the same time as this message
+            const unseenMessages = await ChatMessage.find({
+                room_id: message.room_id,
+                campus_id: campus_id,
+                is_deleted: false,
+                created_at: { $lte: message.created_at },
+                sender_id: { $ne: user_id }, // Not sent by this user
             });
 
-            // 🚀 REAL-TIME BROADCAST: Notify sender about message being seen
+            const now = new Date();
+            const messagesToUpdate: string[] = [];
+            const alreadySeenByUser: string[] = [];
+
+            // Filter messages that haven't been seen by this user yet
+            for (const msg of (unseenMessages.rows || [])) {
+                if (!msg.seen_by || !msg.seen_by.includes(user_id)) {
+                    messagesToUpdate.push(msg.id);
+                } else {
+                    alreadySeenByUser.push(msg.id);
+                }
+            }
+
+            // Update all unseen messages
+            for (const msgId of messagesToUpdate) {
+                const msg = await ChatMessage.findById(msgId);
+                if (msg) {
+                    const updatedSeenBy = [...(msg.seen_by || []), user_id];
+                    
+                    await ChatMessage.replaceById(msgId, {
+                        ...msg,
+                        is_seen: true,
+                        seen_by: updatedSeenBy,
+                        seen_at: now,
+                        updated_at: now,
+                    });
+                }
+            }
+
+            log(
+                `✅ Marked ${messagesToUpdate.length} messages as seen by user ${user_id} in room ${message.room_id}`,
+                LogTypes.LOGS,
+                "CHAT_SERVICE"
+            );
+
+            // 🚀 REAL-TIME BROADCAST: Notify all room members about messages being seen
+            // This clears unread count for both/all users in the conversation
             try {
                 if (message.room_id) {
-                    SocketService.broadcastMessageSeen(message.room_id, message_id, user_id);
-                    log(`✅ Broadcasted message seen ${message_id} by user ${user_id}`, LogTypes.LOGS, "CHAT_SERVICE");
+                    // Broadcast each message seen event
+                    for (const msgId of messagesToUpdate) {
+                        SocketService.broadcastMessageSeen(message.room_id, msgId, user_id);
+                    }
+                    
+                    // Also broadcast a bulk update for efficiency
+                    SocketService.broadcastToChatRoom(message.room_id, "messages-bulk-seen", {
+                        type: "bulk_messages_seen",
+                        data: {
+                            messageIds: messagesToUpdate,
+                            seenBy: user_id,
+                            count: messagesToUpdate.length,
+                            timestamp: now.toISOString()
+                        }
+                    });
+                    
+                    log(
+                        `✅ Broadcasted ${messagesToUpdate.length} messages seen events to room ${message.room_id}`,
+                        LogTypes.LOGS,
+                        "CHAT_SERVICE"
+                    );
                 }
             } catch (error) {
                 log(`⚠️ Failed to broadcast message seen status: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");

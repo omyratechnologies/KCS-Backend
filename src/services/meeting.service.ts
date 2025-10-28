@@ -17,6 +17,7 @@ import { MeetingErrorMonitor } from "@/utils/meeting_error_monitor";
 
 import { SocketService } from "./socket.service";
 import { WebRTCService } from "./webrtc.service";
+import { PushNotificationService } from "./push_notification.service";
 
 // Import email functions
 import {
@@ -319,6 +320,90 @@ const sendMeetingCancellations = async (
 };
 
 /**
+ * Helper function to send push notifications for meeting events
+ */
+const sendMeetingPushNotifications = async (
+    meeting: IMeetingData,
+    participants: string[],
+    notificationType: "invitation" | "reminder" | "started" | "cancelled" | "updated" | "ending_soon",
+    additionalData?: Record<string, string | number | boolean>
+): Promise<void> => {
+    try {
+        if (participants.length === 0) {
+            return;
+        }
+
+        // Prepare notification content based on type
+        let title = "";
+        let message = "";
+        let data: Record<string, string | number | boolean> = {
+            meeting_id: meeting.id,
+            meeting_name: meeting.meeting_name,
+            scheduled_time: meeting.meeting_start_time.toISOString(),
+            meeting_room_id: meeting.meeting_room_id || "",
+            notification_type: "meeting",
+            meeting_event: notificationType,
+            ...additionalData,
+        };
+
+        switch (notificationType) {
+            case "invitation":
+                title = "📅 New Meeting Invitation";
+                message = `You've been invited to "${meeting.meeting_name}"`;
+                break;
+            case "reminder":
+                title = "⏰ Meeting Reminder";
+                message = `"${meeting.meeting_name}" starts soon`;
+                break;
+            case "started":
+                title = "🟢 Meeting Started";
+                message = `"${meeting.meeting_name}" has started. Join now!`;
+                break;
+            case "cancelled":
+                title = "❌ Meeting Cancelled";
+                message = `"${meeting.meeting_name}" has been cancelled`;
+                break;
+            case "updated":
+                title = "✏️ Meeting Updated";
+                message = `"${meeting.meeting_name}" details have been updated`;
+                break;
+            case "ending_soon":
+                title = "⏱️ Meeting Ending Soon";
+                message = `"${meeting.meeting_name}" will end in 5 minutes`;
+                break;
+        }
+
+        // Send push notification to specific users
+        const result = await PushNotificationService.sendToSpecificUsers({
+            title,
+            message,
+            data,
+            notification_type: "teacher", // Generic type for meetings
+            campus_id: meeting.campus_id,
+            target_users: participants,
+        });
+
+        if (!result.success) {
+            MeetingErrorMonitor.logError(
+                "sendMeetingPushNotifications:failed",
+                new Error(`Push notification failed: ${result.details.errors.join(", ")}`),
+                {
+                    meeting_id: meeting.id,
+                    notification_type: notificationType,
+                    participants_count: participants.length,
+                }
+            );
+        }
+    } catch (error) {
+        MeetingErrorMonitor.logError("sendMeetingPushNotifications", error as Error, {
+            meeting_id: meeting.id,
+            notification_type: notificationType,
+        });
+        // Don't throw - push notifications are not critical
+    }
+};
+
+/**
  * 🎪 Enhanced Meeting Service for Real-time Video Conferencing
  *
  * Supports:
@@ -502,6 +587,9 @@ export class MeetingService {
                     if (host && host.email) {
                         const meeting_url = `https://dev.letscatchup-kcs.com/meeting/${meeting.meeting_room_id}`;
                         await sendMeetingInvitations(meeting, host, data.participants, meeting_url);
+                        
+                        // 🔔 Send push notifications to invited participants
+                        await sendMeetingPushNotifications(meeting, data.participants, "invitation");
                     }
                 } catch (emailError) {
                     MeetingErrorMonitor.logError("createMeeting:invitations", emailError as Error, {
@@ -788,6 +876,17 @@ export class MeetingService {
                                     }
                                 })
                             );
+                            
+                            // 🔔 Send push notifications to all participants
+                            try {
+                                await sendMeetingPushNotifications(updatedMeeting, meeting.participants, "updated", {
+                                    changes_summary: Object.keys(data).join(", ")
+                                });
+                            } catch (pushError) {
+                                MeetingErrorMonitor.logError("updateMeeting:pushNotifications", pushError as Error, {
+                                    meeting_id: id,
+                                });
+                            }
                         }
                     } catch (emailError) {
                         MeetingErrorMonitor.logError("updateMeeting:emailNotifications", emailError as Error, {
@@ -877,6 +976,11 @@ export class MeetingService {
                                 meeting.participants,
                                 "Meeting has been cancelled by the organizer"
                             );
+                            
+                            // 🔔 Send push notifications to all participants
+                            await sendMeetingPushNotifications(meeting, meeting.participants, "cancelled", {
+                                cancellation_reason: "Meeting has been cancelled by the organizer"
+                            });
                         }
                     } catch (emailError) {
                         MeetingErrorMonitor.logError("deleteMeeting:cancellationEmails", emailError as Error, {
@@ -974,6 +1078,11 @@ export class MeetingService {
             // Notify participants
             try {
                 SocketService.sendToMeeting(meetingId, "meeting-started", updatedMeeting);
+                
+                // 🔔 Send push notifications to all participants
+                if (meeting.participants && meeting.participants.length > 0) {
+                    await sendMeetingPushNotifications(updatedMeeting, meeting.participants, "started");
+                }
             } catch (socketError) {
                 MeetingErrorMonitor.logError("startMeeting:notification", socketError as Error, {
                     meeting_id: meetingId,
