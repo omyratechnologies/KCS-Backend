@@ -114,12 +114,16 @@ export class SocketService {
      * Register meeting-related events
      */
     private static registerMeetingEvents(socket: Socket): void {
-        const { userId, userName, campusId } = socket.data;
+        const { userId: authUserId, userName: authUserName, campusId } = socket.data;
 
         // Join meeting room
-        socket.on("join-meeting", async (data: { meetingId: string; meeting_password?: string }) => {
+        socket.on("join-meeting", async (data: { meetingId: string; userId?: string; userName?: string; meeting_password?: string }) => {
             try {
                 const { meetingId, meeting_password } = data;
+                
+                // Use provided userId/userName from payload, fallback to auth data
+                const userId = data.userId || authUserId;
+                const userName = data.userName || authUserName;
 
                 // Verify meeting exists and user has access
                 const meeting = await Meeting.findById(meetingId);
@@ -163,6 +167,9 @@ export class SocketService {
                 }
                 this.meetingParticipants.get(meetingId)!.add(socket.id);
 
+                // Generate unique session-based participantId
+                const participantId = `${meetingId}_${userId}_${Date.now()}`;
+
                 // Create/update participant record
                 const participantData: Partial<IMeetingParticipant> = {
                     meeting_id: meetingId,
@@ -171,7 +178,7 @@ export class SocketService {
                     participant_email: socket.data.userEmail,
                     connection_status: "connected",
                     joined_at: new Date(),
-                    peer_connection_id: uuidv4(),
+                    peer_connection_id: participantId, // Use session-based ID
                     socket_id: socket.id,
                     ip_address: socket.handshake.address,
                     user_agent: socket.handshake.headers["user-agent"] || "",
@@ -199,20 +206,24 @@ export class SocketService {
                     await WebRTCService.createMeetingRouter(meetingId);
                 }
 
-                // Notify existing participants
+                // Get existing participants before notifying
+                const existingParticipants = await this.getMeetingParticipants(meetingId);
+
+                // Notify existing participants about the new joiner
                 socket.to(meetingId).emit("participant-joined", {
-                    participantId: participant.id,
+                    participantId: participantId,
                     userName,
                     userId,
+                    audio: true,
+                    video: true,
+                    screen: false,
                     permissions: participantData.permissions,
                 });
 
                 // Send meeting info to new participant
-                const existingParticipants = await this.getMeetingParticipants(meetingId);
-
                 socket.emit("meeting-joined", {
                     meeting,
-                    participantId: participant.id,
+                    participantId: participantId,
                     participants: existingParticipants,
                     webrtcConfig: meeting.webrtc_config,
                 });
@@ -754,6 +765,14 @@ export class SocketService {
         try {
             const { userId, userName } = socket.data;
 
+            // Get participant record to retrieve the session-based participantId
+            const participant = await MeetingParticipant.findOne({
+                meeting_id: meetingId,
+                socket_id: socket.id,
+            });
+            
+            const participantId = participant?.peer_connection_id || userId;
+
             // Remove from socket room
             await socket.leave(meetingId);
 
@@ -763,9 +782,9 @@ export class SocketService {
             // Handle WebRTC cleanup
             await WebRTCService.handleParticipantDisconnect(meetingId, userId);
 
-            // Notify other participants
+            // Notify other participants with session-based participantId
             socket.to(meetingId).emit("participant-left", {
-                participantId: userId,
+                participantId: participantId,
                 userName,
             });
 
@@ -803,7 +822,17 @@ export class SocketService {
             meeting_id: meetingId,
             connection_status: "connected",
         });
-        return participants.rows || [];
+        
+        // Format participants to include media status and session-based participantId
+        return (participants.rows || []).map((p: any) => ({
+            participantId: p.peer_connection_id || p.id,
+            userId: p.user_id,
+            userName: p.participant_name,
+            audio: p.media_status?.audio_enabled ?? true,
+            video: p.media_status?.video_enabled ?? true,
+            screen: p.media_status?.screen_sharing ?? false,
+            permissions: p.permissions,
+        }));
     }
 
     /**
