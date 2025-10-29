@@ -25,6 +25,7 @@ export class WebRTCService {
     private static workers: mediasoup.types.Worker[] = [];
     private static routers: Map<string, mediasoup.types.Router> = new Map();
     private static transports: Map<string, mediasoup.types.Transport> = new Map();
+    private static transportIdMap: Map<string, string> = new Map(); // mediasoup transport.id -> composite key
     private static producers: Map<string, mediasoup.types.Producer> = new Map();
     private static consumers: Map<string, mediasoup.types.Consumer> = new Map();
     private static rooms: Map<string, Set<string>> = new Map(); // room -> participants
@@ -251,6 +252,9 @@ export class WebRTCService {
 
         const transportId = `${meetingId}_${participantId}_${direction}`;
         this.transports.set(transportId, transport);
+        
+        // Store reverse mapping: mediasoup transport.id -> our composite key
+        this.transportIdMap.set(transport.id, transportId);
 
         // Add to room participants
         this.rooms.get(meetingId)?.add(participantId);
@@ -273,7 +277,15 @@ export class WebRTCService {
         transportId: string,
         dtlsParameters: mediasoup.types.DtlsParameters
     ): Promise<void> {
-        const transport = this.transports.get(transportId);
+        // First try to find by MediaSoup transport ID (from frontend)
+        let compositeKey = this.transportIdMap.get(transportId);
+        
+        // If not found, maybe it's already a composite key (backward compatibility)
+        if (!compositeKey) {
+            compositeKey = transportId;
+        }
+        
+        const transport = this.transports.get(compositeKey);
         if (!transport) {
             throw new Error(`Transport not found: ${transportId}`);
         }
@@ -401,6 +413,8 @@ export class WebRTCService {
         for (const transportId of [sendTransportId, recvTransportId]) {
             const transport = this.transports.get(transportId);
             if (transport && !transport.closed) {
+                // Remove from reverse mapping before closing
+                this.transportIdMap.delete(transport.id);
                 transport.close();
                 this.transports.delete(transportId);
             }
@@ -456,6 +470,8 @@ export class WebRTCService {
             if (transportId.startsWith(meetingId) && !transport.closed) {
                 transport.close();
                 this.transports.delete(transportId);
+                // Also remove from reverse mapping
+                this.transportIdMap.delete(transport.id);
             }
         }
 
