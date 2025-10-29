@@ -672,4 +672,23 @@ export class WebRTCService {
             memoryUsage: process.memoryUsage(),
         };
     }
+
+    /**
+     * Get router RTP capabilities for a meeting
+     * Required for client-side device initialization
+     */
+    public static getMeetingRouterRtpCapabilities(meetingId: string): mediasoup.types.RtpCapabilities | null {
+        if (!this.isMediaSoupAvailable) {
+            console.log(`⚠️ MediaSoup not available - cannot get RTP capabilities for meeting: ${meetingId}`);
+            return null;
+        }
+
+        const router = this.routers.get(meetingId);
+        if (!router) {
+            console.log(`⚠️ Router not found for meeting: ${meetingId}`);
+            return null;
+        }
+
+        return router.rtpCapabilities;
+    }
 }

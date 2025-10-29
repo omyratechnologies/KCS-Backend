@@ -201,6 +201,9 @@ export class SocketService {
                 // Get existing participants before notifying
                 const existingParticipants = await this.getMeetingParticipants(meetingId);
 
+                // Get router RTP capabilities for WebRTC initialization
+                const rtpCapabilities = WebRTCService.getMeetingRouterRtpCapabilities(meetingId);
+
                 // Notify existing participants about the new joiner
                 socket.to(meetingId).emit("participant-joined", {
                     participantId: participantId,
@@ -217,7 +220,10 @@ export class SocketService {
                     meeting,
                     participantId: participantId,
                     participants: existingParticipants,
-                    webrtcConfig: meeting.webrtc_config,
+                    webrtcConfig: {
+                        ...meeting.webrtc_config,
+                        rtpCapabilities: rtpCapabilities, // ✅ Added RTP capabilities for frontend
+                    },
                 });
 
                 console.log(`✅ ${userName} joined meeting ${meetingId}`);

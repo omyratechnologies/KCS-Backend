@@ -259,6 +259,9 @@ export class SocketServiceOptimized {
 
                 const existingParticipants = await this.getMeetingParticipants(meetingId);
 
+                // Get router RTP capabilities for WebRTC initialization
+                const rtpCapabilities = WebRTCService.getMeetingRouterRtpCapabilities(meetingId);
+
                 socket.to(meetingId).emit("participant-joined", {
                     participantId: participantId,
                     userName,
@@ -273,7 +276,10 @@ export class SocketServiceOptimized {
                     meeting,
                     participantId: participantId,
                     participants: existingParticipants,
-                    webrtcConfig: meeting.webrtc_config,
+                    webrtcConfig: {
+                        ...meeting.webrtc_config,
+                        rtpCapabilities: rtpCapabilities, // ✅ Added RTP capabilities for frontend
+                    },
                 });
 
                 console.log(`✅ ${userName} joined meeting ${meetingId}`);
