@@ -3,7 +3,7 @@ import { Context } from "hono";
 import { IMeetingData } from "@/models/meeting.model";
 import { User } from "@/models/user.model";
 import { MeetingService } from "@/services/meeting.service";
-import { SocketService } from "@/services/socket.service";
+import { SocketServiceOptimized as SocketService } from "@/services/socket.service.optimized";
 import { WebRTCService } from "@/services/webrtc.service";
 import { MeetingErrorMonitor } from "@/utils/meeting_error_monitor";
 

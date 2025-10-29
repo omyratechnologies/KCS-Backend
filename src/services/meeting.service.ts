@@ -15,7 +15,7 @@ import {
 import { User } from "@/models/user.model";
 import { MeetingErrorMonitor } from "@/utils/meeting_error_monitor";
 
-import { SocketService } from "./socket.service";
+import { SocketServiceOptimized as SocketService } from "./socket.service.optimized";
 import { WebRTCService } from "./webrtc.service";
 import { PushNotificationService } from "./push_notification.service";
 

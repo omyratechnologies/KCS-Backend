@@ -581,8 +581,124 @@ export class SocketServiceOptimized {
      * Register WebRTC signaling events
      */
     private static registerWebRTCEvents(socket: Socket): void {
-        // WebRTC events remain the same as original implementation
-        // ... (keeping existing WebRTC implementation)
+        // Create WebRTC transport
+        socket.on("create-transport", async (data: { meetingId: string; direction: "send" | "recv" }) => {
+            try {
+                const { meetingId, direction } = data;
+                const participantId = socket.data.userId;
+
+                const { transport, params } = await WebRTCService.createWebRtcTransport(
+                    meetingId,
+                    participantId,
+                    direction
+                );
+
+                socket.emit("transport-created", {
+                    direction,
+                    params,
+                });
+            } catch (error) {
+                console.error("Error creating transport:", error);
+                socket.emit("error", {
+                    message: "Failed to create transport",
+                });
+            }
+        });
+
+        // Connect transport
+        socket.on("connect-transport", async (data: { transportId: string; dtlsParameters: any }) => {
+            try {
+                await WebRTCService.connectTransport(data.transportId, data.dtlsParameters);
+                socket.emit("transport-connected", {
+                    transportId: data.transportId,
+                });
+            } catch (error) {
+                console.error("Error connecting transport:", error);
+                socket.emit("error", {
+                    message: "Failed to connect transport",
+                });
+            }
+        });
+
+        // Start producing media
+        socket.on("produce", async (data: { meetingId: string; kind: "audio" | "video"; rtpParameters: any }) => {
+            try {
+                const { meetingId, kind, rtpParameters } = data;
+                const participantId = socket.data.userId;
+
+                const { id } = await WebRTCService.produce(meetingId, participantId, rtpParameters, kind);
+
+                socket.emit("produced", { kind, producerId: id });
+
+                // Notify other participants
+                socket.to(meetingId).emit("new-producer", {
+                    participantId,
+                    producerId: id,
+                    kind,
+                });
+            } catch (error) {
+                console.error("Error producing media:", error);
+                socket.emit("error", {
+                    message: "Failed to produce media",
+                });
+            }
+        });
+
+        // Start consuming media
+        socket.on(
+            "consume",
+            async (data: {
+                meetingId: string;
+                producerParticipantId: string;
+                kind: "audio" | "video";
+                rtpCapabilities: any;
+            }) => {
+                try {
+                    const { meetingId, producerParticipantId, kind, rtpCapabilities } = data;
+                    const consumerParticipantId = socket.data.userId;
+
+                    const consumerData = await WebRTCService.consume(
+                        meetingId,
+                        consumerParticipantId,
+                        producerParticipantId,
+                        rtpCapabilities,
+                        kind
+                    );
+
+                    socket.emit("consumed", {
+                        ...consumerData,
+                        kind,
+                        producerParticipantId,
+                    });
+                } catch (error) {
+                    console.error("Error consuming media:", error);
+                    socket.emit("error", {
+                        message: "Failed to consume media",
+                    });
+                }
+            }
+        );
+
+        // Resume/pause consumer
+        socket.on("resume-consumer", async (data: { consumerId: string }) => {
+            try {
+                await WebRTCService.resumeConsumer(data.consumerId);
+                socket.emit("consumer-resumed", {
+                    consumerId: data.consumerId,
+                });
+            } catch (error) {
+                console.error("Error resuming consumer:", error);
+            }
+        });
+
+        socket.on("pause-consumer", async (data: { consumerId: string }) => {
+            try {
+                await WebRTCService.pauseConsumer(data.consumerId);
+                socket.emit("consumer-paused", { consumerId: data.consumerId });
+            } catch (error) {
+                console.error("Error pausing consumer:", error);
+            }
+        });
     }
 
     /**
@@ -935,6 +1051,57 @@ export class SocketServiceOptimized {
                     timestamp: new Date().toISOString()
                 });
             }
+        }
+    }
+
+    /**
+     * Notify all participants in a meeting (like Microsoft Teams notifications)
+     */
+    public static async notifyMeetingParticipants(
+        meetingId: string,
+        notification: {
+            type: string;
+            data: any;
+            exclude?: string[];
+        }
+    ): Promise<void> {
+        try {
+            const participantSockets = this.meetingParticipants.get(meetingId);
+            if (participantSockets) {
+                for (const socketId of participantSockets) {
+                    const socket = this.activeSockets.get(socketId);
+                    if (socket && (!notification.exclude || !notification.exclude.includes(socket.data.userId))) {
+                        socket.emit("meeting_notification", notification);
+                    }
+                }
+            }
+        } catch (error) {
+            log(`Error notifying meeting participants: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
+        }
+    }
+
+    /**
+     * Notify specific participants by their IDs
+     */
+    public static async notifySpecificParticipants(
+        participantIds: string[],
+        notification: {
+            type: string;
+            data: any;
+        }
+    ): Promise<void> {
+        try {
+            for (const userId of participantIds) {
+                const socketId = this.userSockets.get(userId);
+                if (socketId) {
+                    const socket = this.activeSockets.get(socketId);
+                    if (socket) {
+                        socket.emit("participant_notification", notification);
+                    }
+                }
+            }
+        } catch (error) {
+            log(`Error notifying specific participants: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
         }
     }
 
