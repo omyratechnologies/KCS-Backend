@@ -117,9 +117,9 @@ export class SocketService {
         const { userId: authUserId, userName: authUserName, campusId } = socket.data;
 
         // Join meeting room
-        socket.on("join-meeting", async (data: { meetingId: string; userId?: string; userName?: string; meeting_password?: string }) => {
+        socket.on("join-meeting", async (data: { meetingId: string; userId?: string; userName?: string }) => {
             try {
-                const { meetingId, meeting_password } = data;
+                const { meetingId } = data;
                 
                 // Use provided userId/userName from payload, fallback to auth data
                 const userId = data.userId || authUserId;
@@ -134,14 +134,6 @@ export class SocketService {
 
                 if (meeting.campus_id !== campusId) {
                     socket.emit("error", { message: "Access denied" });
-                    return;
-                }
-
-                // Check password if required
-                if (meeting.meeting_password && meeting.meeting_password !== meeting_password) {
-                    socket.emit("error", {
-                        message: "Invalid meeting password",
-                    });
                     return;
                 }
 

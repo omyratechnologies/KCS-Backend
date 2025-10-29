@@ -23,7 +23,6 @@ interface IMeetingData {
     current_participants: string[];
 
     // Security & Access Control
-    meeting_password?: string;
     waiting_room_enabled: boolean;
     require_host_approval: boolean;
     allow_guests: boolean;
@@ -198,7 +197,6 @@ const MeetingSchema = new Schema({
     current_participants: { type: [String], default: [] },
 
     // Security & Access Control
-    meeting_password: { type: String },
     waiting_room_enabled: { type: Boolean, default: false },
     require_host_approval: { type: Boolean, default: false },
     allow_guests: { type: Boolean, default: true },

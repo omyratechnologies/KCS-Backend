@@ -152,7 +152,6 @@ const sendMeetingInvitations = async (
                         host_phone: host.phone_number,
                         meeting_url,
                         meeting_id: meeting.meeting_room_id,
-                        meeting_password: meeting.meeting_password,
                         agenda: (meeting.meeting_meta_data as any)?.agenda || "",
                         participants_count: participants.length,
                         email: participant.email,
@@ -431,7 +430,6 @@ export class MeetingService {
             // Enhanced options
             meeting_type?: "scheduled" | "instant" | "recurring";
             max_participants?: number;
-            meeting_password?: string;
             waiting_room_enabled?: boolean;
             require_host_approval?: boolean;
             features?: {
@@ -498,7 +496,6 @@ export class MeetingService {
                 current_participants: [],
 
                 // Security & Access Control
-                meeting_password: data.meeting_password,
                 waiting_room_enabled: data.waiting_room_enabled || false,
                 require_host_approval: data.require_host_approval || false,
                 allow_guests: true,

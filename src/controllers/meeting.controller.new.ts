@@ -34,11 +34,10 @@ export class MeetingController {
                 // Enhanced options
                 meeting_type = "scheduled",
                 max_participants = 100,
-                meeting_password,
                 waiting_room_enabled = false,
                 require_host_approval = false,
-                features = {},
-                recording_config = {},
+                features,
+                recording_config,
             }: {
                 participants: string[];
                 meeting_name: string;
@@ -49,7 +48,6 @@ export class MeetingController {
                 meeting_meta_data: object;
                 meeting_type?: "scheduled" | "instant" | "recurring";
                 max_participants?: number;
-                meeting_password?: string;
                 waiting_room_enabled?: boolean;
                 require_host_approval?: boolean;
                 features?: {
@@ -82,7 +80,6 @@ export class MeetingController {
                 participants,
                 meeting_type,
                 max_participants,
-                meeting_password,
                 waiting_room_enabled,
                 require_host_approval,
                 features,
@@ -550,7 +547,6 @@ export class MeetingController {
     public static readonly joinMeeting = async (ctx: Context) => {
         try {
             const { meeting_id } = ctx.req.param();
-            const { meeting_password } = await ctx.req.json();
             const user_id = ctx.get("user_id");
             const campus_id = ctx.get("campus_id");
 
@@ -564,17 +560,6 @@ export class MeetingController {
                         message: "Access denied",
                     },
                     403
-                );
-            }
-
-            // Check password if required
-            if (meeting.meeting_password && meeting.meeting_password !== meeting_password) {
-                return ctx.json(
-                    {
-                        success: false,
-                        message: "Invalid meeting password",
-                    },
-                    401
                 );
             }
 
@@ -602,7 +587,6 @@ export class MeetingController {
                         current_participants: meeting.current_participants?.length || 0,
                     },
                     canJoin: true,
-                    requiresPassword: !!meeting.meeting_password,
                     waitingRoomEnabled: meeting.waiting_room_enabled,
                 },
             });

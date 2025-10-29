@@ -173,7 +173,6 @@ export interface MeetingInvitationEmailData {
     host_phone?: string;
     meeting_url: string;
     meeting_id: string;
-    meeting_password?: string;
     calendar_url?: string;
     meeting_materials_url?: string;
     agenda?: string;

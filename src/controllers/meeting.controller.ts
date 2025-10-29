@@ -44,14 +44,13 @@ export class MeetingController {
                 meeting_name,
                 meeting_start_time,
                 participants,
-                // Enhanced options
+                                // Enhanced options
                 meeting_type = "scheduled",
                 max_participants = 100,
-                meeting_password,
                 waiting_room_enabled = false,
                 require_host_approval = false,
-                features = {},
-                recording_config = {},
+                features,
+                recording_config,
             }: {
                 participants: string[];
                 meeting_name: string;
@@ -62,7 +61,6 @@ export class MeetingController {
                 meeting_meta_data: object;
                 meeting_type?: "scheduled" | "instant" | "recurring";
                 max_participants?: number;
-                meeting_password?: string;
                 waiting_room_enabled?: boolean;
                 require_host_approval?: boolean;
                 features?: {
@@ -95,7 +93,6 @@ export class MeetingController {
                 participants,
                 meeting_type,
                 max_participants,
-                meeting_password,
                 waiting_room_enabled,
                 require_host_approval,
                 features,
@@ -1079,7 +1076,6 @@ export class MeetingController {
     public static readonly joinMeeting = async (ctx: Context) => {
         try {
             const { meeting_id } = ctx.req.param();
-            const { meeting_password } = await ctx.req.json();
             const user_id = ctx.get("user_id");
             const campus_id = ctx.get("campus_id");
 
@@ -1126,21 +1122,19 @@ export class MeetingController {
                 );
             }
 
-            // ✅ FIXED: Password only required for guests, not invited participants
-            // Invited participants (creator/participant by ID/email) don't need password
+            // ✅ FIXED: No password required anymore
+            // Invited participants (creator/participant by ID/email) can join directly
             const isInvitedParticipant = isCreator || isParticipantById || isParticipantByEmail;
             
-            // Only check password if user is a guest (not invited) and meeting has password
-            if (!isInvitedParticipant && allowsGuests && meeting.meeting_password) {
-                if (meeting.meeting_password !== meeting_password) {
-                    return ctx.json(
-                        {
-                            success: false,
-                            message: "Invalid meeting password",
-                        },
-                        401
-                    );
-                }
+            // Check if user is allowed to join
+            if (!isInvitedParticipant && !allowsGuests) {
+                return ctx.json(
+                    {
+                        success: false,
+                        message: "You are not invited to this meeting",
+                    },
+                    403
+                );
             }
 
             // Check if meeting is active
@@ -1167,7 +1161,6 @@ export class MeetingController {
                         current_participants: meeting.current_participants?.length || 0,
                     },
                     canJoin: true,
-                    requiresPassword: !!meeting.meeting_password,
                     waitingRoomEnabled: meeting.waiting_room_enabled,
                 },
             });

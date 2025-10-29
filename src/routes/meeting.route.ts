@@ -33,12 +33,6 @@ const enhancedCreateMeetingSchema = createMeetingRequestBodySchema
     .extend({
         meeting_type: z.enum(["scheduled", "instant", "recurring"]).optional(),
         max_participants: z.number().min(2).max(10_000).optional(),
-        meeting_password: z
-            .string()
-            .min(6)
-            .max(50)
-            .optional()
-            .transform((val) => val?.trim()),
         waiting_room_enabled: z.boolean().optional(),
         require_host_approval: z.boolean().optional(),
         features: z
@@ -76,13 +70,7 @@ const enhancedCreateMeetingSchema = createMeetingRequestBodySchema
         }
     );
 
-const joinMeetingSchema = z.object({
-    meeting_password: z
-        .string()
-        .optional()
-        .transform((val) => val?.trim()),
-});
-
+// Remove the join meeting schema as password is no longer needed
 // Parameter validation schemas
 const meetingIdSchema = z.object({
     meeting_id: z.string().min(1, "Meeting ID is required"),
@@ -341,7 +329,6 @@ app.post(
             },
         },
     }),
-    zValidator("json", joinMeetingSchema),
     MeetingController.joinMeeting
 );
 
