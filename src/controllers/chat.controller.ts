@@ -1,7 +1,7 @@
 import { Context } from "hono";
-import { ChatService } from "../services/chat.service";
+import { ChatServiceOptimized as ChatService } from "../services/chat.service.optimized";
 import { ChatValidationService } from "../services/chat_validation.service";
-import { SocketService } from "../services/socket.service";
+import { SocketServiceOptimized as SocketService } from "../services/socket.service.optimized";
 import log, { LogTypes } from "../libs/logger";
 
 export class ChatController {

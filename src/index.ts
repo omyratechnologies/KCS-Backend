@@ -5,7 +5,8 @@ import { Cache } from "@/libs/cache/redis";
 import { initDB } from "@/libs/db";
 import log, { LogTypes } from "@/libs/logger";
 import { UploadFactory } from "@/libs/s3/upload.factory";
-import { SocketService } from "@/services/socket.service";
+import { SocketServiceOptimized as SocketService } from "@/services/socket.service.optimized";
+// import { SocketService } from "@/services/socket.service";
 import { WebRTCService } from "@/services/webrtc.service";
 import { FirebaseService } from "@/services/firebase.service";
 import { config } from "@/utils/env";
@@ -85,11 +86,11 @@ async function initializeServices() {
             log(`⚠️ WebRTC initialization failed, continuing without video features: ${error}`, LogTypes.ERROR, "INIT");
         }
 
-        // Initialize Socket.IO service for real-time communication
-        log("🔗 Initializing Socket.IO service...", LogTypes.LOGS, "INIT");
+        // Initialize Socket.IO service for real-time communication (OPTIMIZED)
+        log("🔗 Initializing Optimized Socket.IO service with Redis adapter...", LogTypes.LOGS, "INIT");
         try {
-            SocketService.initialize(server);
-            log("✅ Socket.IO service initialized", LogTypes.LOGS, "INIT");
+            await SocketService.initialize(server);
+            log("✅ Optimized Socket.IO service initialized with Redis adapter", LogTypes.LOGS, "INIT");
         } catch (error) {
             log(`⚠️ Socket.IO initialization failed, continuing without real-time features: ${error}`, LogTypes.ERROR, "INIT");
         }
