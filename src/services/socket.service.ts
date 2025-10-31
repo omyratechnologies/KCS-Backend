@@ -488,12 +488,12 @@ export class SocketService {
             });
         });
 
-        // Mark messages as seen
+        // Mark messages as seen with unread count reset
         socket.on("mark-messages-seen", async (data: { roomId: string; messageIds: string[] }) => {
             try {
                 const { roomId, messageIds } = data;
                 
-                // Broadcast to room that messages were seen
+                // Broadcast to other users in the room (not to self)
                 socket.to(`chat_room_${roomId}`).emit("messages-seen", {
                     userId,
                     roomId,
@@ -501,11 +501,14 @@ export class SocketService {
                     timestamp: new Date().toISOString()
                 });
                 
+                // Send acknowledgment to the user who marked messages as seen
                 socket.emit("messages-seen-acknowledged", { 
                     success: true, 
                     roomId, 
                     messageIds 
                 });
+                
+                console.log(`✅ User ${userId} marked ${messageIds.length} messages as seen in room ${roomId}`);
             } catch (error) {
                 console.error("Error marking messages seen:", error);
             }
@@ -945,7 +948,8 @@ export class SocketService {
     }
 
     /**
-     * Broadcast user status change (online/offline/typing)
+     * Broadcast user status change (online/offline/typing) to all relevant chat rooms
+     * FIX: Now broadcasts to specific rooms where user is a member for two-way online status
      */
     public static broadcastUserStatus(userId: string, status: {
         isOnline?: boolean;
@@ -953,6 +957,22 @@ export class SocketService {
         typingInRoom?: string;
         statusMessage?: string;
     }): void {
+        // Get all chat rooms and broadcast to rooms where user is a member
+        this.io.sockets.sockets.forEach((socket) => {
+            const socketRooms = [...socket.rooms];
+            for (const room of socketRooms) {
+                if (room.startsWith('chat_room_')) {
+                    // Broadcast to this room
+                    this.io.to(room).emit("chat-user-status-update", {
+                        userId,
+                        ...status,
+                        timestamp: new Date().toISOString()
+                    });
+                }
+            }
+        });
+        
+        // Also broadcast globally for users not in specific rooms
         this.io.emit("chat-user-status-update", {
             userId,
             ...status,

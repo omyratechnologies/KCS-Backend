@@ -477,7 +477,7 @@ export class SocketServiceOptimized {
             });
         });
 
-        // 🚀 OPTIMIZED: Mark messages as seen with batch update
+        // 🚀 OPTIMIZED: Mark messages as seen with batch update and unread count reset
         socket.on("mark-messages-seen", async (data: { roomId: string; messageIds: string[] }) => {
             try {
                 const { roomId, messageIds } = data;
@@ -485,7 +485,7 @@ export class SocketServiceOptimized {
                 // 🚀 OPTIMIZATION: Reset unread count in cache immediately
                 await ChatCacheService.resetUnreadCount(userId, roomId);
                 
-                // Broadcast immediately (DB update happens async)
+                // Broadcast to other users in the room (not to self)
                 socket.to(`chat_room_${roomId}`).emit("messages-seen", {
                     userId,
                     roomId,
@@ -493,11 +493,21 @@ export class SocketServiceOptimized {
                     timestamp: new Date().toISOString()
                 });
                 
+                // Send acknowledgment to the user who marked messages as seen
                 socket.emit("messages-seen-acknowledged", { 
                     success: true, 
                     roomId, 
                     messageIds 
                 });
+                
+                // Broadcast updated unread count to the user (now should be 0)
+                const newUnreadCount = await ChatCacheService.getUnreadCount(userId, roomId);
+                socket.emit("unread-count", { 
+                    roomId, 
+                    count: newUnreadCount 
+                });
+                
+                log(`✅ User ${userId} marked ${messageIds.length} messages as seen in room ${roomId}`, LogTypes.LOGS, "SOCKET_SERVICE");
             } catch (error) {
                 log(`Error marking messages seen: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
             }
@@ -1020,7 +1030,8 @@ export class SocketServiceOptimized {
     }
 
     /**
-     * 🚀 OPTIMIZED: Broadcast user status from Redis cache
+     * 🚀 OPTIMIZED: Broadcast user status from Redis cache to all relevant chat rooms
+     * FIX: Now broadcasts to specific rooms where user is a member for two-way online status
      */
     public static async broadcastUserStatus(userId: string, status: {
         isOnline?: boolean;
@@ -1028,11 +1039,32 @@ export class SocketServiceOptimized {
         typingInRoom?: string;
         statusMessage?: string;
     }): Promise<void> {
-        this.io.emit("chat-user-status-update", {
-            userId,
-            ...status,
-            timestamp: new Date().toISOString()
-        });
+        // Get user's rooms from cache
+        const userRooms = await ChatCacheService.getCachedUserRooms(userId);
+        
+        if (userRooms && userRooms.length > 0) {
+            // Broadcast to each room the user is in
+            for (const roomId of userRooms) {
+                this.io.to(`chat_room_${roomId}`).emit("chat-user-status-update", {
+                    userId,
+                    ...status,
+                    timestamp: new Date().toISOString()
+                });
+            }
+        }
+        
+        // Also send to the user's own socket for consistency
+        const socketId = this.userSockets.get(userId);
+        if (socketId) {
+            const socket = this.activeSockets.get(socketId);
+            if (socket) {
+                socket.emit("chat-user-status-update", {
+                    userId,
+                    ...status,
+                    timestamp: new Date().toISOString()
+                });
+            }
+        }
     }
 
     /**

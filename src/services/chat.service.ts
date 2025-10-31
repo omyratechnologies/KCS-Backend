@@ -731,21 +731,18 @@ export class ChatService {
             // This clears unread count for both/all users in the conversation
             try {
                 if (message.room_id) {
-                    // Broadcast each message seen event
+                    // Broadcast bulk update for the WebSocket mark-messages-seen event
+                    SocketService.broadcastToChatRoom(message.room_id, "messages-seen", {
+                        userId: user_id,
+                        roomId: message.room_id,
+                        messageIds: messagesToUpdate,
+                        timestamp: now.toISOString()
+                    });
+                    
+                    // Also broadcast each individual message seen event for blue tick updates
                     for (const msgId of messagesToUpdate) {
                         SocketService.broadcastMessageSeen(message.room_id, msgId, user_id);
                     }
-                    
-                    // Also broadcast a bulk update for efficiency
-                    SocketService.broadcastToChatRoom(message.room_id, "messages-bulk-seen", {
-                        type: "bulk_messages_seen",
-                        data: {
-                            messageIds: messagesToUpdate,
-                            seenBy: user_id,
-                            count: messagesToUpdate.length,
-                            timestamp: now.toISOString()
-                        }
-                    });
                     
                     log(
                         `✅ Broadcasted ${messagesToUpdate.length} messages seen events to room ${message.room_id}`,
