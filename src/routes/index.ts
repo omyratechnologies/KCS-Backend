@@ -12,6 +12,7 @@ import classQuizRoute from "@/routes/class_quiz.route";
 import courseRoute from "@/routes/course.route";
 import curriculumRoute from "@/routes/curriculum.route";
 import dashboardRoute from "@/routes/dashboard.route";
+import { diagnosticRoutes } from "@/routes/diagnostic.routes";
 import documentStoreoute from "@/routes/document_store.route";
 import eventMediaGalleryRoute from "@/routes/event_media_gallery.route";
 import examRoute from "@/routes/exam.route";
@@ -55,6 +56,7 @@ app.route("/locations", locationsRoute); // Public locations API
 // Apply authentication middleware to all routes below this point
 app.use(authMiddleware());
 
+app.route("/diagnostic", diagnosticRoutes);
 app.route("/android-apk", androidApkRoute);
 app.route("/dashboard", dashboardRoute);
 app.route("/user", usersRoute);
