@@ -72,10 +72,9 @@ export const markClassAttendanceResponseSchema = z
 // Update Attendance Request
 export const updateAttendanceRequestBodySchema = z
     .object({
+        user_id: z.string().openapi({ example: "user123" }),
         date: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
         status: attendanceStatusEnum.openapi({ example: "present" }),
-        user_id: z.string().openapi({ example: "user123" }),
-        user_type: userTypeEnum.optional().openapi({ example: "Student" }),
     })
     .openapi({ ref: "UpdateAttendanceRequest" });
 

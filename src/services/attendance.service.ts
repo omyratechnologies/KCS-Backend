@@ -27,11 +27,21 @@ export class AttendanceService {
             throw new Error("user_type must be either 'Student' or 'Teacher'");
         }
 
+        // Normalize date to start of day for matching
+        const startOfDay = new Date(date);
+        startOfDay.setUTCHours(0, 0, 0, 0);
+        
+        const endOfDay = new Date(date);
+        endOfDay.setUTCHours(23, 59, 59, 999);
+
         const updatedAttendance = await Attendance.findOneAndUpdate(
             {
                 user_id,
                 campus_id,
-                date,
+                date: {
+                    $gte: startOfDay,
+                    $lte: endOfDay,
+                },
             },
             {
                 ...data,

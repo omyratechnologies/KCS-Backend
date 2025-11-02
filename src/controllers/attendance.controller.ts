@@ -53,32 +53,37 @@ export class AttendanceController {
             const campus_id = ctx.get("campus_id");
 
             const {
+                user_id,
                 date,
                 status,
-                user_id,
-                user_type,
             }: {
-                date: string;
                 user_id: string;
-                status: string;
-                user_type?: string;
+                date: string;
+                status: AttendanceStatus;
             } = await ctx.req.json();
 
-            const attendance = await AttendanceService.updateAttendance(
+            const parsedDate = new Date(date);
+            
+            // Normalize to UTC start of day
+            parsedDate.setUTCHours(0, 0, 0, 0);
+
+            await AttendanceService.updateAttendance(
                 {
                     user_id,
                     campus_id,
-                    date: new Date(date),
+                    date: parsedDate,
                 },
                 {
                     data: {
-                        status: status as AttendanceStatus,
-                        user_type: user_type as UserType,
+                        status: status,
                     },
                 }
             );
 
-            return ctx.json(attendance);
+            return ctx.json({
+                success: true,
+                message: "Attendance updated successfully",
+            });
         } catch (error) {
             return ctx.json(
                 {
