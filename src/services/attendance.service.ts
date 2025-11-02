@@ -59,6 +59,7 @@ export class AttendanceService {
         filters?: {
             class_ids?: string[];
             user_ids?: string[];
+            status?: ("present" | "absent" | "late" | "leave")[];
             page?: number;
             limit?: number;
         }
@@ -89,6 +90,11 @@ export class AttendanceService {
 
         if (filters?.user_ids && filters.user_ids.length > 0) {
             query.user_id = { $in: filters.user_ids };
+        }
+
+        // Filter by status if provided
+        if (filters?.status && filters.status.length > 0) {
+            query.status = { $in: filters.status };
         }
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -505,7 +511,10 @@ export class AttendanceService {
         campus_id: string,
         student_id: string,
         from_date: Date,
-        to_date: Date
+        to_date: Date,
+        filters?: {
+            status?: ("present" | "absent" | "late" | "leave")[];
+        }
     ) => {
         try {
             // Get student details
@@ -525,16 +534,25 @@ export class AttendanceService {
 
             const primaryClass = studentClasses.rows && studentClasses.rows.length > 0 ? studentClasses.rows[0] : null;
 
+            // Build query for attendance records
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const attendanceQuery: Record<string, any> = {
+                campus_id,
+                user_id: student_id,
+                date: {
+                    $gte: from_date,
+                    $lte: to_date,
+                },
+            };
+
+            // Apply status filter if provided
+            if (filters?.status && filters.status.length > 0) {
+                attendanceQuery.status = { $in: filters.status };
+            }
+
             // Get all attendance records for this student in the date range
             const studentAttendance = await Attendance.find(
-                {
-                    campus_id,
-                    user_id: student_id,
-                    date: {
-                        $gte: from_date,
-                        $lte: to_date,
-                    },
-                },
+                attendanceQuery,
                 {
                     sort: {
                         date: "DESC",
@@ -743,6 +761,16 @@ export class AttendanceService {
                             view_type: "Monthly",
                         },
                     },
+                    attendance: attendanceRecords.map(record => ({
+                        id: record.id,
+                        user_id: record.user_id,
+                        campus_id: record.campus_id,
+                        class_id: record.class_id,
+                        date: record.date,
+                        status: record.status,
+                        created_at: record.created_at,
+                        updated_at: record.updated_at,
+                    })),
                 },
                 pagination: {
                     current_page: 1,

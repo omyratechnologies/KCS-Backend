@@ -158,6 +158,19 @@ app.get(
                 description: "Optional: Filter by specific student IDs (comma-separated)",
             },
             {
+                name: "status",
+                in: "query",
+                required: false,
+                schema: { 
+                    type: "array",
+                    items: { 
+                        type: "string",
+                        enum: ["present", "absent", "late", "leave"]
+                    }
+                },
+                description: "Optional: Filter by attendance status (comma-separated)",
+            },
+            {
                 name: "page",
                 in: "query",
                 required: false,
@@ -255,6 +268,19 @@ app.get(
                 description: "Optional: Filter by specific student IDs (comma-separated)",
             },
             {
+                name: "status",
+                in: "query",
+                required: false,
+                schema: { 
+                    type: "array",
+                    items: { 
+                        type: "string",
+                        enum: ["present", "absent", "late", "leave"]
+                    }
+                },
+                description: "Optional: Filter by attendance status (comma-separated)",
+            },
+            {
                 name: "page",
                 in: "query",
                 required: false,
@@ -346,6 +372,40 @@ app.get(
                 required: true,
                 schema: { type: "string", format: "date" },
                 description: "End date for attendance records (YYYY-MM-DD)",
+            },
+            {
+                name: "status",
+                in: "query",
+                required: false,
+                schema: { 
+                    type: "array",
+                    items: { 
+                        type: "string",
+                        enum: ["present", "absent", "late", "leave"]
+                    }
+                },
+                description: "Optional: Filter by attendance status (comma-separated)",
+            },
+            {
+                name: "page",
+                in: "query",
+                required: false,
+                schema: {
+                    type: "integer",
+                    minimum: 1,
+                    default: 1,
+                },
+                description: "Optional: Page number for pagination",
+            },
+            {
+                name: "limit",
+                in: "query",
+                required: false,
+                schema: {
+                    type: "integer",
+                    minimum: 1,
+                },
+                description: "Optional: Number of records per page",
             },
         ],
         responses: {

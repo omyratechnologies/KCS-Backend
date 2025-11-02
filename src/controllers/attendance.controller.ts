@@ -94,10 +94,25 @@ export class AttendanceController {
         try {
             const campus_id = ctx.get("campus_id");
 
-            const { from_date, to_date, class_ids, user_ids, page, limit } = ctx.req.query();
+            const { from_date, to_date, class_ids, user_ids, status, page, limit } = ctx.req.query();
 
             if (!from_date || !to_date) {
                 return ctx.json({ error: "from_date and to_date are required" }, 400);
+            }
+
+            const parsedFromDate = new Date(from_date);
+            const parsedToDate = new Date(to_date);
+
+            if (Number.isNaN(parsedFromDate.getTime())) {
+                return ctx.json({ error: "Invalid from_date format. Use YYYY-MM-DD" }, 400);
+            }
+
+            if (Number.isNaN(parsedToDate.getTime())) {
+                return ctx.json({ error: "Invalid to_date format. Use YYYY-MM-DD" }, 400);
+            }
+
+            if (parsedFromDate > parsedToDate) {
+                return ctx.json({ error: "Invalid dates check from and to" }, 400);
             }
 
             const pageNum = page ? parseInt(page) : 1;
@@ -105,11 +120,12 @@ export class AttendanceController {
 
             const result = await AttendanceService.getAttendanceByCampusId(
                 campus_id,
-                new Date(from_date),
-                new Date(to_date),
+                parsedFromDate,
+                parsedToDate,
                 {
                     class_ids: class_ids ? class_ids.split(',') : undefined,
                     user_ids: user_ids ? user_ids.split(',') : undefined,
+                    status: status ? status.split(',') as ("present" | "absent" | "late" | "leave")[] : undefined,
                     page: pageNum,
                     limit: limitNum,
                 }
@@ -161,6 +177,10 @@ export class AttendanceController {
                 return ctx.json({ error: "Invalid to_date format. Use YYYY-MM-DD" }, 400);
             }
 
+            if (parsedFromDate > parsedToDate) {
+                return ctx.json({ error: "Invalid dates check from and to" }, 400);
+            }
+
             // Get optional filters
             const user_ids = ctx.req.query("user_ids");
             const status = ctx.req.query("status");
@@ -205,6 +225,7 @@ export class AttendanceController {
             // Get required date range from query parameters
             const from_date = ctx.req.query("from_date");
             const to_date = ctx.req.query("to_date");
+            const status = ctx.req.query("status");
 
             if (!from_date || !to_date) {
                 return ctx.json({ error: "from_date and to_date are required" }, 400);
@@ -221,11 +242,18 @@ export class AttendanceController {
                 return ctx.json({ error: "Invalid to_date format. Use YYYY-MM-DD" }, 400);
             }
 
+            if (parsedFromDate > parsedToDate) {
+                return ctx.json({ error: "Invalid dates check from and to" }, 400);
+            }
+
             const studentView = await AttendanceService.getStudentAttendanceView(
                 campus_id,
                 student_id,
                 parsedFromDate,
-                parsedToDate
+                parsedToDate,
+                {
+                    status: status ? status.split(',') as ("present" | "absent" | "late" | "leave")[] : undefined,
+                }
             );
 
             return ctx.json(studentView);
