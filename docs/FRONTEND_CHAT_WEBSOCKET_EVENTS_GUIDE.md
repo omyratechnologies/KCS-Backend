@@ -287,7 +287,8 @@ socket.on('new-chat-message', (data) => {
   
   const message = data.data;
   // {
-  //   id: 'message::uuid',
+  //   id: 'message::real_database_uuid',    // ✅ Real database UUID
+  //   temp_id: 'temp_1762107303765_vu83x0zw2', // ✅ Client's temp_id (if provided)
   //   room_id: 'chat_room::uuid',
   //   sender_id: 'user::123',
   //   content: 'Hello everyone!',
@@ -297,6 +298,16 @@ socket.on('new-chat-message', (data) => {
   //   reactions: [],
   //   reply_to: null
   // }
+  
+  // 🔥 IMPORTANT: If you sent optimistic message with temp_id,
+  // replace it with the real message using temp_id matching
+  if (message.temp_id) {
+    const tempMessage = findMessageByTempId(message.temp_id);
+    if (tempMessage) {
+      replaceMessage(tempMessage, message); // Replace temp with real
+      return;
+    }
+  }
   
   // Add message to UI
   addMessageToChat(message.room_id, message);

@@ -251,9 +251,11 @@ export class ChatServiceOptimized {
                 return { success: false, error: validation.reason };
             }
 
-            // 🚀 STEP 2: Create temporary message object for instant delivery
-            const tempMessage = {
-                id: messageData.temp_id || `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            // 🚀 STEP 2: Generate temp_id if not provided by client
+            const temp_id = messageData.temp_id || `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+            // 🚀 STEP 2.5: Create actual message in database FIRST to get real ID
+            const message = await ChatMessage.create({
                 campus_id,
                 room_id,
                 sender_id,
@@ -269,39 +271,37 @@ export class ChatServiceOptimized {
                 meta_data: {},
                 created_at: new Date(),
                 updated_at: new Date(),
-                _temp: true, // Flag to indicate this is a temporary message
+            });
+
+            // 🚀 STEP 3: Create message object with REAL ID + temp_id for broadcast
+            const messageToSend = {
+                id: message.id,           // ✅ Real database UUID
+                temp_id: temp_id,         // ✅ Echo client's temp_id
+                campus_id: message.campus_id,
+                room_id: message.room_id,
+                sender_id: message.sender_id,
+                message_type: message.message_type,
+                content: message.content,
+                file_url: message.file_url,
+                reply_to: message.reply_to,
+                is_edited: message.is_edited,
+                is_deleted: message.is_deleted,
+                is_seen: message.is_seen,
+                seen_by: message.seen_by,
+                delivered_to: message.delivered_to,
+                meta_data: message.meta_data,
+                created_at: message.created_at,
+                updated_at: message.updated_at,
             };
 
-            // 🚀 STEP 3: INSTANT WebSocket broadcast (happens FIRST, before DB)
-            // This gives the sender immediate feedback
-            SocketServiceOptimized.broadcastChatMessage(room_id, tempMessage, sender_id);
-            log(`✅ Instantly broadcasted message to room ${room_id}`, LogTypes.LOGS, "CHAT_SERVICE");
+            // 🚀 STEP 4: INSTANT WebSocket broadcast with real ID + temp_id
+            SocketServiceOptimized.broadcastChatMessage(room_id, messageToSend, sender_id);
+            log(`✅ Instantly broadcasted message ${message.id} (temp: ${temp_id}) to room ${room_id}`, LogTypes.LOGS, "CHAT_SERVICE");
 
-            // 🚀 STEP 4: Save to database ASYNCHRONOUSLY (doesn't block response)
-            // We return success immediately and let DB save happen in background
-            const dbSavePromise = (async () => {
+            // 🚀 STEP 5: Update room's last message ASYNCHRONOUSLY
+            const roomUpdatePromise = (async () => {
                 try {
-                    // Create actual message in database
-                    const message = await ChatMessage.create({
-                        campus_id,
-                        room_id,
-                        sender_id,
-                        message_type: messageData.message_type || "text",
-                        content: messageData.content,
-                        file_url: messageData.file_url,
-                        reply_to: messageData.reply_to,
-                        is_edited: false,
-                        is_deleted: false,
-                        is_seen: false,
-                        seen_by: [],
-                        delivered_to: [],
-                        meta_data: {},
-                        created_at: new Date(),
-                        updated_at: new Date(),
-                    });
-
-                    // Update room's last message (async)
-                    ChatRoom.updateById(room_id, {
+                    await ChatRoom.updateById(room_id, {
                         meta_data: {
                             last_message: {
                                 content: messageData.content,
@@ -310,30 +310,10 @@ export class ChatServiceOptimized {
                             },
                         },
                         updated_at: new Date(),
-                    }).catch(err => log(`Failed to update room last message: ${err}`, LogTypes.ERROR, "CHAT_SERVICE"));
-
-                    // 🚀 STEP 5: Send confirmation with real message ID
-                    SocketServiceOptimized.sendToUser(sender_id, "message-confirmed", {
-                        tempId: tempMessage.id,
-                        realId: message.id,
-                        message: message,
-                        timestamp: new Date().toISOString()
                     });
-
-                    log(`✅ Saved message ${message.id} to DB`, LogTypes.LOGS, "CHAT_SERVICE");
-
-                    return message;
-                } catch (error) {
-                    log(`❌ Failed to save message to DB: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
-                    
-                    // Notify sender of failure
-                    SocketServiceOptimized.sendToUser(sender_id, "message-failed", {
-                        tempId: tempMessage.id,
-                        error: "Failed to save message",
-                        timestamp: new Date().toISOString()
-                    });
-                    
-                    throw error;
+                    log(`✅ Updated room ${room_id} last message`, LogTypes.LOGS, "CHAT_SERVICE");
+                } catch (err) {
+                    log(`Failed to update room last message: ${err}`, LogTypes.ERROR, "CHAT_SERVICE");
                 }
             })();
 
@@ -361,19 +341,16 @@ export class ChatServiceOptimized {
             // 🚀 STEP 7: Send push notifications (parallel, non-blocking)
             const pushNotificationPromise = (async () => {
                 try {
-                    // Wait for DB save to get real message
-                    const savedMessage = await dbSavePromise;
-                    await this.sendChatPushNotification(savedMessage, sender_id, room_id, campus_id);
+                    await this.sendChatPushNotification(message, sender_id, room_id, campus_id);
                 } catch (error) {
                     log(`⚠️ Failed to send push notification: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
                 }
             })();
 
-            // 🚀 OPTIMIZATION: Return immediately with temp message
-            // Client will receive confirmation via WebSocket when DB save completes
+            // 🚀 RETURN: Return immediately with real message + temp_id
             return { 
                 success: true, 
-                data: tempMessage as any, // Return temp message immediately
+                data: messageToSend as any, // Return message with real ID + temp_id
             };
         } catch (error) {
             log(`❌ Send message error: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");

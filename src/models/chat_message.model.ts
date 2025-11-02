@@ -24,6 +24,7 @@ export interface IChatMessage {
     // New fields for enhanced features
     sequence_number?: number; // Per-room sequence number for ordering
     client_message_id?: string; // Client-generated ID for idempotency
+    temp_id?: string; // Temporary ID echoed from client for optimistic updates
     starred_by?: string[]; // Array of user_ids who starred this message
     forwarded_from?: string; // Original message ID if this is a forwarded message
     forwarded_count?: number; // Number of times this message has been forwarded
