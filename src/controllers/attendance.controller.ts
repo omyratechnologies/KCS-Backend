@@ -163,6 +163,7 @@ export class AttendanceController {
 
             // Get optional filters
             const user_ids = ctx.req.query("user_ids");
+            const status = ctx.req.query("status");
             const page = ctx.req.query("page");
             const limit = ctx.req.query("limit");
 
@@ -173,6 +174,7 @@ export class AttendanceController {
                 parsedToDate,
                 {
                     user_ids: user_ids ? user_ids.split(',') : undefined,
+                    status: status ? status.split(',') as ("present" | "absent" | "late" | "leave")[] : undefined,
                     page: page ? parseInt(page) : undefined,
                     limit: limit ? parseInt(limit) : undefined,
                 }

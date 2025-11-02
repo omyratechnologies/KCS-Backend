@@ -255,6 +255,7 @@ export class AttendanceService {
         to_date: Date,
         filters?: {
             user_ids?: string[];
+            status?: ("present" | "absent" | "late" | "leave")[];
             page?: number;
             limit?: number;
         }
@@ -294,21 +295,47 @@ export class AttendanceService {
             // Calculate total class days (excluding weekends for now)
             const totalDays = Math.ceil((to_date.getTime() - from_date.getTime()) / (1000 * 60 * 60 * 24));
 
-            // Get attendance data for all students
+            // OPTIMIZED: Fetch ALL attendance records in a single query instead of per-student queries
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const allAttendanceQuery: Record<string, any> = {
+                campus_id,
+                class_id,
+                date: {
+                    $gte: from_date,
+                    $lte: to_date,
+                },
+            };
+
+            // Filter by user_ids if provided
+            if (filters?.user_ids && filters.user_ids.length > 0) {
+                allAttendanceQuery.user_id = { $in: filters.user_ids };
+            } else {
+                // Otherwise get attendance for all students in the class
+                allAttendanceQuery.user_id = { $in: paginatedStudentIds };
+            }
+
+            // Filter by status if provided
+            if (filters?.status && filters.status.length > 0) {
+                allAttendanceQuery.status = { $in: filters.status };
+            }
+
+            const allAttendanceResult = await Attendance.find(allAttendanceQuery);
+            const allAttendanceRecords = allAttendanceResult.rows || [];
+
+            // Group attendance records by student ID for quick lookup
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const attendanceByStudent = allAttendanceRecords.reduce((acc: Record<string, any[]>, record) => {
+                if (!acc[record.user_id]) {
+                    acc[record.user_id] = [];
+                }
+                acc[record.user_id].push(record);
+                return acc;
+            }, {});
+
+            // Get attendance data for all students using the pre-fetched records
             const attendanceReportPromises = students.map(async (student) => {
                 try {
-                    // Get all attendance records for this student in the date range and class
-                    const studentAttendance = await Attendance.find({
-                        campus_id,
-                        class_id,
-                        user_id: student.id,
-                        date: {
-                            $gte: from_date,
-                            $lte: to_date,
-                        },
-                    });
-
-                    const attendanceRecords = studentAttendance.rows || [];
+                    const attendanceRecords = attendanceByStudent[student.id] || [];
 
                     // Calculate attendance statistics
                     const totalClasses = totalDays; // Can be refined based on actual class schedule
@@ -412,6 +439,11 @@ export class AttendanceService {
                 attendanceCountQuery.user_id = { $in: filters.user_ids };
             }
             
+            // Apply status filter to count query if provided
+            if (filters?.status && filters.status.length > 0) {
+                attendanceCountQuery.status = { $in: filters.status };
+            }
+            
             const attendanceCount = await Attendance.find(attendanceCountQuery);
             const totalAttendanceRecords = attendanceCount.rows.length;
             
@@ -441,6 +473,16 @@ export class AttendanceService {
                         needs_attention_below_60: needsAttentionCount,
                     },
                     students: attendanceReport,
+                    attendance: allAttendanceRecords.map(record => ({
+                        id: record.id,
+                        user_id: record.user_id,
+                        campus_id: record.campus_id,
+                        class_id: record.class_id,
+                        date: record.date,
+                        status: record.status,
+                        created_at: record.created_at,
+                        updated_at: record.updated_at,
+                    })),
                 },
                 pagination: {
                     current_page: currentPage,
