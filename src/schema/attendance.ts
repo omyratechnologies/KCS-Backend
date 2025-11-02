@@ -20,127 +20,10 @@ export const attendanceSchema = z
     })
     .openapi({ ref: "Attendance" });
 
-// Mark Attendance Request (Enhanced to support both single and bulk)
-export const markAttendanceRequestBodySchema = z
-    .object({
-        date: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
-        status: attendanceStatusEnum.openapi({ example: "present" }),
-        user_id: z.string().optional().openapi({ example: "user123" }),
-        user_ids: z
-            .array(z.string())
-            .optional()
-            .openapi({
-                example: ["user123", "user456", "user789"],
-            }),
-        user_type: userTypeEnum.optional().default("Student").openapi({ example: "Student" }),
-    })
-    .refine((data) => data.user_id || (data.user_ids && data.user_ids.length > 0), {
-        message: "Either user_id or user_ids must be provided",
-    })
-    .openapi({ ref: "MarkAttendanceRequest" });
-
-// Bulk attendance response schema
-export const bulkAttendanceResponseSchema = z
-    .object({
-        success: z.array(attendanceSchema),
-        errors: z.array(
-            z.object({
-                user_id: z.string(),
-                error: z.string(),
-            })
-        ),
-        total_processed: z.number(),
-        successful_count: z.number(),
-        error_count: z.number(),
-    })
-    .openapi({ ref: "BulkAttendanceResponse" });
-
-export const markAttendanceResponseSchema = z
-    .union([attendanceSchema, bulkAttendanceResponseSchema])
-    .openapi({ ref: "MarkAttendanceResponse" });
-
-// Dedicated Bulk Mark Attendance Request
-export const markBulkAttendanceRequestBodySchema = z
-    .object({
-        date: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
-        attendances: z
-            .array(
-                z.object({
-                    user_id: z.string().openapi({ example: "user123" }),
-                    status: attendanceStatusEnum.openapi({
-                        example: "present",
-                    }),
-                    user_type: userTypeEnum.optional().default("Student").openapi({ example: "Student" }),
-                })
-            )
-            .min(1)
-            .openapi({
-                example: [
-                    {
-                        user_id: "user123",
-                        status: "present",
-                        user_type: "Student",
-                    },
-                    {
-                        user_id: "user456",
-                        status: "absent",
-                        user_type: "Student",
-                    },
-                    {
-                        user_id: "teacher789",
-                        status: "present",
-                        user_type: "Teacher",
-                    },
-                ],
-            }),
-    })
-    .openapi({ ref: "MarkBulkAttendanceRequest" });
-
-// Update Attendance Request
-export const updateAttendanceRequestBodySchema = z
-    .object({
-        date: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
-        status: attendanceStatusEnum.openapi({ example: "present" }),
-        user_id: z.string().openapi({ example: "user123" }),
-        user_type: userTypeEnum.optional().openapi({ example: "Student" }),
-    })
-    .openapi({ ref: "UpdateAttendanceRequest" });
-
-export const updateAttendanceResponseSchema = attendanceSchema.openapi({
-    ref: "UpdateAttendanceResponse",
-});
-
-// Get Attendances By Date Response
-export const getAttendancesByDateResponseSchema = z
-    .array(attendanceSchema)
-    .openapi({ ref: "GetAttendancesByDateResponse" });
-
-// Get Attendance By User ID Response
-export const getAttendanceByUserIdResponseSchema = z
-    .array(attendanceSchema)
-    .openapi({ ref: "GetAttendanceByUserIdResponse" });
-
-// Get Attendance By Campus ID Response
-export const getAttendanceByCampusIdResponseSchema = z
-    .array(attendanceSchema)
-    .openapi({ ref: "GetAttendanceByCampusIdResponse" });
-
-// Get Attendance By Class ID And Date Request
-export const getAttendanceByClassIdAndDateRequestBodySchema = z
-    .object({
-        class_id: z.string().openapi({ example: "class123" }),
-        date: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
-    })
-    .openapi({ ref: "GetAttendanceByClassIdAndDateRequest" });
-
-export const getAttendanceByClassIdAndDateResponseSchema = z
-    .array(attendanceSchema)
-    .openapi({ ref: "GetAttendanceByClassIdAndDateResponse" });
-
-// Dedicated Class Attendance Request
+// Dedicated Class Attendance Request (now universal for all attendance marking)
 export const markClassAttendanceRequestBodySchema = z
     .object({
-        class_id: z.string().openapi({ example: "class123" }),
+        class_id: z.string().optional().openapi({ example: "class123" }),
         date: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
         attendances: z
             .array(
@@ -186,45 +69,23 @@ export const markClassAttendanceResponseSchema = z
     })
     .openapi({ ref: "MarkClassAttendanceResponse" });
 
-// Teacher Attendance Stats Response
-export const getAttendanceStatsByTeacherIdResponseSchema = z
+// Update Attendance Request
+export const updateAttendanceRequestBodySchema = z
     .object({
-        total_classes: z.number().openapi({ example: 8 }),
-        completed_today: z.number().openapi({ example: 4 }),
-        pending_today: z.number().openapi({ example: 2 }),
-        average_attendance: z.number().openapi({ example: 68 }),
-        date: z.string().openapi({ example: "2023-06-23" }),
-        debug: z.string().optional().openapi({ example: "Debug information" }),
-        classes: z
-            .array(
-                z.object({
-                    class_id: z.string().openapi({ example: "class123" }),
-                    class_name: z.string().openapi({ example: "Class X - Section A" }),
-                    status: z.enum(["completed", "pending", "incomplete"]).openapi({ example: "completed" }),
-                    present_count: z.number().openapi({ example: 32 }),
-                    total_students: z.number().openapi({ example: 35 }),
-                    attendance_rate: z.number().openapi({ example: 91 }),
-                    last_updated: z.string().nullable().openapi({ example: "2023-06-23T10:30:00Z" }),
-                    error: z.string().optional().openapi({
-                        example: "Unable to fetch attendance data",
-                    }),
-                })
-            )
-            .openapi({
-                example: [
-                    {
-                        class_id: "class123",
-                        class_name: "Class X - Section A",
-                        status: "completed",
-                        present_count: 32,
-                        total_students: 35,
-                        attendance_rate: 91,
-                        last_updated: "2023-06-23T10:30:00Z",
-                    },
-                ],
-            }),
+        user_id: z.string().openapi({ example: "user123" }),
+        date: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
+        status: attendanceStatusEnum.openapi({ example: "present" }),
     })
-    .openapi({ ref: "GetAttendanceStatsByTeacherIdResponse" });
+    .openapi({ ref: "UpdateAttendanceRequest" });
+
+export const updateAttendanceResponseSchema = attendanceSchema.openapi({
+    ref: "UpdateAttendanceResponse",
+});
+
+// Get Attendance By Campus ID Response
+export const getAttendanceByCampusIdResponseSchema = z
+    .array(attendanceSchema)
+    .openapi({ ref: "GetAttendanceByCampusIdResponse" });
 
 // Class Attendance Report Response Schema
 export const getClassAttendanceReportResponseSchema = z

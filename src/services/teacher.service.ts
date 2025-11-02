@@ -12,12 +12,37 @@ import { UserService } from "./users.service";
 export class TeacherService {
     // Create a new teacher
     public static async createTeacher(campusId: string, teacherData: Partial<ITeacherData>): Promise<ITeacherData> {
-        const teacher = await Teacher.create({
+        // Remove 'id' from teacherData to prevent manual ID injection
+        // Ottoman/Couchbase will auto-generate the ID
+        if ('id' in teacherData) {
+            delete teacherData.id;
+        }
+        
+        // Prevent clients from injecting an arbitrary id.
+        // Use the user's id as the teacher id so it remains stable across role changes.
+        let teacherDataWithoutId: Partial<ITeacherData> = {};
+        if (teacherData) {
+            // shallow copy and remove any provided 'id' to prevent client injection
+            teacherDataWithoutId = { ...(teacherData as Partial<ITeacherData>) };
+            if ((teacherDataWithoutId as any).id) {
+                delete (teacherDataWithoutId as any).id;
+            }
+        }
+
+        const teacherCreatePayload: Partial<ITeacherData> & { id?: string } = {
             campus_id: campusId,
-            ...teacherData,
+            ...teacherDataWithoutId,
             created_at: new Date(),
             updated_at: new Date(),
-        });
+        };
+
+        // If a user_id is provided (i.e. this user already exists), use it as the teacher id
+        // so the teacher id remains the same as the user id forever (stable across role changes).
+        if (teacherData && teacherData.user_id) {
+            teacherCreatePayload.id = teacherData.user_id;
+        }
+
+    const teacher = await Teacher.create(teacherCreatePayload as unknown as ITeacherData);
         if (!teacher) {
             throw new Error("Teacher not created");
         }
