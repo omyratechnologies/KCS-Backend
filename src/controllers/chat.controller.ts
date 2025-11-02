@@ -2,6 +2,9 @@ import { Context } from "hono";
 import { ChatServiceOptimized as ChatService } from "../services/chat.service.optimized";
 import { ChatValidationService } from "../services/chat_validation.service";
 import { SocketServiceOptimized as SocketService } from "../services/socket.service.optimized";
+import { ChatMediaService } from "../services/chat_media.service";
+import { MultiDeviceSyncService } from "../services/multi_device_sync.service";
+import { ChatEnhancedService } from "../services/chat_enhanced.service";
 import log, { LogTypes } from "../libs/logger";
 
 export class ChatController {
@@ -847,6 +850,427 @@ export class ChatController {
                 success: false,
                 error: "Failed to search messages"
             }, 500);
+        }
+    };
+
+    // ============================================================
+    // ENHANCED FEATURES - Media Upload, Multi-Device, Forwarding
+    // ============================================================
+
+    /**
+     * Request presigned upload URL for chat media
+     * POST /api/v1/chat/media/upload-url
+     */
+    public static readonly requestUploadUrl = async (ctx: Context) => {
+        try {
+            const user_id = ctx.get("user_id");
+            const campus_id = ctx.get("campus_id");
+            const body = await ctx.req.json();
+
+            const { fileName, fileType, fileSize } = body;
+
+            if (!fileName || !fileType || !fileSize) {
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "fileName, fileType, and fileSize are required",
+                    },
+                    400
+                );
+            }
+
+            const result = await ChatMediaService.generatePresignedUploadUrl(
+                campus_id,
+                user_id,
+                fileName,
+                fileType,
+                fileSize
+            );
+
+            return ctx.json(result, result.success ? 200 : 400);
+        } catch (error) {
+            return ctx.json(
+                {
+                    success: false,
+                    error: `Failed to generate upload URL: ${error instanceof Error ? error.message : "Unknown error"}`,
+                },
+                500
+            );
+        }
+    };
+
+    /**
+     * Confirm media upload completion
+     * POST /api/v1/chat/media/confirm
+     */
+    public static readonly confirmUpload = async (ctx: Context) => {
+        try {
+            const user_id = ctx.get("user_id");
+            const campus_id = ctx.get("campus_id");
+            const body = await ctx.req.json();
+
+            const { fileKey, fileName, fileType, fileSize, width, height, duration } = body;
+
+            if (!fileKey || !fileName || !fileType || !fileSize) {
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "fileKey, fileName, fileType, and fileSize are required",
+                    },
+                    400
+                );
+            }
+
+            const result = await ChatMediaService.confirmMediaUpload(campus_id, user_id, {
+                fileKey,
+                fileName,
+                fileType,
+                fileSize,
+                width,
+                height,
+                duration,
+            });
+
+            return ctx.json(result, result.success ? 200 : 400);
+        } catch (error) {
+            return ctx.json(
+                {
+                    success: false,
+                    error: `Failed to confirm upload: ${error instanceof Error ? error.message : "Unknown error"}`,
+                },
+                500
+            );
+        }
+    };
+
+    /**
+     * Get media metadata
+     * GET /api/v1/chat/media/:upload_id
+     */
+    public static readonly getMediaMetadata = async (ctx: Context) => {
+        try {
+            const upload_id = ctx.req.param("upload_id");
+
+            const result = await ChatMediaService.getMediaMetadata(upload_id);
+
+            return ctx.json(result, result.success ? 200 : 404);
+        } catch (error) {
+            return ctx.json(
+                {
+                    success: false,
+                    error: `Failed to get media metadata: ${error instanceof Error ? error.message : "Unknown error"}`,
+                },
+                500
+            );
+        }
+    };
+
+    /**
+     * Delete media
+     * DELETE /api/v1/chat/media/:upload_id
+     */
+    public static readonly deleteMedia = async (ctx: Context) => {
+        try {
+            const user_id = ctx.get("user_id");
+            const upload_id = ctx.req.param("upload_id");
+
+            const result = await ChatMediaService.deleteMedia(upload_id, user_id);
+
+            return ctx.json(result, result.success ? 200 : 400);
+        } catch (error) {
+            return ctx.json(
+                {
+                    success: false,
+                    error: `Failed to delete media: ${error instanceof Error ? error.message : "Unknown error"}`,
+                },
+                500
+            );
+        }
+    };
+
+    /**
+     * Register user device
+     * POST /api/v1/chat/devices/register
+     */
+    public static readonly registerDevice = async (ctx: Context) => {
+        try {
+            const user_id = ctx.get("user_id");
+            const campus_id = ctx.get("campus_id");
+            const body = await ctx.req.json();
+
+            const { device_id, device_name, device_type, platform, app_version, push_token } = body;
+
+            if (!device_id || !device_name || !device_type || !platform || !app_version) {
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "device_id, device_name, device_type, platform, and app_version are required",
+                    },
+                    400
+                );
+            }
+
+            const result = await MultiDeviceSyncService.registerDevice({
+                user_id,
+                campus_id,
+                device_id,
+                device_name,
+                device_type,
+                platform,
+                app_version,
+                push_token,
+                ip_address: ctx.req.header("x-forwarded-for") || ctx.req.header("x-real-ip"),
+                user_agent: ctx.req.header("user-agent"),
+            });
+
+            return ctx.json(result, result.success ? 200 : 400);
+        } catch (error) {
+            return ctx.json(
+                {
+                    success: false,
+                    error: `Failed to register device: ${error instanceof Error ? error.message : "Unknown error"}`,
+                },
+                500
+            );
+        }
+    };
+
+    /**
+     * Get user devices
+     * GET /api/v1/chat/devices
+     */
+    public static readonly getUserDevices = async (ctx: Context) => {
+        try {
+            const user_id = ctx.get("user_id");
+
+            const result = await MultiDeviceSyncService.getUserDevices(user_id);
+
+            return ctx.json(result, result.success ? 200 : 400);
+        } catch (error) {
+            return ctx.json(
+                {
+                    success: false,
+                    error: `Failed to get devices: ${error instanceof Error ? error.message : "Unknown error"}`,
+                },
+                500
+            );
+        }
+    };
+
+    /**
+     * Deactivate device
+     * POST /api/v1/chat/devices/:device_id/logout
+     */
+    public static readonly deactivateDevice = async (ctx: Context) => {
+        try {
+            const user_id = ctx.get("user_id");
+            const device_id = ctx.req.param("device_id");
+
+            const result = await MultiDeviceSyncService.deactivateDevice(user_id, device_id);
+
+            return ctx.json(result, result.success ? 200 : 400);
+        } catch (error) {
+            return ctx.json(
+                {
+                    success: false,
+                    error: `Failed to deactivate device: ${error instanceof Error ? error.message : "Unknown error"}`,
+                },
+                500
+            );
+        }
+    };
+
+    /**
+     * Sync chats
+     * POST /api/v1/chat/sync/chats
+     */
+    public static readonly syncChats = async (ctx: Context) => {
+        try {
+            const user_id = ctx.get("user_id");
+            const campus_id = ctx.get("campus_id");
+            const body = await ctx.req.json();
+
+            const { device_id } = body;
+
+            if (!device_id) {
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "device_id is required",
+                    },
+                    400
+                );
+            }
+
+            const result = await MultiDeviceSyncService.syncChats(user_id, campus_id, device_id);
+
+            return ctx.json(result, result.success ? 200 : 400);
+        } catch (error) {
+            return ctx.json(
+                {
+                    success: false,
+                    error: `Failed to sync chats: ${error instanceof Error ? error.message : "Unknown error"}`,
+                },
+                500
+            );
+        }
+    };
+
+    /**
+     * Sync messages for a room
+     * POST /api/v1/chat/sync/messages
+     */
+    public static readonly syncMessages = async (ctx: Context) => {
+        try {
+            const user_id = ctx.get("user_id");
+            const campus_id = ctx.get("campus_id");
+            const body = await ctx.req.json();
+
+            const { room_id, since_timestamp, since_sequence, limit } = body;
+
+            if (!room_id) {
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "room_id is required",
+                    },
+                    400
+                );
+            }
+
+            const sinceTimestamp = since_timestamp ? new Date(since_timestamp) : undefined;
+
+            const result = await MultiDeviceSyncService.syncMessages(user_id, campus_id, room_id, {
+                since_timestamp: sinceTimestamp,
+                since_sequence,
+                limit,
+            });
+
+            return ctx.json(result, result.success ? 200 : 400);
+        } catch (error) {
+            return ctx.json(
+                {
+                    success: false,
+                    error: `Failed to sync messages: ${error instanceof Error ? error.message : "Unknown error"}`,
+                },
+                500
+            );
+        }
+    };
+
+    /**
+     * Forward message to multiple rooms
+     * POST /api/v1/chat/messages/:message_id/forward
+     */
+    public static readonly forwardMessage = async (ctx: Context) => {
+        try {
+            const user_id = ctx.get("user_id");
+            const campus_id = ctx.get("campus_id");
+            const message_id = ctx.req.param("message_id");
+            const body = await ctx.req.json();
+
+            const { target_room_ids } = body;
+
+            if (!target_room_ids || !Array.isArray(target_room_ids) || target_room_ids.length === 0) {
+                return ctx.json(
+                    {
+                        success: false,
+                        error: "target_room_ids array is required and must not be empty",
+                    },
+                    400
+                );
+            }
+
+            const result = await ChatEnhancedService.forwardMessage(user_id, campus_id, message_id, target_room_ids);
+
+            return ctx.json(result, result.success ? 200 : 400);
+        } catch (error) {
+            return ctx.json(
+                {
+                    success: false,
+                    error: `Failed to forward message: ${error instanceof Error ? error.message : "Unknown error"}`,
+                },
+                500
+            );
+        }
+    };
+
+    /**
+     * Toggle star message
+     * POST /api/v1/chat/messages/:message_id/star
+     */
+    public static readonly toggleStarMessage = async (ctx: Context) => {
+        try {
+            const user_id = ctx.get("user_id");
+            const campus_id = ctx.get("campus_id");
+            const message_id = ctx.req.param("message_id");
+
+            const result = await ChatEnhancedService.toggleStarMessage(user_id, message_id, campus_id);
+
+            return ctx.json(result, result.success ? 200 : 400);
+        } catch (error) {
+            return ctx.json(
+                {
+                    success: false,
+                    error: `Failed to toggle star: ${error instanceof Error ? error.message : "Unknown error"}`,
+                },
+                500
+            );
+        }
+    };
+
+    /**
+     * Get starred messages
+     * GET /api/v1/chat/messages/starred
+     */
+    public static readonly getStarredMessages = async (ctx: Context) => {
+        try {
+            const user_id = ctx.get("user_id");
+            const campus_id = ctx.get("campus_id");
+
+            const room_id = ctx.req.query("room_id");
+            const page = ctx.req.query("page") ? parseInt(ctx.req.query("page")!) : 1;
+            const limit = ctx.req.query("limit") ? parseInt(ctx.req.query("limit")!) : 50;
+
+            const result = await ChatEnhancedService.getStarredMessages(user_id, campus_id, {
+                room_id,
+                page,
+                limit,
+            });
+
+            return ctx.json(result, result.success ? 200 : 400);
+        } catch (error) {
+            return ctx.json(
+                {
+                    success: false,
+                    error: `Failed to get starred messages: ${error instanceof Error ? error.message : "Unknown error"}`,
+                },
+                500
+            );
+        }
+    };
+
+    /**
+     * Get message info (delivery and read status)
+     * GET /api/v1/chat/messages/:message_id/info
+     */
+    public static readonly getMessageInfo = async (ctx: Context) => {
+        try {
+            const user_id = ctx.get("user_id");
+            const campus_id = ctx.get("campus_id");
+            const message_id = ctx.req.param("message_id");
+
+            const result = await ChatEnhancedService.getMessageInfo(user_id, message_id, campus_id);
+
+            return ctx.json(result, result.success ? 200 : 404);
+        } catch (error) {
+            return ctx.json(
+                {
+                    success: false,
+                    error: `Failed to get message info: ${error instanceof Error ? error.message : "Unknown error"}`,
+                },
+                500
+            );
         }
     };
 }

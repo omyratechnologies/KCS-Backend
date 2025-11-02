@@ -64,4 +64,29 @@ chatRouter.post('/validate/group-creation', ChatController.validateGroupCreation
 // Get WebSocket connection statistics (Admin only)
 chatRouter.get('/admin/websocket-stats', ChatController.getWebSocketStats);
 
+// ============================================================
+// ENHANCED FEATURES - Media, Multi-Device, Forwarding, Starring
+// ============================================================
+
+// Media Upload Routes
+chatRouter.post("/media/upload-url", ChatController.requestUploadUrl);
+chatRouter.post("/media/confirm", ChatController.confirmUpload);
+chatRouter.get("/media/:upload_id", ChatController.getMediaMetadata);
+chatRouter.delete("/media/:upload_id", ChatController.deleteMedia);
+
+// Device Management Routes
+chatRouter.post("/devices/register", ChatController.registerDevice);
+chatRouter.get("/devices", ChatController.getUserDevices);
+chatRouter.post("/devices/:device_id/logout", ChatController.deactivateDevice);
+
+// Sync Routes
+chatRouter.post("/sync/chats", ChatController.syncChats);
+chatRouter.post("/sync/messages", ChatController.syncMessages);
+
+// Message Enhancement Routes
+chatRouter.post("/messages/:message_id/forward", ChatController.forwardMessage);
+chatRouter.post("/messages/:message_id/star", ChatController.toggleStarMessage);
+chatRouter.get("/messages/starred", ChatController.getStarredMessages);
+chatRouter.get("/messages/:message_id/info", ChatController.getMessageInfo);
+
 export default chatRouter;

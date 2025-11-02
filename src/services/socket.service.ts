@@ -9,6 +9,7 @@ import { config } from "@/utils/env";
 
 import { UserService } from "./users.service";
 import { WebRTCService } from "./webrtc.service";
+import { EnhancedSocketEvents } from "./enhanced_socket_events.service";
 
 /**
  * 🔄 Socket.IO Service for Real-time Meeting Communication
@@ -105,6 +106,10 @@ export class SocketService {
         this.registerGeneralChatEvents(socket); // NEW: General chat system
         this.registerWebRTCEvents(socket);
         this.registerPresenceEvents(socket);
+        
+        // NEW: Register enhanced events (media, sync, devices, etc.)
+        EnhancedSocketEvents.registerEnhancedEvents(socket);
+        EnhancedSocketEvents.registerPresenceEvents(socket);
 
         // Handle disconnection
         socket.on("disconnect", () => this.handleDisconnection(socket));

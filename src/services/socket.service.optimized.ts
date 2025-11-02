@@ -12,6 +12,7 @@ import { config } from "@/utils/env";
 import { UserService } from "./users.service";
 import { WebRTCService } from "./webrtc.service";
 import { ChatCacheService } from "./chat_cache.service";
+import { EnhancedSocketEvents } from "./enhanced_socket_events.service";
 import log, { LogTypes } from "@/libs/logger";
 
 /**
@@ -154,6 +155,9 @@ export class SocketServiceOptimized {
         this.registerGeneralChatEventsOptimized(socket); // OPTIMIZED version
         this.registerWebRTCEvents(socket);
         this.registerPresenceEventsOptimized(socket); // OPTIMIZED version
+        // NEW: Register enhanced events (media, sync, devices, etc.)
+        EnhancedSocketEvents.registerEnhancedEvents(socket);
+        EnhancedSocketEvents.registerPresenceEvents(socket);
 
         // Start heartbeat
         this.startHeartbeat(socket);
