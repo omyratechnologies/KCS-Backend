@@ -9,7 +9,7 @@ export class UsersController {
             const _user_type = c.get("user_type");
             const _campus_id = c.get("campus_id");
 
-            const { user_id, email, password, first_name, last_name, phone, address, meta_data, user_type } =
+            const { user_id, email, password, first_name, last_name, phone, address, meta_data, user_type, academic_year, class_id } =
                 await c.req.json();
 
             let { campus_id } = await c.req.json();
@@ -47,6 +47,8 @@ export class UsersController {
                 meta_data,
                 user_type,
                 campus_id,
+                academic_year,
+                class_id,
             });
 
             return c.json(users);

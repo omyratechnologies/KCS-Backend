@@ -23,6 +23,8 @@ export class UserService {
         meta_data,
         user_type,
         campus_id,
+        academic_year,
+        class_id,
     }: {
         user_id: string;
         email: string;
@@ -34,7 +36,19 @@ export class UserService {
         meta_data: string;
         user_type: string;
         campus_id?: string;
+        academic_year?: string;
+        class_id?: string;
     }) => {
+        
+        // if its type is student and its academic year or class id not there then give error
+        if (user_type === "Student" && (!academic_year || !class_id)) {
+            throw new Error("Academic year and class ID are required for students");
+        }
+
+        // Validate that user_type is provided either directly or auto-set
+        if (!user_type) {
+            throw new Error("User type is required");
+        }
         // Check if email already exists
         try {
             const existingUser = await User.find({ email: email });
@@ -65,6 +79,8 @@ export class UserService {
             is_deleted: false,
             user_type: user_type,
             campus_id: campus_id ?? " ",
+            academic_year: academic_year ?? undefined,
+            class_id: class_id ?? undefined,
             created_at: new Date(),
             updated_at: new Date(),
         });
@@ -91,7 +107,7 @@ export class UserService {
                 first_name,
                 last_name,
                 email,
-                user_type,
+                user_type: user_type,
                 user_id,
                 campus_name: campusName,
             });
@@ -131,6 +147,8 @@ export class UserService {
                 "is_deleted",
                 "user_type",
                 "campus_id",
+                "academic_year",
+                "class_id",
                 "created_at",
                 "updated_at",
             ],
@@ -164,6 +182,8 @@ export class UserService {
                 "is_deleted",
                 "user_type",
                 "campus_id",
+                "academic_year",
+                "class_id",
                 "created_at",
                 "updated_at",
             ],
@@ -185,6 +205,8 @@ export class UserService {
             is_deleted?: boolean;
             user_type?: string;
             campus_id?: string;
+            academic_year?: string;
+            class_id?: string;
         }
     ): Promise<void> => {
         const user = await User.findById(id);

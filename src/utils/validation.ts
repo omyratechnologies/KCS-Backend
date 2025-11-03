@@ -46,8 +46,9 @@ export const createUserSchema = z.object({
         .union([z.string(), z.record(z.any())])
         .optional()
         .transform((val) => (val && typeof val !== "string" ? JSON.stringify(val) : val)),
-    user_type: userTypeSchema,
     campus_id: campusIdSchema.optional(),
+    academic_year: z.string().optional(),
+    class_id: z.string().optional(),
 });
 
 // Update user validation schema
@@ -67,6 +68,8 @@ export const updateUserSchema = z
         is_deleted: z.boolean().optional(),
         user_type: userTypeSchema.optional(),
         campus_id: campusIdSchema.optional(),
+        academic_year: z.string().optional(),
+        class_id: z.string().optional(),
     })
     .refine((data) => Object.keys(data).length > 0, {
         message: "At least one field must be provided for update",
