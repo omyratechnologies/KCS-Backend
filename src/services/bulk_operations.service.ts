@@ -1,5 +1,8 @@
 import { IFeeData } from "@/models/fee.model";
-import { IPaymentTransaction } from "@/models/payment_transaction.model";
+// import { IPaymentTransaction } from "@/models/payment_transaction.model"; // TODO: Payment module not implemented yet
+
+// Temporary type definition until payment module is implemented
+type IPaymentTransaction = any;
 
 export interface BulkFeeGenerationRequest {
     template_id: string;
@@ -251,9 +254,13 @@ export class BulkOperationsService {
 
         try {
             const { Fee } = await import("@/models/fee.model");
-            const { PaymentService } = await import("@/services/payment.service");
+            // const { PaymentService } = await import("@/services/payment.service"); // TODO: Payment module not implemented yet
             const { UserService } = await import("@/services/users.service");
 
+            // TODO: Payment processing temporarily disabled - payment module not implemented
+            throw new Error("Payment processing is not available - payment module not implemented yet");
+
+            /* TODO: Uncomment when payment module is implemented
             // Get target fees
             const targetFees = await this.getTargetFees(campus_id, request.student_ids, request.fee_ids);
 
@@ -342,6 +349,7 @@ export class BulkOperationsService {
             result.summary.processing_time_ms = Date.now() - startTime;
 
             return result;
+            */
         } catch (error) {
             throw new Error(`Bulk payment processing failed: ${error}`);
         }
@@ -558,6 +566,10 @@ export class BulkOperationsService {
     }
 
     private static async processAdminPayment(campus_id: string, fee: IFeeData, processed_by: string): Promise<void> {
+        // TODO: Payment processing temporarily disabled - payment module not implemented
+        throw new Error("Payment processing is not available - payment module not implemented yet");
+        
+        /* TODO: Uncomment when payment module is implemented
         const { Fee } = await import("@/models/fee.model");
         const { PaymentTransaction } = await import("@/models/payment_transaction.model");
         const { PaymentInvoice } = await import("@/models/payment_invoice.model");
@@ -610,6 +622,11 @@ export class BulkOperationsService {
     }
 
     private static async generateInvoice(campus_id: string, transaction: any, fee: IFeeData): Promise<void> {
+        // TODO: Payment processing temporarily disabled - payment module not implemented
+        console.warn("Invoice generation skipped - payment module not implemented yet");
+        return;
+        
+        /* TODO: Uncomment when payment module is implemented
         try {
             const { PaymentInvoice } = await import("@/models/payment_invoice.model");
             const { UserService } = await import("@/services/users.service");
@@ -640,9 +657,15 @@ export class BulkOperationsService {
         } catch (error) {
             console.error("Failed to generate invoice:", error);
         }
+        */
     }
 
     private static async sendFeeGenerationNotification(campus_id: string, fee: any, student: any): Promise<void> {
+        // TODO: Payment notification temporarily disabled - payment module not implemented
+        console.warn("Fee generation notification skipped - payment module not implemented yet");
+        return;
+        
+        /* TODO: Uncomment when payment module is implemented
         try {
             const { PaymentNotificationService } = await import("@/services/payment_notification.service");
             const schoolData = await PaymentNotificationService.getSchoolDetails(campus_id);
@@ -651,6 +674,7 @@ export class BulkOperationsService {
         } catch (error) {
             console.error("Failed to send fee generation notification:", error);
         }
+        */
     }
 
     private static async sendPaymentNotification(
@@ -659,6 +683,11 @@ export class BulkOperationsService {
         student: any,
         isCompleted: boolean
     ): Promise<void> {
+        // TODO: Payment notification temporarily disabled - payment module not implemented
+        console.warn("Payment notification skipped - payment module not implemented yet");
+        return;
+        
+        /* TODO: Uncomment when payment module is implemented
         try {
             const { PaymentNotificationService } = await import("@/services/payment_notification.service");
             const schoolData = await PaymentNotificationService.getSchoolDetails(campus_id);
@@ -687,6 +716,7 @@ export class BulkOperationsService {
         } catch (error) {
             console.error("Failed to send payment notification:", error);
         }
+        */
     }
 
     private static async getSchoolData(campus_id: string): Promise<any> {

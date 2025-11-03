@@ -1,6 +1,6 @@
 import { Campus } from "@/models/campus.model";
 import { Fee } from "@/models/fee.model";
-import { PaymentTransaction } from "@/models/payment_transaction.model";
+// import { PaymentTransaction } from "@/models/payment_transaction.model"; // TODO: Payment module not implemented yet
 import { SchoolBankDetails } from "@/models/school_bank_details.model";
 import { User } from "@/models/user.model";
 
