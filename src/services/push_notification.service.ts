@@ -26,13 +26,38 @@ export interface PushNotificationResult {
     };
 }
 
+/**
+ * Push Notification Service
+ * 
+ * IMPORTANT: This service uses different strategies to avoid duplicate notifications:
+ * 
+ * 1. sendCampusWideNotification() - Uses TOPIC-based messaging
+ *    - Sends ONE message to the campus topic (e.g., /topics/campus_{id})
+ *    - All subscribed devices receive the notification
+ *    - Most efficient for broadcasting to entire campus
+ *    - ✅ Use for: Announcements, campus-wide alerts
+ * 
+ * 2. sendToSpecificUsers() - Uses TOKEN-based messaging
+ *    - Sends individual messages to specific device tokens
+ *    - Allows granular control over recipients
+ *    - ✅ Use for: Chat messages, personal notifications, specific user groups
+ * 
+ * 3. sendToUserTypes() - Uses TOKEN-based messaging
+ *    - Filters users by type (Student, Teacher, Parent, Admin)
+ *    - Sends to specific device tokens
+ *    - ✅ Use for: Role-specific notifications
+ * 
+ * NOTE: Devices are automatically subscribed to campus topics when they register
+ * their device token via registerDeviceToken()
+ */
 export class PushNotificationService {
     /**
      * Send push notification for campus-wide announcements
+     * Uses topic-based messaging for efficiency (single message to all subscribers)
      */
     public static async sendCampusWideNotification(payload: PushNotificationPayload): Promise<PushNotificationResult> {
         try {
-            // Send to campus topic for immediate delivery
+            // Send to campus topic for immediate delivery to all subscribers
             const topicName = `campus_${payload.campus_id}`;
             const topicResult = await FirebaseService.sendToTopic({
                 title: payload.title,
@@ -45,25 +70,22 @@ export class PushNotificationService {
                 topic: topicName,
             });
 
-            // Also send to individual tokens for better reliability
-            const tokenResult = await this.sendToDeviceTokens(payload);
+            // Get token count for reporting purposes only (don't send to tokens)
+            const tokens = await this.getTargetDeviceTokens(payload);
 
             return {
-                success: topicResult.success || tokenResult.success,
-                total_recipients: tokenResult.total_recipients,
-                successful_sends: tokenResult.successful_sends,
-                failed_sends: tokenResult.failed_sends,
+                success: topicResult.success,
+                total_recipients: tokens.length, // Estimated count based on registered tokens
+                successful_sends: topicResult.success ? tokens.length : 0,
+                failed_sends: topicResult.success ? 0 : tokens.length,
                 details: {
-                    tokens_sent: tokenResult.details.tokens_sent,
+                    tokens_sent: 0, // Not sending to individual tokens
                     topic_sent: topicResult.success,
-                    invalid_tokens: tokenResult.details.invalid_tokens,
-                    errors: [
-                        ...(topicResult.error ? [topicResult.error] : []),
-                        ...tokenResult.details.errors
-                    ],
+                    invalid_tokens: [],
+                    errors: topicResult.error ? [topicResult.error] : [],
                 },
             };
-        } catch {
+        } catch (error) {
             return {
                 success: false,
                 total_recipients: 0,
@@ -73,7 +95,7 @@ export class PushNotificationService {
                     tokens_sent: 0,
                     topic_sent: false,
                     invalid_tokens: [],
-                    errors: ["Error sending notification"],
+                    errors: [error instanceof Error ? error.message : "Error sending notification"],
                 },
             };
         }
