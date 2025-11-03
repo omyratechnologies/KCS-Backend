@@ -6,7 +6,7 @@ import { createAdapter } from "@socket.io/redis-adapter";
 import { createClient } from "redis";
 import { v4 as uuidv4 } from "uuid";
 
-import { type IMeetingParticipant, Meeting, MeetingChat, MeetingParticipant } from "@/models/meeting.model";
+import { type IMeetingParticipant, Meeting, MeetingChat, MeetingParticipant, MeetingRecording, type IMeetingRecording } from "@/models/meeting.model";
 import { config } from "@/utils/env";
 
 import { UserService } from "./users.service";
@@ -46,6 +46,9 @@ export class SocketServiceOptimized {
     // Redis clients for pub/sub
     private static pubClient: ReturnType<typeof createClient>;
     private static subClient: ReturnType<typeof createClient>;
+
+    // ✅ Rate limiting infrastructure
+    private static rateLimiters: Map<string, Map<string, { count: number; resetTime: number }>> = new Map();
 
     /**
      * Initialize Socket.IO server with Redis adapter for horizontal scaling
@@ -132,12 +135,55 @@ export class SocketServiceOptimized {
     }
 
     /**
+     * ✅ Rate limiting helper
+     * @param socketId Socket identifier
+     * @param eventName Event to rate limit
+     * @param maxEvents Maximum events allowed
+     * @param windowMs Time window in milliseconds
+     * @returns true if allowed, false if rate limited
+     */
+    private static checkRateLimit(
+        socketId: string,
+        eventName: string,
+        maxEvents: number,
+        windowMs: number
+    ): boolean {
+        const now = Date.now();
+        const key = `${socketId}:${eventName}`;
+        
+        if (!this.rateLimiters.has(eventName)) {
+            this.rateLimiters.set(eventName, new Map());
+        }
+        
+        const eventLimiter = this.rateLimiters.get(eventName)!;
+        const limiterData = eventLimiter.get(socketId);
+        
+        // Check if we need to reset the window
+        if (!limiterData || now >= limiterData.resetTime) {
+            eventLimiter.set(socketId, {
+                count: 1,
+                resetTime: now + windowMs
+            });
+            return true; // Allowed
+        }
+        
+        // Check if limit exceeded
+        if (limiterData.count >= maxEvents) {
+            return false; // Rate limited
+        }
+        
+        // Increment counter
+        limiterData.count++;
+        return true; // Allowed
+    }
+
+    /**
      * Handle new socket connection
      */
     private static handleConnection(socket: Socket): void {
         const { userId, userName } = socket.data;
 
-        console.log(`👤 User ${userName} (${userId}) connected with socket ${socket.id}`);
+        log(`👤 User ${userName} (${userId}) connected with socket ${socket.id}`, LogTypes.LOGS, "SOCKET_SERVICE");
 
         // Store socket mappings
         this.activeSockets.set(socket.id, socket);
@@ -288,7 +334,7 @@ export class SocketServiceOptimized {
 
                 console.log(`✅ ${userName} joined meeting ${meetingId}`);
             } catch (error) {
-                console.error("Error joining meeting:", error);
+                log(`Error joining meeting: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
                 socket.emit("error", { message: "Failed to join meeting" });
             }
         });
@@ -296,6 +342,704 @@ export class SocketServiceOptimized {
         // Leave meeting
         socket.on("leave-meeting", async (data: { meetingId: string }) => {
             await this.handleLeaveMeeting(socket, data.meetingId);
+        });
+
+        // ============================================
+        // 🎥 SCREEN SHARING EVENTS
+        // ============================================
+        
+        socket.on("screen:start", async (data: { meetingId: string }) => {
+            try {
+                const { meetingId } = data;
+                const { userId, userName } = socket.data;
+
+                log(`📺 ${userName} started screen sharing in meeting ${meetingId}`, LogTypes.LOGS, "SOCKET_SERVICE");
+
+                // Update participant media status
+                await MeetingParticipant.findOneAndUpdate(
+                    { meeting_id: meetingId, user_id: userId },
+                    { 
+                        media_status: {
+                            screen_sharing: true
+                        } as any,
+                        updated_at: new Date()
+                    }
+                );
+
+                // Update analytics
+                await Meeting.findByIdAndUpdate(meetingId, {
+                    $inc: { "analytics.screen_shares_count": 1 }
+                });
+
+                // Notify all participants in the meeting
+                this.io.to(meetingId).emit("screen:started", {
+                    meetingId,
+                    userId,
+                    userName,
+                    timestamp: new Date().toISOString()
+                });
+
+            } catch (error) {
+                log(`Error starting screen share: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
+                socket.emit("error", {
+                    event: "screen:start",
+                    message: "Failed to start screen sharing",
+                    error: error instanceof Error ? error.message : String(error)
+                });
+            }
+        });
+
+        socket.on("screen:stop", async (data: { meetingId: string }) => {
+            try {
+                const { meetingId } = data;
+                const { userId, userName } = socket.data;
+
+                log(`📺 ${userName} stopped screen sharing in meeting ${meetingId}`, LogTypes.LOGS, "SOCKET_SERVICE");
+
+                // Update participant media status
+                await MeetingParticipant.findOneAndUpdate(
+                    { meeting_id: meetingId, user_id: userId },
+                    { 
+                        media_status: {
+                            screen_sharing: false
+                        } as any,
+                        updated_at: new Date()
+                    }
+                );
+
+                // Notify all participants
+                this.io.to(meetingId).emit("screen:stopped", {
+                    meetingId,
+                    userId,
+                    userName,
+                    timestamp: new Date().toISOString()
+                });
+
+            } catch (error) {
+                log(`Error stopping screen share: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
+                socket.emit("error", {
+                    event: "screen:stop",
+                    message: "Failed to stop screen sharing",
+                    error: error instanceof Error ? error.message : String(error)
+                });
+            }
+        });
+
+        // ============================================
+        // ✋ HAND RAISE EVENTS
+        // ============================================
+
+        socket.on("hand:raise", async (data: { meetingId: string }) => {
+            try {
+                const { meetingId } = data;
+                const { userId, userName } = socket.data;
+
+                log(`✋ ${userName} raised hand in meeting ${meetingId}`, LogTypes.LOGS, "SOCKET_SERVICE");
+
+                // Notify all participants (especially host)
+                this.io.to(meetingId).emit("hand:raised", {
+                    meetingId,
+                    userId,
+                    userName,
+                    timestamp: new Date().toISOString()
+                });
+
+                // Store in audit trail for analytics
+                await Meeting.findByIdAndUpdate(meetingId, {
+                    $push: {
+                        audit_trail: {
+                            timestamp: new Date(),
+                            action: "hand_raised",
+                            user_id: userId,
+                            details: { userName }
+                        }
+                    }
+                });
+
+            } catch (error) {
+                log(`Error raising hand: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
+                socket.emit("error", {
+                    event: "hand:raise",
+                    message: "Failed to raise hand",
+                    error: error instanceof Error ? error.message : String(error)
+                });
+            }
+        });
+
+        socket.on("hand:lower", async (data: { meetingId: string }) => {
+            try {
+                const { meetingId } = data;
+                const { userId, userName } = socket.data;
+
+                log(`✋ ${userName} lowered hand in meeting ${meetingId}`, LogTypes.LOGS, "SOCKET_SERVICE");
+
+                // Notify all participants
+                this.io.to(meetingId).emit("hand:lowered", {
+                    meetingId,
+                    userId,
+                    userName,
+                    timestamp: new Date().toISOString()
+                });
+
+            } catch (error) {
+                log(`Error lowering hand: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
+                socket.emit("error", {
+                    event: "hand:lower",
+                    message: "Failed to lower hand",
+                    error: error instanceof Error ? error.message : String(error)
+                });
+            }
+        });
+
+        // ============================================
+        // 🔇 PARTICIPANT CONTROL EVENTS (HOST ACTIONS)
+        // ============================================
+
+        socket.on("participant:mute", async (data: { 
+            meetingId: string; 
+            targetUserId: string;
+            kind: "audio" | "video";
+        }) => {
+            try {
+                const { meetingId, targetUserId, kind } = data;
+                const { userId: hostUserId, userName: hostName } = socket.data;
+
+                // Verify host has permission
+                const meeting = await Meeting.findById(meetingId);
+                if (!meeting) {
+                    throw new Error("Meeting not found");
+                }
+
+                // Check if requester is host or co-host
+                const hostParticipant = await MeetingParticipant.findOne({
+                    meeting_id: meetingId,
+                    user_id: hostUserId
+                });
+
+                if (!hostParticipant?.permissions.is_host && !hostParticipant?.permissions.is_moderator) {
+                    throw new Error("Permission denied - only host can mute participants");
+                }
+
+                log(`🔇 ${hostName} muted ${targetUserId}'s ${kind} in meeting ${meetingId}`, LogTypes.LOGS, "SOCKET_SERVICE");
+
+                // Update target participant's status
+                await MeetingParticipant.findOneAndUpdate(
+                    { meeting_id: meetingId, user_id: targetUserId },
+                    {
+                        media_status: {
+                            [kind + '_enabled']: false,
+                            is_muted_by_host: true
+                        } as any,
+                        updated_at: new Date()
+                    }
+                );
+
+                // Find target participant's socket
+                const targetSocketId = this.userSockets.get(targetUserId);
+                if (targetSocketId) {
+                    const targetSocket = this.activeSockets.get(targetSocketId);
+                    if (targetSocket) {
+                        // Send mute command to target participant
+                        targetSocket.emit("muted:by-host", {
+                            meetingId,
+                            kind,
+                            hostName,
+                            reason: "Muted by host",
+                            timestamp: new Date().toISOString()
+                        });
+                    }
+                }
+
+                // Notify all participants about the update
+                this.io.to(meetingId).emit("participant:media:updated", {
+                    meetingId,
+                    userId: targetUserId,
+                    kind,
+                    enabled: false,
+                    mutedByHost: true
+                });
+
+                // Store in audit trail
+                await Meeting.findByIdAndUpdate(meetingId, {
+                    $push: {
+                        audit_trail: {
+                            timestamp: new Date(),
+                            action: "participant_muted",
+                            user_id: hostUserId,
+                            details: { targetUserId, kind, hostName }
+                        }
+                    }
+                });
+
+            } catch (error) {
+                log(`Error muting participant: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
+                socket.emit("error", {
+                    event: "participant:mute",
+                    message: "Failed to mute participant",
+                    error: error instanceof Error ? error.message : String(error)
+                });
+            }
+        });
+
+        // ============================================
+        // 😊 REACTION EVENTS
+        // ============================================
+
+        socket.on("reaction:send", async (data: { 
+            meetingId: string; 
+            emoji: string;
+        }) => {
+            try {
+                // ✅ Rate limit: 3 reactions per second
+                if (!this.checkRateLimit(socket.id, "reaction:send", 3, 1000)) {
+                    socket.emit("error", {
+                        event: "reaction:send",
+                        message: "Reaction rate limit exceeded. Please slow down.",
+                        code: "RATE_LIMIT_EXCEEDED"
+                    });
+                    return;
+                }
+                
+                const { meetingId, emoji } = data;
+                const { userId, userName } = socket.data;
+
+                // Validate emoji (basic check)
+                const validEmojis = ["👍", "❤️", "😂", "😮", "😢", "👏", "🎉", "🤔", "👎", "🔥"];
+                if (!validEmojis.includes(emoji)) {
+                    throw new Error("Invalid emoji");
+                }
+
+                log(`${emoji} ${userName} sent reaction in meeting ${meetingId}`, LogTypes.LOGS, "SOCKET_SERVICE");
+
+                // Broadcast reaction to all participants (ephemeral - not stored in DB)
+                this.io.to(meetingId).emit("reaction:received", {
+                    meetingId,
+                    userId,
+                    userName,
+                    emoji,
+                    timestamp: new Date().toISOString()
+                });
+
+            } catch (error) {
+                log(`Error sending reaction: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
+                socket.emit("error", {
+                    event: "reaction:send",
+                    message: "Failed to send reaction",
+                    error: error instanceof Error ? error.message : String(error)
+                });
+            }
+        });
+
+        // ============================================
+        // 🔴 RECORDING CONTROL EVENTS
+        // ============================================
+
+        socket.on("recording:start", async (data: {
+            meetingId: string;
+            options?: {
+                recordVideo?: boolean;
+                recordAudio?: boolean;
+                recordChat?: boolean;
+            }
+        }) => {
+            try {
+                const { meetingId, options = {} } = data;
+                const { userId, userName } = socket.data;
+
+                // ✅ Get meeting first to check if recording is enabled
+                const meeting = await Meeting.findById(meetingId);
+                if (!meeting) {
+                    socket.emit("error", {
+                        event: "recording:start",
+                        message: "Meeting not found",
+                        code: "MEETING_NOT_FOUND"
+                    });
+                    return;
+                }
+
+                // ✅ Check if recording is enabled for this meeting
+                if (!(meeting as any).recording_enabled) {
+                    socket.emit("error", {
+                        event: "recording:start",
+                        message: "Recording is disabled for this meeting",
+                        code: "RECORDING_DISABLED"
+                    });
+                    return;
+                }
+
+                // ✅ Verify permission (only host or moderator can start recording)
+                const participant = await MeetingParticipant.findOne({
+                    meeting_id: meetingId,
+                    user_id: userId
+                });
+
+                if (!participant) {
+                    socket.emit("error", {
+                        event: "recording:start",
+                        message: "You are not a participant in this meeting",
+                        code: "NOT_A_PARTICIPANT"
+                    });
+                    return;
+                }
+
+                if (!participant.permissions?.is_host && !participant.permissions?.is_moderator) {
+                    socket.emit("error", {
+                        event: "recording:start",
+                        message: "Only hosts and moderators can start recording",
+                        code: "UNAUTHORIZED_RECORDING"
+                    });
+                    return;
+                }
+
+                log(`🔴 ${userName} started recording meeting ${meetingId}`, LogTypes.LOGS, "SOCKET_SERVICE");
+
+                // Create recording record in database
+                const recordingData: Partial<IMeetingRecording> = {
+                    meeting_id: meetingId,
+                    recording_type: 'video',
+                    started_at: new Date(),
+                    is_available: false,
+                };
+
+                const recording = await MeetingRecording.create(recordingData);
+
+                // Notify all participants
+                this.io.to(meetingId).emit("recording:started", {
+                    meetingId,
+                    recordingId: recording.id,
+                    hostName: userName,
+                    options,
+                    timestamp: new Date().toISOString()
+                });
+
+            } catch (error) {
+                log(`Error starting recording: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
+                socket.emit("error", {
+                    event: "recording:start",
+                    message: "Failed to start recording",
+                    error: error instanceof Error ? error.message : String(error)
+                });
+            }
+        });
+
+        socket.on("recording:stop", async (data: { meetingId: string }) => {
+            try {
+                const { meetingId } = data;
+                const { userId, userName } = socket.data;
+
+                // ✅ Verify participant exists and has permission
+                const participant = await MeetingParticipant.findOne({
+                    meeting_id: meetingId,
+                    user_id: userId
+                });
+
+                if (!participant) {
+                    socket.emit("error", {
+                        event: "recording:stop",
+                        message: "You are not a participant in this meeting",
+                        code: "NOT_A_PARTICIPANT"
+                    });
+                    return;
+                }
+
+                if (!participant.permissions?.is_host && !participant.permissions?.is_moderator) {
+                    socket.emit("error", {
+                        event: "recording:stop",
+                        message: "Only hosts and moderators can stop recording",
+                        code: "UNAUTHORIZED_RECORDING"
+                    });
+                    return;
+                }
+
+                log(`⏹️ ${userName} stopped recording meeting ${meetingId}`, LogTypes.LOGS, "SOCKET_SERVICE");
+
+                // Update recording record
+                const activeRecording = await MeetingRecording.findOne({
+                    meeting_id: meetingId,
+                    ended_at: null
+                });
+
+                if (activeRecording) {
+                    await MeetingRecording.updateById(activeRecording.id, {
+                        ended_at: new Date(),
+                        is_available: true
+                    });
+                }
+
+                // Notify all participants
+                this.io.to(meetingId).emit("recording:stopped", {
+                    meetingId,
+                    hostName: userName,
+                    timestamp: new Date().toISOString()
+                });
+
+            } catch (error) {
+                log(`Error stopping recording: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
+                socket.emit("error", {
+                    event: "recording:stop",
+                    message: "Failed to stop recording",
+                    error: error instanceof Error ? error.message : String(error)
+                });
+            }
+        });
+
+        socket.on("recording:pause", async (data: { meetingId: string }) => {
+            try {
+                const { meetingId } = data;
+                const { userId, userName } = socket.data;
+
+                // ✅ Verify participant exists and has permission
+                const participant = await MeetingParticipant.findOne({
+                    meeting_id: meetingId,
+                    user_id: userId
+                });
+
+                if (!participant) {
+                    socket.emit("error", {
+                        event: "recording:pause",
+                        message: "You are not a participant in this meeting",
+                        code: "NOT_A_PARTICIPANT"
+                    });
+                    return;
+                }
+
+                if (!participant.permissions?.is_host && !participant.permissions?.is_moderator) {
+                    socket.emit("error", {
+                        event: "recording:pause",
+                        message: "Only hosts and moderators can pause recording",
+                        code: "UNAUTHORIZED_RECORDING"
+                    });
+                    return;
+                }
+
+                log(`⏸️ ${userName} paused recording meeting ${meetingId}`, LogTypes.LOGS, "SOCKET_SERVICE");
+
+                // In a full implementation, you would pause the actual recording process here
+                // For now, we just notify clients
+
+                this.io.to(meetingId).emit("recording:paused", {
+                    meetingId,
+                    hostName: userName,
+                    timestamp: new Date().toISOString()
+                });
+
+            } catch (error) {
+                log(`Error pausing recording: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
+                socket.emit("error", {
+                    event: "recording:pause",
+                    message: "Failed to pause recording",
+                    error: error instanceof Error ? error.message : String(error)
+                });
+            }
+        });
+
+        socket.on("recording:resume", async (data: { meetingId: string }) => {
+            try {
+                const { meetingId } = data;
+                const { userId, userName } = socket.data;
+
+                // ✅ Verify participant exists and has permission
+                const participant = await MeetingParticipant.findOne({
+                    meeting_id: meetingId,
+                    user_id: userId
+                });
+
+                if (!participant) {
+                    socket.emit("error", {
+                        event: "recording:resume",
+                        message: "You are not a participant in this meeting",
+                        code: "NOT_A_PARTICIPANT"
+                    });
+                    return;
+                }
+
+                if (!participant.permissions?.is_host && !participant.permissions?.is_moderator) {
+                    socket.emit("error", {
+                        event: "recording:resume",
+                        message: "Only hosts and moderators can resume recording",
+                        code: "UNAUTHORIZED_RECORDING"
+                    });
+                    return;
+                }
+
+                log(`▶️ ${userName} resumed recording meeting ${meetingId}`, LogTypes.LOGS, "SOCKET_SERVICE");
+
+                // In a full implementation, you would resume the actual recording process here
+                // For now, we just notify clients
+
+                this.io.to(meetingId).emit("recording:resumed", {
+                    meetingId,
+                    hostName: userName,
+                    timestamp: new Date().toISOString()
+                });
+
+            } catch (error) {
+                log(`Error resuming recording: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
+                socket.emit("error", {
+                    event: "recording:resume",
+                    message: "Failed to resume recording",
+                    error: error instanceof Error ? error.message : String(error)
+                });
+            }
+        });
+
+        // ============================================
+        // 🎨 LAYOUT & UI CONTROL EVENTS
+        // ============================================
+
+        socket.on("layout:change", async (data: {
+            meetingId: string;
+            layout: "grid" | "speaker" | "presentation";
+        }) => {
+            try {
+                const { meetingId, layout } = data;
+                const { userId, userName } = socket.data;
+
+                log(`🎨 ${userName} changed layout to ${layout} in meeting ${meetingId}`, LogTypes.LOGS, "SOCKET_SERVICE");
+
+                // Broadcast layout change to all participants
+                this.io.to(meetingId).emit("layout:changed", {
+                    meetingId,
+                    layout,
+                    userId,
+                    userName,
+                    timestamp: new Date().toISOString()
+                });
+
+            } catch (error) {
+                log(`Error changing layout: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
+                socket.emit("error", {
+                    event: "layout:change",
+                    message: "Failed to change layout",
+                    error: error instanceof Error ? error.message : String(error)
+                });
+            }
+        });
+
+        socket.on("participant:pin", async (data: {
+            meetingId: string;
+            targetUserId: string;
+        }) => {
+            try {
+                const { meetingId, targetUserId } = data;
+                const { userId, userName } = socket.data;
+
+                log(`📌 ${userName} pinned ${targetUserId} in meeting ${meetingId}`, LogTypes.LOGS, "SOCKET_SERVICE");
+
+                // Broadcast pin action
+                this.io.to(meetingId).emit("participant:pinned", {
+                    meetingId,
+                    targetUserId,
+                    pinnedBy: userId,
+                    pinnedByName: userName,
+                    timestamp: new Date().toISOString()
+                });
+
+            } catch (error) {
+                log(`Error pinning participant: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
+                socket.emit("error", {
+                    event: "participant:pin",
+                    message: "Failed to pin participant",
+                    error: error instanceof Error ? error.message : String(error)
+                });
+            }
+        });
+
+        socket.on("participant:spotlight", async (data: {
+            meetingId: string;
+            targetUserId: string;
+        }) => {
+            try {
+                const { meetingId, targetUserId } = data;
+                const { userId, userName } = socket.data;
+
+                // Verify host permission
+                const participant = await MeetingParticipant.findOne({
+                    meeting_id: meetingId,
+                    user_id: userId
+                });
+
+                if (!participant?.permissions.is_host && !participant?.permissions.is_moderator) {
+                    throw new Error("Permission denied - only host can spotlight participants");
+                }
+
+                log(`⭐ ${userName} spotlighted ${targetUserId} in meeting ${meetingId}`, LogTypes.LOGS, "SOCKET_SERVICE");
+
+                // Broadcast spotlight action
+                this.io.to(meetingId).emit("participant:spotlighted", {
+                    meetingId,
+                    targetUserId,
+                    spotlightedBy: userId,
+                    spotlightedByName: userName,
+                    timestamp: new Date().toISOString()
+                });
+
+            } catch (error) {
+                log(`Error spotlighting participant: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
+                socket.emit("error", {
+                    event: "participant:spotlight",
+                    message: "Failed to spotlight participant",
+                    error: error instanceof Error ? error.message : String(error)
+                });
+            }
+        });
+
+        // ============================================
+        // 📊 TELEMETRY & STATS EVENTS
+        // ============================================
+
+        socket.on("stats:report", async (data: {
+            meetingId: string;
+            stats: {
+                rtt?: number;
+                jitter?: number;
+                packetLoss?: number;
+                bitrate?: number;
+                framesDecoded?: number;
+                framesDropped?: number;
+            }
+        }) => {
+            try {
+                // ✅ Rate limit: 1 report per 5 seconds (reduce database load)
+                if (!this.checkRateLimit(socket.id, "stats:report", 1, 5000)) {
+                    return; // Silently drop excessive stats reports
+                }
+                
+                const { meetingId, stats } = data;
+                const { userId } = socket.data;
+
+                // Update participant connection quality based on stats
+                let connectionQuality: "poor" | "fair" | "good" | "excellent" = "good";
+                
+                if (stats.packetLoss && stats.packetLoss > 5) {
+                    connectionQuality = "poor";
+                } else if (stats.packetLoss && stats.packetLoss > 3) {
+                    connectionQuality = "fair";
+                } else if (stats.rtt && stats.rtt < 100 && (!stats.packetLoss || stats.packetLoss < 1)) {
+                    connectionQuality = "excellent";
+                }
+
+                await MeetingParticipant.findOneAndUpdate(
+                    { meeting_id: meetingId, user_id: userId },
+                    {
+                        connection_quality: connectionQuality,
+                        updated_at: new Date()
+                    }
+                );
+
+                // Update meeting analytics (average connection quality)
+                const participants = await MeetingParticipant.find({ meeting_id: meetingId });
+                const qualityMap = { poor: 1, fair: 2, good: 3, excellent: 4 };
+                const avgQuality = participants.reduce((sum, p) => sum + qualityMap[p.connection_quality], 0) / participants.length;
+
+                await Meeting.findByIdAndUpdate(meetingId, {
+                    "analytics.connection_quality_avg": avgQuality
+                });
+
+            } catch (error) {
+                log(`Error reporting stats: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
+                // Don't send error to client for stats (it's frequent)
+            }
         });
 
         // Additional meeting events remain the same...
@@ -316,6 +1060,15 @@ export class SocketServiceOptimized {
                 recipientId?: string;
             }) => {
                 try {
+                    // ✅ Rate limit: 10 messages per minute (prevent spam)
+                    if (!this.checkRateLimit(socket.id, "send-message", 10, 60000)) {
+                        socket.emit("error", {
+                            message: "Message rate limit exceeded. Please slow down.",
+                            code: "RATE_LIMIT_EXCEEDED"
+                        });
+                        return;
+                    }
+                    
                     const { meetingId, message, recipientType, recipientId } = data;
 
                     const rooms = [...socket.rooms];
@@ -360,14 +1113,19 @@ export class SocketServiceOptimized {
                         updated_at: new Date(),
                     });
                 } catch (error) {
-                    console.error("Error sending chat message:", error);
+                    log(`Error sending chat message: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
                     socket.emit("error", { message: "Failed to send message" });
                 }
             }
         );
 
-        // 🚀 OPTIMIZED: Typing indicator with Redis cache
+        // 🚀 OPTIMIZED: Typing indicator with Redis cache and rate limiting
         socket.on("typing", async (data: { meetingId: string; typing: boolean }) => {
+            // ✅ Rate limit: 1 event per second per socket
+            if (!this.checkRateLimit(socket.id, "typing", 1, 1000)) {
+                return; // Silently drop excessive typing events
+            }
+            
             const { meetingId, typing } = data;
             
             if (typing) {
@@ -612,7 +1370,7 @@ export class SocketServiceOptimized {
                     params,
                 });
             } catch (error) {
-                console.error("Error creating transport:", error);
+                log(`Error creating transport: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
                 socket.emit("error", {
                     message: "Failed to create transport",
                 });
@@ -627,7 +1385,7 @@ export class SocketServiceOptimized {
                     transportId: data.transportId,
                 });
             } catch (error) {
-                console.error("Error connecting transport:", error);
+                log(`Error connecting transport: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
                 socket.emit("error", {
                     message: "Failed to connect transport",
                 });
@@ -651,7 +1409,7 @@ export class SocketServiceOptimized {
                     kind,
                 });
             } catch (error) {
-                console.error("Error producing media:", error);
+                log(`Error producing media: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
                 socket.emit("error", {
                     message: "Failed to produce media",
                 });
@@ -685,7 +1443,7 @@ export class SocketServiceOptimized {
                         producerParticipantId,
                     });
                 } catch (error) {
-                    console.error("Error consuming media:", error);
+                    log(`Error consuming media: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
                     socket.emit("error", {
                         message: "Failed to consume media",
                     });
@@ -701,7 +1459,7 @@ export class SocketServiceOptimized {
                     consumerId: data.consumerId,
                 });
             } catch (error) {
-                console.error("Error resuming consumer:", error);
+                log(`Error resuming consumer: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
             }
         });
 
@@ -710,7 +1468,57 @@ export class SocketServiceOptimized {
                 await WebRTCService.pauseConsumer(data.consumerId);
                 socket.emit("consumer-paused", { consumerId: data.consumerId });
             } catch (error) {
-                console.error("Error pausing consumer:", error);
+                log(`Error pausing consumer: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
+            }
+        });
+
+        // 🎥 Change quality layer for simulcast streams
+        socket.on("quality:change", async (data: {
+            meetingId: string;
+            layer: "low" | "medium" | "high";
+        }) => {
+            try {
+                const { meetingId, layer } = data;
+                const { userId } = socket.data;
+
+                // Map layer names to spatial layer numbers
+                const layerMap = { low: 0, medium: 1, high: 2 };
+                const spatialLayer = layerMap[layer];
+
+                log(`🔀 User ${userId} changing quality to ${layer} (layer ${spatialLayer}) in meeting ${meetingId}`, LogTypes.LOGS, "SOCKET_SERVICE");
+
+                // Find all video consumers for this user in this meeting
+                const consumerIds = WebRTCService.getConsumerIdsForUser(meetingId, userId);
+                let updatedCount = 0;
+                
+                // Switch layer for each video consumer
+                for (const consumerId of consumerIds) {
+                    if (consumerId.endsWith('_video')) {
+                        try {
+                            await WebRTCService.switchConsumerLayer(consumerId, spatialLayer);
+                            updatedCount++;
+                        } catch (error) {
+                            log(`Failed to switch layer for consumer ${consumerId}: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
+                        }
+                    }
+                }
+
+                socket.emit("quality:changed", {
+                    meetingId,
+                    layer,
+                    spatialLayer,
+                    consumersUpdated: updatedCount
+                });
+
+                log(`✅ Updated ${updatedCount} video consumers to ${layer} quality`, LogTypes.LOGS, "SOCKET_SERVICE");
+
+            } catch (error) {
+                log(`Error changing quality: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
+                socket.emit("error", {
+                    event: "quality:change",
+                    message: "Failed to change quality",
+                    error: error instanceof Error ? error.message : String(error)
+                });
             }
         });
     }
@@ -808,21 +1616,23 @@ export class SocketServiceOptimized {
     }
 
     /**
-     * Handle leaving a meeting
+     * ✅ Handle leaving a meeting with improved error handling
      */
     private static async handleLeaveMeeting(socket: Socket, meetingId: string): Promise<void> {
+        const { userId, userName } = socket.data;
+        let participantId = userId;
+        
         try {
-            const { userId, userName } = socket.data;
-
             const participant = await MeetingParticipant.findOne({
                 meeting_id: meetingId,
                 socket_id: socket.id,
             });
             
-            const participantId = participant?.peer_connection_id || userId;
+            participantId = participant?.peer_connection_id || userId;
 
             await socket.leave(meetingId);
 
+            // ✅ Always clean up from meetingParticipants Map
             this.meetingParticipants.get(meetingId)?.delete(socket.id);
 
             await WebRTCService.handleParticipantDisconnect(meetingId, userId);
@@ -841,6 +1651,34 @@ export class SocketServiceOptimized {
             log(`👋 ${userName} left meeting ${meetingId}`, LogTypes.LOGS, "SOCKET_SERVICE");
         } catch (error) {
             log(`Error leaving meeting: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
+            
+            // ✅ Ensure cleanup even on error to prevent memory leaks
+            try {
+                this.meetingParticipants.get(meetingId)?.delete(socket.id);
+                
+                // If no participants left, force cleanup
+                const remainingParticipants = this.meetingParticipants.get(meetingId)?.size || 0;
+                if (remainingParticipants === 0) {
+                    this.meetingParticipants.delete(meetingId);
+                    
+                    // Best-effort WebRTC cleanup
+                    await WebRTCService.closeMeetingRoom(meetingId).catch(err => {
+                        log(`Failed to close WebRTC room during error recovery: ${err}`, LogTypes.ERROR, "SOCKET_SERVICE");
+                    });
+                }
+                
+                // Best-effort participant notification
+                try {
+                    socket.to(meetingId).emit("participant-left", {
+                        participantId,
+                        userName,
+                    });
+                } catch {
+                    // Silently fail broadcast on error
+                }
+            } catch (cleanupError) {
+                log(`Critical error in cleanup fallback: ${cleanupError}`, LogTypes.ERROR, "SOCKET_SERVICE");
+            }
         }
     }
 

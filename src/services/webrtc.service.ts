@@ -10,6 +10,7 @@ import {
     MeetingChat,
     MeetingParticipant,
 } from "@/models/meeting.model";
+import log, { LogTypes } from "@/libs/logger";
 
 /**
  * 🎥 WebRTC Service for High-Scale Video Conferencing
@@ -53,6 +54,29 @@ export class WebRTCService {
             routers: this.routers.size,
             activeRooms: this.rooms.size,
         };
+    }
+
+    /**
+     * Get all consumer IDs for a specific user in a meeting (for quality switching)
+     */
+    public static getConsumerIdsForUser(meetingId: string, userId: string): string[] {
+        const consumerPrefix = `${meetingId}_${userId}_`;
+        const consumerIds: string[] = [];
+        
+        for (const consumerId of this.consumers.keys()) {
+            if (consumerId.startsWith(consumerPrefix)) {
+                consumerIds.push(consumerId);
+            }
+        }
+        
+        return consumerIds;
+    }
+
+    /**
+     * Get consumer by ID (for external access)
+     */
+    public static getConsumer(consumerId: string): mediasoup.types.Consumer | undefined {
+        return this.consumers.get(consumerId);
     }
 
     // Media server configuration
@@ -104,7 +128,7 @@ export class WebRTCService {
         try {
             const numWorkers = Number(process.env.MEDIASOUP_WORKERS) || 4;
 
-            console.log(`🚀 Initializing ${numWorkers} MediaSoup workers for scalable video conferencing...`);
+            log(`🚀 Initializing ${numWorkers} MediaSoup workers for scalable video conferencing...`, LogTypes.LOGS, "WEBRTC_SERVICE");
 
             // Check if MediaSoup is available in the environment
             if (!mediasoup) {
@@ -124,12 +148,9 @@ export class WebRTCService {
             for (const [index, result] of workers.entries()) {
                 if (result.status === "fulfilled" && result.value) {
                     this.workers.push(result.value);
-                    console.log(`✅ MediaSoup worker ${index} initialized [pid:${result.value.pid}]`);
+                    log(`✅ MediaSoup worker ${index} initialized [pid:${result.value.pid}]`, LogTypes.LOGS, "WEBRTC_SERVICE");
                 } else {
-                    console.warn(
-                        `⚠️ Failed to create MediaSoup worker ${index}:`,
-                        result.status === "rejected" ? result.reason : "Unknown error"
-                    );
+                    log(`⚠️ MediaSoup worker ${index} initialization timed out after 10 seconds - ${result.status === "rejected" ? result.reason : "Unknown error"}`, LogTypes.ERROR, "WEBRTC_SERVICE");
                 }
             }
 
@@ -137,16 +158,16 @@ export class WebRTCService {
                 throw new Error("No MediaSoup workers could be created");
             }
 
-            console.log(`✅ MediaSoup initialized with ${this.workers.length}/${numWorkers} workers`);
+            log(`✅ MediaSoup initialized with ${this.workers.length}/${numWorkers} workers`, LogTypes.LOGS, "WEBRTC_SERVICE");
         } catch (error) {
-            console.warn("⚠️ MediaSoup initialization failed, running in compatibility mode:", error);
+            log(`⚠️ MediaSoup initialization failed, running in compatibility mode: ${error}`, LogTypes.ERROR, "WEBRTC_SERVICE");
 
             // Set a flag to indicate MediaSoup is not available
             this.isMediaSoupAvailable = false;
 
             // Don't throw the error - allow the server to continue without MediaSoup
             // The participant management features will still work without WebRTC
-            console.log("📱 Participant management APIs will work without MediaSoup");
+            log("📱 Participant management APIs will work without MediaSoup", LogTypes.LOGS, "WEBRTC_SERVICE");
         }
     }
 
@@ -169,7 +190,7 @@ export class WebRTCService {
                     });
 
                     worker.on("died", () => {
-                        console.error(`💀 MediaSoup worker ${index} died, restarting... [pid:${worker.pid}]`);
+                        log(`💀 MediaSoup worker ${index} died, restarting... [pid:${worker.pid}]`, LogTypes.ERROR, "WEBRTC_SERVICE");
                         // Remove the dead worker and try to restart
                         const workerIndex = this.workers.indexOf(worker);
                         if (workerIndex > -1) {
@@ -196,7 +217,7 @@ export class WebRTCService {
      */
     public static async createMeetingRouter(meetingId: string): Promise<mediasoup.types.Router | null> {
         if (!this.isMediaSoupAvailable || this.workers.length === 0) {
-            console.log(`⚠️ MediaSoup not available - router creation skipped for meeting: ${meetingId}`);
+            log(`⚠️ MediaSoup not available - router creation skipped for meeting: ${meetingId}`, LogTypes.LOGS, "WEBRTC_SERVICE");
             return null;
         }
 
@@ -210,7 +231,7 @@ export class WebRTCService {
         this.routers.set(meetingId, router);
         this.rooms.set(meetingId, new Set());
 
-        console.log(`🏗️  Created router for meeting: ${meetingId}`);
+        log(`🏗️  Created router for meeting: ${meetingId}`, LogTypes.LOGS, "WEBRTC_SERVICE");
         return router;
     }
 
@@ -226,7 +247,7 @@ export class WebRTCService {
         params: any;
     }> {
         if (!this.isMediaSoupAvailable) {
-            console.log(`⚠️ MediaSoup not available - transport creation skipped for participant: ${participantId}`);
+            log(`⚠️ MediaSoup not available - transport creation skipped for participant: ${participantId}`, LogTypes.LOGS, "WEBRTC_SERVICE");
             return {
                 transport: null,
                 params: null,
@@ -294,7 +315,7 @@ export class WebRTCService {
     }
 
     /**
-     * Produce media (video/audio) from a participant
+     * Produce media (video/audio) from a participant with simulcast support
      */
     public static async produce(
         meetingId: string,
@@ -309,10 +330,41 @@ export class WebRTCService {
             throw new Error(`Send transport not found for participant: ${participantId}`);
         }
 
-        const producer = await transport.produce({
+        // 🎥 Enable simulcast for video to support adaptive quality streaming
+        const produceOptions: any = {
             kind,
             rtpParameters,
-        });
+            appData: {
+                peerId: participantId,
+                meetingId
+            }
+        };
+
+        // Add simulcast encodings for video only
+        if (kind === 'video') {
+            // Three quality layers: low, medium, high
+            produceOptions.encodings = [
+                {
+                    maxBitrate: 100_000,  // 100 kbps - Low quality (for poor connections)
+                    scaleResolutionDownBy: 4,
+                    scalabilityMode: 'L1T3'
+                },
+                {
+                    maxBitrate: 300_000,  // 300 kbps - Medium quality
+                    scaleResolutionDownBy: 2,
+                    scalabilityMode: 'L1T3'
+                },
+                {
+                    maxBitrate: 900_000,  // 900 kbps - High quality (full resolution)
+                    scalabilityMode: 'L1T3'
+                }
+            ];
+            log(`🎥 Creating video producer with simulcast (3 layers) for ${participantId}`, LogTypes.LOGS, "WEBRTC_SERVICE");
+        } else {
+            log(`🎤 Creating audio producer for ${participantId}`, LogTypes.LOGS, "WEBRTC_SERVICE");
+        }
+
+        const producer = await transport.produce(produceOptions);
 
         const producerId = `${meetingId}_${participantId}_${kind}`;
         this.producers.set(producerId, producer);
@@ -324,6 +376,7 @@ export class WebRTCService {
         await this.updateMeetingAnalytics(meetingId, "producer_added", {
             kind,
             participantId,
+            simulcast: kind === 'video'
         });
 
         return { id: producer.id };
@@ -403,6 +456,58 @@ export class WebRTCService {
     }
 
     /**
+     * Switch consumer to different quality layer (for simulcast)
+     * @param consumerId - The composite consumer ID
+     * @param spatialLayer - 0 = low, 1 = medium, 2 = high quality
+     */
+    public static async switchConsumerLayer(
+        consumerId: string,
+        spatialLayer: number
+    ): Promise<void> {
+        const consumer = this.consumers.get(consumerId);
+        if (!consumer) {
+            throw new Error(`Consumer not found: ${consumerId}`);
+        }
+
+        if (consumer.kind !== 'video') {
+            // Only video supports layers
+            return;
+        }
+
+        try {
+            await consumer.setPreferredLayers({
+                spatialLayer,
+                temporalLayer: 2  // Always use highest temporal layer for smooth video
+            });
+
+            log(`🔀 Switched consumer ${consumerId} to spatial layer ${spatialLayer}`, LogTypes.LOGS, "WEBRTC_SERVICE");
+        } catch (error) {
+            log(`Failed to switch layer for consumer ${consumerId}: ${error}`, LogTypes.ERROR, "WEBRTC_SERVICE");
+            throw error;
+        }
+    }
+
+    /**
+     * Get current consumer layers (for monitoring)
+     */
+    public static getConsumerLayers(consumerId: string): {
+        currentLayer: number;
+        preferredLayer: number;
+    } | null {
+        const consumer = this.consumers.get(consumerId);
+        if (!consumer || consumer.kind !== 'video') {
+            return null;
+        }
+
+        // Type assertion for layers property
+        const consumerWithLayers = consumer as any;
+        return {
+            currentLayer: consumerWithLayers.currentLayers?.spatialLayer ?? -1,
+            preferredLayer: consumerWithLayers.preferredLayers?.spatialLayer ?? -1
+        };
+    }
+
+    /**
      * Handle participant leaving the meeting
      */
     public static async handleParticipantDisconnect(meetingId: string, participantId: string): Promise<void> {
@@ -453,7 +558,7 @@ export class WebRTCService {
             participantId,
         });
 
-        console.log(`👋 Participant ${participantId} disconnected from meeting ${meetingId}`);
+        log(`👋 Participant ${participantId} disconnected from meeting ${meetingId}`, LogTypes.LOGS, "WEBRTC_SERVICE");
     }
 
     /**
@@ -502,7 +607,7 @@ export class WebRTCService {
             updated_at: new Date(),
         });
 
-        console.log(`🏁 Closed meeting room: ${meetingId}`);
+        log(`🏁 Closed meeting room: ${meetingId}`, LogTypes.LOGS, "WEBRTC_SERVICE");
     }
 
     /**
@@ -585,7 +690,7 @@ export class WebRTCService {
         kind: mediasoup.types.MediaKind
     ): void {
         // This will be implemented with Socket.IO in the next step
-        console.log(`🔔 New ${kind} producer from ${producerParticipantId} in meeting ${meetingId}`);
+        log(`🔔 New ${kind} producer from ${producerParticipantId} in meeting ${meetingId}`, LogTypes.LOGS, "WEBRTC_SERVICE");
     }
 
     /**
@@ -629,7 +734,7 @@ export class WebRTCService {
                 updated_at: new Date(),
             });
         } catch (error) {
-            console.error("Failed to update meeting analytics:", error);
+            log(`Failed to update meeting analytics: ${error}`, LogTypes.ERROR, "WEBRTC_SERVICE");
         }
     }
 
@@ -695,13 +800,13 @@ export class WebRTCService {
      */
     public static getMeetingRouterRtpCapabilities(meetingId: string): mediasoup.types.RtpCapabilities | null {
         if (!this.isMediaSoupAvailable) {
-            console.log(`⚠️ MediaSoup not available - cannot get RTP capabilities for meeting: ${meetingId}`);
+            log(`⚠️ MediaSoup not available - cannot get RTP capabilities for meeting: ${meetingId}`, LogTypes.LOGS, "WEBRTC_SERVICE");
             return null;
         }
 
         const router = this.routers.get(meetingId);
         if (!router) {
-            console.log(`⚠️ Router not found for meeting: ${meetingId}`);
+            log(`⚠️ Router not found for meeting: ${meetingId}`, LogTypes.LOGS, "WEBRTC_SERVICE");
             return null;
         }
 
