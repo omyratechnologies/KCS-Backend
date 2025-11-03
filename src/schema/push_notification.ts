@@ -91,7 +91,7 @@ export const sendTestNotificationRequestBodySchema = z
             example: "This is a test notification",
             description: "Notification message"
         }),
-        target_user_types: z.array(z.enum(["Student", "Teacher", "Parent", "Admin"]))
+        target_user_types: z.array(z.enum(["Student", "Teacher", "Parent", "Admin", "Principal", "Staff"]))
             .optional()
             .openapi({
                 example: ["Student", "Teacher"],

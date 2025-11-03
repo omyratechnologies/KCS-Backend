@@ -63,17 +63,43 @@ export class UsersController {
             }
         }
     };
-    // Get All
+    // Get All Users with filtering and pagination
     public static readonly getUsers = async (c: Context) => {
         try {
             const campus_id = c.get("campus_id");
-            const users = await UserService.getUsers(campus_id);
+            const query = c.req.query();
 
-            return c.json(users);
+            const filters = {
+                page: query.page ? Number.parseInt(query.page) : 1,
+                limit: query.limit ? Number.parseInt(query.limit) : 20,
+                user_type: query.user_type as string,
+                search: query.search as string,
+                user_id: query.user_id as string,
+                email: query.email as string,
+                name: query.name as string,
+                phone: query.phone as string,
+                is_active: query.is_active ? query.is_active === "true" : undefined,
+                is_deleted: query.is_deleted ? query.is_deleted === "true" : false,
+                academic_year: query.academic_year as string,
+                class_id: query.class_id as string,
+                from: query.from ? new Date(query.from) : undefined,
+                to: query.to ? new Date(query.to) : undefined,
+                sort_by: query.sort_by as string,
+                sort_order: (query.sort_order as "asc" | "desc") || "desc",
+            };
+
+            const result = await UserService.getUsersWithFilters(campus_id, filters);
+
+            return c.json({
+                success: true,
+                data: result.users,
+                pagination: result.pagination,
+            });
         } catch (error) {
             if (error instanceof Error) {
                 return c.json(
                     {
+                        success: false,
                         message: error.message,
                     },
                     400
@@ -178,65 +204,6 @@ export class UsersController {
             if (error instanceof Error) {
                 return c.json(
                     {
-                        message: error.message,
-                    },
-                    400
-                );
-            }
-        }
-    };
-
-    // Get students with pagination and filters
-    public static readonly getStudents = async (c: Context) => {
-        try {
-            const campus_id = c.get("campus_id");
-            const query = c.req.query();
-
-            // Validate academic_year and class_id - both must be provided together or neither
-            const hasAcademicYear = !!query.academic_year;
-            const hasClassId = !!query.class_id;
-            
-            if (hasAcademicYear !== hasClassId) {
-                return c.json(
-                    {
-                        success: false,
-                        message: "Both academic_year and class_id must be provided together, or neither should be included",
-                    },
-                    400
-                );
-            }
-
-            const filters = {
-                page: query.page ? Number.parseInt(query.page) : 1,
-                limit: query.limit ? Number.parseInt(query.limit) : 20,
-                user_type: "Student",
-                search: query.search as string,
-                user_id: query.user_id as string,
-                email: query.email as string,
-                name: query.name as string,
-                phone: query.phone as string,
-                is_active: query.is_active ? query.is_active === "true" : undefined,
-                is_deleted: query.is_deleted ? query.is_deleted === "true" : false,
-                from: query.from ? new Date(query.from) : undefined,
-                to: query.to ? new Date(query.to) : undefined,
-                sort_by: query.sort_by as string,
-                sort_order: (query.sort_order as "asc" | "desc") || "desc",
-                academic_year: query.academic_year as string,
-                class_id: query.class_id as string,
-            };
-
-            const result = await UserService.getUsersWithFilters(campus_id, filters);
-            
-            return c.json({
-                success: true,
-                data: result.users,
-                pagination: result.pagination,
-            });
-        } catch (error) {
-            if (error instanceof Error) {
-                return c.json(
-                    {
-                        success: false,
                         message: error.message,
                     },
                     400

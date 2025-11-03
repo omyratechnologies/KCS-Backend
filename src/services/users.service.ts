@@ -125,46 +125,6 @@ export class UserService {
     };
 
     // Get All
-    public static readonly getUsers = async (campus_id?: string) => {
-        const filter = campus_id ? { campus_id: campus_id } : {};
-        const options: FindOptions = {
-            sort: {
-                created_at: "DESC",
-            },
-            limit: 100,
-            skip: 0,
-            select: [
-                "id",
-                "user_id",
-                "email",
-                "first_name",
-                "last_name",
-                "phone",
-                "address",
-                "last_login",
-                "meta_data",
-                "is_active",
-                "is_deleted",
-                "user_type",
-                "campus_id",
-                "academic_year",
-                "class_id",
-                "created_at",
-                "updated_at",
-            ],
-        };
-
-        const data: {
-            rows: IUser[];
-        } = await User.find(filter, options);
-
-        if (data.rows.length === 0) {
-            throw new Error("No users found");
-        }
-
-        return data.rows;
-    };
-
     // Get One
     public static readonly getUser = async (id: string): Promise<IUser> => {
         return await User.findById(id, {
@@ -396,9 +356,28 @@ export class UserService {
 
         // Build filter object
         const filter: any = { campus_id };
+        
+        // Prevent Super Admin from being retrieved through this endpoint
+        if (user_type === "Super Admin") {
+            // Return empty result if explicitly trying to get Super Admin
+            return {
+                users: [],
+                pagination: {
+                    current_page: page,
+                    per_page: limit,
+                    total_items: 0,
+                    total_pages: 0,
+                    has_next: false,
+                    has_previous: false,
+                },
+            };
+        }
+        
         if (user_type) {
             filter.user_type = user_type;
         }
+        // Note: Super Admin will be filtered out from results below
+        
         if (is_deleted !== undefined) {
             filter.is_deleted = is_deleted;
         }
@@ -421,6 +400,8 @@ export class UserService {
                 "is_deleted",
                 "user_type",
                 "campus_id",
+                "academic_year",
+                "class_id",
                 "created_at",
                 "updated_at",
             ],
@@ -431,6 +412,9 @@ export class UserService {
         } = await User.find(filter, options);
 
         let users = data.rows;
+
+        // SECURITY: Always exclude Super Admin users from results
+        users = users.filter((u) => u.user_type !== "Super Admin");
 
         // Apply additional filters
         if (user_id) {
@@ -489,22 +473,39 @@ export class UserService {
             });
         }
 
-        // Filter by class enrollment if academic_year and class_id are provided
-        if (academic_year && class_id) {
-            const classData = await Class.findOne({
-                campus_id,
-                academic_year,
-                id: class_id,
-                is_active: true,
-                is_deleted: false,
-            });
+        // Filter by academic_year if provided
+        if (academic_year) {
+            users = users.filter((u) => u.academic_year === academic_year);
+        }
 
-            if (classData && classData.student_ids && classData.student_ids.length > 0) {
-                const enrolledStudentIds = new Set(classData.student_ids);
-                users = users.filter((u) => enrolledStudentIds.has(u.id));
-            } else {
-                // No students enrolled in this class
-                users = [];
+        // Filter by class_id if provided
+        if (class_id) {
+            users = users.filter((u) => u.class_id === class_id);
+        }
+
+        // Additional filter: check class enrollment if both academic_year and class_id are provided and user_type is Student
+        if (academic_year && class_id && user_type === "Student") {
+            try {
+                const classData = await Class.findOne({
+                    campus_id,
+                    academic_year,
+                    id: class_id,
+                    is_active: true,
+                    is_deleted: false,
+                });
+
+                if (classData && classData.student_ids && classData.student_ids.length > 0) {
+                    const enrolledStudentIds = new Set(classData.student_ids);
+                    // Further filter to only students enrolled in the class
+                    users = users.filter((u) => enrolledStudentIds.has(u.id));
+                }
+            } catch {
+                // If class not found or error, continue with users already filtered by academic_year and class_id fields
+                infoLogs(
+                    `Class lookup failed for academic_year: ${academic_year}, class_id: ${class_id}`,
+                    LogTypes.ERROR,
+                    "USER:GET:CLASS_LOOKUP_FAILED"
+                );
             }
         }
 

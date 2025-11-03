@@ -25,9 +25,9 @@ const phoneSchema = z.string().regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number
 
 const addressSchema = z.string().min(1, "Address is required").max(500, "Address must be less than 500 characters");
 
-const userTypeSchema = z.enum(["Student", "Teacher", "Parent", "Admin", "Super Admin"], {
+const userTypeSchema = z.enum(["Student", "Teacher", "Parent", "Admin", "Super Admin", "Principal", "Staff"], {
     errorMap: () => ({
-        message: "Invalid user type. Must be one of: Student, Teacher, Parent, Admin, Super Admin",
+        message: "Invalid user type. Must be one of: Student, Teacher, Parent, Admin, Super Admin, Principal, Staff",
     }),
 });
 
@@ -80,13 +80,24 @@ export const updatePasswordSchema = z.object({
     password: passwordSchema,
 });
 
-// Query parameters validation schema
+// Query parameters validation schema for getting users
 export const getUsersQuerySchema = z.object({
     campus_id: campusIdSchema.optional(),
     user_type: userTypeSchema.optional(),
     is_active: z.boolean().optional(),
-    limit: z.number().min(1).max(1000).default(100),
-    skip: z.number().min(0).default(0),
+    page: z.number().min(1).default(1).optional(),
+    limit: z.number().min(1).max(1000).default(20).optional(),
+    search: z.string().optional(),
+    user_id: z.string().optional(),
+    email: z.string().email().optional(),
+    name: z.string().optional(),
+    phone: z.string().optional(),
+    academic_year: z.string().optional(),
+    class_id: z.string().optional(),
+    from: z.string().optional(), // ISO date string
+    to: z.string().optional(), // ISO date string
+    sort_by: z.string().default("created_at").optional(),
+    sort_order: z.enum(["asc", "desc"]).default("desc").optional(),
 });
 
 // ID parameter validation

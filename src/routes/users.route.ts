@@ -9,7 +9,6 @@ import {
     createUserResponseSchema,
     deleteUserResponseSchema,
     getUserResponseSchema,
-    getUsersResponseSchema,
     updateUserRequestBodySchema,
     updateUserResponseSchema,
 } from "@/schema/user";
@@ -71,43 +70,16 @@ app.get(
         tags: ["Users"],
         operationId: "getUsers",
         summary: "Get all users",
-        description: "Retrieves all users for the current campus",
-        responses: {
-            200: {
-                description: "List of users",
-                content: {
-                    "application/json": {
-                        schema: resolver(getUsersResponseSchema),
-                    },
-                },
-            },
-            400: {
-                description: "Bad request",
-                content: {
-                    "application/json": {
-                        schema: {
-                            type: "object",
-                            properties: {
-                                message: { type: "string" },
-                            },
-                        },
-                    },
-                },
-            },
-        },
-    }),
-    // roleMiddleware("get_users"),
-    UsersController.getUsers
-);
-
-app.get(
-    "/students",
-    describeRoute({
-        tags: ["Users"],
-        operationId: "getStudents",
-        summary: "Get all students",
-        description: "Retrieves all students for the current campus with pagination and filtering support",
+        description: "Retrieves all users for the current campus with advanced filtering, pagination, and search capabilities. Supports filtering by user type and type-specific parameters.",
         parameters: [
+            {
+                name: "user_type",
+                in: "query",
+                required: false,
+                schema: { type: "string", enum: ["Student", "Teacher", "Parent", "Admin", "Principal", "Staff"] },
+                description: "Filter by user type",
+                example: "Student",
+            },
             {
                 name: "page",
                 in: "query",
@@ -127,7 +99,7 @@ app.get(
                 in: "query",
                 required: false,
                 schema: { type: "string" },
-                description: "Search term to filter students by name, email, user_id, phone, or address",
+                description: "Search term to filter users by name, email, user_id, phone, or address",
             },
             {
                 name: "user_id",
@@ -165,11 +137,27 @@ app.get(
                 description: "Filter by active status",
             },
             {
+                name: "academic_year",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+                description: "Filter by academic year (primarily for Students)",
+                example: "2024-2025",
+            },
+            {
+                name: "class_id",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+                description: "Filter by class ID (for Students or Teachers assigned to a class)",
+                example: "29562c3d-9ea8-420f-b3dc-b9dc8cab623d",
+            },
+            {
                 name: "from",
                 in: "query",
                 required: false,
                 schema: { type: "string", format: "date" },
-                description: "Filter students created from this date (ISO 8601 format: YYYY-MM-DD)",
+                description: "Filter users created from this date (ISO 8601 format: YYYY-MM-DD)",
                 example: "2024-01-01",
             },
             {
@@ -177,7 +165,7 @@ app.get(
                 in: "query",
                 required: false,
                 schema: { type: "string", format: "date" },
-                description: "Filter students created up to this date (ISO 8601 format: YYYY-MM-DD)",
+                description: "Filter users created up to this date (ISO 8601 format: YYYY-MM-DD)",
                 example: "2024-12-31",
             },
             {
@@ -185,7 +173,7 @@ app.get(
                 in: "query",
                 required: false,
                 schema: { type: "string", default: "created_at" },
-                description: "Field to sort by (e.g., created_at, first_name, email)",
+                description: "Field to sort by (e.g., created_at, updated_at, first_name, email)",
             },
             {
                 name: "sort_order",
@@ -194,26 +182,10 @@ app.get(
                 schema: { type: "string", enum: ["asc", "desc"], default: "desc" },
                 description: "Sort order (ascending or descending)",
             },
-            {
-                name: "academic_year",
-                in: "query",
-                required: false,
-                schema: { type: "string" },
-                description: "Filter students enrolled in a specific academic year. Must be provided together with class_id.",
-                example: "2024-2025",
-            },
-            {
-                name: "class_id",
-                in: "query",
-                required: false,
-                schema: { type: "string" },
-                description: "Filter students enrolled in a specific class. Must be provided together with academic_year.",
-                example: "29562c3d-9ea8-420f-b3dc-b9dc8cab623d",
-            },
         ],
         responses: {
             200: {
-                description: "List of students with pagination",
+                description: "List of users with pagination",
                 content: {
                     "application/json": {
                         schema: {
@@ -258,11 +230,12 @@ app.get(
             },
         },
     }),
-    UsersController.getStudents
+    // roleMiddleware("get_users"),
+    UsersController.getUsers
 );
 
 app.get(
-    "/i/:id",
+    "/:id",
     describeRoute({
         tags: ["Users"],
         operationId: "getUser",
