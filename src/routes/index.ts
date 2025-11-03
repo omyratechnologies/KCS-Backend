@@ -28,8 +28,6 @@ import messagesRoute from "@/routes/message.route";
 import notificationRoute from "@/routes/notification.route";
 import parentRoute from "@/routes/parent.route";
 import parentFeedControlRoute from "@/routes/parent_feed_control.route";
-import paymentRoute from "@/routes/payment.route";
-import paymentSettlementRoute from "@/routes/payment_settlement.route";
 import pushNotificationRoute from "@/routes/push_notification.route";
 import semesterReportRoute from "@/routes/semester_report.route";
 import studentPerformanceRoute from "@/routes/student_performance.route";
@@ -92,8 +90,6 @@ app.route("/semester-report", semesterReportRoute);
 app.route("/teacher", teacherRoute);
 app.route("/parent", parentRoute);
 app.route("/parent-feed-controls", parentFeedControlRoute);
-app.route("/payment", paymentRoute);
-app.route("/payment-settlement", paymentSettlementRoute);
 app.route("/super-admin", superAdminRoute);
 
 export default app;

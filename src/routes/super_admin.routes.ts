@@ -11,7 +11,7 @@ superAdminRoutes.use("*", authMiddleware());
 // ========================= SCHOOL MANAGEMENT =========================
 
 /**
- * Onboard a new school with payment system setup
+ * Onboard a new school
  * POST /super-admin/schools/onboard
  */
 superAdminRoutes.post("/schools/onboard", SuperAdminController.onboardNewSchool);
@@ -29,12 +29,6 @@ superAdminRoutes.get("/schools/health", SuperAdminController.monitorSchoolHealth
 superAdminRoutes.get("/analytics/platform", SuperAdminController.getPlatformAnalytics);
 
 /**
- * Troubleshoot payment issues for a specific school
- * GET /super-admin/schools/:campus_id/troubleshoot
- */
-superAdminRoutes.get("/schools/:campus_id/troubleshoot", SuperAdminController.troubleshootSchoolPayments);
-
-/**
  * Check compliance for all schools
  * GET /super-admin/compliance/check-all
  */
@@ -47,12 +41,6 @@ superAdminRoutes.get("/compliance/check-all", SuperAdminController.checkComplian
  * GET /super-admin/security/monitor
  */
 superAdminRoutes.get("/security/monitor", SuperAdminController.monitorSystemSecurity);
-
-/**
- * Update payment gateway configurations globally
- * POST /super-admin/gateways/update-configurations
- */
-superAdminRoutes.post("/gateways/update-configurations", SuperAdminController.updateGatewayConfigurations);
 
 /**
  * Monitor platform performance
@@ -74,7 +62,7 @@ superAdminRoutes.post("/backup/initiate", SuperAdminController.initiateManualBac
 
 /**
  * Generate platform-wide audit report
- * GET /super-admin/audit/generate?start_date=2023-01-01&end_date=2023-12-31&include_payment_data=true
+ * GET /super-admin/audit/generate?start_date=2023-01-01&end_date=2023-12-31
  */
 superAdminRoutes.get("/audit/generate", SuperAdminController.generateAuditReport);
 

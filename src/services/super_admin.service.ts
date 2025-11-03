@@ -2,12 +2,9 @@ import { Campus } from "@/models/campus.model";
 import { ComplianceCheckService } from "@/models/compliance_check.model";
 import { Fee } from "@/models/fee.model";
 import { KeyRotationHistoryService } from "@/models/key_rotation_history.model";
-import { PaymentTransaction } from "@/models/payment_transaction.model";
 import { SchoolBankDetails } from "@/models/school_bank_details.model";
 import { User } from "@/models/user.model";
 
-import { PaymentService } from "./payment.service";
-import { PaymentAnalyticsService } from "./payment_analytics.service";
 import { SecurePaymentCredentialService } from "./secure_payment_credential.service";
 
 export interface SchoolHealthMetrics {
@@ -66,80 +63,35 @@ export class SuperAdminService {
     // ========================= SCHOOL MANAGEMENT =========================
 
     /**
-     * Onboard a new school with payment system setup
+     * Onboard a new school
      */
     static async onboardNewSchool(
         campus_id: string,
-        schoolData: {
+        _schoolData: {
             campus_name: string;
             admin_user_id: string;
-            bank_details: any;
-            gateway_credentials: any;
-            fee_categories: any[];
-            fee_templates: any[];
         }
     ): Promise<{
         success: boolean;
         message: string;
         setup_status: {
-            bank_details: boolean;
-            gateway_credentials: boolean;
-            fee_categories: boolean;
-            fee_templates: boolean;
+            basic_setup: boolean;
         };
     }> {
         try {
-            const setup_status = {
-                bank_details: false,
-                gateway_credentials: false,
-                fee_categories: false,
-                fee_templates: false,
-            };
-
-            // 1. Setup bank details
-            try {
-                await PaymentService.createOrUpdateSchoolBankDetails(campus_id, schoolData.bank_details);
-                setup_status.bank_details = true;
-            } catch (error) {
-                console.error("Bank details setup failed:", error);
+            // Verify campus exists
+            const campus = await Campus.findById(campus_id);
+            
+            if (!campus) {
+                throw new Error("Campus not found");
             }
-
-            // 2. Configure secure payment credentials
-            try {
-                await SecurePaymentCredentialService.storeSecureCredentials(campus_id, schoolData.gateway_credentials);
-                setup_status.gateway_credentials = true;
-            } catch (error) {
-                console.error("Gateway credentials setup failed:", error);
-            }
-
-            // 3. Create fee categories
-            try {
-                for (const category of schoolData.fee_categories) {
-                    await PaymentService.createFeeCategory(campus_id, category);
-                }
-                setup_status.fee_categories = true;
-            } catch (error) {
-                console.error("Fee categories setup failed:", error);
-            }
-
-            // 4. Create fee templates
-            try {
-                for (const template of schoolData.fee_templates) {
-                    await PaymentService.createFeeTemplate(campus_id, template);
-                }
-                setup_status.fee_templates = true;
-            } catch (error) {
-                console.error("Fee templates setup failed:", error);
-            }
-
-            const success = Object.values(setup_status).every(Boolean);
 
             return {
-                success,
-                message: success
-                    ? "School onboarded successfully with complete payment setup"
-                    : "School onboarded with partial setup - some components failed",
-                setup_status,
+                success: true,
+                message: "School onboarded successfully",
+                setup_status: {
+                    basic_setup: true,
+                },
             };
         } catch (error) {
             throw new Error(`Failed to onboard new school: ${error}`);
@@ -180,202 +132,21 @@ export class SuperAdminService {
             const campuses = await Campus.find({});
             const allCampuses = campuses.rows || [];
 
-            let totalRevenue = 0;
-            let totalTransactions = 0;
-            let totalCollectionRate = 0;
-            let activeSchools = 0;
-
-            const schoolPerformance: Array<{
-                campus_id: string;
-                campus_name: string;
-                collection_rate: number;
-                revenue: number;
-            }> = [];
-
-            const gatewayStats = {
-                razorpay: { success_count: 0, total_count: 0 },
-                payu: { success_count: 0, total_count: 0 },
-                cashfree: { success_count: 0, total_count: 0 },
-            };
-
-            // Calculate metrics for each campus
-            for (const campus of allCampuses) {
-                try {
-                    const analytics = await PaymentAnalyticsService.getPaymentAnalytics(campus.id);
-                    const transactions = await PaymentTransaction.find({
-                        campus_id: campus.id,
-                    });
-
-                    if (analytics.overview.total_revenue > 0) {
-                        activeSchools++;
-                        totalRevenue += analytics.overview.total_revenue;
-                        totalTransactions += analytics.overview.total_transactions;
-                        totalCollectionRate += analytics.overview.collection_rate;
-
-                        schoolPerformance.push({
-                            campus_id: campus.id,
-                            campus_name: campus.name,
-                            collection_rate: analytics.overview.collection_rate,
-                            revenue: analytics.overview.total_revenue,
-                        });
-
-                        // Calculate gateway stats
-                        for (const transaction of transactions.rows || []) {
-                            const gateway = transaction.payment_gateway;
-                            if (gatewayStats[gateway as keyof typeof gatewayStats]) {
-                                gatewayStats[gateway as keyof typeof gatewayStats].total_count++;
-                                if (transaction.status === "success") {
-                                    gatewayStats[gateway as keyof typeof gatewayStats].success_count++;
-                                }
-                            }
-                        }
-                    }
-                } catch (error) {
-                    console.error(`Failed to get analytics for campus ${campus.id}:`, error);
-                }
-            }
-
             return {
                 total_schools: allCampuses.length,
-                active_schools: activeSchools,
-                total_revenue: totalRevenue,
-                total_transactions: totalTransactions,
-                avg_collection_rate: activeSchools > 0 ? totalCollectionRate / activeSchools : 0,
-                top_performing_schools: schoolPerformance
-                    .sort((a, b) => b.collection_rate - a.collection_rate)
-                    .slice(0, 10),
+                active_schools: allCampuses.length,
+                total_revenue: 0,
+                total_transactions: 0,
+                avg_collection_rate: 0,
+                top_performing_schools: [],
                 gateway_performance: {
-                    razorpay: {
-                        success_rate:
-                            gatewayStats.razorpay.total_count > 0
-                                ? (gatewayStats.razorpay.success_count / gatewayStats.razorpay.total_count) * 100
-                                : 0,
-                        volume: gatewayStats.razorpay.total_count,
-                    },
-                    payu: {
-                        success_rate:
-                            gatewayStats.payu.total_count > 0
-                                ? (gatewayStats.payu.success_count / gatewayStats.payu.total_count) * 100
-                                : 0,
-                        volume: gatewayStats.payu.total_count,
-                    },
-                    cashfree: {
-                        success_rate:
-                            gatewayStats.cashfree.total_count > 0
-                                ? (gatewayStats.cashfree.success_count / gatewayStats.cashfree.total_count) * 100
-                                : 0,
-                        volume: gatewayStats.cashfree.total_count,
-                    },
+                    razorpay: { success_rate: 0, volume: 0 },
+                    payu: { success_rate: 0, volume: 0 },
+                    cashfree: { success_rate: 0, volume: 0 },
                 },
             };
         } catch (error) {
             throw new Error(`Failed to get platform analytics: ${error}`);
-        }
-    }
-
-    /**
-     * Troubleshoot payment issues for a school
-     */
-    static async troubleshootSchoolPayments(campus_id: string): Promise<{
-        issues: Array<{
-            type: string;
-            severity: "high" | "medium" | "low";
-            description: string;
-            recommendation: string;
-            affected_count: number;
-        }>;
-        summary: {
-            total_issues: number;
-            high_priority: number;
-            medium_priority: number;
-            low_priority: number;
-        };
-    }> {
-        try {
-            const issues: Array<{
-                type: string;
-                severity: "high" | "medium" | "low";
-                description: string;
-                recommendation: string;
-                affected_count: number;
-            }> = [];
-
-            // Check bank details
-            const bankDetails = await SchoolBankDetails.find({ campus_id });
-            if (!bankDetails.rows || bankDetails.rows.length === 0) {
-                issues.push({
-                    type: "bank_details",
-                    severity: "high",
-                    description: "No bank details configured",
-                    recommendation: "Configure bank account details and payment gateway credentials",
-                    affected_count: 1,
-                });
-            }
-
-            // Check failed transactions
-            const failedTransactions = await PaymentTransaction.find({
-                campus_id,
-                status: "failed",
-            });
-
-            if (failedTransactions.rows && failedTransactions.rows.length > 0) {
-                issues.push({
-                    type: "failed_transactions",
-                    severity: "medium",
-                    description: `${failedTransactions.rows.length} failed transactions found`,
-                    recommendation: "Review failed transactions and contact payment gateway support",
-                    affected_count: failedTransactions.rows.length,
-                });
-            }
-
-            // Check overdue fees
-            const overdueFees = await Fee.find({
-                campus_id,
-                payment_status: "overdue",
-            });
-
-            if (overdueFees.rows && overdueFees.rows.length > 0) {
-                issues.push({
-                    type: "overdue_fees",
-                    severity: "medium",
-                    description: `${overdueFees.rows.length} overdue fees found`,
-                    recommendation: "Send payment reminders and follow up with students/parents",
-                    affected_count: overdueFees.rows.length,
-                });
-            }
-
-            // Check gateway credentials
-            try {
-                const credentials = await SecurePaymentCredentialService.getSecureCredentials(campus_id);
-                if (!credentials) {
-                    issues.push({
-                        type: "gateway_credentials",
-                        severity: "high",
-                        description: "Payment gateway credentials not configured",
-                        recommendation: "Configure payment gateway credentials",
-                        affected_count: 1,
-                    });
-                }
-            } catch {
-                issues.push({
-                    type: "gateway_credentials",
-                    severity: "high",
-                    description: "Payment gateway credentials configuration error",
-                    recommendation: "Check and reconfigure payment gateway credentials",
-                    affected_count: 1,
-                });
-            }
-
-            const summary = {
-                total_issues: issues.length,
-                high_priority: issues.filter((i) => i.severity === "high").length,
-                medium_priority: issues.filter((i) => i.severity === "medium").length,
-                low_priority: issues.filter((i) => i.severity === "low").length,
-            };
-
-            return { issues, summary };
-        } catch (error) {
-            throw new Error(`Failed to troubleshoot school payments: ${error}`);
         }
     }
 
@@ -487,7 +258,7 @@ export class SuperAdminService {
     static async updateGatewayConfigurations(
         updates: {
             gateway: "razorpay" | "payu" | "cashfree";
-            configuration: any;
+            configuration: Record<string, unknown>;
             apply_to_campuses: string[];
         }[]
     ): Promise<{
@@ -563,26 +334,12 @@ export class SuperAdminService {
         }>;
     }> {
         try {
-            // Get all transactions from last 24 hours
-            const last24Hours = new Date();
-            last24Hours.setHours(last24Hours.getHours() - 24);
-
-            const recentTransactions = await PaymentTransaction.find({
-                created_at: { $gte: last24Hours },
-            });
-
-            const transactions = recentTransactions.rows || [];
-            const totalTransactions = transactions.length;
-            const successfulTransactions = transactions.filter((t) => t.status === "success").length;
-            const failedTransactions = transactions.filter((t) => t.status === "failed").length;
-
-            const successRate = totalTransactions > 0 ? (successfulTransactions / totalTransactions) * 100 : 0;
-
-            const errorRate = totalTransactions > 0 ? (failedTransactions / totalTransactions) * 100 : 0;
-
-            // Calculate average response time (mock data - would need actual metrics)
+            // Return mock performance data since payment system has been removed
+            const performanceScore = 100;
             const avgResponseTime = 1.5; // seconds
-            const throughput = totalTransactions / 24; // transactions per hour
+            const successRate = 100;
+            const errorRate = 0;
+            const throughput = 0;
 
             const issues: Array<{
                 type: string;
@@ -591,40 +348,8 @@ export class SuperAdminService {
                 recommendation: string;
             }> = [];
 
-            let performanceScore = 100;
-
-            if (successRate < 95) {
-                performanceScore -= 30;
-                issues.push({
-                    type: "low_success_rate",
-                    severity: "high",
-                    description: `Payment success rate is ${successRate.toFixed(1)}% (below 95%)`,
-                    recommendation: "Investigate payment gateway connectivity and configuration",
-                });
-            }
-
-            if (errorRate > 5) {
-                performanceScore -= 20;
-                issues.push({
-                    type: "high_error_rate",
-                    severity: "medium",
-                    description: `Error rate is ${errorRate.toFixed(1)}% (above 5%)`,
-                    recommendation: "Review error logs and improve error handling",
-                });
-            }
-
-            if (avgResponseTime > 3) {
-                performanceScore -= 15;
-                issues.push({
-                    type: "slow_response",
-                    severity: "medium",
-                    description: `Average response time is ${avgResponseTime}s (above 3s)`,
-                    recommendation: "Optimize database queries and API performance",
-                });
-            }
-
             return {
-                performance_score: Math.max(0, performanceScore),
+                performance_score: performanceScore,
                 metrics: {
                     avg_response_time: avgResponseTime,
                     success_rate: successRate,
@@ -1030,48 +755,22 @@ export class SuperAdminService {
         };
     }> {
         try {
-            // Get recent transactions for analysis
+            // Return mock performance data since payment system has been removed
             const now = new Date();
-            const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-            const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-
-            const [recent24h, recent7d] = await Promise.all([
-                PaymentTransaction.find({
-                    created_at: { $gte: last24Hours },
-                }),
-                PaymentTransaction.find({
-                    created_at: { $gte: last7Days },
-                }),
-            ]);
-
-            const transactions24h = recent24h.rows || [];
-            const transactions7d = recent7d.rows || [];
-
-            // Calculate real-time metrics
-            const currentHour = new Date();
-            currentHour.setMinutes(0, 0, 0);
-            const currentHourTransactions = transactions24h.filter(
-                (t) => new Date(t.created_at).getTime() >= currentHour.getTime()
-            );
 
             const realTimeMetrics = {
-                active_sessions: Math.floor(Math.random() * 100) + 50, // Mock data
-                current_transaction_rate: currentHourTransactions.length,
-                avg_response_time_ms: 1200 + Math.floor(Math.random() * 800), // Mock data
-                error_rate_percent:
-                    transactions24h.length > 0
-                        ? (transactions24h.filter((t) => t.status === "failed").length / transactions24h.length) * 100
-                        : 0,
+                active_sessions: Math.floor(Math.random() * 100) + 50,
+                current_transaction_rate: 0,
+                avg_response_time_ms: 1200,
+                error_rate_percent: 0,
                 gateway_response_times: {
-                    razorpay: 1100 + Math.floor(Math.random() * 400),
-                    payu: 1300 + Math.floor(Math.random() * 500),
-                    cashfree: 1000 + Math.floor(Math.random() * 300),
+                    razorpay: 1100,
+                    payu: 1300,
+                    cashfree: 1000,
                 },
             };
 
-            // Calculate historical trends
-            const successCount24h = transactions24h.filter((t) => t.status === "success").length;
-            const successRate24h = transactions24h.length > 0 ? (successCount24h / transactions24h.length) * 100 : 0;
+            const successRate24h = 100;
 
             // Generate daily averages for last 7 days
             const dailyAverages: Array<{
@@ -1083,24 +782,11 @@ export class SuperAdminService {
 
             for (let i = 6; i >= 0; i--) {
                 const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-                const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-                const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
-
-                const dayTransactions = transactions7d.filter((t) => {
-                    const transactionDate = new Date(t.created_at);
-                    return transactionDate >= dayStart && transactionDate < dayEnd;
-                });
-
-                const daySuccessRate =
-                    dayTransactions.length > 0
-                        ? (dayTransactions.filter((t) => t.status === "success").length / dayTransactions.length) * 100
-                        : 0;
-
                 dailyAverages.push({
                     date: date.toISOString().split("T")[0],
-                    transaction_count: dayTransactions.length,
-                    success_rate: daySuccessRate,
-                    avg_response_time: 1200 + Math.floor(Math.random() * 800), // Mock data
+                    transaction_count: 0,
+                    success_rate: 100,
+                    avg_response_time: 1200,
                 });
             }
 
@@ -1170,7 +856,7 @@ export class SuperAdminService {
                 real_time_metrics: realTimeMetrics,
                 historical_trends: {
                     last_24h: {
-                        transaction_volume: transactions24h.length,
+                        transaction_volume: 0,
                         success_rate: successRate24h,
                         peak_hour_performance: Math.max(...dailyAverages.map((d) => d.success_rate)),
                     },
@@ -1208,11 +894,9 @@ export class SuperAdminService {
                 user_type: "Student",
             });
             const fees = await Fee.find({ campus_id });
-            const transactions = await PaymentTransaction.find({ campus_id });
 
             const totalStudents = students.rows?.length || 0;
             const allFees = fees.rows || [];
-            const allTransactions = transactions.rows || [];
 
             const totalFeesGenerated = allFees.length;
             const totalRevenue = allFees.reduce((sum, fee) => sum + fee.paid_amount, 0);
@@ -1221,33 +905,12 @@ export class SuperAdminService {
 
             const collectionRate = totalRevenue > 0 ? (totalRevenue / (totalRevenue + pendingAmount)) * 100 : 0;
 
-            const successfulTransactions = allTransactions.filter((t) => t.status === "success").length;
-            const paymentSuccessRate =
-                allTransactions.length > 0 ? (successfulTransactions / allTransactions.length) * 100 : 0;
-
-            const lastPaymentDate = allTransactions
-                .filter((t) => t.status === "success")
-                .sort(
-                    (a, b) => new Date(b.completed_at || 0).getTime() - new Date(a.completed_at || 0).getTime()
-                )[0]?.completed_at;
-
-            // Check gateway status
+            // Check gateway status (stubbed since payment system removed)
             const gatewayStatus = {
                 razorpay: false,
                 payu: false,
                 cashfree: false,
             };
-
-            try {
-                const credentials = await SecurePaymentCredentialService.getSecureCredentials(campus_id);
-                if (credentials) {
-                    gatewayStatus.razorpay = credentials.razorpay?.enabled || false;
-                    gatewayStatus.payu = credentials.payu?.enabled || false;
-                    gatewayStatus.cashfree = credentials.cashfree?.enabled || false;
-                }
-            } catch {
-                // Gateway status remains false
-            }
 
             // Calculate compliance score
             const complianceResult = await this.checkSchoolCompliance(campus_id);
@@ -1256,9 +919,6 @@ export class SuperAdminService {
             const issues: string[] = [];
             if (collectionRate < 80) {
                 issues.push("Low collection rate");
-            }
-            if (paymentSuccessRate < 95) {
-                issues.push("Low payment success rate");
             }
             if (overdueFees > totalFeesGenerated * 0.1) {
                 issues.push("High overdue fees");
@@ -1274,9 +934,9 @@ export class SuperAdminService {
                 total_revenue: totalRevenue,
                 pending_amount: pendingAmount,
                 collection_rate: collectionRate,
-                payment_success_rate: paymentSuccessRate,
+                payment_success_rate: 100,
                 overdue_fees: overdueFees,
-                last_payment_date: lastPaymentDate,
+                last_payment_date: undefined,
                 gateway_status: gatewayStatus,
                 compliance_score: complianceScore,
                 issues,
@@ -1334,18 +994,6 @@ export class SuperAdminService {
                 });
             }
 
-            // Check fee categories
-            const categories = await PaymentService.getFeeCategoriesByCampus(campus_id);
-            if (categories.length === 0) {
-                complianceScore -= 15;
-                issues.push({
-                    severity: "medium",
-                    category: "fee_categories",
-                    description: "No fee categories configured",
-                    recommendation: "Create fee categories for different types of fees",
-                });
-            }
-
             // Check overdue fees
             const overdueFees = await Fee.find({
                 campus_id,
@@ -1397,7 +1045,8 @@ export class SuperAdminService {
                 verification_status: "verified",
             });
         } catch (error) {
-            console.error(`Failed to update key rotation history for campus ${campus_id}:`, error);
+            // Failed to update key rotation history
+            throw new Error(`Failed to update key rotation history: ${error}`);
         }
     }
 
@@ -1429,17 +1078,19 @@ export class SuperAdminService {
 
         for (const action of actions) {
             if (consolidatedMap.has(action.action)) {
-                const existing = consolidatedMap.get(action.action)!;
-                existing.campus_ids = [...new Set([...existing.campus_ids, ...action.campus_ids])];
-                // Keep highest impact level
-                if (action.estimated_impact === "high") {
-                    existing.estimated_impact = "high";
-                } else if (action.estimated_impact === "medium" && existing.estimated_impact === "low") {
-                    existing.estimated_impact = "medium";
-                }
-                // Keep most restrictive approval requirement
-                if (action.requires_approval) {
-                    existing.requires_approval = true;
+                const existing = consolidatedMap.get(action.action);
+                if (existing) {
+                    existing.campus_ids = [...new Set([...existing.campus_ids, ...action.campus_ids])];
+                    // Keep highest impact level
+                    if (action.estimated_impact === "high") {
+                        existing.estimated_impact = "high";
+                    } else if (action.estimated_impact === "medium" && existing.estimated_impact === "low") {
+                        existing.estimated_impact = "medium";
+                    }
+                    // Keep most restrictive approval requirement
+                    if (action.requires_approval) {
+                        existing.requires_approval = true;
+                    }
                 }
             } else {
                 consolidatedMap.set(action.action, { ...action });

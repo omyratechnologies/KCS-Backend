@@ -7,7 +7,7 @@ export class SuperAdminController {
     // ========================= SCHOOL MANAGEMENT =========================
 
     /**
-     * Onboard a new school with complete payment setup
+     * Onboard a new school
      */
     public static readonly onboardNewSchool = async (ctx: Context) => {
         try {
@@ -112,41 +112,6 @@ export class SuperAdminController {
     };
 
     /**
-     * Troubleshoot payment issues for a specific school
-     */
-    public static readonly troubleshootSchoolPayments = async (ctx: Context) => {
-        try {
-            const user_type = ctx.get("user_type");
-
-            // Only Super Admin can troubleshoot
-            if (user_type !== "Super Admin") {
-                return ctx.json({ error: "Unauthorized - Super Admin access required" }, 403);
-            }
-
-            const { campus_id } = ctx.req.param();
-
-            if (!campus_id) {
-                return ctx.json({ error: "campus_id is required" }, 400);
-            }
-
-            const troubleshooting = await SuperAdminService.troubleshootSchoolPayments(campus_id);
-
-            return ctx.json({
-                success: true,
-                data: troubleshooting,
-            });
-        } catch (error) {
-            return ctx.json(
-                {
-                    success: false,
-                    message: error instanceof Error ? error.message : "Unknown error",
-                },
-                500
-            );
-        }
-    };
-
-    /**
      * Check compliance for all schools
      */
     public static readonly checkComplianceForAllSchools = async (ctx: Context) => {
@@ -201,44 +166,6 @@ export class SuperAdminController {
             return ctx.json({
                 success: true,
                 data: securityStatus,
-            });
-        } catch (error) {
-            return ctx.json(
-                {
-                    success: false,
-                    message: error instanceof Error ? error.message : "Unknown error",
-                },
-                500
-            );
-        }
-    };
-
-    /**
-     * Update payment gateway configurations globally
-     */
-    public static readonly updateGatewayConfigurations = async (ctx: Context) => {
-        try {
-            const user_type = ctx.get("user_type");
-
-            // Only Super Admin can update gateway configurations
-            if (user_type !== "Super Admin") {
-                return ctx.json({ error: "Unauthorized - Super Admin access required" }, 403);
-            }
-
-            const { updates } = await ctx.req.json();
-
-            if (!updates || !Array.isArray(updates)) {
-                return ctx.json({ error: "updates array is required" }, 400);
-            }
-
-            const result = await SuperAdminService.updateGatewayConfigurations(updates);
-
-            return ctx.json({
-                success: result.success,
-                data: result,
-                message: result.success
-                    ? "Gateway configurations updated successfully"
-                    : "Some gateway configurations failed to update",
             });
         } catch (error) {
             return ctx.json(
@@ -324,7 +251,6 @@ export class SuperAdminController {
 
             const {
                 backup_type = "full",
-                include_payment_data = true,
                 include_user_data = true,
                 campus_ids,
                 compression = "gzip",
@@ -332,7 +258,7 @@ export class SuperAdminController {
             } = await ctx.req.json();
 
             const backupJob = await BackupRecoveryService.initiateBackup(backup_type, {
-                include_payment_data,
+                include_payment_data: false,
                 include_user_data,
                 campus_ids,
                 compression,
@@ -502,7 +428,7 @@ export class SuperAdminController {
                 return ctx.json({ error: "Unauthorized - Super Admin access required" }, 403);
             }
 
-            const { start_date, end_date, include_payment_data = true } = ctx.req.query();
+            const { start_date, end_date } = ctx.req.query();
 
             const dateRange = {
                 start_date: start_date
@@ -692,25 +618,11 @@ export class SuperAdminController {
                 }
 
                 try {
-                    // Execute the remediation action based on type
-                    let actionResult: { success: boolean; message: string };
-
-                    switch (action.action) {
-                        case "Configure default payment gateway": {
-                            actionResult = await this.configureDefaultPaymentGateway(action.campus_ids);
-                            break;
-                        }
-                        case "Enable automated payment reminders": {
-                            actionResult = await this.enableAutomatedReminders(action.campus_ids);
-                            break;
-                        }
-                        default: {
-                            actionResult = {
-                                success: false,
-                                message: `Unknown remediation action: ${action.action}`,
-                            };
-                        }
-                    }
+                    // Payment-related remediation actions have been removed
+                    const actionResult: { success: boolean; message: string } = {
+                        success: false,
+                        message: `Remediation action not implemented: ${action.action}`,
+                    };
 
                     results.push({
                         action: action.action,
@@ -783,10 +695,9 @@ export class SuperAdminController {
                 performance: performanceMetrics.performance_score,
                 security: securityStatus.overall_security_score,
                 compliance: complianceStatus.overall_score,
-                collection: platformAnalytics.avg_collection_rate,
             };
 
-            const overallHealthScore = Object.values(healthScores).reduce((sum, score) => sum + score, 0) / 4;
+            const overallHealthScore = Object.values(healthScores).reduce((sum, score) => sum + score, 0) / 3;
 
             // Generate system status summary
             const systemStatus = {
@@ -797,13 +708,10 @@ export class SuperAdminController {
                     performance: performanceMetrics.current_status,
                     security: securityStatus.overall_security_score >= 80 ? "healthy" : "warning",
                     compliance: complianceStatus.compliance_status,
-                    payments: platformAnalytics.avg_collection_rate >= 80 ? "healthy" : "warning",
                 },
                 key_metrics: {
                     total_schools: platformAnalytics.total_schools,
                     active_schools: platformAnalytics.active_schools,
-                    total_revenue: platformAnalytics.total_revenue,
-                    avg_collection_rate: platformAnalytics.avg_collection_rate,
                     current_transaction_rate: performanceMetrics.real_time_metrics.current_transaction_rate,
                     error_rate: performanceMetrics.real_time_metrics.error_rate_percent,
                     compliant_schools: complianceStatus.campus_results.filter((c) => c.status === "compliant").length,
@@ -855,73 +763,5 @@ export class SuperAdminController {
     };
 
     // ========================= HELPER METHODS FOR REMEDIATION =========================
-
-    /**
-     * Configure default payment gateway for campuses
-     */
-    private static async configureDefaultPaymentGateway(
-        campus_ids: string[]
-    ): Promise<{ success: boolean; message: string }> {
-        try {
-            const defaultGatewayConfig = {
-                gateway: "razorpay" as const,
-                configuration: {
-                    key_id: "rzp_test_default",
-                    key_secret: "test_secret_default",
-                    enabled: true,
-                    mode: "test" as const,
-                },
-                apply_to_campuses: campus_ids,
-            };
-
-            const result = await SuperAdminService.updateGatewayConfigurations([defaultGatewayConfig]);
-
-            return {
-                success: result.success,
-                message: result.success
-                    ? `Default payment gateway configured for ${campus_ids.length} campuses`
-                    : "Failed to configure default payment gateway for some campuses",
-            };
-        } catch (error) {
-            return {
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error",
-            };
-        }
-    }
-
-    /**
-     * Enable automated payment reminders for campuses
-     */
-    private static async enableAutomatedReminders(
-        campus_ids: string[]
-    ): Promise<{ success: boolean; message: string }> {
-        try {
-            // This would typically update campus settings or notification preferences
-            // For now, we'll simulate the operation
-
-            let successCount = 0;
-
-            for (const campus_id of campus_ids) {
-                try {
-                    // Simulate enabling automated reminders
-                    // In a real implementation, this would update campus notification settings
-                    await new Promise((resolve) => setTimeout(resolve, 100)); // Simulate async operation
-                    successCount++;
-                } catch (error) {
-                    console.error(`Failed to enable automated reminders for campus ${campus_id}:`, error);
-                }
-            }
-
-            return {
-                success: successCount === campus_ids.length,
-                message: `Automated payment reminders enabled for ${successCount}/${campus_ids.length} campuses`,
-            };
-        } catch (error) {
-            return {
-                success: false,
-                message: error instanceof Error ? error.message : "Unknown error",
-            };
-        }
-    }
+    // (Helper methods removed - payment system functionality removed)
 }
