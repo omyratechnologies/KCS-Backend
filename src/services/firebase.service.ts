@@ -1,6 +1,20 @@
 import admin from "firebase-admin";
 import log, { LogTypes } from "@/libs/logger";
 
+/**
+ * Firebase Notification Payload
+ * 
+ * Note: This service sends DATA-ONLY messages (no 'notification' field in FCM payload)
+ * to prevent duplicate notifications. The frontend app is responsible for displaying
+ * notifications from the data payload.
+ * 
+ * Why data-only?
+ * - Prevents Firebase from auto-displaying notifications when app is in background/killed
+ * - Gives frontend full control over notification display
+ * - Eliminates duplicate notification issue
+ * 
+ * The 'title' and 'message' fields are placed in the 'data' object as 'title' and 'body'
+ */
 interface FirebaseNotificationPayload {
     title: string;
     message: string;
@@ -99,44 +113,35 @@ export class FirebaseService {
         }
 
         try {
+            // ✅ DATA-ONLY MESSAGE - Prevents duplicate notifications
+            // The frontend app will handle displaying notifications from the data payload
+            // This prevents Firebase from auto-displaying AND the app displaying (duplicate issue)
             const message: admin.messaging.MulticastMessage = {
-                notification: {
-                    title: payload.title,
-                    body: payload.message,
-                },
+                // ❌ REMOVED notification field to prevent auto-display by Firebase
                 data: {
                     ...payload.data,
                     title: payload.title,
-                    message: payload.message,
+                    body: payload.message,  // Changed from 'message' to 'body' for consistency
                     timestamp: new Date().toISOString(),
                 },
                 tokens: payload.tokens,
                 android: {
-                    notification: {
-                        priority: "high" as const,
-                        defaultSound: true,
-                        defaultVibrateTimings: true,
-                    },
+                    // Keep high priority for immediate delivery
                     priority: "high" as const,
                 },
                 apns: {
                     payload: {
                         aps: {
-                            alert: {
-                                title: payload.title,
-                                body: payload.message,
-                            },
-                            sound: "default",
-                            badge: 1,
+                            contentAvailable: true,  // For iOS background delivery
                         },
+                    },
+                    headers: {
+                        'apns-priority': '10',  // High priority for iOS
                     },
                 },
                 webpush: {
-                    notification: {
-                        title: payload.title,
-                        body: payload.message,
-                        icon: "/icon-192x192.png",
-                        badge: "/badge-72x72.png",
+                    headers: {
+                        Urgency: 'high',
                     },
                 },
             };
@@ -182,44 +187,34 @@ export class FirebaseService {
         }
 
         try {
+            // ✅ DATA-ONLY MESSAGE - Prevents duplicate notifications
+            // The frontend app will handle displaying notifications from the data payload
             const message: admin.messaging.Message = {
-                notification: {
-                    title: payload.title,
-                    body: payload.message,
-                },
+                // ❌ REMOVED notification field to prevent auto-display by Firebase
                 data: {
                     ...payload.data,
                     title: payload.title,
-                    message: payload.message,
+                    body: payload.message,  // Changed from 'message' to 'body' for consistency
                     timestamp: new Date().toISOString(),
                 },
                 topic: payload.topic,
                 android: {
-                    notification: {
-                        priority: "high" as const,
-                        defaultSound: true,
-                        defaultVibrateTimings: true,
-                    },
+                    // Keep high priority for immediate delivery
                     priority: "high" as const,
                 },
                 apns: {
                     payload: {
                         aps: {
-                            alert: {
-                                title: payload.title,
-                                body: payload.message,
-                            },
-                            sound: "default",
-                            badge: 1,
+                            contentAvailable: true,  // For iOS background delivery
                         },
+                    },
+                    headers: {
+                        'apns-priority': '10',  // High priority for iOS
                     },
                 },
                 webpush: {
-                    notification: {
-                        title: payload.title,
-                        body: payload.message,
-                        icon: "/icon-192x192.png",
-                        badge: "/badge-72x72.png",
+                    headers: {
+                        Urgency: 'high',
                     },
                 },
             };
