@@ -29,21 +29,28 @@ const initDB = async () => {
         log("Importing database models...", LogTypes.LOGS, "DB");
         await import("@/models");
 
-        // Note: ensureIndexes() is commented out due to issues with missing indexes
-        // Indexes should be created manually in Couchbase or through a migration script
-        // Uncomment below when all required indexes are present in the database
-        /*
+        // Ensure all models/collections are created
+        // Note: This may fail if indexes don't exist, but that's okay
         try {
-            log("Ensuring database indexes...", LogTypes.LOGS, "DB");
-            await ottoman.ensureIndexes();
-            log("Database indexes ensured", LogTypes.LOGS, "DB");
+            log("Ensuring database collections and indexes...", LogTypes.LOGS, "DB");
+            
+            // First ensure collections exist
+            await ottoman.ensureCollections();
+            log("Database collections ensured", LogTypes.LOGS, "DB");
+            
+            // Then try to ensure indexes (may fail if some don't exist)
+            try {
+                await ottoman.ensureIndexes();
+                log("Database indexes ensured", LogTypes.LOGS, "DB");
+            } catch (indexError) {
+                // Indexes might not exist yet - that's okay, log and continue
+                log(`Info: Some indexes may need manual creation: ${indexError instanceof Error ? indexError.message : String(indexError)}`, LogTypes.LOGS, "DB");
+            }
         } catch (error) {
-            // Log warning but don't fail - indexes may not exist yet or need manual creation
+            // Log warning but don't fail - collections/indexes may need manual creation
             const errorMessage = error instanceof Error ? error.message : String(error);
-            log(`Warning: Could not ensure indexes (this is usually safe to ignore): ${errorMessage}`, LogTypes.LOGS, "DB");
-            // Don't throw - continue with startup even if index creation fails
+            log(`Warning: Could not ensure collections/indexes (continuing anyway): ${errorMessage}`, LogTypes.LOGS, "DB");
         }
-        */
 
         log("Connected to DB", LogTypes.LOGS, "DB");
     } catch (error) {
