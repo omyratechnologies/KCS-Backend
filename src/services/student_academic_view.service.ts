@@ -6,7 +6,6 @@ import { ClassQuiz } from "@/models/class_quiz.model";
 import { ClassQuizSubmission } from "@/models/class_quiz_submission.model";
 import { CourseEnrollment } from "@/models/course_enrollment.model";
 import { CourseProgress } from "@/models/course_progress.model";
-import { Examination } from "@/models/examination.model";
 import { LeaveRequest } from "@/models/leave_request.model";
 import { StudentPerformance } from "@/models/student_performance.model";
 import { StudentRecord } from "@/models/student_record.model";
@@ -630,9 +629,6 @@ export class StudentAcademicViewService {
             recommendations.push("Increase time spent on course materials");
         }
 
-        if (data.feeStatus.summary.total_due_amount > 0) {
-            recommendations.push("Clear pending fee payments to avoid disruptions");
-        }
 
         if (recommendations.length === 0) {
             recommendations.push("Keep up the excellent work!");
