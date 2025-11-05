@@ -62,21 +62,8 @@ jobs:
               curl -s http://localhost:4500/api/health | jq .
             else
               echo "❌ Deployment failed! Application is not healthy."
-              echo ""
-              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-              echo "📋 Service Status:"
-              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+              echo "Service status:"
               sudo systemctl status kcs-backend --no-pager -l
-              echo ""
-              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-              echo "📄 Application Logs (Last 50 lines):"
-              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-              sudo journalctl -u kcs-backend -n 50 --no-pager
-              echo ""
-              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-              echo "🔍 Checking for errors in logs:"
-              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-              sudo journalctl -u kcs-backend -n 100 --no-pager | grep -i "error" || echo "No explicit errors found"
               exit 1
             fi
             

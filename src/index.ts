@@ -12,10 +12,22 @@ import { FirebaseService } from "@/services/firebase.service";
 import { config } from "@/utils/env";
 
 // Create HTTP server for Socket.IO integration
-const server = createServer();
+// Use global to persist server across hot reloads
+const globalForServer = globalThis as unknown as {
+    httpServer: ReturnType<typeof createServer> | undefined;
+    servicesInitialized: boolean | undefined;
+};
+
+const server = globalForServer.httpServer ?? createServer();
+globalForServer.httpServer = server;
 
 // Initialize services asynchronously
 async function initializeServices() {
+    // Skip initialization if already done (for hot reload)
+    if (globalForServer.servicesInitialized) {
+        log("🔄 Hot reload detected - skipping service re-initialization", LogTypes.LOGS, "INIT");
+        return;
+    }
     try {
         log("🚀 Initializing services...", LogTypes.LOGS, "INIT");
 
@@ -97,6 +109,9 @@ async function initializeServices() {
 
         log("🎉 All services initialized successfully", LogTypes.LOGS, "INIT");
         log("🎪 Real-time video conferencing system ready to support millions of users!", LogTypes.LOGS, "INIT");
+        
+        // Mark services as initialized
+        globalForServer.servicesInitialized = true;
     } catch (error) {
         log(`❌ Failed to initialize services: ${error}`, LogTypes.ERROR, "INIT");
         process.exit(1);
@@ -106,10 +121,12 @@ async function initializeServices() {
 // Initialize services on startup
 initializeServices();
 
-// Start the HTTP server for Socket.IO
-server.listen(Number(config.PORT) + 1, () => {
-    log(`🔌 Socket.IO server running on port ${Number(config.PORT) + 1}`, LogTypes.LOGS, "INIT");
-});
+// Start the HTTP server for Socket.IO (only if not already listening)
+if (!server.listening) {
+    server.listen(Number(config.PORT) + 1, () => {
+        log(`🔌 Socket.IO server running on port ${Number(config.PORT) + 1}`, LogTypes.LOGS, "INIT");
+    });
+}
 
 export default {
     fetch: app.fetch.bind(app),
