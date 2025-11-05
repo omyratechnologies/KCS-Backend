@@ -50,6 +50,13 @@ export class SocketServiceOptimized {
     // ✅ Rate limiting infrastructure
     private static rateLimiters: Map<string, Map<string, { count: number; resetTime: number }>> = new Map();
 
+    // 🚀 Message queue for offline users
+    private static pendingMessages: Map<string, Array<{
+        message: any;
+        roomId: string;
+        queuedAt: Date;
+    }>> = new Map(); // userId -> pending messages
+
     /**
      * Initialize Socket.IO server with Redis adapter for horizontal scaling
      */
@@ -193,6 +200,11 @@ export class SocketServiceOptimized {
         // 🚀 OPTIMIZATION: Set user online in Redis immediately (no DB write)
         ChatCacheService.setUserOnline(userId, socket.id).catch(err => 
             log(`Failed to set user online in cache: ${err}`, LogTypes.ERROR, "SOCKET_SERVICE")
+        );
+
+        // 🚀 NEW: Send any pending messages queued while user was offline
+        this.sendPendingMessages(userId, socket).catch(err => 
+            log(`Failed to send pending messages: ${err}`, LogTypes.ERROR, "SOCKET_SERVICE")
         );
 
         // Register event handlers
@@ -1240,12 +1252,112 @@ export class SocketServiceOptimized {
         });
 
         // 🚀 OPTIMIZED: Mark messages as seen with batch update and unread count reset
+        // 🚀 OPTIMIZED: Mark messages as seen with batch update and unread count reset
         socket.on("mark-messages-seen", async (data: { roomId: string; messageIds: string[] }) => {
             try {
                 const { roomId, messageIds } = data;
                 
+                if (!messageIds || messageIds.length === 0) {
+                    return;
+                }
+
                 // 🚀 OPTIMIZATION: Reset unread count in cache immediately
                 await ChatCacheService.resetUnreadCount(userId, roomId);
+                
+                // 🚀 NEW: Update user_chat_preferences with last_read_message_id
+                try {
+                    const { UserChatPreferences } = await import("../models/user_chat_preferences.model");
+                    const { ChatMessage } = await import("../models/chat_message.model");
+                    
+                    // Get the latest message from the list
+                    let latestMessageId = messageIds[messageIds.length - 1];
+                    let latestTimestamp = new Date();
+
+                    // Try to get the actual latest message by timestamp
+                    for (const msgId of messageIds) {
+                        try {
+                            const msg = await ChatMessage.findById(msgId);
+                            if (msg && msg.created_at > latestTimestamp) {
+                                latestMessageId = msgId;
+                                latestTimestamp = msg.created_at;
+                            }
+                        } catch {
+                            // Skip if message not found
+                        }
+                    }
+
+                    // Update or create user_chat_preferences
+                    const existingPrefs = await UserChatPreferences.find({
+                        user_id: userId,
+                        room_id: roomId
+                    });
+
+                    const prefs = existingPrefs.rows?.[0];
+
+                    if (prefs) {
+                        await UserChatPreferences.updateById(prefs.id, {
+                            last_read_message_id: latestMessageId,
+                            last_read_at: new Date(),
+                            manually_marked_unread: false,
+                            updated_at: new Date()
+                        });
+                    } else {
+                        await UserChatPreferences.create({
+                            user_id: userId,
+                            room_id: roomId,
+                            last_read_message_id: latestMessageId,
+                            last_read_at: new Date(),
+                            manually_marked_unread: false,
+                            is_archived: false,
+                            is_deleted: false,
+                            is_muted: false,
+                            created_at: new Date(),
+                            updated_at: new Date()
+                        });
+                    }
+                } catch (error) {
+                    log(`Failed to update user_chat_preferences: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
+                }
+
+                // Get message senders to notify them
+                try {
+                    const { ChatMessage } = await import("../models/chat_message.model");
+                    const senderIds = new Set<string>();
+
+                    for (const msgId of messageIds) {
+                        try {
+                            const msg = await ChatMessage.findById(msgId);
+                            if (msg && msg.sender_id !== userId) {
+                                senderIds.add(msg.sender_id);
+                            }
+                        } catch {
+                            // Skip if message not found
+                        }
+                    }
+
+                    // Broadcast seen receipt to each sender
+                    const seenReceipt = {
+                        userId,
+                        userName,
+                        seenAt: new Date().toISOString()
+                    };
+
+                    for (const senderId of senderIds) {
+                        const senderSocketId = this.userSockets.get(senderId);
+                        if (senderSocketId) {
+                            const senderSocket = this.activeSockets.get(senderSocketId);
+                            if (senderSocket) {
+                                senderSocket.emit("messages-seen", {
+                                    roomId,
+                                    messageIds,
+                                    seenBy: seenReceipt
+                                });
+                            }
+                        }
+                    }
+                } catch (error) {
+                    log(`Failed to notify senders of seen receipts: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
+                }
                 
                 // Broadcast to other users in the room (not to self)
                 socket.to(`chat_room_${roomId}`).emit("messages-seen", {
@@ -1346,6 +1458,18 @@ export class SocketServiceOptimized {
             } catch (error) {
                 log(`Error getting unread count: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
             }
+        });
+
+        // 🚀 NEW: Heartbeat ping/pong
+        socket.on("ping", async () => {
+            // Respond with pong immediately
+            socket.emit("pong");
+            
+            // Update last_seen timestamp in cache
+            await ChatCacheService.updateLastSeen(userId);
+            
+            // Optional: Update user status to ensure they're marked as online
+            await ChatCacheService.setUserOnline(userId, socket.id);
         });
     }
 
@@ -1765,13 +1889,110 @@ export class SocketServiceOptimized {
             }
         }
         
-        // Then broadcast to room (sender will receive again but client can dedupe)
-        this.io.to(`chat_room_${roomId}`).emit("new-chat-message", messageData);
-        
-        // 🚀 OPTIMIZATION: Update unread counts in cache for offline users
-        this.updateUnreadCountsForMessage(roomId, senderId, message.id).catch(err =>
-            log(`Failed to update unread counts: ${err}`, LogTypes.ERROR, "SOCKET_SERVICE")
+        // Get room members and check who's online
+        this.broadcastOrQueueMessage(roomId, messageData, senderId).catch(err =>
+            log(`Failed to broadcast/queue message: ${err}`, LogTypes.ERROR, "SOCKET_SERVICE")
         );
+    }
+
+    /**
+     * 🚀 NEW: Broadcast message to online users and queue for offline users
+     */
+    private static async broadcastOrQueueMessage(roomId: string, messageData: any, senderId: string): Promise<void> {
+        try {
+            // Get all room members from cache
+            const allMembers = await ChatCacheService.getCachedRoomMembers(roomId);
+            if (!allMembers) {
+                // Fallback: just broadcast to room
+                this.io.to(`chat_room_${roomId}`).emit("new-chat-message", messageData);
+                return;
+            }
+
+            // Get online users in room from cache
+            const onlineUsers = await ChatCacheService.getRoomOnlineUsers(roomId);
+            
+            let onlineCount = 0;
+            let queuedCount = 0;
+
+            for (const memberId of allMembers) {
+                if (memberId === senderId) continue; // Skip sender
+
+                if (onlineUsers.includes(memberId)) {
+                    // User is online, message already broadcast via room
+                    onlineCount++;
+                } else {
+                    // User is offline, queue message
+                    this.queueMessageForOfflineUser(memberId, roomId, messageData.data);
+                    await ChatCacheService.incrementUnreadCount(memberId, roomId, 1);
+                    queuedCount++;
+                }
+            }
+
+            // Broadcast to room (for online users)
+            this.io.to(`chat_room_${roomId}`).emit("new-chat-message", messageData);
+
+            log(
+                `📨 Message broadcast to ${onlineCount} online users, queued for ${queuedCount} offline users in room ${roomId}`,
+                LogTypes.LOGS,
+                "SOCKET_SERVICE"
+            );
+        } catch (error) {
+            log(`Error in broadcastOrQueueMessage: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
+            // Fallback: just broadcast
+            this.io.to(`chat_room_${roomId}`).emit("new-chat-message", messageData);
+        }
+    }
+
+    /**
+     * 🚀 NEW: Queue message for offline user
+     */
+    private static queueMessageForOfflineUser(userId: string, roomId: string, message: any): void {
+        if (!this.pendingMessages.has(userId)) {
+            this.pendingMessages.set(userId, []);
+        }
+
+        const userQueue = this.pendingMessages.get(userId)!;
+        userQueue.push({
+            message,
+            roomId,
+            queuedAt: new Date()
+        });
+
+        // Limit queue size to prevent memory issues (max 100 messages per user)
+        if (userQueue.length > 100) {
+            userQueue.shift(); // Remove oldest message
+        }
+
+        log(`📥 Queued message for offline user ${userId} (queue size: ${userQueue.length})`, LogTypes.LOGS, "SOCKET_SERVICE");
+    }
+
+    /**
+     * 🚀 NEW: Send all pending messages to a user when they connect
+     */
+    private static async sendPendingMessages(userId: string, socket: Socket): Promise<void> {
+        const userQueue = this.pendingMessages.get(userId);
+        
+        if (!userQueue || userQueue.length === 0) {
+            return;
+        }
+
+        const count = userQueue.length;
+        log(`📬 Delivering ${count} pending messages to user ${userId}`, LogTypes.LOGS, "SOCKET_SERVICE");
+
+        // Send all pending messages
+        for (const item of userQueue) {
+            socket.emit("new-chat-message", {
+                type: "new_message",
+                data: item.message,
+                timestamp: item.queuedAt.toISOString(),
+                queued: true // Flag to indicate this was queued
+            });
+        }
+
+        // Clear the queue
+        this.pendingMessages.delete(userId);
+
+        log(`✅ Delivered ${count} pending messages to user ${userId}`, LogTypes.LOGS, "SOCKET_SERVICE");
     }
 
     /**
@@ -1913,7 +2134,7 @@ export class SocketServiceOptimized {
      * Send notification to specific user
      */
     public static notifyChatUser(userId: string, notification: {
-        type: "new_chat" | "new_message" | "mention" | "room_created";
+        type: "new_chat" | "new_message" | "mention" | "room_created" | "room_deleted" | "room_archived" | "room_messages_cleared";
         data: any;
     }): void {
         const socketId = this.userSockets.get(userId);

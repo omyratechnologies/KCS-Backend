@@ -10,13 +10,23 @@ import log, { LogTypes } from "../libs/logger";
 export class ChatController {
     /**
      * Get user's chat rooms
+     * Query param: ?archived=true/false (optional)
      */
     public static readonly getChatRooms = async (ctx: Context) => {
         try {
             const campus_id = ctx.get("campus_id");
             const user_id = ctx.get("user_id");
+            
+            // 🚀 NEW: Support archived filter
+            const archivedParam = ctx.req.query("archived");
+            let archived: boolean | undefined;
+            if (archivedParam === "true") {
+                archived = true;
+            } else if (archivedParam === "false") {
+                archived = false;
+            }
 
-            const result = await ChatService.getUserChatRooms(user_id, campus_id);
+            const result = await ChatService.getUserChatRooms(user_id, campus_id, archived);
 
             if (result.success) {
                 return ctx.json({
@@ -1271,6 +1281,175 @@ export class ChatController {
                 },
                 500
             );
+        }
+    };
+
+    // ============================================================
+    // NEW FEATURES - Delete, Clear, Archive, Read Status
+    // ============================================================
+
+    /**
+     * Delete chat room
+     * DELETE /api/v1/chat/rooms/:room_id
+     * 
+     * For personal chats: Soft delete via user_chat_preferences
+     * For group chats: Remove user from members or hard delete if last member
+     */
+    public static readonly deleteChat = async (ctx: Context) => {
+        try {
+            const user_id = ctx.get("user_id");
+            const campus_id = ctx.get("campus_id");
+            const room_id = ctx.req.param("room_id");
+
+            const result = await ChatService.deleteChat(user_id, campus_id, room_id);
+
+            if (result.success) {
+                return ctx.json({
+                    success: true,
+                    data: result.data,
+                    message: "Chat deleted successfully"
+                });
+            } else {
+                return ctx.json({
+                    success: false,
+                    error: result.error
+                }, 400);
+            }
+        } catch (error) {
+            log(`Delete chat controller error: ${error}`, LogTypes.ERROR, "CHAT_CONTROLLER");
+            return ctx.json({
+                success: false,
+                error: `Failed to delete chat: ${error instanceof Error ? error.message : "Unknown error"}`
+            }, 500);
+        }
+    };
+
+    /**
+     * Clear chat messages
+     * DELETE /api/v1/chat/rooms/:room_id/messages
+     * 
+     * Query param: ?for_everyone=true (admin only)
+     * Default: Clear for current user only (set timestamp)
+     */
+    public static readonly clearChatMessages = async (ctx: Context) => {
+        try {
+            const user_id = ctx.get("user_id");
+            const campus_id = ctx.get("campus_id");
+            const room_id = ctx.req.param("room_id");
+            const for_everyone = ctx.req.query("for_everyone") === "true";
+
+            const result = await ChatService.clearChatMessages(user_id, campus_id, room_id, for_everyone);
+
+            if (result.success) {
+                return ctx.json({
+                    success: true,
+                    data: result.data,
+                    message: result.message || "Chat cleared successfully"
+                });
+            } else {
+                return ctx.json({
+                    success: false,
+                    error: result.error
+                }, 400);
+            }
+        } catch (error) {
+            log(`Clear chat messages controller error: ${error}`, LogTypes.ERROR, "CHAT_CONTROLLER");
+            return ctx.json({
+                success: false,
+                error: `Failed to clear chat messages: ${error instanceof Error ? error.message : "Unknown error"}`
+            }, 500);
+        }
+    };
+
+    /**
+     * Archive/Unarchive chat room
+     * PUT /api/v1/chat/rooms/:room_id/archive
+     * 
+     * Body: { is_archived: true/false }
+     */
+    public static readonly archiveChat = async (ctx: Context) => {
+        try {
+            const user_id = ctx.get("user_id");
+            const campus_id = ctx.get("campus_id");
+            const room_id = ctx.req.param("room_id");
+            const body = await ctx.req.json();
+
+            if (typeof body.is_archived !== "boolean") {
+                return ctx.json({
+                    success: false,
+                    error: "is_archived field is required and must be a boolean"
+                }, 400);
+            }
+
+            const result = await ChatService.archiveChat(user_id, campus_id, room_id, body.is_archived);
+
+            if (result.success) {
+                return ctx.json({
+                    success: true,
+                    data: result.data,
+                    message: body.is_archived ? "Chat archived successfully" : "Chat unarchived successfully"
+                });
+            } else {
+                return ctx.json({
+                    success: false,
+                    error: result.error
+                }, 400);
+            }
+        } catch (error) {
+            log(`Archive chat controller error: ${error}`, LogTypes.ERROR, "CHAT_CONTROLLER");
+            return ctx.json({
+                success: false,
+                error: `Failed to archive/unarchive chat: ${error instanceof Error ? error.message : "Unknown error"}`
+            }, 500);
+        }
+    };
+
+    /**
+     * Update read status of a chat room
+     * PUT /api/v1/chat/rooms/:room_id/read-status
+     * 
+     * Body: { is_read: true/false, last_read_message_id?: string }
+     */
+    public static readonly updateReadStatus = async (ctx: Context) => {
+        try {
+            const user_id = ctx.get("user_id");
+            const campus_id = ctx.get("campus_id");
+            const room_id = ctx.req.param("room_id");
+            const body = await ctx.req.json();
+
+            if (typeof body.is_read !== "boolean") {
+                return ctx.json({
+                    success: false,
+                    error: "is_read field is required and must be a boolean"
+                }, 400);
+            }
+
+            const result = await ChatService.updateReadStatus(
+                user_id,
+                campus_id,
+                room_id,
+                body.is_read,
+                body.last_read_message_id
+            );
+
+            if (result.success) {
+                return ctx.json({
+                    success: true,
+                    data: result.data,
+                    message: body.is_read ? "Chat marked as read" : "Chat marked as unread"
+                });
+            } else {
+                return ctx.json({
+                    success: false,
+                    error: result.error
+                }, 400);
+            }
+        } catch (error) {
+            log(`Update read status controller error: ${error}`, LogTypes.ERROR, "CHAT_CONTROLLER");
+            return ctx.json({
+                success: false,
+                error: `Failed to update read status: ${error instanceof Error ? error.message : "Unknown error"}`
+            }, 500);
         }
     };
 }

@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 
 import { authMiddleware } from "@/middlewares/auth.middleware";
-import androidApkRoute from "@/routes/android_apk.route";
+import adminCourseAnalyticsRoute from "@/routes/admin_course_analytics.route";
 import assignmentRoute from "@/routes/assignments.route";
 import attendanceRoute from "@/routes/attendance.route";
 import authRoute from "@/routes/auth.route";
@@ -30,6 +30,7 @@ import parentRoute from "@/routes/parent.route";
 import parentFeedControlRoute from "@/routes/parent_feed_control.route";
 import pushNotificationRoute from "@/routes/push_notification.route";
 import semesterReportRoute from "@/routes/semester_report.route";
+import studentAcademicViewRoute from "@/routes/student_academic_view.route";
 import studentPerformanceRoute from "@/routes/student_performance.route";
 import studentProgressRoute from "@/routes/student_progress.route";
 import studentRecordRoute from "@/routes/student_record.route";
@@ -55,8 +56,8 @@ app.route("/locations", locationsRoute); // Public locations API
 app.use(authMiddleware());
 
 app.route("/diagnostic", diagnosticRoutes);
-app.route("/android-apk", androidApkRoute);
 app.route("/dashboard", dashboardRoute);
+app.route("/admin-course-analytics", adminCourseAnalyticsRoute);
 app.route("/user", usersRoute);
 app.route("/campus", campusesRoute);
 app.route("/chat", chatRoute);
@@ -86,6 +87,7 @@ app.route("/upload", uploadRoute);
 app.route("/student-record", studentRecordRoute);
 app.route("/student-performance", studentPerformanceRoute);
 app.route("/student-progress", studentProgressRoute);
+app.route("/student-academic-view", studentAcademicViewRoute);
 app.route("/semester-report", semesterReportRoute);
 app.route("/teacher", teacherRoute);
 app.route("/parent", parentRoute);

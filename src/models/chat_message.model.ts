@@ -28,6 +28,12 @@ export interface IChatMessage {
     starred_by?: string[]; // Array of user_ids who starred this message
     forwarded_from?: string; // Original message ID if this is a forwarded message
     forwarded_count?: number; // Number of times this message has been forwarded
+    
+    // Encryption support fields
+    is_encrypted?: boolean; // Whether message content is encrypted
+    encryption_key_id?: string; // ID of the encryption key used
+    encrypted_content?: string; // Encrypted message content (when is_encrypted = true)
+    
     meta_data: {
         reactions?: {
             [emoji: string]: string[]; // emoji -> array of user_ids
@@ -79,6 +85,12 @@ const ChatMessageSchema = new Schema({
     starred_by: { type: [String], required: false, default: [] },
     forwarded_from: { type: String, required: false },
     forwarded_count: { type: Number, required: false, default: 0 },
+    
+    // Encryption fields
+    is_encrypted: { type: Boolean, required: false, default: false },
+    encryption_key_id: { type: String, required: false },
+    encrypted_content: { type: String, required: false },
+    
     meta_data: { type: Object, required: true, default: {} },
     created_at: { type: Date, default: () => new Date() },
     updated_at: { type: Date, default: () => new Date() },

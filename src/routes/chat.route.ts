@@ -47,6 +47,22 @@ chatRouter.get('/messages/search', ChatController.searchMessages);
 // Get unread message count
 chatRouter.get('/unread-count', ChatController.getUnreadCount);
 
+// ============================================================
+// NEW FEATURES - Delete, Clear, Archive, Read Status
+// ============================================================
+
+// Delete chat room (soft delete for personal, remove member or hard delete for group)
+chatRouter.delete('/rooms/:room_id', ChatController.deleteChat);
+
+// Clear chat messages (set clear timestamp for user or delete all if admin)
+chatRouter.delete('/rooms/:room_id/messages', ChatController.clearChatMessages);
+
+// Archive/Unarchive chat room
+chatRouter.put('/rooms/:room_id/archive', ChatController.archiveChat);
+
+// Mark room as read/unread
+chatRouter.put('/rooms/:room_id/read-status', ChatController.updateReadStatus);
+
 // Get deleted messages from a room (Teachers, Admins, Super Admins only)
 chatRouter.get('/rooms/:room_id/deleted-messages', ChatController.getDeletedMessages);
 

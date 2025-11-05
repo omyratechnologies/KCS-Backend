@@ -391,6 +391,9 @@ export class ChatServiceOptimized {
                 is_deleted: false,
             };
 
+            // 🚀 NEW: Get user's clear timestamp for filtering
+            let messagesClearedAt: Date | undefined;
+
             if (options.room_id) {
                 // Validate user can access this room
                 const room = await ChatRoom.findById(options.room_id);
@@ -398,6 +401,21 @@ export class ChatServiceOptimized {
                     return { success: false, error: "Access denied to this room" };
                 }
                 query.room_id = options.room_id;
+
+                // 🚀 NEW: Get user's preferences to check if messages were cleared
+                try {
+                    const { UserChatPreferences } = await import("../models/user_chat_preferences.model");
+                    const prefs = await UserChatPreferences.find({
+                        user_id,
+                        room_id: options.room_id
+                    });
+
+                    if (prefs.rows && prefs.rows.length > 0) {
+                        messagesClearedAt = prefs.rows[0].messages_cleared_at;
+                    }
+                } catch (error) {
+                    log(`Failed to get user preferences: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
+                }
             } else if (options.recipient_id) {
                 // Personal chat - find messages between these two users
                 query.$or = [
@@ -414,13 +432,22 @@ export class ChatServiceOptimized {
                 skip,
             });
 
+            // 🚀 NEW: Filter messages by cleared timestamp if set
+            let filteredMessages = messages.rows || [];
+            if (messagesClearedAt) {
+                filteredMessages = filteredMessages.filter((msg: IChatMessage) => 
+                    msg.created_at > messagesClearedAt
+                );
+                log(`🧹 Filtered ${messages.rows?.length || 0} messages to ${filteredMessages.length} after clear timestamp`, LogTypes.LOGS, "CHAT_SERVICE");
+            }
+
             return {
                 success: true,
-                data: messages.rows || [],
+                data: filteredMessages,
                 pagination: {
                     page,
                     limit,
-                    total: messages.rows?.length || 0,
+                    total: filteredMessages.length,
                 },
             };
         } catch (error) {
@@ -430,31 +457,15 @@ export class ChatServiceOptimized {
     }
 
     /**
-     * 🚀 OPTIMIZED: Get user's chat rooms with caching
+     * 🚀 OPTIMIZED: Get user's chat rooms with caching and user preferences
      */
     public static async getUserChatRooms(
         user_id: string,
-        campus_id: string
-    ): Promise<{ success: boolean; data?: IChatRoom[]; error?: string }> {
+        campus_id: string,
+        archived?: boolean
+    ): Promise<{ success: boolean; data?: any[]; error?: string }> {
         try {
-            // Try to get from cache first
-            const cachedRoomIds = await ChatCacheService.getCachedUserRooms(user_id);
-            
-            if (cachedRoomIds) {
-                // Fetch room details for cached IDs
-                const rooms = await Promise.all(
-                    cachedRoomIds.map(roomId => ChatRoom.findById(roomId))
-                );
-                
-                const validRooms = rooms.filter(room => room !== null) as IChatRoom[];
-                
-                if (validRooms.length > 0) {
-                    log(`✅ Retrieved ${validRooms.length} rooms from cache for user ${user_id}`, LogTypes.LOGS, "CHAT_SERVICE");
-                    return { success: true, data: validRooms };
-                }
-            }
-
-            // Cache miss - fetch from database
+            // Fetch all rooms from database
             const allRooms = await ChatRoom.find(
                 {
                     campus_id,
@@ -471,11 +482,66 @@ export class ChatServiceOptimized {
                     (room: { members: string | string[] }) => room.members && room.members.includes(user_id)
                 ) || [];
 
-            // Cache the result
+            // 🚀 NEW: Load user preferences for these rooms
+            const { UserChatPreferences } = await import("../models/user_chat_preferences.model");
+            const allPrefs = await UserChatPreferences.find({ user_id });
+            
+            // Create a map of room_id -> preferences
+            const prefsMap = new Map<string, any>();
+            if (allPrefs.rows) {
+                for (const pref of allPrefs.rows) {
+                    prefsMap.set(pref.room_id, pref);
+                }
+            }
+
+            // 🚀 NEW: Enhance rooms with user preferences and calculate unread count
+            const enhancedRooms = await Promise.all(
+                userRooms.map(async (room: IChatRoom) => {
+                    const prefs = prefsMap.get(room.id);
+                    
+                    // Skip deleted rooms (soft delete)
+                    if (prefs?.is_deleted) {
+                        return null;
+                    }
+
+                    // Filter by archived status if specified
+                    if (archived !== undefined) {
+                        const roomIsArchived = prefs?.is_archived || false;
+                        if (roomIsArchived !== archived) {
+                            return null;
+                        }
+                    }
+
+                    // 🚀 Calculate unread count from cache
+                    let unread_count = 0;
+                    try {
+                        unread_count = await ChatCacheService.getUnreadCount(user_id, room.id);
+                    } catch (error) {
+                        log(`Failed to get unread count for room ${room.id}: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
+                    }
+
+                    return {
+                        ...room,
+                        is_archived: prefs?.is_archived || false,
+                        archived_at: prefs?.archived_at || null,
+                        is_muted: prefs?.is_muted || false,
+                        muted_until: prefs?.muted_until || null,
+                        last_read_at: prefs?.last_read_at || null,
+                        unread_count
+                    };
+                })
+            );
+
+            // Filter out null values (deleted/filtered rooms)
+            const filteredRooms = enhancedRooms.filter(room => room !== null);
+
+            // Cache the result (only room IDs, not full data with prefs)
             const roomIds = userRooms.map((room: IChatRoom) => room.id);
             await ChatCacheService.cacheUserRooms(user_id, roomIds);
 
-            return { success: true, data: userRooms };
+            log(`✅ Retrieved ${filteredRooms.length} rooms for user ${user_id}`, LogTypes.LOGS, "CHAT_SERVICE");
+
+            return { success: true, data: filteredRooms };
         } catch (error) {
             log(`Error getting chat rooms: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
             return {
@@ -1283,6 +1349,507 @@ export class ChatServiceOptimized {
                 LogTypes.ERROR,
                 "CHAT_SERVICE"
             );
+        }
+    }
+
+    // ============================================================
+    // NEW FEATURES - Delete, Clear, Archive, Read Status
+    // ============================================================
+
+    /**
+     * Delete chat room
+     * For personal chats: Soft delete via user_chat_preferences
+     * For group chats: Remove user from members or hard delete if last member
+     */
+    public static async deleteChat(
+        user_id: string,
+        campus_id: string,
+        room_id: string
+    ): Promise<{ success: boolean; data?: any; error?: string }> {
+        try {
+            // Import UserChatPreferences model
+            const { UserChatPreferences } = await import("../models/user_chat_preferences.model");
+
+            // Get the room
+            const room = await ChatRoom.findById(room_id);
+            if (!room) {
+                return { success: false, error: "Chat room not found" };
+            }
+
+            // Verify user is a member
+            if (!room.members.includes(user_id)) {
+                return { success: false, error: "You are not a member of this chat room" };
+            }
+
+            // Check room type
+            if (room.room_type === "personal") {
+                // Personal chat: Soft delete via user_chat_preferences
+                // Find existing preferences or create new
+                const existingPrefs = await UserChatPreferences.find({
+                    user_id,
+                    room_id
+                });
+
+                const prefs = existingPrefs.rows?.[0];
+
+                if (prefs) {
+                    // Update existing
+                    await UserChatPreferences.updateById(prefs.id, {
+                        is_deleted: true,
+                        deleted_at: new Date(),
+                        updated_at: new Date()
+                    });
+                } else {
+                    // Create new
+                    await UserChatPreferences.create({
+                        user_id,
+                        room_id,
+                        is_deleted: true,
+                        deleted_at: new Date(),
+                        is_archived: false,
+                        manually_marked_unread: false,
+                        is_muted: false,
+                        created_at: new Date(),
+                        updated_at: new Date()
+                    });
+                }
+
+                // Broadcast room deleted event to user's devices
+                SocketServiceOptimized.notifyChatUser(user_id, {
+                    type: "room_deleted",
+                    data: {
+                        room_id,
+                        deleted_at: new Date().toISOString()
+                    }
+                });
+
+                return {
+                    success: true,
+                    data: {
+                        room_id,
+                        deleted_at: new Date(),
+                        type: "soft_delete"
+                    }
+                };
+            } else {
+                // Group chat: Remove user from members
+                const updatedMembers = room.members.filter(id => id !== user_id);
+
+                if (updatedMembers.length === 0) {
+                    // Last member: Hard delete the room
+                    await ChatRoom.removeById(room_id);
+                    
+                    // Clear cache
+                    await ChatCacheService.invalidateRoomCache(room_id);
+
+                    // Broadcast room deleted event
+                    SocketServiceOptimized.broadcastToChatRoom(room_id, "room-deleted", {
+                        room_id,
+                        deleted_by: user_id,
+                        deleted_at: new Date().toISOString(),
+                        type: "hard_delete"
+                    });
+
+                    return {
+                        success: true,
+                        data: {
+                            room_id,
+                            deleted_at: new Date(),
+                            type: "hard_delete",
+                            reason: "last_member"
+                        }
+                    };
+                } else {
+                    // Remove user from members
+                    await ChatRoom.updateById(room_id, {
+                        members: updatedMembers,
+                        updated_at: new Date()
+                    });
+
+                    // If user was admin, handle admin transfer
+                    if (room.admin_user_ids.includes(user_id)) {
+                        const updatedAdmins = room.admin_user_ids.filter(id => id !== user_id);
+                        
+                        // If no admins left, make first member admin
+                        if (updatedAdmins.length === 0 && updatedMembers.length > 0) {
+                            updatedAdmins.push(updatedMembers[0]);
+                        }
+
+                        await ChatRoom.updateById(room_id, {
+                            admin_user_ids: updatedAdmins
+                        });
+                    }
+
+                    // Update cache
+                    await ChatCacheService.cacheRoomMembers(room_id, updatedMembers);
+
+                    // Broadcast user left event
+                    SocketServiceOptimized.broadcastToChatRoom(room_id, "user-left-room", {
+                        room_id,
+                        user_id,
+                        left_at: new Date().toISOString()
+                    });
+
+                    // Notify the user
+                    SocketServiceOptimized.notifyChatUser(user_id, {
+                        type: "room_deleted",
+                        data: {
+                            room_id,
+                            deleted_at: new Date().toISOString()
+                        }
+                    });
+
+                    return {
+                        success: true,
+                        data: {
+                            room_id,
+                            deleted_at: new Date(),
+                            type: "member_removed"
+                        }
+                    };
+                }
+            }
+        } catch (error) {
+            log(`Delete chat error: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
+            return {
+                success: false,
+                error: `Failed to delete chat: ${error instanceof Error ? error.message : "Unknown error"}`
+            };
+        }
+    }
+
+    /**
+     * Clear chat messages
+     * Default: Set clear timestamp for user
+     * Admin: Hard delete all messages if for_everyone=true
+     */
+    public static async clearChatMessages(
+        user_id: string,
+        campus_id: string,
+        room_id: string,
+        for_everyone: boolean = false
+    ): Promise<{ success: boolean; data?: any; message?: string; error?: string }> {
+        try {
+            // Import UserChatPreferences model
+            const { UserChatPreferences } = await import("../models/user_chat_preferences.model");
+
+            // Get the room
+            const room = await ChatRoom.findById(room_id);
+            if (!room) {
+                return { success: false, error: "Chat room not found" };
+            }
+
+            // Verify user is a member
+            if (!room.members.includes(user_id)) {
+                return { success: false, error: "You are not a member of this chat room" };
+            }
+
+            if (for_everyone) {
+                // Check if user has permission (creator or admin)
+                const isCreator = room.created_by === user_id;
+                const isAdmin = room.admin_user_ids.includes(user_id);
+
+                if (!isCreator && !isAdmin) {
+                    return {
+                        success: false,
+                        error: "Only room creator or admins can clear messages for everyone"
+                    };
+                }
+
+                // Hard delete all messages in the room
+                const messages = await ChatMessage.find({ room_id });
+                const messageIds = messages.rows?.map((m: IChatMessage) => m.id) || [];
+
+                for (const msg_id of messageIds) {
+                    await ChatMessage.removeById(msg_id);
+                }
+
+                // Broadcast messages cleared event
+                SocketServiceOptimized.broadcastToChatRoom(room_id, "room-messages-cleared", {
+                    room_id,
+                    cleared_by: user_id,
+                    cleared_at: new Date().toISOString(),
+                    for_everyone: true
+                });
+
+                log(`✅ All messages cleared in room ${room_id} by ${user_id}`, LogTypes.LOGS, "CHAT_SERVICE");
+
+                return {
+                    success: true,
+                    message: "All messages cleared for everyone",
+                    data: {
+                        room_id,
+                        cleared_at: new Date(),
+                        for_everyone: true,
+                        messages_deleted: messageIds.length
+                    }
+                };
+            } else {
+                // Clear for current user only: Set timestamp
+                const existingPrefs = await UserChatPreferences.find({
+                    user_id,
+                    room_id
+                });
+
+                const prefs = existingPrefs.rows?.[0];
+
+                if (prefs) {
+                    // Update existing
+                    await UserChatPreferences.updateById(prefs.id, {
+                        messages_cleared_at: new Date(),
+                        updated_at: new Date()
+                    });
+                } else {
+                    // Create new
+                    await UserChatPreferences.create({
+                        user_id,
+                        room_id,
+                        messages_cleared_at: new Date(),
+                        is_archived: false,
+                        is_deleted: false,
+                        manually_marked_unread: false,
+                        is_muted: false,
+                        created_at: new Date(),
+                        updated_at: new Date()
+                    });
+                }
+
+                // Reset unread count in cache
+                await ChatCacheService.resetUnreadCount(user_id, room_id);
+
+                log(`✅ Messages cleared for user ${user_id} in room ${room_id}`, LogTypes.LOGS, "CHAT_SERVICE");
+
+                return {
+                    success: true,
+                    message: "Messages cleared for you",
+                    data: {
+                        room_id,
+                        cleared_at: new Date(),
+                        for_everyone: false
+                    }
+                };
+            }
+        } catch (error) {
+            log(`Clear chat messages error: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
+            return {
+                success: false,
+                error: `Failed to clear messages: ${error instanceof Error ? error.message : "Unknown error"}`
+            };
+        }
+    }
+
+    /**
+     * Archive or unarchive a chat room
+     */
+    public static async archiveChat(
+        user_id: string,
+        campus_id: string,
+        room_id: string,
+        is_archived: boolean
+    ): Promise<{ success: boolean; data?: any; error?: string }> {
+        try {
+            // Import UserChatPreferences model
+            const { UserChatPreferences } = await import("../models/user_chat_preferences.model");
+
+            // Get the room
+            const room = await ChatRoom.findById(room_id);
+            if (!room) {
+                return { success: false, error: "Chat room not found" };
+            }
+
+            // Verify user is a member
+            if (!room.members.includes(user_id)) {
+                return { success: false, error: "You are not a member of this chat room" };
+            }
+
+            // Find existing preferences or create new
+            const existingPrefs = await UserChatPreferences.find({
+                user_id,
+                room_id
+            });
+
+            const prefs = existingPrefs.rows?.[0];
+
+            if (prefs) {
+                // Update existing
+                await UserChatPreferences.updateById(prefs.id, {
+                    is_archived,
+                    archived_at: is_archived ? new Date() : undefined,
+                    updated_at: new Date()
+                });
+            } else {
+                // Create new
+                await UserChatPreferences.create({
+                    user_id,
+                    room_id,
+                    is_archived,
+                    archived_at: is_archived ? new Date() : undefined,
+                    is_deleted: false,
+                    manually_marked_unread: false,
+                    is_muted: false,
+                    created_at: new Date(),
+                    updated_at: new Date()
+                });
+            }
+
+            // Broadcast archive event to user's devices
+            SocketServiceOptimized.notifyChatUser(user_id, {
+                type: "room_archived",
+                data: {
+                    room_id,
+                    is_archived,
+                    archived_at: is_archived ? new Date().toISOString() : null
+                }
+            });
+
+            log(`✅ Room ${room_id} ${is_archived ? "archived" : "unarchived"} for user ${user_id}`, LogTypes.LOGS, "CHAT_SERVICE");
+
+            return {
+                success: true,
+                data: {
+                    room_id,
+                    is_archived,
+                    archived_at: is_archived ? new Date() : null
+                }
+            };
+        } catch (error) {
+            log(`Archive chat error: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
+            return {
+                success: false,
+                error: `Failed to ${is_archived ? "archive" : "unarchive"} chat: ${error instanceof Error ? error.message : "Unknown error"}`
+            };
+        }
+    }
+
+    /**
+     * Update read status of a chat room
+     * Mark as read (with optional last_read_message_id) or manually mark as unread
+     */
+    public static async updateReadStatus(
+        user_id: string,
+        campus_id: string,
+        room_id: string,
+        is_read: boolean,
+        last_read_message_id?: string
+    ): Promise<{ success: boolean; data?: any; error?: string }> {
+        try {
+            // Import UserChatPreferences model
+            const { UserChatPreferences } = await import("../models/user_chat_preferences.model");
+
+            // Get the room
+            const room = await ChatRoom.findById(room_id);
+            if (!room) {
+                return { success: false, error: "Chat room not found" };
+            }
+
+            // Verify user is a member
+            if (!room.members.includes(user_id)) {
+                return { success: false, error: "You are not a member of this chat room" };
+            }
+
+            // Find existing preferences or create new
+            const existingPrefs = await UserChatPreferences.find({
+                user_id,
+                room_id
+            });
+
+            const prefs = existingPrefs.rows?.[0];
+
+            if (is_read) {
+                // Mark as read
+                const updateData: any = {
+                    manually_marked_unread: false,
+                    last_read_at: new Date(),
+                    updated_at: new Date()
+                };
+
+                if (last_read_message_id) {
+                    updateData.last_read_message_id = last_read_message_id;
+                }
+
+                if (prefs) {
+                    await UserChatPreferences.updateById(prefs.id, updateData);
+                } else {
+                    await UserChatPreferences.create({
+                        user_id,
+                        room_id,
+                        last_read_message_id,
+                        last_read_at: new Date(),
+                        manually_marked_unread: false,
+                        is_archived: false,
+                        is_deleted: false,
+                        is_muted: false,
+                        created_at: new Date(),
+                        updated_at: new Date()
+                    });
+                }
+
+                // Reset unread count in cache
+                await ChatCacheService.resetUnreadCount(user_id, room_id);
+
+                log(`✅ Room ${room_id} marked as read for user ${user_id}`, LogTypes.LOGS, "CHAT_SERVICE");
+
+                return {
+                    success: true,
+                    data: {
+                        room_id,
+                        unread_count: 0,
+                        last_read_message_id,
+                        read_at: new Date()
+                    }
+                };
+            } else {
+                // Mark as unread (manually)
+                if (prefs) {
+                    await UserChatPreferences.updateById(prefs.id, {
+                        manually_marked_unread: true,
+                        updated_at: new Date()
+                    });
+                } else {
+                    await UserChatPreferences.create({
+                        user_id,
+                        room_id,
+                        manually_marked_unread: true,
+                        is_archived: false,
+                        is_deleted: false,
+                        is_muted: false,
+                        created_at: new Date(),
+                        updated_at: new Date()
+                    });
+                }
+
+                // Set unread count to at least 1 in cache
+                await ChatCacheService.incrementUnreadCount(user_id, room_id, 1);
+
+                // Calculate actual unread count
+                const messages = await ChatMessage.find({
+                    room_id,
+                    is_deleted: false
+                });
+                
+                const unreadMessages = messages.rows?.filter((m: IChatMessage) => 
+                    m.sender_id !== user_id
+                ) || [];
+
+                const unread_count = Math.max(unreadMessages.length, 1);
+
+                log(`✅ Room ${room_id} marked as unread for user ${user_id}`, LogTypes.LOGS, "CHAT_SERVICE");
+
+                return {
+                    success: true,
+                    data: {
+                        room_id,
+                        unread_count,
+                        manually_marked_unread: true
+                    }
+                };
+            }
+        } catch (error) {
+            log(`Update read status error: ${error}`, LogTypes.ERROR, "CHAT_SERVICE");
+            return {
+                success: false,
+                error: `Failed to update read status: ${error instanceof Error ? error.message : "Unknown error"}`
+            };
         }
     }
 }
