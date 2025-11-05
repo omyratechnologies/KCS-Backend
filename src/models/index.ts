@@ -2,7 +2,6 @@
 
 // Export all models for easy access
 
-export { AndroidApk } from "./android_apk.model";
 export { Assignment } from "./assignment.model";
 export { AssignmentSubmission } from "./assignment_submission.model";
 export { Attendance } from "./attendance.model";
