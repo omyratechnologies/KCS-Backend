@@ -77,7 +77,7 @@ export class StudentAcademicViewService {
      */
     private static getStudentInfo = async (student_id: string, campus_id: string) => {
         const userResult: any = await User.find({
-            user_id: student_id,
+            id: student_id,
             campus_id,
             user_type: "Student",
             is_deleted: false,

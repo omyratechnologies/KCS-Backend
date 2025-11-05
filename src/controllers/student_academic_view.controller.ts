@@ -8,9 +8,18 @@ export class StudentAcademicViewController {
      */
     public static readonly getMyAcademicView = async (ctx: Context) => {
         try {
-            const user = ctx.get("user");
-            const student_id = user.user_id;
-            const campus_id = user.campus_id || ctx.get("campus_id");
+            const student_id = ctx.get("user_id");
+            const campus_id = ctx.get("campus_id");
+
+            if (!student_id) {
+                return ctx.json(
+                    {
+                        success: false,
+                        message: "User ID not found",
+                    },
+                    401
+                );
+            }
 
             if (!campus_id) {
                 return ctx.json(
