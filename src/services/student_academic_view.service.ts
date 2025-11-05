@@ -7,7 +7,6 @@ import { ClassQuizSubmission } from "@/models/class_quiz_submission.model";
 import { CourseEnrollment } from "@/models/course_enrollment.model";
 import { CourseProgress } from "@/models/course_progress.model";
 import { Examination } from "@/models/examination.model";
-import { Fee } from "@/models/fee.model";
 import { LeaveRequest } from "@/models/leave_request.model";
 import { StudentPerformance } from "@/models/student_performance.model";
 import { StudentRecord } from "@/models/student_record.model";
@@ -31,7 +30,6 @@ export class StudentAcademicViewService {
                 assignmentAnalytics,
                 quizAnalytics,
                 examResults,
-                feeStatus,
                 leaveHistory,
             ] = await Promise.all([
                 this.getPerformanceData(student_id),
@@ -40,7 +38,6 @@ export class StudentAcademicViewService {
                 this.getAssignmentAnalytics(student_id, campus_id),
                 this.getQuizAnalytics(student_id, campus_id),
                 this.getExamResults(student_id, campus_id),
-                this.getFeeStatus(student_id, campus_id),
                 this.getLeaveHistory(student_id, campus_id),
             ]);
 
@@ -61,7 +58,6 @@ export class StudentAcademicViewService {
                 assignments: assignmentAnalytics,
                 quizzes: quizAnalytics,
                 examinations: examResults,
-                fees: feeStatus,
                 leave_requests: leaveHistory,
                 overall_analytics: overallAnalytics,
                 generated_at: new Date(),
@@ -410,45 +406,6 @@ export class StudentAcademicViewService {
                     totalMarksPossible > 0 ? ((totalMarksObtained / totalMarksPossible) * 100).toFixed(2) : "0",
             },
             exam_results: examResults,
-        };
-    };
-
-    /**
-     * Get fee payment status
-     */
-    private static getFeeStatus = async (student_id: string, campus_id: string) => {
-        const feeResult: any = await Fee.find({
-            user_id: student_id,
-            campus_id,
-        });
-
-        const fees = feeResult.rows || [];
-
-        // Calculate statistics
-        let totalAmount = 0;
-        let paidAmount = 0;
-        let dueAmount = 0;
-
-        for (const fee of fees) {
-            totalAmount += fee.total_amount || 0;
-            paidAmount += fee.paid_amount || 0;
-            dueAmount += fee.due_amount || 0;
-        }
-
-        return {
-            summary: {
-                total_fee_amount: totalAmount,
-                total_paid_amount: paidAmount,
-                total_due_amount: dueAmount,
-                payment_percentage: totalAmount > 0 ? ((paidAmount / totalAmount) * 100).toFixed(2) : "0",
-            },
-            fee_records: fees,
-            status_breakdown: {
-                paid: fees.filter((f: any) => f.payment_status === "paid").length,
-                partial: fees.filter((f: any) => f.payment_status === "partial").length,
-                unpaid: fees.filter((f: any) => f.payment_status === "unpaid").length,
-                overdue: fees.filter((f: any) => f.payment_status === "overdue").length,
-            },
         };
     };
 
