@@ -29,7 +29,10 @@ const initDB = async () => {
         log("Importing database models...", LogTypes.LOGS, "DB");
         await import("@/models");
 
-        // Ensure all models/collections are created
+        // Note: ensureIndexes() is commented out due to issues with missing indexes
+        // Indexes should be created manually in Couchbase or through a migration script
+        // Uncomment below when all required indexes are present in the database
+        /*
         try {
             log("Ensuring database indexes...", LogTypes.LOGS, "DB");
             await ottoman.ensureIndexes();
@@ -40,6 +43,7 @@ const initDB = async () => {
             log(`Warning: Could not ensure indexes (this is usually safe to ignore): ${errorMessage}`, LogTypes.LOGS, "DB");
             // Don't throw - continue with startup even if index creation fails
         }
+        */
 
         log("Connected to DB", LogTypes.LOGS, "DB");
     } catch (error) {
