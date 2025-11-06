@@ -1315,7 +1315,7 @@ export class ChatServiceOptimized {
             const result = await PushNotificationService.sendToSpecificUsers({
                 title: notificationTitle,
                 message: notificationBody,
-                notification_type: "class",
+                notification_type: "chat",
                 campus_id,
                 target_users: offlineRecipients,
                 data: {

@@ -6,7 +6,7 @@ export interface PushNotificationPayload {
     title: string;
     message: string;
     data?: Record<string, string | number | boolean>;
-    notification_type: "campus_wide" | "class" | "student" | "teacher" | "parent";
+    notification_type: "campus_wide" | "class" | "student" | "teacher" | "parent" | "chat" | "meeting" | "assignment" | "fees" | "event";
     campus_id: string;
     target_users?: string[]; // Specific user IDs to send to
     target_user_types?: Array<"Student" | "Teacher" | "Parent" | "Admin">; // User types to send to
@@ -57,16 +57,25 @@ export class PushNotificationService {
      */
     public static async sendCampusWideNotification(payload: PushNotificationPayload): Promise<PushNotificationResult> {
         try {
+            // Convert all data values to strings for Firebase FCM compatibility
+            const dataAsStrings: Record<string, string> = {
+                notification_type: payload.notification_type,
+                campus_id: payload.campus_id,
+            };
+
+            // Convert payload.data values to strings
+            if (payload.data) {
+                Object.entries(payload.data).forEach(([key, value]) => {
+                    dataAsStrings[key] = String(value);
+                });
+            }
+
             // Send to campus topic for immediate delivery to all subscribers
             const topicName = `campus_${payload.campus_id}`;
             const topicResult = await FirebaseService.sendToTopic({
                 title: payload.title,
                 message: payload.message,
-                data: {
-                    notification_type: payload.notification_type,
-                    campus_id: payload.campus_id,
-                    ...payload.data,
-                },
+                data: dataAsStrings,
                 topic: topicName,
             });
 
@@ -138,16 +147,25 @@ export class PushNotificationService {
                 };
             }
 
+            // Convert all data values to strings for Firebase FCM compatibility
+            const dataAsStrings: Record<string, string> = {
+                notification_type: payload.notification_type,
+                campus_id: payload.campus_id,
+                ...(payload.class_id && { class_id: payload.class_id }),
+            };
+
+            // Convert payload.data values to strings
+            if (payload.data) {
+                Object.entries(payload.data).forEach(([key, value]) => {
+                    dataAsStrings[key] = String(value);
+                });
+            }
+
             // Send notification to tokens
             const result = await FirebaseService.sendToTokens({
                 title: payload.title,
                 message: payload.message,
-                data: {
-                    notification_type: payload.notification_type,
-                    campus_id: payload.campus_id,
-                    ...(payload.class_id && { class_id: payload.class_id }),
-                    ...payload.data,
-                },
+                data: dataAsStrings,
                 tokens: tokens,
             });
 

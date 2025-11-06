@@ -377,7 +377,7 @@ const sendMeetingPushNotifications = async (
             title,
             message,
             data,
-            notification_type: "teacher", // Generic type for meetings
+            notification_type: "meeting",
             campus_id: meeting.campus_id,
             target_users: participants,
         });

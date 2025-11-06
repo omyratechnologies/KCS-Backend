@@ -308,8 +308,29 @@ export class AttendanceService {
 
             const students = (await Promise.all(studentPromises)).filter((student) => student !== null);
 
-            // Calculate total class days (excluding weekends for now)
-            const totalDays = Math.ceil((to_date.getTime() - from_date.getTime()) / (1000 * 60 * 60 * 24));
+            // Calculate total class days based on ACTUAL attendance records (unique dates when attendance was marked)
+            // This ensures all students/classes in the campus have the same total_days reference
+            const campusAttendanceQuery = {
+                campus_id,
+                class_id,
+                date: {
+                    $gte: from_date,
+                    $lte: to_date,
+                },
+            };
+            
+            const campusAttendanceResult = await Attendance.find(campusAttendanceQuery);
+            const campusAttendanceRecords = campusAttendanceResult.rows || [];
+            
+            // Get unique dates when attendance was actually marked for this class
+            const uniqueDates = new Set(
+                campusAttendanceRecords.map(record => 
+                    new Date(record.date).toISOString().split('T')[0]
+                )
+            );
+            
+            // Total days = number of unique dates when attendance was marked
+            const totalDays = uniqueDates.size;
 
             // OPTIMIZED: Fetch ALL attendance records in a single query instead of per-student queries
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -572,6 +593,29 @@ export class AttendanceService {
 
             const attendanceRecords = studentAttendance.rows || [];
 
+            // Get campus-wide total working days (unique dates when attendance was marked for ANY student)
+            // This ensures all students show the same total_days for fair comparison
+            const campusAttendanceQuery = {
+                campus_id,
+                date: {
+                    $gte: from_date,
+                    $lte: to_date,
+                },
+            };
+            
+            const campusAttendanceResult = await Attendance.find(campusAttendanceQuery);
+            const campusAttendanceRecords = campusAttendanceResult.rows || [];
+            
+            // Get unique dates when attendance was marked campus-wide
+            const campusUniqueDates = new Set(
+                campusAttendanceRecords.map(record => 
+                    new Date(record.date).toISOString().split('T')[0]
+                )
+            );
+            
+            // Campus-wide total working days (same for all students)
+            const campusTotalDays = campusUniqueDates.size;
+
             // Group attendance records by month
             const monthlyAttendance = new Map<
                 string,
@@ -683,8 +727,9 @@ export class AttendanceService {
             const totalLate = attendanceRecords.filter((record) => record.status === "late").length;
             const totalLeave = attendanceRecords.filter((record) => record.status === "leave").length;
 
+            // Calculate attendance rate based on campus-wide total days for consistency
             const overallAttendanceRate =
-                totalRecords > 0 ? Math.round(((totalPresent + totalLate) / totalRecords) * 100) : 0;
+                campusTotalDays > 0 ? Math.round(((totalPresent + totalLate) / campusTotalDays) * 100) : 0;
 
             // Determine overall attendance status
             let overallStatus = "good";
@@ -700,7 +745,8 @@ export class AttendanceService {
 
             // Calculate total unique months/days for display
             const totalMonths = monthlyPerformance.length;
-            const totalUniqueDays = totalRecords;
+            const studentTotalRecords = totalRecords; // Student's actual attendance records
+            const totalUniqueDays = campusTotalDays; // Campus-wide total working days
 
             return {
                 success: true,
@@ -717,7 +763,7 @@ export class AttendanceService {
                     date_range: {
                         from_date: from_date.toISOString().split("T")[0],
                         to_date: to_date.toISOString().split("T")[0],
-                        showing_records: `${totalMonths} months with ${totalUniqueDays} attendance records`,
+                        showing_records: `${totalMonths} months with ${studentTotalRecords} attendance records`,
                     },
                     summary_cards: {
                         total_days: {
