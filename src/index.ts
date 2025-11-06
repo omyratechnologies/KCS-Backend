@@ -9,6 +9,7 @@ import { SocketServiceOptimized as SocketService } from "@/services/socket.servi
 // import { SocketService } from "@/services/socket.service";
 import { WebRTCService } from "@/services/webrtc.service";
 import { FirebaseService } from "@/services/firebase.service";
+import { ReminderScheduler } from "@/services/reminder_scheduler.service";
 import { config } from "@/utils/env";
 
 // Create HTTP server for Socket.IO integration
@@ -105,6 +106,15 @@ async function initializeServices() {
             log("✅ Optimized Socket.IO service initialized with Redis adapter", LogTypes.LOGS, "INIT");
         } catch (error) {
             log(`⚠️ Socket.IO initialization failed, continuing without real-time features: ${error}`, LogTypes.ERROR, "INIT");
+        }
+
+        // Initialize Reminder Scheduler for push notifications
+        log("⏰ Starting Reminder Scheduler...", LogTypes.LOGS, "INIT");
+        try {
+            ReminderScheduler.start();
+            log("✅ Reminder Scheduler started successfully", LogTypes.LOGS, "INIT");
+        } catch (error) {
+            log(`⚠️ Reminder Scheduler initialization failed: ${error}`, LogTypes.ERROR, "INIT");
         }
 
         log("🎉 All services initialized successfully", LogTypes.LOGS, "INIT");

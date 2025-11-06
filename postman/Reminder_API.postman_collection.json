@@ -1,0 +1,904 @@
+{
+	"info": {
+		"_postman_id": "kcs-reminder-api-2025",
+		"name": "KCS Reminder API",
+		"description": "Self-reminder API with push notifications. Create, manage, and receive notifications for personal reminders with support for one-time, daily, and weekly frequencies.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "kcs-reminders"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{auth_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "User Reminders",
+			"item": [
+				{
+					"name": "Create Reminder",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Submit Assignment\",\n  \"note\": \"Remember to submit the math assignment before 5 PM\",\n  \"reminder_date\": \"2025-02-15\",\n  \"reminder_time\": \"14:30\",\n  \"frequency\": \"one_time\",\n  \"is_am\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/reminders",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"reminders"
+							]
+						},
+						"description": "Create a new personal reminder with push notifications.\n\n**Request Body:**\n- `title` (required): Reminder title (1-200 characters)\n- `note` (optional): Additional notes (max 1000 characters)\n- `reminder_date` (required): Date in YYYY-MM-DD format\n- `reminder_time` (required): Time in HH:mm format (24-hour)\n- `frequency` (required): \"one_time\", \"daily\", or \"weekly\"\n- `is_am` (optional): For UI display (true=AM, false=PM)\n\n**Returns:**\n- Created reminder object with ID\n- `reminder_datetime`: Combined date and time\n- `is_active`: true\n- `is_sent`: false"
+					},
+					"response": [
+						{
+							"name": "Success - One-time Reminder",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"Submit Assignment\",\n  \"note\": \"Remember to submit the math assignment before 5 PM\",\n  \"reminder_date\": \"2025-02-15\",\n  \"reminder_time\": \"14:30\",\n  \"frequency\": \"one_time\",\n  \"is_am\": false\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/reminders",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"reminders"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Reminder created successfully\",\n  \"data\": {\n    \"id\": \"reminder_abc123\",\n    \"user_id\": \"user_123\",\n    \"campus_id\": \"campus_123\",\n    \"title\": \"Submit Assignment\",\n    \"note\": \"Remember to submit the math assignment before 5 PM\",\n    \"reminder_date\": \"2025-02-15T00:00:00.000Z\",\n    \"reminder_time\": \"14:30\",\n    \"reminder_datetime\": \"2025-02-15T14:30:00.000Z\",\n    \"frequency\": \"one_time\",\n    \"is_am\": false,\n    \"is_active\": true,\n    \"is_sent\": false,\n    \"created_at\": \"2025-11-07T10:30:00.000Z\",\n    \"updated_at\": \"2025-11-07T10:30:00.000Z\"\n  }\n}"
+						},
+						{
+							"name": "Success - Daily Reminder",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"Morning Workout\",\n  \"note\": \"Don't skip leg day!\",\n  \"reminder_date\": \"2025-11-08\",\n  \"reminder_time\": \"06:00\",\n  \"frequency\": \"daily\",\n  \"is_am\": true\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/reminders",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"reminders"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Reminder created successfully\",\n  \"data\": {\n    \"id\": \"reminder_xyz789\",\n    \"user_id\": \"user_123\",\n    \"campus_id\": \"campus_123\",\n    \"title\": \"Morning Workout\",\n    \"note\": \"Don't skip leg day!\",\n    \"reminder_date\": \"2025-11-08T00:00:00.000Z\",\n    \"reminder_time\": \"06:00\",\n    \"reminder_datetime\": \"2025-11-08T06:00:00.000Z\",\n    \"frequency\": \"daily\",\n    \"is_am\": true,\n    \"is_active\": true,\n    \"is_sent\": false,\n    \"created_at\": \"2025-11-07T10:30:00.000Z\",\n    \"updated_at\": \"2025-11-07T10:30:00.000Z\"\n  }\n}"
+						},
+						{
+							"name": "Error - Past Date",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"Old Reminder\",\n  \"reminder_date\": \"2025-01-01\",\n  \"reminder_time\": \"10:00\",\n  \"frequency\": \"one_time\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/reminders",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"reminders"
+									]
+								}
+							},
+							"status": "Internal Server Error",
+							"code": 500,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": false,\n  \"message\": \"Reminder time must be in the future\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Get All Reminders",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/reminders",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"reminders"
+							]
+						},
+						"description": "Get all reminders for the authenticated user.\n\n**Query Parameters (all optional):**\n- `is_active`: Filter by active status (true/false)\n- `frequency`: Filter by frequency (one_time, daily, weekly)\n- `from_date`: Filter reminders from this date (YYYY-MM-DD)\n- `to_date`: Filter reminders up to this date (YYYY-MM-DD)\n\n**Returns:**\n- Array of reminder objects\n- Total count"
+					},
+					"response": [
+						{
+							"name": "Success - All Reminders",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/reminders",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"reminders"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": true,\n  \"data\": [\n    {\n      \"id\": \"reminder_abc123\",\n      \"user_id\": \"user_123\",\n      \"campus_id\": \"campus_123\",\n      \"title\": \"Submit Assignment\",\n      \"note\": \"Remember to submit the math assignment before 5 PM\",\n      \"reminder_date\": \"2025-02-15T00:00:00.000Z\",\n      \"reminder_time\": \"14:30\",\n      \"reminder_datetime\": \"2025-02-15T14:30:00.000Z\",\n      \"frequency\": \"one_time\",\n      \"is_am\": false,\n      \"is_active\": true,\n      \"is_sent\": false,\n      \"created_at\": \"2025-11-07T10:30:00.000Z\",\n      \"updated_at\": \"2025-11-07T10:30:00.000Z\"\n    },\n    {\n      \"id\": \"reminder_xyz789\",\n      \"user_id\": \"user_123\",\n      \"campus_id\": \"campus_123\",\n      \"title\": \"Morning Workout\",\n      \"note\": \"Don't skip leg day!\",\n      \"reminder_date\": \"2025-11-08T00:00:00.000Z\",\n      \"reminder_time\": \"06:00\",\n      \"reminder_datetime\": \"2025-11-08T06:00:00.000Z\",\n      \"frequency\": \"daily\",\n      \"is_am\": true,\n      \"is_active\": true,\n      \"is_sent\": false,\n      \"created_at\": \"2025-11-07T10:30:00.000Z\",\n      \"updated_at\": \"2025-11-07T10:30:00.000Z\"\n    }\n  ],\n  \"total\": 2\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Reminders - Active Only",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/reminders?is_active=true",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"reminders"
+							],
+							"query": [
+								{
+									"key": "is_active",
+									"value": "true"
+								}
+							]
+						},
+						"description": "Get only active reminders for the user."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Reminders - By Frequency",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/reminders?frequency=daily",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"reminders"
+							],
+							"query": [
+								{
+									"key": "frequency",
+									"value": "daily"
+								}
+							]
+						},
+						"description": "Get reminders filtered by frequency (daily, weekly, or one_time)."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Reminders - Date Range",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/reminders?from_date=2025-02-01&to_date=2025-02-28",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"reminders"
+							],
+							"query": [
+								{
+									"key": "from_date",
+									"value": "2025-02-01",
+									"description": "Start date (YYYY-MM-DD)"
+								},
+								{
+									"key": "to_date",
+									"value": "2025-02-28",
+									"description": "End date (YYYY-MM-DD)"
+								}
+							]
+						},
+						"description": "Get reminders in a specific date range (e.g., all reminders in February 2025).\n\n**Use Case:** Perfect for calendar view - get all reminders for a specific month or date range."
+					},
+					"response": [
+						{
+							"name": "Success - February 2025 Reminders",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/reminders?from_date=2025-02-01&to_date=2025-02-28",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"reminders"
+									],
+									"query": [
+										{
+											"key": "from_date",
+											"value": "2025-02-01"
+										},
+										{
+											"key": "to_date",
+											"value": "2025-02-28"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": true,\n  \"data\": [\n    {\n      \"id\": \"reminder_feb1\",\n      \"user_id\": \"user_123\",\n      \"campus_id\": \"campus_123\",\n      \"title\": \"Valentine's Day Celebration\",\n      \"reminder_date\": \"2025-02-14T00:00:00.000Z\",\n      \"reminder_time\": \"10:00\",\n      \"reminder_datetime\": \"2025-02-14T10:00:00.000Z\",\n      \"frequency\": \"one_time\",\n      \"is_active\": true,\n      \"is_sent\": false\n    },\n    {\n      \"id\": \"reminder_feb2\",\n      \"user_id\": \"user_123\",\n      \"campus_id\": \"campus_123\",\n      \"title\": \"Submit Assignment\",\n      \"reminder_date\": \"2025-02-15T00:00:00.000Z\",\n      \"reminder_time\": \"14:30\",\n      \"reminder_datetime\": \"2025-02-15T14:30:00.000Z\",\n      \"frequency\": \"one_time\",\n      \"is_active\": true,\n      \"is_sent\": false\n    }\n  ],\n  \"total\": 2\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Reminder by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/reminders/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"reminders",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "reminder_abc123",
+									"description": "Reminder ID"
+								}
+							]
+						},
+						"description": "Get a specific reminder by its ID.\n\n**Path Parameters:**\n- `id`: Reminder ID\n\n**Returns:**\n- Single reminder object"
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/reminders/reminder_abc123",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"reminders",
+										"reminder_abc123"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": true,\n  \"data\": {\n    \"id\": \"reminder_abc123\",\n    \"user_id\": \"user_123\",\n    \"campus_id\": \"campus_123\",\n    \"title\": \"Submit Assignment\",\n    \"note\": \"Remember to submit the math assignment before 5 PM\",\n    \"reminder_date\": \"2025-02-15T00:00:00.000Z\",\n    \"reminder_time\": \"14:30\",\n    \"reminder_datetime\": \"2025-02-15T14:30:00.000Z\",\n    \"frequency\": \"one_time\",\n    \"is_am\": false,\n    \"is_active\": true,\n    \"is_sent\": false,\n    \"created_at\": \"2025-11-07T10:30:00.000Z\",\n    \"updated_at\": \"2025-11-07T10:30:00.000Z\"\n  }\n}"
+						},
+						{
+							"name": "Error - Not Found",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/reminders/invalid_id",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"reminders",
+										"invalid_id"
+									]
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": false,\n  \"message\": \"Reminder not found\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Update Reminder",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Updated: Submit Assignment\",\n  \"note\": \"Updated note - Don't forget!\",\n  \"reminder_date\": \"2025-02-20\",\n  \"reminder_time\": \"15:00\",\n  \"frequency\": \"daily\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/reminders/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"reminders",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "reminder_abc123",
+									"description": "Reminder ID"
+								}
+							]
+						},
+						"description": "Update an existing reminder. All fields are optional.\n\n**Path Parameters:**\n- `id`: Reminder ID\n\n**Request Body (all optional):**\n- `title`: Updated title\n- `note`: Updated note\n- `reminder_date`: Updated date (YYYY-MM-DD)\n- `reminder_time`: Updated time (HH:mm)\n- `frequency`: Updated frequency\n- `is_active`: Set to false to deactivate\n- `is_am`: Updated AM/PM indicator\n\n**Note:** If date or time is updated, `is_sent` is automatically reset to false."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"title\": \"Updated: Submit Assignment\",\n  \"reminder_date\": \"2025-02-20\",\n  \"reminder_time\": \"15:00\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/reminders/reminder_abc123",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"reminders",
+										"reminder_abc123"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Reminder updated successfully\",\n  \"data\": {\n    \"id\": \"reminder_abc123\",\n    \"user_id\": \"user_123\",\n    \"campus_id\": \"campus_123\",\n    \"title\": \"Updated: Submit Assignment\",\n    \"note\": \"Remember to submit the math assignment before 5 PM\",\n    \"reminder_date\": \"2025-02-20T00:00:00.000Z\",\n    \"reminder_time\": \"15:00\",\n    \"reminder_datetime\": \"2025-02-20T15:00:00.000Z\",\n    \"frequency\": \"one_time\",\n    \"is_am\": false,\n    \"is_active\": true,\n    \"is_sent\": false,\n    \"created_at\": \"2025-11-07T10:30:00.000Z\",\n    \"updated_at\": \"2025-11-07T12:00:00.000Z\"\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Deactivate Reminder",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"is_active\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/reminders/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"reminders",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "reminder_abc123"
+								}
+							]
+						},
+						"description": "Deactivate a reminder without deleting it. The reminder will stop sending notifications."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Reminder",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/reminders/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"reminders",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "reminder_abc123",
+									"description": "Reminder ID"
+								}
+							]
+						},
+						"description": "Delete (deactivate) a reminder.\n\n**Path Parameters:**\n- `id`: Reminder ID\n\n**Note:** This performs a soft delete by setting `is_active` to false."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/reminders/reminder_abc123",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"reminders",
+										"reminder_abc123"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Reminder deleted successfully\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Reminder Statistics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/reminders/stats",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"reminders",
+								"stats"
+							]
+						},
+						"description": "Get statistics about user's reminders.\n\n**Returns:**\n- Total reminders count\n- Active reminders count\n- Pending reminders count (active & not sent & future)\n- Completed reminders count (sent)\n- Breakdown by frequency (one_time, daily, weekly)"
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/reminders/stats",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"reminders",
+										"stats"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": true,\n  \"data\": {\n    \"total\": 15,\n    \"active\": 10,\n    \"pending\": 5,\n    \"completed\": 5,\n    \"by_frequency\": {\n      \"one_time\": 8,\n      \"daily\": 5,\n      \"weekly\": 2\n    }\n  }\n}"
+						}
+					]
+				}
+			],
+			"description": "User endpoints for managing personal reminders. All endpoints require authentication."
+		},
+		{
+			"name": "Admin Operations",
+			"item": [
+				{
+					"name": "Process Pending Reminders",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/reminders/admin/process",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"reminders",
+								"admin",
+								"process"
+							]
+						},
+						"description": "Manually trigger processing of pending reminders.\n\n**Access:** Admin or Super Admin only\n\n**Process:**\n1. Finds reminders due in next 5 minutes\n2. Sends push notifications\n3. Marks one-time reminders as sent\n4. Reschedules recurring reminders\n\n**Returns:**\n- Number of reminders processed\n- Number of successful sends\n- Number of failed sends\n\n**Note:** This runs automatically every minute in the background. Use this endpoint for manual testing or troubleshooting."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/reminders/admin/process",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"reminders",
+										"admin",
+										"process"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Processed 5 pending reminders\",\n  \"data\": {\n    \"processed\": 5,\n    \"successful\": 4,\n    \"failed\": 1\n  }\n}"
+						},
+						{
+							"name": "Error - Unauthorized",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/reminders/admin/process",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"reminders",
+										"admin",
+										"process"
+									]
+								}
+							},
+							"status": "Forbidden",
+							"code": 403,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": false,\n  \"message\": \"Unauthorized. Admin access required.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Cleanup Old Reminders",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/reminders/admin/cleanup?older_than_days=30",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"reminders",
+								"admin",
+								"cleanup"
+							],
+							"query": [
+								{
+									"key": "older_than_days",
+									"value": "30",
+									"description": "Remove reminders older than this many days (default: 30)"
+								}
+							]
+						},
+						"description": "Clean up old completed one-time reminders.\n\n**Access:** Admin or Super Admin only\n\n**Query Parameters:**\n- `older_than_days` (optional): Remove reminders older than this many days (default: 30)\n\n**Process:**\n- Only affects one-time reminders\n- Only affects sent reminders\n- Sets `is_active` to false\n\n**Returns:**\n- Number of reminders cleaned up"
+					},
+					"response": [
+						{
+							"name": "Success - Default 30 days",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/reminders/admin/cleanup",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"reminders",
+										"admin",
+										"cleanup"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Cleaned up 10 old reminders\",\n  \"data\": {\n    \"cleaned\": 10\n  }\n}"
+						},
+						{
+							"name": "Success - Custom 60 days",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/reminders/admin/cleanup?older_than_days=60",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"reminders",
+										"admin",
+										"cleanup"
+									],
+									"query": [
+										{
+											"key": "older_than_days",
+											"value": "60"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Cleaned up 25 old reminders\",\n  \"data\": {\n    \"cleaned\": 25\n  }\n}"
+						}
+					]
+				}
+			],
+			"description": "Admin-only endpoints for managing the reminder system. Requires Admin or Super Admin role.",
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{admin_token}}",
+						"type": "string"
+					}
+				]
+			}
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:4500",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "your_user_jwt_token_here",
+			"type": "string"
+		},
+		{
+			"key": "admin_token",
+			"value": "your_admin_jwt_token_here",
+			"type": "string"
+		}
+	]
+}
