@@ -28,6 +28,7 @@ import messagesRoute from "@/routes/message.route";
 import notificationRoute from "@/routes/notification.route";
 import parentRoute from "@/routes/parent.route";
 import parentFeedControlRoute from "@/routes/parent_feed_control.route";
+import paymentRoute from "@/routes/payment.route";
 import pushNotificationRoute from "@/routes/push_notification.route";
 import reminderRoute from "@/routes/reminder.route";
 import semesterReportRoute from "@/routes/semester_report.route";
@@ -76,6 +77,7 @@ app.route("/exam", examRoute);
 app.route("/exam/timetable", examTimetableRoute);
 app.route("/feeds", feedRoute); // New feeds API
 app.route("/fee", feeRoute);
+app.route("/payments", paymentRoute); // Razorpay payment system
 app.route("/leave", leaveRoute);
 app.route("/timetable", timetableRoute);
 app.route("/notification", notificationRoute);
