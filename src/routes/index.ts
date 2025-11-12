@@ -45,6 +45,7 @@ import timetableRoute from "@/routes/timetable.route";
 import uploadRoute from "@/routes/upload.route";
 import usersRoute from "@/routes/users.route";
 import { videoCallRoutes } from "@/routes/video_call.routes";
+import vendorRoute from "@/routes/vendor.route";
 
 const app = new Hono();
 
@@ -78,6 +79,7 @@ app.route("/exam/timetable", examTimetableRoute);
 app.route("/feeds", feedRoute); // New feeds API
 app.route("/fee", feeRoute);
 app.route("/payments", paymentRoute); // Razorpay payment system
+app.route("/vendors", vendorRoute); // Campus vendor management (Cashfree)
 app.route("/leave", leaveRoute);
 app.route("/timetable", timetableRoute);
 app.route("/notification", notificationRoute);

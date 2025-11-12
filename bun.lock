@@ -5,6 +5,7 @@
       "name": "backend-api",
       "dependencies": {
         "@aws-sdk/client-sesv2": "^3.821.0",
+        "@cashfreepayments/cashfree-js": "^1.0.5",
         "@hono/swagger-ui": "^0.5.1",
         "@hono/zod-validator": "^0.4.3",
         "@scalar/hono-api-reference": "^0.8.10",
@@ -220,6 +221,8 @@
     "@bravo68web/prettier-config": ["@bravo68web/prettier-config@1.2.6", "", { "dependencies": { "prettier-plugin-package-perfection": "1.1.0", "prettier-plugin-prisma": "5.0.0", "prettier-plugin-sort-json": "3.1.0", "prettier-plugin-tailwindcss": "0.5.9", "vitest": "1.0.1" }, "peerDependencies": { "prettier": "2.x || 3.x" } }, "sha512-tkKxRrlL9/+geiYtl4LncqerdshM5MBTv5+SRG4zBpcY9WHRrRm1WOAFHX0N941NJ5fIvPlrU9bx2ILDt/J/Vg=="],
 
     "@bravo68web/tsconfig": ["@bravo68web/tsconfig@1.2.5", "", { "peerDependencies": { "typescript": "5.x" } }, "sha512-5Nue3QVkgmIV9Z3bbZ/JB5VnVBEsvv2ZFd3iQDyLb3F63W5TOeMwaxVVkP469x3XLVMbHpsIZ+RTMWVptzsIwg=="],
+
+    "@cashfreepayments/cashfree-js": ["@cashfreepayments/cashfree-js@1.0.5", "", {}, "sha512-fP9wi9mseXJmESGIkD9vb6RAKdSZw42jXiQY2LUt5A2STyEqMv0mYLgK2zqpMNSbdK9QdN1c4YnEv9mmyxC8mg=="],
 
     "@couchbase/couchbase-darwin-arm64-napi": ["@couchbase/couchbase-darwin-arm64-napi@4.4.6", "", { "os": "darwin", "cpu": "arm64" }, "sha512-U7Bw4LR6l/9IX5KRtXeY61fKkLqyZAeAvY7ms9dfA5jObhI4JG33238JJdgrBQgjoA4+1PjmhgRzkXviDqfClg=="],
 
