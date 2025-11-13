@@ -79,7 +79,7 @@ app.route("/exam/timetable", examTimetableRoute);
 app.route("/feeds", feedRoute); // New feeds API
 app.route("/fee", feeRoute);
 app.route("/payments", paymentRoute); // Razorpay payment system
-app.route("/vendors", vendorRoute); // Campus vendor management (Cashfree)
+app.route("/vendor", vendorRoute); // Campus vendor management (Cashfree)
 app.route("/leave", leaveRoute);
 app.route("/timetable", timetableRoute);
 app.route("/notification", notificationRoute);

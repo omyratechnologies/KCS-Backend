@@ -1,6 +1,10 @@
 /**
  * Campus Vendor Routes
- * CRUD operations for campus vendor management
+ * Vendor management for campus payment accounts
+ * - Admin only access (campus_id extracted from token)
+ * - One vendor per campus (permanent)
+ * - Create once, update anytime
+ * - No delete (permanent vendor assignment)
  */
 
 import { Hono } from "hono";
@@ -9,7 +13,6 @@ import {
     getCampusVendor,
     getAllVendors,
     updateCampusVendor,
-    deleteCampusVendor,
     getVendorBalance,
     uploadVendorDocument,
     getVendorDocuments,
@@ -17,28 +20,25 @@ import {
 
 const vendorRoute = new Hono();
 
-// Create vendor for a campus (admin only)
+// Create vendor for admin's campus (admin only) - ONE TIME ONLY
 vendorRoute.post("/", createCampusVendor);
 
-// Get all vendors (admin only)
-vendorRoute.get("/", getAllVendors);
+// Get all vendors (super admin only)
+vendorRoute.get("/all", getAllVendors);
 
-// Get vendor by campus ID
-vendorRoute.get("/:campus_id", getCampusVendor);
+// Get vendor for admin's campus 
+vendorRoute.get("/", getCampusVendor);
 
-// Update vendor by campus ID
-vendorRoute.put("/:campus_id", updateCampusVendor);
+// Update vendor for admin's campus 
+vendorRoute.put("/", updateCampusVendor);
 
-// Delete vendor by campus ID (soft delete)
-vendorRoute.delete("/:campus_id", deleteCampusVendor);
+// Get vendor balance for admin's campus 
+vendorRoute.get("/balance", getVendorBalance);
 
-// Get vendor balance by campus ID
-vendorRoute.get("/:campus_id/balance", getVendorBalance);
+// Upload vendor document for admin's campus 
+vendorRoute.post("/documents", uploadVendorDocument);
 
-// Upload vendor document
-vendorRoute.post("/:campus_id/documents", uploadVendorDocument);
-
-// Get vendor documents
-vendorRoute.get("/:campus_id/documents", getVendorDocuments);
+// Get vendor documents for admin's campus 
+vendorRoute.get("/documents", getVendorDocuments);
 
 export default vendorRoute;

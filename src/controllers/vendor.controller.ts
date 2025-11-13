@@ -13,12 +13,22 @@ import type { ICashfreeVendor } from "../types/payment-gateway.types";
  * Create vendor for a campus
  * Only admin can create vendors
  * One vendor per campus - strictly enforced
+ * campus_id is extracted from admin token
  */
 export const createCampusVendor = async (c: Context) => {
     try {
+        // Get campus_id from authenticated admin token (set by authMiddleware)
+        const campus_id = c.get("campus_id");
+
+        if (!campus_id) {
+            return c.json({
+                success: false,
+                error: "Unauthorized: campus_id not found in token",
+            }, 401);
+        }
+
         const body = await c.req.json();
         const {
-            campus_id,
             vendor_name,
             name,
             vendor_email,
@@ -52,17 +62,16 @@ export const createCampusVendor = async (c: Context) => {
             }, 400);
         }
 
-        // STRICT CHECK: Only ONE vendor per campus allowed
+        // STRICT CHECK: Only ONE vendor per campus allowed (permanent)
         const existingVendor = await CampusVendor.find({
             campus_id: campus_id,
-            is_deleted: false,
         });
 
         if (existingVendor && existingVendor.rows.length > 0) {
             return c.json({
                 success: false,
                 error: "A vendor already exists for this campus. Only one vendor allowed per campus.",
-                message: "Please delete the existing vendor first or use the update endpoint to modify it.",
+                message: "Use the update endpoint (PUT /vendors) to modify the existing vendor.",
                 existing_vendor: {
                     vendor_id: existingVendor.rows[0].id,
                     cashfree_vendor_id: existingVendor.rows[0].cashfree_vendor_id,
@@ -129,8 +138,8 @@ export const createCampusVendor = async (c: Context) => {
             upi_details: upiDetails,
             kyc_details,
             kyc_status: "PENDING",
-            created_by: c.get("user")?.id || "admin",
-            is_deleted: false,
+            created_by: c.get("user_id") || "admin",
+            
         });
 
         return c.json({
@@ -158,16 +167,24 @@ export const createCampusVendor = async (c: Context) => {
 };
 
 /**
- * Get vendor for a campus
+ * Get vendor for admin's campus
  * Always syncs with Cashfree to get latest status
+ * campus_id is extracted from admin token
  */
 export const getCampusVendor = async (c: Context) => {
     try {
-        const campus_id = c.req.param("campus_id");
+        // Get campus_id from authenticated admin token (set by authMiddleware)
+        const campus_id = c.get("campus_id");
+
+        if (!campus_id) {
+            return c.json({
+                success: false,
+                error: "Unauthorized: campus_id not found in token",
+            }, 401);
+        }
 
         const result = await CampusVendor.find({
             campus_id: campus_id,
-            is_deleted: false,
         });
 
         if (!result || result.rows.length === 0) {
@@ -227,7 +244,7 @@ export const getCampusVendor = async (c: Context) => {
 export const getAllVendors = async (c: Context) => {
     try {
         const result = await CampusVendor.find({
-            is_deleted: false,
+            
         });
 
         // Fetch latest status from Cashfree for each vendor
@@ -268,16 +285,26 @@ export const getAllVendors = async (c: Context) => {
 };
 
 /**
- * Update campus vendor
+ * Update campus vendor for admin's campus
+ * campus_id is extracted from admin token
  */
 export const updateCampusVendor = async (c: Context) => {
     try {
-        const campus_id = c.req.param("campus_id");
+        // Get campus_id from authenticated admin token (set by authMiddleware)
+        const campus_id = c.get("campus_id");
+
+        if (!campus_id) {
+            return c.json({
+                success: false,
+                error: "Unauthorized: campus_id not found in token",
+            }, 401);
+        }
+
         const body = await c.req.json();
 
         const result = await CampusVendor.find({
             campus_id: campus_id,
-            is_deleted: false,
+            
         });
 
         if (!result || result.rows.length === 0) {
@@ -289,23 +316,30 @@ export const updateCampusVendor = async (c: Context) => {
 
         const vendor = result.rows[0];
 
+        // Accept both naming conventions (vendor_name OR name)
+        const vendorName = body.vendor_name || body.name;
+        const vendorEmail = body.vendor_email || body.email;
+        const vendorPhone = body.vendor_phone || body.phone;
+        const vendorStatus = body.vendor_status || body.status;
+        const scheduleOption = body.settlement_schedule || body.schedule_option;
+
         // Prepare update data for Cashfree
         const cashfreeUpdateData: Partial<ICashfreeVendor> = {};
 
-        if (body.vendor_name) {
-            cashfreeUpdateData.name = body.vendor_name;
+        if (vendorName) {
+            cashfreeUpdateData.name = vendorName;
         }
-        if (body.vendor_email) {
-            cashfreeUpdateData.email = body.vendor_email;
+        if (vendorEmail) {
+            cashfreeUpdateData.email = vendorEmail;
         }
-        if (body.vendor_phone) {
-            cashfreeUpdateData.phone = body.vendor_phone;
+        if (vendorPhone) {
+            cashfreeUpdateData.phone = vendorPhone;
         }
-        if (body.vendor_status) {
-            cashfreeUpdateData.status = body.vendor_status;
+        if (vendorStatus) {
+            cashfreeUpdateData.status = vendorStatus;
         }
-        if (body.settlement_schedule) {
-            cashfreeUpdateData.schedule_option = body.settlement_schedule;
+        if (scheduleOption) {
+            cashfreeUpdateData.schedule_option = scheduleOption;
         }
         if (body.verify_account !== undefined) {
             cashfreeUpdateData.verify_account = body.verify_account;
@@ -328,24 +362,24 @@ export const updateCampusVendor = async (c: Context) => {
 
         // Update in database
         const updateData: Partial<ICampusVendor> = {
-            updated_by: c.get("user")?.id || "admin",
+            updated_by: c.get("user_id") || "admin",
             updated_at: new Date(),
         };
 
-        if (body.vendor_name) {
-            updateData.vendor_name = body.vendor_name;
+        if (vendorName) {
+            updateData.vendor_name = vendorName;
         }
-        if (body.vendor_email) {
-            updateData.vendor_email = body.vendor_email;
+        if (vendorEmail) {
+            updateData.vendor_email = vendorEmail;
         }
-        if (body.vendor_phone) {
-            updateData.vendor_phone = body.vendor_phone;
+        if (vendorPhone) {
+            updateData.vendor_phone = vendorPhone;
         }
-        if (body.vendor_status) {
-            updateData.vendor_status = body.vendor_status;
+        if (vendorStatus) {
+            updateData.vendor_status = vendorStatus;
         }
-        if (body.settlement_schedule) {
-            updateData.settlement_schedule = body.settlement_schedule;
+        if (scheduleOption) {
+            updateData.settlement_schedule = scheduleOption;
         }
         if (body.verify_account !== undefined) {
             updateData.verify_account = body.verify_account;
@@ -390,85 +424,29 @@ export const updateCampusVendor = async (c: Context) => {
     }
 };
 
-/**
- * Delete campus vendor (soft delete)
- * Admin only - syncs with Cashfree
- */
-export const deleteCampusVendor = async (c: Context) => {
-    try {
-        const campus_id = c.req.param("campus_id");
-
-        const result = await CampusVendor.find({
-            campus_id: campus_id,
-            is_deleted: false,
-        });
-
-        if (!result || result.rows.length === 0) {
-            return c.json({
-                success: false,
-                error: "No vendor found for this campus",
-            }, 404);
-        }
-
-        const vendor = result.rows[0];
-
-        // Sync with Cashfree - mark vendor as DELETED
-        try {
-            await cashfreeService.updateVendor(vendor.cashfree_vendor_id, {
-                status: "DELETED",
-            });
-        } catch (cashfreeError) {
-            // Log error but continue with database deletion
-            if (cashfreeError instanceof Error) {
-                return c.json({
-                    success: false,
-                    error: "Failed to sync deletion with Cashfree",
-                    details: cashfreeError.message,
-                    message: "Vendor exists in database but Cashfree sync failed. Contact support.",
-                }, 500);
-            }
-        }
-
-        // Soft delete in database
-        await CampusVendor.updateById(vendor.id, {
-            is_deleted: true,
-            vendor_status: "DELETED",
-            updated_by: c.get("user")?.id || "admin",
-            updated_at: new Date(),
-        });
-
-        return c.json({
-            success: true,
-            message: "Vendor deleted successfully and synced with Cashfree",
-            data: {
-                campus_id: vendor.campus_id,
-                vendor_name: vendor.vendor_name,
-                cashfree_vendor_id: vendor.cashfree_vendor_id,
-            },
-        });
-
-    } catch (error) {
-        if (error instanceof Error) {
-            return c.json({
-                success: false,
-                error: "Failed to delete vendor",
-                details: error.message,
-            }, 500);
-        }
-        throw error;
-    }
-};
+// NOTE: Delete operation removed. Vendors are create-once and may be updated.
+// If a request reaches this old endpoint, return a 405 Not Allowed.
+// The route for DELETE was removed from routing, so this function is intentionally omitted.
 
 /**
- * Get vendor balance
+ * Get vendor balance for admin's campus
+ * campus_id is extracted from admin token
  */
 export const getVendorBalance = async (c: Context) => {
     try {
-        const campus_id = c.req.param("campus_id");
+        // Get campus_id from authenticated admin token (set by authMiddleware)
+        const campus_id = c.get("campus_id");
+
+        if (!campus_id) {
+            return c.json({
+                success: false,
+                error: "Unauthorized: campus_id not found in token",
+            }, 401);
+        }
 
         const result = await CampusVendor.find({
             campus_id: campus_id,
-            is_deleted: false,
+            
         });
 
         if (!result || result.rows.length === 0) {
@@ -501,15 +479,24 @@ export const getVendorBalance = async (c: Context) => {
 };
 
 /**
- * Upload vendor documents
+ * Upload vendor documents for admin's campus
+ * campus_id is extracted from admin token
  */
 export const uploadVendorDocument = async (c: Context) => {
     try {
-        const campus_id = c.req.param("campus_id");
-        
+        // Get campus_id from authenticated admin token (set by authMiddleware)
+        const campus_id = c.get("campus_id");
+
+        if (!campus_id) {
+            return c.json({
+                success: false,
+                error: "Unauthorized: campus_id not found in token",
+            }, 401);
+        }
+
         const result = await CampusVendor.find({
             campus_id: campus_id,
-            is_deleted: false,
+            
         });
 
         if (!result || result.rows.length === 0) {
@@ -549,15 +536,24 @@ export const uploadVendorDocument = async (c: Context) => {
 };
 
 /**
- * Get vendor documents
+ * Get vendor documents for admin's campus
+ * campus_id is extracted from admin token
  */
 export const getVendorDocuments = async (c: Context) => {
     try {
-        const campus_id = c.req.param("campus_id");
+        // Get campus_id from authenticated admin token (set by authMiddleware)
+        const campus_id = c.get("campus_id");
+
+        if (!campus_id) {
+            return c.json({
+                success: false,
+                error: "Unauthorized: campus_id not found in token",
+            }, 401);
+        }
 
         const result = await CampusVendor.find({
             campus_id: campus_id,
-            is_deleted: false,
+            
         });
 
         if (!result || result.rows.length === 0) {
