@@ -46,6 +46,8 @@ import uploadRoute from "@/routes/upload.route";
 import usersRoute from "@/routes/users.route";
 import { videoCallRoutes } from "@/routes/video_call.routes";
 import vendorRoute from "@/routes/vendor.route";
+import feeStructureRoute from "./fee_structure.route";
+import cashfreePaymentRoute from "./cashfree_payment.route";
 
 const app = new Hono();
 
@@ -80,6 +82,8 @@ app.route("/feeds", feedRoute); // New feeds API
 app.route("/fee", feeRoute);
 app.route("/payments", paymentRoute); // Razorpay payment system
 app.route("/vendor", vendorRoute); // Campus vendor management (Cashfree)
+app.route("/fee-structures", feeStructureRoute); // Class fee structure management (Cashfree)
+app.route("/cashfree-payments", cashfreePaymentRoute); // Cashfree payment orders with vendor splits
 app.route("/leave", leaveRoute);
 app.route("/timetable", timetableRoute);
 app.route("/notification", notificationRoute);

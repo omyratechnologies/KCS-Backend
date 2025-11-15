@@ -165,6 +165,24 @@ class CashfreeService {
     }
 
     /**
+     * Get order details by order ID
+     */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async getOrder(orderId: string): Promise<any> {
+        const response = await fetch(`${this.baseUrl}/pg/orders/${orderId}`, {
+            method: "GET",
+            headers: this.getHeaders(),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(`Cashfree Get Order Failed: ${JSON.stringify(error)}`);
+        }
+
+        return await response.json();
+    }
+
+    /**
      * Create split after payment (split after payment feature)
      */
     async createSplitAfterPayment(orderId: string, splitData: {
