@@ -18,9 +18,10 @@ feeStructureRouter.get("/", ClassFeeStructureController.getAllFeeStructures);
 feeStructureRouter.get("/:id", ClassFeeStructureController.getFeeStructureById);
 
 // Update fee structure
-feeStructureRouter.put("/:id", ClassFeeStructureController.updateFeeStructure);
+feeStructureRouter.patch("/:id", ClassFeeStructureController.updateFeeStructure);
 
-// Delete fee structure
+// Delete fee structure - BLOCKED (fee structures can be modified but never deleted)
+// Kept for backwards compatibility but returns 403 Forbidden
 feeStructureRouter.delete("/:id", ClassFeeStructureController.deleteFeeStructure);
 
 export default feeStructureRouter;

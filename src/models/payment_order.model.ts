@@ -27,17 +27,6 @@ export interface IPaymentOrder {
     order_currency: string;
     order_status: "ACTIVE" | "PAID" | "EXPIRED" | "CANCELLED";
     
-    // Student details
-    customer_id: string;
-    customer_name: string;
-    customer_email: string;
-    customer_phone: string;
-    
-    // Vendor split details
-    vendor_id: string; // Campus vendor cashfree_vendor_id
-    vendor_split_percentage: number;
-    vendor_split_amount: number;
-    
     // Payment response
     payment_session_id?: string;
     payment_link?: string;
@@ -80,15 +69,6 @@ const paymentOrderSchema = new Schema({
     order_currency: { type: String, default: "INR" },
     order_status: { type: String, default: "ACTIVE" },
     
-    customer_id: { type: String, required: true },
-    customer_name: String,
-    customer_email: String,
-    customer_phone: String,
-    
-    vendor_id: String,
-    vendor_split_percentage: Number,
-    vendor_split_amount: Number,
-    
     payment_session_id: String,
     payment_link: String,
     
@@ -111,6 +91,4 @@ const paymentOrderSchema = new Schema({
     updated_at: Date,
 });
 
-export const PaymentOrder = ottoman.model("payment_order", paymentOrderSchema, {
-    keyGenerator: () => `payment_order::${Date.now()}::${Math.random().toString(36).substr(2, 9)}`,
-});
+export const PaymentOrder = ottoman.model("payment_order", paymentOrderSchema);

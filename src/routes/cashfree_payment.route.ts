@@ -11,6 +11,15 @@ const cashfreePaymentRouter = new Hono();
 // Create payment order (student only)
 cashfreePaymentRouter.post("/create-order", PaymentOrderController.createOrder);
 
+// Sync payment statuses with Cashfree (students sync their own, admins can sync any student)
+cashfreePaymentRouter.get("/sync-payments", PaymentOrderController.syncPaymentsWithCashfree);
+
+// Get student's payment history
+cashfreePaymentRouter.get("/my-payments", PaymentOrderController.getMyPayments);
+
+// Get student payment history by ID (admin only)
+cashfreePaymentRouter.get("/student/:student_id/payments", PaymentOrderController.getStudentPayments);
+
 // Get all payment orders for student
 cashfreePaymentRouter.get("/", PaymentOrderController.getAllOrders);
 

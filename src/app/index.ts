@@ -9,6 +9,7 @@ import { openAPISpecs } from "hono-openapi";
 
 import log, { LogTypes } from "@/libs/logger";
 import routes from "@/routes";
+import { PaymentOrderController } from "@/controllers/payment_order.controller";
 import { config } from "@/utils/env";
 
 const app = new Hono();
@@ -32,6 +33,9 @@ app.get("/health", (ctx) => ctx.json({ status: "ok!" }));
 app.get("/favicon.ico", async (ctx) => {
     return ctx.redirect("https://hono.dev/images/logo-small.png");
 });
+
+// Cashfree webhook endpoint (PUBLIC - no auth required)
+app.post("/api/cashfree-payments/webhook", PaymentOrderController.handleWebhook);
 
 app.route("/api", routes);
 

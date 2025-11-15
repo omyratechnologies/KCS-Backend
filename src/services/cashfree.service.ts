@@ -143,6 +143,7 @@ class CashfreeService {
             customer_name: string;
         };
         order_note?: string;
+        order_expiry_time?: string; // ISO 8601 format (e.g., "2024-11-15T12:30:00Z")
         order_meta?: {
             return_url?: string;
             notify_url?: string;
