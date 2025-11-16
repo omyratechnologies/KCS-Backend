@@ -13,7 +13,6 @@ import { CashfreeWebhookEvent, PaymentMode } from "../types/payment-gateway.type
 // role middleware "../middlewares/role.middleware"
 import { roleMiddleware } from "../middlewares/role.middleware";
 
-
 export class PaymentOrderController {
     /**
      * Create payment order (student initiates payment)
@@ -38,14 +37,20 @@ export class PaymentOrderController {
 
             // Validation
             if (!fee_structure_id || !payment_type) {
-                return c.json({ 
-                    success: false, 
-                    message: "Missing required fields: fee_structure_id, payment_type" 
-                }, 400);
+                return c.json(
+                    {
+                        success: false,
+                        message: "Missing required fields: fee_structure_id, payment_type",
+                    },
+                    400
+                );
             }
 
             if (payment_type === PaymentMode.INSTALLMENT && !installment_number) {
-                return c.json({ success: false, message: "installment_number is required for installment payments" }, 400);
+                return c.json(
+                    { success: false, message: "installment_number is required for installment payments" },
+                    400
+                );
             }
 
             // Auto-fetch student details from User model
@@ -59,18 +64,22 @@ export class PaymentOrderController {
             const customer_phone = student.phone;
 
             if (!customer_name || !customer_email || !customer_phone) {
-                return c.json({ 
-                    success: false, 
-                    message: "Student profile incomplete. Please update your name, email, and phone number." 
-                }, 400);
+                return c.json(
+                    {
+                        success: false,
+                        message: "Student profile incomplete. Please update your name, email, and phone number.",
+                    },
+                    400
+                );
             }
 
             // Get fee structure
-            const feeStructureResult = await ClassFeeStructure.find({ 
-                id: fee_structure_id 
+            const feeStructureResult = await ClassFeeStructure.find({
+                id: fee_structure_id,
             });
-            const feeStructure = feeStructureResult && feeStructureResult.rows.length > 0 ? feeStructureResult.rows[0] : null;
-            
+            const feeStructure =
+                feeStructureResult && feeStructureResult.rows.length > 0 ? feeStructureResult.rows[0] : null;
+
             if (!feeStructure) {
                 return c.json({ success: false, message: "Fee structure not found" }, 404);
             }
@@ -85,32 +94,58 @@ export class PaymentOrderController {
             }
 
             // ===== PAYMENT VALIDATION: Check payment history =====
-            
+
             // Get all successful payments for this student and fee structure
             const existingPaymentsQuery = await PaymentOrder.find({
                 student_id,
                 fee_structure_id,
                 payment_status: "SUCCESS",
             });
-            const existingPayments = existingPaymentsQuery && existingPaymentsQuery.rows ? existingPaymentsQuery.rows : [];
-            
-            // Calculate total already paid
+            const existingPayments =
+                existingPaymentsQuery && existingPaymentsQuery.rows ? existingPaymentsQuery.rows : [];
+
+            // Calculate total already paid (including late fees)
             const total_already_paid = existingPayments.reduce((sum, payment) => sum + payment.order_amount, 0);
-            
-            // Check if student has already paid the full amount
-            if (total_already_paid >= feeStructure.total_amount) {
-                return c.json({ 
-                    success: false, 
-                    message: `Payment limit reached. You have already paid ₹${total_already_paid} out of ₹${feeStructure.total_amount}. No further payments allowed.`,
-                    total_paid: total_already_paid,
-                    total_due: feeStructure.total_amount,
-                }, 400);
+
+            // Calculate base amount paid (excluding late fees from installments)
+            // This is used for validation against fee structure total
+            const base_amount_paid = existingPayments.reduce((sum, payment) => {
+                if (payment.payment_type === PaymentMode.INSTALLMENT && payment.installment_number) {
+                    // Find the installment in fee structure to get base amount
+                    const inst = feeStructure.installments?.find(i => i.installment_number === payment.installment_number);
+                    if (inst) {
+                        return sum + inst.amount; // Use base installment amount, not order_amount
+                    }
+                }
+                return sum + payment.order_amount; // For one-time payments, use full amount
+            }, 0);
+
+            // eslint-disable-next-line no-console
+            console.log("💰 Payment Summary:", {
+                total_paid_including_late_fees: total_already_paid,
+                base_amount_paid_excluding_late_fees: base_amount_paid,
+                fee_structure_total: feeStructure.total_amount,
+                remaining_base: feeStructure.total_amount - base_amount_paid,
+            });
+
+            // Check if student has already paid the full BASE amount
+            if (base_amount_paid >= feeStructure.total_amount) {
+                return c.json(
+                    {
+                        success: false,
+                        message: `Payment limit reached. You have already paid the full fee of ₹${feeStructure.total_amount} (Total including late fees: ₹${total_already_paid}). No further payments allowed.`,
+                        total_paid: total_already_paid,
+                        base_paid: base_amount_paid,
+                        total_due: feeStructure.total_amount,
+                    },
+                    400
+                );
             }
 
             // Get vendor
             const vendorResult = await CampusVendor.find({ campus_id: feeStructure.campus_id });
             const vendor = vendorResult && vendorResult.rows.length > 0 ? vendorResult.rows[0] : null;
-            
+
             if (!vendor) {
                 return c.json({ success: false, message: "Campus vendor not configured" }, 500);
             }
@@ -125,23 +160,26 @@ export class PaymentOrderController {
             // Calculate order amount
             let order_amount = 0;
             let installment_description = "";
-            
+
             // eslint-disable-next-line no-console
             console.log("Payment request:", { payment_type, installment_number, PaymentModeEnum: PaymentMode });
-            
+
             if (payment_type === PaymentMode.ONE_TIME) {
                 order_amount = feeStructure.one_time_amount;
-                
-                // Check if one-time payment would exceed total
-                if (total_already_paid + order_amount > feeStructure.total_amount) {
-                    return c.json({ 
-                        success: false, 
-                        message: `Cannot process one-time payment. You have already paid ₹${total_already_paid}. Paying ₹${order_amount} would exceed the total fee of ₹${feeStructure.total_amount}.`,
-                        total_paid: total_already_paid,
-                        total_due: feeStructure.total_amount,
-                    }, 400);
+
+                // Check if one-time payment would exceed total (using base amount)
+                if (base_amount_paid + order_amount > feeStructure.total_amount) {
+                    return c.json(
+                        {
+                            success: false,
+                            message: `Cannot process one-time payment. You have already paid ₹${base_amount_paid} (₹${total_already_paid} including late fees). Paying ₹${order_amount} would exceed the total fee of ₹${feeStructure.total_amount}.`,
+                            total_paid: total_already_paid,
+                            base_paid: base_amount_paid,
+                            total_due: feeStructure.total_amount,
+                        },
+                        400
+                    );
                 }
-                
             } else if (payment_type === PaymentMode.INSTALLMENT) {
                 const installment = feeStructure.installments.find(
                     (inst) => inst.installment_number === installment_number
@@ -149,36 +187,111 @@ export class PaymentOrderController {
                 if (!installment) {
                     return c.json({ success: false, message: "Installment not found" }, 404);
                 }
-                
+
+                // ===== VALIDATION: Due date is required =====
+                if (!installment.due_date) {
+                    return c.json(
+                        {
+                            success: false,
+                            message: `Installment ${installment_number} does not have a due date configured. Please contact admin.`,
+                        },
+                        400
+                    );
+                }
+
+                // ===== VALIDATION: Sequential installment payment (must pay in order) =====
+                // Sort installments by due date to determine order
+                const sortedInstallments = [...feeStructure.installments].sort((a, b) => {
+                    const dateA = new Date(a.due_date || '9999-12-31');
+                    const dateB = new Date(b.due_date || '9999-12-31');
+                    return dateA.getTime() - dateB.getTime();
+                });
+
+                // Find which installments have been paid
+                const paidInstallmentNumbers = existingPayments
+                    .filter(p => p.payment_type === PaymentMode.INSTALLMENT && p.installment_number)
+                    .map(p => p.installment_number);
+
+                // Find the next unpaid installment (by due date order)
+                const nextUnpaidInstallment = sortedInstallments.find(
+                    inst => !paidInstallmentNumbers.includes(inst.installment_number)
+                );
+
+                // Check if trying to pay out of order
+                if (nextUnpaidInstallment && nextUnpaidInstallment.installment_number !== installment_number) {
+                    return c.json(
+                        {
+                            success: false,
+                            message: `You must pay installments in order. Next due: Installment ${nextUnpaidInstallment.installment_number} (Due: ${nextUnpaidInstallment.due_date}). You cannot skip to Installment ${installment_number}.`,
+                            next_installment: {
+                                installment_number: nextUnpaidInstallment.installment_number,
+                                amount: nextUnpaidInstallment.amount,
+                                due_date: nextUnpaidInstallment.due_date,
+                                description: nextUnpaidInstallment.description,
+                            },
+                        },
+                        400
+                    );
+                }
+
                 // Check if this installment is already paid
                 const installmentAlreadyPaid = existingPayments.some(
-                    payment => payment.payment_type === PaymentMode.INSTALLMENT && 
-                               payment.installment_number === installment_number
+                    (payment) =>
+                        payment.payment_type === PaymentMode.INSTALLMENT &&
+                        payment.installment_number === installment_number
                 );
-                
+
                 if (installmentAlreadyPaid) {
-                    return c.json({ 
-                        success: false, 
-                        message: `Installment ${installment_number} has already been paid.`,
-                    }, 400);
+                    return c.json(
+                        {
+                            success: false,
+                            message: `Installment ${installment_number} has already been paid.`,
+                        },
+                        400
+                    );
                 }
-                
+
                 // STRICT: Must pay EXACT installment amount
                 order_amount = installment.amount;
                 installment_description = installment.description || `Installment ${installment_number}`;
-                
+
+                // ===== LATE FEE CALCULATION =====
+                // Check if payment is after due date and add late fee
+                let appliedLateFee = 0;
+                if (installment.due_date && installment.late_fee) {
+                    const dueDate = new Date(installment.due_date);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0); // Set to start of day for comparison
+                    dueDate.setHours(0, 0, 0, 0);
+
+                    if (today > dueDate) {
+                        appliedLateFee = installment.late_fee || 0;
+                        order_amount += appliedLateFee;
+                        installment_description += ` (Late Fee: ₹${appliedLateFee})`;
+                        
+                        // eslint-disable-next-line no-console
+                        console.log(`⚠️ Late payment detected! Due: ${installment.due_date}, Late Fee: ₹${appliedLateFee}`);
+                    }
+                }
+
                 // eslint-disable-next-line no-console
-                console.log("Installment payment:", { installment_number, order_amount, installment });
-                
-                // Check if this payment would exceed total
-                if (total_already_paid + order_amount > feeStructure.total_amount) {
-                    return c.json({ 
-                        success: false, 
-                        message: `Cannot process installment ${installment_number}. You have already paid ₹${total_already_paid}. Paying ₹${order_amount} would exceed the total fee of ₹${feeStructure.total_amount}.`,
-                        total_paid: total_already_paid,
-                        total_due: feeStructure.total_amount,
-                        remaining: feeStructure.total_amount - total_already_paid,
-                    }, 400);
+                console.log("Installment payment:", { installment_number, order_amount, base_amount: installment.amount, late_fee: appliedLateFee });
+
+                // ===== VALIDATION: Check if payment would exceed total (using BASE amounts only) =====
+                // Late fees are penalties and should NOT count against the total fee structure amount
+                const baseInstallmentAmount = installment.amount; // Without late fee
+                if (base_amount_paid + baseInstallmentAmount > feeStructure.total_amount) {
+                    return c.json(
+                        {
+                            success: false,
+                            message: `Cannot process installment ${installment_number}. You have already paid ₹${base_amount_paid} in base fees (₹${total_already_paid} including late fees). The base installment amount of ₹${baseInstallmentAmount} would exceed the total fee of ₹${feeStructure.total_amount}.`,
+                            total_paid: total_already_paid,
+                            base_paid: base_amount_paid,
+                            total_due: feeStructure.total_amount,
+                            remaining: feeStructure.total_amount - base_amount_paid,
+                        },
+                        400
+                    );
                 }
             }
 
@@ -226,12 +339,17 @@ export class PaymentOrderController {
                         customer_email,
                         customer_phone,
                     },
-                    order_note: payment_type === PaymentMode.ONE_TIME 
-                        ? `${feeStructure.class_name} - ${feeStructure.academic_year} - One Time Payment`
-                        : `${feeStructure.class_name} - ${feeStructure.academic_year} - ${installment_description}`,
+                    order_note:
+                        payment_type === PaymentMode.ONE_TIME
+                            ? `${feeStructure.class_name} - ${feeStructure.academic_year} - One Time Payment`
+                            : `${feeStructure.class_name} - ${feeStructure.academic_year} - ${installment_description}`,
                     order_meta: {
-                        return_url: (return_url && return_url.startsWith('http')) ? return_url : `http://localhost:3000/payment/success`,
-                        notify_url: process.env.CASHFREE_WEBHOOK_URL || `http://localhost:4500/api/cashfree-payments/webhook`,
+                        return_url:
+                            return_url && return_url.startsWith("http")
+                                ? return_url
+                                : `http://localhost:3000/payment/success`,
+                        notify_url:
+                            process.env.CASHFREE_WEBHOOK_URL || `http://localhost:4500/api/cashfree-payments/webhook`,
                     },
                     order_expiry_time: new Date(Date.now() + 20 * 60 * 1000).toISOString(), // 20 minutes from now (Cashfree requires >15 min)
                     order_splits: [
@@ -259,19 +377,22 @@ export class PaymentOrderController {
                 paymentOrder.order_status = cashfreeOrder.order_status;
                 await paymentOrder.save();
 
-                return c.json({
-                    success: true,
-                    message: "Payment order created successfully",
-                    data: {
-                        order_id: paymentOrder.order_id,
-                        cf_order_id: cashfreeOrder.cf_order_id,
-                        payment_session_id: cashfreeOrder.payment_session_id,
-                        order_amount,
-                        order_currency: "INR",
-                        payment_link: `https://sandbox.cashfree.com/pg/orders/${cashfreeOrder.cf_order_id}`,
-                        order_status: cashfreeOrder.order_status,
+                return c.json(
+                    {
+                        success: true,
+                        message: "Payment order created successfully",
+                        data: {
+                            order_id: paymentOrder.order_id,
+                            cf_order_id: cashfreeOrder.cf_order_id,
+                            payment_session_id: cashfreeOrder.payment_session_id,
+                            order_amount,
+                            order_currency: "INR",
+                            payment_link: `https://sandbox.cashfree.com/pg/orders/${cashfreeOrder.cf_order_id}`,
+                            order_status: cashfreeOrder.order_status,
+                        },
                     },
-                }, 201);
+                    201
+                );
             } catch (cashfreeError) {
                 // Mark order as failed
                 paymentOrder.order_status = "FAILED";
@@ -280,20 +401,26 @@ export class PaymentOrderController {
 
                 // eslint-disable-next-line no-console
                 console.error("Cashfree Order Creation Error:", cashfreeError);
-                return c.json({
-                    success: false,
-                    message: "Failed to create payment order in Cashfree",
-                    error: cashfreeError instanceof Error ? cashfreeError.message : "Unknown error",
-                }, 500);
+                return c.json(
+                    {
+                        success: false,
+                        message: "Failed to create payment order in Cashfree",
+                        error: cashfreeError instanceof Error ? cashfreeError.message : "Unknown error",
+                    },
+                    500
+                );
             }
         } catch (error) {
             // eslint-disable-next-line no-console
             console.error("Create Payment Order Error:", error);
-            return c.json({
-                success: false,
-                message: "Failed to create payment order",
-                error: error instanceof Error ? error.message : "Unknown error",
-            }, 500);
+            return c.json(
+                {
+                    success: false,
+                    message: "Failed to create payment order",
+                    error: error instanceof Error ? error.message : "Unknown error",
+                },
+                500
+            );
         }
     }
 
@@ -313,7 +440,8 @@ export class PaymentOrderController {
             }
 
             // Verify ownership (students can only see their own orders)
-            if (paymentOrder.student_id !== student_id) {
+            const user_type = c.get("user_type");
+            if (paymentOrder.student_id !== student_id && user_type?.toLowerCase() !== "admin") {
                 return c.json({ success: false, message: "Unauthorized access to payment order" }, 403);
             }
 
@@ -321,7 +449,7 @@ export class PaymentOrderController {
             if (paymentOrder.cf_order_id) {
                 try {
                     const cashfreePayment = await cashfreeService.getPayment(paymentOrder.cf_order_id);
-                    
+
                     // Update payment status if changed
                     if (cashfreePayment.payment_status !== paymentOrder.payment_status) {
                         paymentOrder.payment_status = cashfreePayment.payment_status;
@@ -344,11 +472,14 @@ export class PaymentOrderController {
         } catch (error) {
             // eslint-disable-next-line no-console
             console.error("Get Order Status Error:", error);
-            return c.json({
-                success: false,
-                message: "Failed to fetch order status",
-                error: error instanceof Error ? error.message : "Unknown error",
-            }, 500);
+            return c.json(
+                {
+                    success: false,
+                    message: "Failed to fetch order status",
+                    error: error instanceof Error ? error.message : "Unknown error",
+                },
+                500
+            );
         }
     }
 
@@ -375,11 +506,14 @@ export class PaymentOrderController {
         } catch (error) {
             // eslint-disable-next-line no-console
             console.error("Get All Orders Error:", error);
-            return c.json({
-                success: false,
-                message: "Failed to fetch payment orders",
-                error: error instanceof Error ? error.message : "Unknown error",
-            }, 500);
+            return c.json(
+                {
+                    success: false,
+                    message: "Failed to fetch payment orders",
+                    error: error instanceof Error ? error.message : "Unknown error",
+                },
+                500
+            );
         }
     }
 
@@ -400,33 +534,40 @@ export class PaymentOrderController {
             const paymentOrder = result && result.rows.length > 0 ? result.rows[0] : null;
 
             if (!paymentOrder) {
-                return c.json({ 
-                    success: false, 
-                    message: "Payment order not found in database"
-                }, 404);
+                return c.json(
+                    {
+                        success: false,
+                        message: "Payment order not found in database",
+                    },
+                    404
+                );
             }
 
             // Verify ownership
-            if (paymentOrder.student_id !== student_id) {
+            const user_type = c.get("user_type");
+            if (paymentOrder.student_id !== student_id && user_type?.toLowerCase() !== "admin") {
                 return c.json({ success: false, message: "Unauthorized access" }, 403);
             }
 
             if (!paymentOrder.cf_order_id) {
-                return c.json({ 
-                    success: false, 
-                    message: "Cashfree order ID not found. Order may not have been created in Cashfree."
-                }, 400);
+                return c.json(
+                    {
+                        success: false,
+                        message: "Cashfree order ID not found. Order may not have been created in Cashfree.",
+                    },
+                    400
+                );
             }
 
             // Get order details from Cashfree using our custom order_id (not cf_order_id)
             const cashfreeOrder = await cashfreeService.getOrder(order_id);
-            
+
             // eslint-disable-next-line no-console
             console.log("📦 Cashfree Order Response:", JSON.stringify(cashfreeOrder, null, 2));
 
             // Update payment order based on Cashfree status
             let updated = false;
-            
+
             if (cashfreeOrder.order_status === "PAID") {
                 paymentOrder.payment_status = "SUCCESS";
                 paymentOrder.order_status = "PAID";
@@ -456,7 +597,9 @@ export class PaymentOrderController {
                 paymentOrder.updated_at = new Date();
                 await paymentOrder.save();
                 // eslint-disable-next-line no-console
-                console.log(`✅ Payment order updated: ${paymentOrder.order_id} - Status: ${paymentOrder.payment_status}`);
+                console.log(
+                    `✅ Payment order updated: ${paymentOrder.order_id} - Status: ${paymentOrder.payment_status}`
+                );
             }
 
             return c.json({
@@ -464,17 +607,20 @@ export class PaymentOrderController {
                 message: updated ? "Payment status updated successfully" : "No update needed",
                 data: {
                     payment_order: paymentOrder,
-                    cashfree_order: cashfreeOrder
-                }
+                    cashfree_order: cashfreeOrder,
+                },
             });
         } catch (error) {
             // eslint-disable-next-line no-console
             console.error("❌ Verify Payment Error:", error);
-            return c.json({
-                success: false,
-                message: "Failed to verify payment",
-                error: error instanceof Error ? error.message : "Unknown error",
-            }, 500);
+            return c.json(
+                {
+                    success: false,
+                    message: "Failed to verify payment",
+                    error: error instanceof Error ? error.message : "Unknown error",
+                },
+                500
+            );
         }
     }
 
@@ -495,23 +641,26 @@ export class PaymentOrderController {
 
             // Get split and settlement details from Cashfree
             const splitDetails = await cashfreeService.getSplitDetails([order_id]);
-            
+
             // eslint-disable-next-line no-console
             console.log("📊 Split Details from Cashfree:", JSON.stringify(splitDetails, null, 2));
 
             return c.json({
                 success: true,
                 message: "Split details retrieved successfully",
-                data: splitDetails
+                data: splitDetails,
             });
         } catch (error) {
             // eslint-disable-next-line no-console
             console.error("❌ Check Split Details Error:", error);
-            return c.json({
-                success: false,
-                message: "Failed to retrieve split details",
-                error: error instanceof Error ? error.message : "Unknown error",
-            }, 500);
+            return c.json(
+                {
+                    success: false,
+                    message: "Failed to retrieve split details",
+                    error: error instanceof Error ? error.message : "Unknown error",
+                },
+                500
+            );
         }
     }
 
@@ -522,7 +671,7 @@ export class PaymentOrderController {
     static async handleWebhook(c: Context) {
         try {
             const webhookData = await c.req.json();
-            
+
             // eslint-disable-next-line no-console
             console.log("📥 Received Cashfree webhook:", JSON.stringify(webhookData, null, 2));
 
@@ -531,7 +680,7 @@ export class PaymentOrderController {
             // Handle payment success webhook
             if (type === "PAYMENT_SUCCESS_WEBHOOK" || type === CashfreeWebhookEvent.PAYMENT_SUCCESS) {
                 const orderId = data.order?.order_id || data.order_id;
-                
+
                 if (!orderId) {
                     // eslint-disable-next-line no-console
                     console.error("❌ Webhook missing order_id");
@@ -541,7 +690,7 @@ export class PaymentOrderController {
                 // Find payment order
                 const result = await PaymentOrder.find({ order_id: orderId });
                 const paymentOrder = result && result.rows.length > 0 ? result.rows[0] : null;
-                
+
                 if (!paymentOrder) {
                     // eslint-disable-next-line no-console
                     console.error("❌ Payment order not found for webhook:", orderId);
@@ -552,7 +701,7 @@ export class PaymentOrderController {
                 try {
                     // Use our order_id (not cf_order_id) to query Cashfree
                     const cashfreeOrder = await cashfreeService.getOrder(orderId);
-                    
+
                     // eslint-disable-next-line no-console
                     console.log("✅ Verified payment from Cashfree API:", cashfreeOrder.order_status);
 
@@ -560,7 +709,7 @@ export class PaymentOrderController {
                     if (cashfreeOrder.order_status === "PAID") {
                         paymentOrder.payment_status = "SUCCESS";
                         paymentOrder.order_status = "PAID";
-                        
+
                         // Get payment details if available
                         if (cashfreeOrder.payments && cashfreeOrder.payments.length > 0) {
                             const payment = cashfreeOrder.payments[0];
@@ -569,7 +718,7 @@ export class PaymentOrderController {
                             paymentOrder.payment_time = payment.payment_time || new Date().toISOString();
                             paymentOrder.payment_amount = payment.payment_amount || paymentOrder.order_amount;
                         }
-                        
+
                         paymentOrder.updated_at = new Date();
                         await paymentOrder.save();
 
@@ -580,7 +729,7 @@ export class PaymentOrderController {
                     // eslint-disable-next-line no-console
                     console.error("❌ Failed to verify payment from Cashfree:", verifyError);
                     // Continue processing even if verification fails
-                    
+
                     // Fallback: Update based on webhook data
                     paymentOrder.payment_status = "SUCCESS";
                     paymentOrder.order_status = "PAID";
@@ -594,10 +743,10 @@ export class PaymentOrderController {
             // Handle payment failed webhook
             if (type === "PAYMENT_FAILED_WEBHOOK" || type === CashfreeWebhookEvent.PAYMENT_FAILED) {
                 const orderId = data.order?.order_id || data.order_id;
-                
+
                 const result = await PaymentOrder.find({ order_id: orderId });
                 const paymentOrder = result && result.rows.length > 0 ? result.rows[0] : null;
-                
+
                 if (paymentOrder) {
                     paymentOrder.payment_status = "FAILED";
                     paymentOrder.order_status = "FAILED";
@@ -620,7 +769,7 @@ export class PaymentOrderController {
                     for (const orderId of settlement.order_ids) {
                         const result = await PaymentOrder.find({ order_id: orderId });
                         const paymentOrder = result && result.rows.length > 0 ? result.rows[0] : null;
-                        
+
                         if (paymentOrder) {
                             paymentOrder.settlement_status = "SETTLED";
                             paymentOrder.settlement_id = settlement.settlement_id;
@@ -640,15 +789,17 @@ export class PaymentOrderController {
             // eslint-disable-next-line no-console
             console.log("ℹ️ Unknown webhook type:", type);
             return c.json({ success: true, message: "Webhook received" });
-            
         } catch (error) {
             // eslint-disable-next-line no-console
             console.error("❌ Webhook Handler Error:", error);
-            return c.json({
-                success: false,
-                message: "Failed to process webhook",
-                error: error instanceof Error ? error.message : "Unknown error",
-            }, 500);
+            return c.json(
+                {
+                    success: false,
+                    message: "Failed to process webhook",
+                    error: error instanceof Error ? error.message : "Unknown error",
+                },
+                500
+            );
         }
     }
 
@@ -685,12 +836,10 @@ export class PaymentOrderController {
             }
 
             // eslint-disable-next-line no-console
-            console.log(`🔄 Starting payment sync... ${syncAll ? 'ALL STUDENTS' : `Student: ${student_id}`}`);
+            console.log(`🔄 Starting payment sync... ${syncAll ? "ALL STUDENTS" : `Student: ${student_id}`}`);
 
             // Fetch pending/active payments
-            const query = syncAll 
-                ? { order_status: "ACTIVE" }
-                : { student_id, order_status: "ACTIVE" };
+            const query = syncAll ? { order_status: "ACTIVE" } : { student_id, order_status: "ACTIVE" };
 
             const result = await PaymentOrder.find(query);
             const pendingPayments = result && result.rows ? result.rows : [];
@@ -708,7 +857,7 @@ export class PaymentOrderController {
                 try {
                     // Get order status from Cashfree using our order_id
                     const cashfreeOrder = await cashfreeService.getOrder(payment.order_id);
-                    
+
                     // eslint-disable-next-line no-console
                     console.log(`📡 Cashfree status for ${payment.order_id}: ${cashfreeOrder.order_status}`);
 
@@ -716,7 +865,7 @@ export class PaymentOrderController {
                     if (cashfreeOrder.order_status === "PAID") {
                         payment.payment_status = "SUCCESS";
                         payment.order_status = "PAID";
-                        
+
                         // Get payment details
                         if (cashfreeOrder.payments && cashfreeOrder.payments.length > 0) {
                             const cfPayment = cashfreeOrder.payments[0];
@@ -724,36 +873,33 @@ export class PaymentOrderController {
                             payment.payment_method = cfPayment.payment_method || payment.payment_method;
                             payment.payment_time = cfPayment.payment_time || payment.payment_time;
                         }
-                        
+
                         payment.updated_at = new Date();
                         await payment.save();
-                        
+
                         updatedCount++;
                         paidCount++;
-                        
+
                         // eslint-disable-next-line no-console
                         console.log(`✅ Updated ${payment.order_id} to PAID`);
-                        
                     } else if (cashfreeOrder.order_status === "EXPIRED") {
                         payment.payment_status = "FAILED";
                         payment.order_status = "EXPIRED";
                         payment.updated_at = new Date();
                         await payment.save();
-                        
+
                         updatedCount++;
                         failedCount++;
-                        
+
                         // eslint-disable-next-line no-console
                         console.log(`⏰ Updated ${payment.order_id} to EXPIRED`);
-                        
                     } else if (cashfreeOrder.order_status === "ACTIVE") {
                         // Still active, no update needed
                         // eslint-disable-next-line no-console
                         console.log(`⏳ ${payment.order_id} still ACTIVE/PENDING`);
                     }
-                    
                 } catch (error) {
-                    const errorMsg = `Failed to sync ${payment.order_id}: ${error instanceof Error ? error.message : 'Unknown error'}`;
+                    const errorMsg = `Failed to sync ${payment.order_id}: ${error instanceof Error ? error.message : "Unknown error"}`;
                     errors.push(errorMsg);
                     // eslint-disable-next-line no-console
                     console.error(`❌ ${errorMsg}`);
@@ -774,15 +920,17 @@ export class PaymentOrderController {
                     errors: errors.length > 0 ? errors : undefined,
                 },
             });
-
         } catch (error) {
             // eslint-disable-next-line no-console
             console.error("❌ Payment Sync Error:", error);
-            return c.json({
-                success: false,
-                message: "Failed to sync payments",
-                error: error instanceof Error ? error.message : "Unknown error",
-            }, 500);
+            return c.json(
+                {
+                    success: false,
+                    message: "Failed to sync payments",
+                    error: error instanceof Error ? error.message : "Unknown error",
+                },
+                500
+            );
         }
     }
 
@@ -793,10 +941,13 @@ export class PaymentOrderController {
 
             // Check if user is a student
             if (!user_type || user_type !== "Student") {
-                return c.json({ 
-                    success: false, 
-                    message: "Unauthorized - Only students can view their payment history" 
-                }, 403);
+                return c.json(
+                    {
+                        success: false,
+                        message: "Unauthorized - Only students can view their payment history",
+                    },
+                    403
+                );
             }
 
             // Fetch all payments for this student
@@ -839,12 +990,14 @@ export class PaymentOrderController {
                         payment_time: payment.payment_time,
                         created_at: payment.created_at,
                         settlement_status: payment.settlement_status,
-                        fee_structure: feeStructure ? {
-                            class_name: feeStructure.class_name,
-                            academic_year: feeStructure.academic_year,
-                            total_amount: feeStructure.total_amount,
-                            fee_description: feeStructure.fee_description,
-                        } : null,
+                        fee_structure: feeStructure
+                            ? {
+                                  class_name: feeStructure.class_name,
+                                  academic_year: feeStructure.academic_year,
+                                  total_amount: feeStructure.total_amount,
+                                  fee_description: feeStructure.fee_description,
+                              }
+                            : null,
                     };
                 })
             );
@@ -860,11 +1013,14 @@ export class PaymentOrderController {
         } catch (error) {
             // eslint-disable-next-line no-console
             console.error("❌ Get My Payments Error:", error);
-            return c.json({
-                success: false,
-                message: "Failed to fetch payments",
-                error: error instanceof Error ? error.message : "Unknown error",
-            }, 500);
+            return c.json(
+                {
+                    success: false,
+                    message: "Failed to fetch payments",
+                    error: error instanceof Error ? error.message : "Unknown error",
+                },
+                500
+            );
         }
     }
 
@@ -924,12 +1080,14 @@ export class PaymentOrderController {
                         payment_time: payment.payment_time,
                         created_at: payment.created_at,
                         settlement_status: payment.settlement_status,
-                        fee_structure: feeStructure ? {
-                            class_name: feeStructure.class_name,
-                            academic_year: feeStructure.academic_year,
-                            total_amount: feeStructure.total_amount,
-                            fee_description: feeStructure.fee_description,
-                        } : null,
+                        fee_structure: feeStructure
+                            ? {
+                                  class_name: feeStructure.class_name,
+                                  academic_year: feeStructure.academic_year,
+                                  total_amount: feeStructure.total_amount,
+                                  fee_description: feeStructure.fee_description,
+                              }
+                            : null,
                     };
                 })
             );
@@ -945,11 +1103,14 @@ export class PaymentOrderController {
         } catch (error) {
             // eslint-disable-next-line no-console
             console.error("❌ Get Student Payments Error:", error);
-            return c.json({
-                success: false,
-                message: "Failed to fetch student payments",
-                error: error instanceof Error ? error.message : "Unknown error",
-            }, 500);
+            return c.json(
+                {
+                    success: false,
+                    message: "Failed to fetch student payments",
+                    error: error instanceof Error ? error.message : "Unknown error",
+                },
+                500
+            );
         }
     }
 }
