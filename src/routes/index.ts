@@ -20,6 +20,7 @@ import examTimetableRoute from "@/routes/exam_timetable.route";
 import feedRoute from "@/routes/feed.route";
 import feeRoute from "@/routes/fee.route";
 import healthRoute from "@/routes/health.route";
+import labelRoute from "@/routes/label.route";
 import leaveRoute from "@/routes/leave.route";
 import libraryRoute from "@/routes/library.route";
 import locationsRoute from "@/routes/locations.route";
@@ -84,6 +85,7 @@ app.route("/payments", paymentRoute); // Razorpay payment system
 app.route("/vendor", vendorRoute); // Campus vendor management (Cashfree)
 app.route("/fee-structures", feeStructureRoute); // Class fee structure management (Cashfree)
 app.route("/cashfree-payments", cashfreePaymentRoute); // Cashfree payment orders with vendor splits
+app.route("/label", labelRoute); // Label management for curriculum chapters
 app.route("/leave", leaveRoute);
 app.route("/timetable", timetableRoute);
 app.route("/notification", notificationRoute);

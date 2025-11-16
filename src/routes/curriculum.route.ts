@@ -6,28 +6,42 @@ import { CurriculumController } from "@/controllers/curriculum.controller";
 import {
     createCurriculumRequestBodySchema,
     createCurriculumResponseSchema,
-    curriculumSchema,
-    deleteCurriculumResponseSchema,
+    getCurriculumBySubjectResponseSchema,
     getCurriculumsResponseSchema,
+    curriculumSchema,
     updateCurriculumRequestBodySchema,
     updateCurriculumResponseSchema,
 } from "@/schema/curriculum";
 
 const app = new Hono();
 
+// Create a new curriculum
 app.post(
     "/",
     describeRoute({
         tags: ["Curriculum"],
         operationId: "createCurriculum",
         summary: "Create a new curriculum",
-        description: "Creates a new curriculum in the system",
+        description: "Creates a new curriculum for a subject. Each subject can only have one curriculum.",
         responses: {
-            200: {
+            201: {
                 description: "Curriculum created successfully",
                 content: {
                     "application/json": {
                         schema: resolver(createCurriculumResponseSchema),
+                    },
+                },
+            },
+            409: {
+                description: "Curriculum already exists for this subject",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                message: { type: "string" },
+                            },
+                        },
                     },
                 },
             },
@@ -50,16 +64,17 @@ app.post(
     CurriculumController.createCurriculum
 );
 
+// Get all curriculums by campus ID
 app.get(
     "/",
     describeRoute({
         tags: ["Curriculum"],
-        operationId: "getCurriculumsByCampusId",
-        summary: "Get all curriculums by campus ID",
-        description: "Retrieves all curriculums for a specific campus",
+        operationId: "getCurriculums",
+        summary: "Get all curriculums with optional label filter",
+        description: "Retrieves all curriculums for the campus. Optional query parameter 'label_ids' (comma-separated) filters and returns only chapters that match the specified labels.",
         responses: {
             200: {
-                description: "List of curriculums",
+                description: "Curriculums retrieved successfully",
                 content: {
                     "application/json": {
                         schema: resolver(getCurriculumsResponseSchema),
@@ -84,33 +99,25 @@ app.get(
     CurriculumController.getCurriculumsByCampusId
 );
 
+// Get curriculum by ID
 app.get(
     "/:id",
     describeRoute({
         tags: ["Curriculum"],
         operationId: "getCurriculumById",
         summary: "Get curriculum by ID",
-        description: "Retrieves a specific curriculum by ID",
-        parameters: [
-            {
-                name: "id",
-                in: "path",
-                required: true,
-                schema: { type: "string" },
-                description: "Curriculum ID",
-            },
-        ],
+        description: "Retrieves a specific curriculum by its ID",
         responses: {
             200: {
-                description: "Curriculum details",
+                description: "Curriculum retrieved successfully",
                 content: {
                     "application/json": {
                         schema: resolver(curriculumSchema),
                     },
                 },
             },
-            500: {
-                description: "Server error",
+            404: {
+                description: "Curriculum not found",
                 content: {
                     "application/json": {
                         schema: {
@@ -127,22 +134,49 @@ app.get(
     CurriculumController.getCurriculumById
 );
 
+// Get curriculum by subject ID
+app.get(
+    "/subject/:subject_id",
+    describeRoute({
+        tags: ["Curriculum"],
+        operationId: "getCurriculumBySubjectId",
+        summary: "Get curriculum by subject ID",
+        description: "Retrieves the curriculum for a specific subject",
+        responses: {
+            200: {
+                description: "Curriculum retrieved successfully",
+                content: {
+                    "application/json": {
+                        schema: resolver(getCurriculumBySubjectResponseSchema),
+                    },
+                },
+            },
+            404: {
+                description: "Curriculum not found for this subject",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                message: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    CurriculumController.getCurriculumBySubjectId
+);
+
+// Update curriculum by ID
 app.put(
     "/:id",
     describeRoute({
         tags: ["Curriculum"],
-        operationId: "updateCurriculumById",
-        summary: "Update a curriculum",
-        description: "Updates a specific curriculum by ID",
-        parameters: [
-            {
-                name: "id",
-                in: "path",
-                required: true,
-                schema: { type: "string" },
-                description: "Curriculum ID",
-            },
-        ],
+        operationId: "updateCurriculum",
+        summary: "Update curriculum",
+        description: "Updates an existing curriculum. Tracks who updated it via updated_by field.",
         responses: {
             200: {
                 description: "Curriculum updated successfully",
@@ -171,47 +205,6 @@ app.put(
     CurriculumController.updateCurriculumById
 );
 
-app.delete(
-    "/:id",
-    describeRoute({
-        tags: ["Curriculum"],
-        operationId: "deleteCurriculumById",
-        summary: "Delete a curriculum",
-        description: "Deletes a specific curriculum by ID",
-        parameters: [
-            {
-                name: "id",
-                in: "path",
-                required: true,
-                schema: { type: "string" },
-                description: "Curriculum ID",
-            },
-        ],
-        responses: {
-            200: {
-                description: "Curriculum deleted successfully",
-                content: {
-                    "application/json": {
-                        schema: resolver(deleteCurriculumResponseSchema),
-                    },
-                },
-            },
-            500: {
-                description: "Server error",
-                content: {
-                    "application/json": {
-                        schema: {
-                            type: "object",
-                            properties: {
-                                message: { type: "string" },
-                            },
-                        },
-                    },
-                },
-            },
-        },
-    }),
-    CurriculumController.deleteCurriculumById
-);
+// Note: No DELETE route - curriculums cannot be deleted, only modified
 
 export default app;
