@@ -39,13 +39,62 @@ import log, { LogTypes } from "@/libs/logger";
 export class SocketServiceOptimized {
     private static io: SocketIOServer;
     private static activeSockets: Map<string, Socket> = new Map();
-    private static userSockets: Map<string, string> = new Map(); // userId -> socketId
+    private static userSockets: Map<string, Set<string>> = new Map(); // userId -> socketIds
     private static socketUsers: Map<string, string> = new Map(); // socketId -> userId
     private static meetingParticipants: Map<string, Set<string>> = new Map(); // meetingId -> socketIds
     
     // Redis clients for pub/sub
     private static pubClient: ReturnType<typeof createClient>;
     private static subClient: ReturnType<typeof createClient>;
+
+    // Helper utilities for multi-device tracking
+    private static addUserSocket(userId: string, socketId: string): void {
+        if (!this.userSockets.has(userId)) {
+            this.userSockets.set(userId, new Set());
+        }
+        this.userSockets.get(userId)!.add(socketId);
+    }
+
+    private static removeUserSocket(userId: string, socketId: string): number {
+        const sockets = this.userSockets.get(userId);
+        if (!sockets) {
+            return 0;
+        }
+        sockets.delete(socketId);
+        if (sockets.size === 0) {
+            this.userSockets.delete(userId);
+            return 0;
+        }
+        return sockets.size;
+    }
+
+    private static emitToUserSockets(userId: string, event: string, payload: any): void {
+        const sockets = this.userSockets.get(userId);
+        if (!sockets) {
+            return;
+        }
+
+        for (const socketId of sockets) {
+            const socket = this.activeSockets.get(socketId);
+            if (socket) {
+                socket.emit(event, payload);
+            }
+        }
+    }
+
+    private static getFirstActiveSocket(userId: string): Socket | undefined {
+        const sockets = this.userSockets.get(userId);
+        if (!sockets || sockets.size === 0) {
+            return undefined;
+        }
+        for (const socketId of sockets) {
+            const socket = this.activeSockets.get(socketId);
+            if (socket) {
+                return socket;
+            }
+        }
+        return undefined;
+    }
 
     // ✅ Rate limiting infrastructure
     private static rateLimiters: Map<string, Map<string, { count: number; resetTime: number }>> = new Map();
@@ -194,7 +243,7 @@ export class SocketServiceOptimized {
 
         // Store socket mappings
         this.activeSockets.set(socket.id, socket);
-        this.userSockets.set(userId, socket.id);
+        this.addUserSocket(userId, socket.id);
         this.socketUsers.set(socket.id, userId);
 
         // 🚀 OPTIMIZATION: Set user online in Redis immediately (no DB write)
@@ -205,6 +254,11 @@ export class SocketServiceOptimized {
         // 🚀 NEW: Send any pending messages queued while user was offline
         this.sendPendingMessages(userId, socket).catch(err => 
             log(`Failed to send pending messages: ${err}`, LogTypes.ERROR, "SOCKET_SERVICE")
+        );
+
+        // ♻️ Auto re-join cached chat rooms so every socket stays in sync
+        this.restoreCachedChatRooms(socket).catch(err =>
+            log(`Failed to restore cached chat rooms: ${err}`, LogTypes.ERROR, "SOCKET_SERVICE")
         );
 
         // Register event handlers
@@ -222,6 +276,35 @@ export class SocketServiceOptimized {
 
         // Handle disconnection
         socket.on("disconnect", () => this.handleDisconnection(socket));
+    }
+
+    /**
+     * Ensure newly connected sockets automatically rejoin cached chat rooms
+     */
+    private static async restoreCachedChatRooms(socket: Socket): Promise<void> {
+        const { userId, userName } = socket.data;
+
+        try {
+            const cachedRooms = await ChatCacheService.getCachedUserRooms(userId);
+            if (!cachedRooms || cachedRooms.length === 0) {
+                return;
+            }
+
+            for (const roomId of cachedRooms) {
+                await socket.join(`chat_room_${roomId}`);
+                await ChatCacheService.addUserToRoomOnline(roomId, userId);
+            }
+
+            socket.emit("chat-rooms-synced", {
+                success: true,
+                rooms: cachedRooms,
+                restoredAt: new Date().toISOString()
+            });
+
+            log(`♻️ Restored ${cachedRooms.length} chat rooms for ${userName}`, LogTypes.LOGS, "SOCKET_SERVICE");
+        } catch (error) {
+            log(`Failed to restore cached chat rooms for ${userName}: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
+        }
     }
 
     /**
@@ -546,21 +629,14 @@ export class SocketServiceOptimized {
                     }
                 );
 
-                // Find target participant's socket
-                const targetSocketId = this.userSockets.get(targetUserId);
-                if (targetSocketId) {
-                    const targetSocket = this.activeSockets.get(targetSocketId);
-                    if (targetSocket) {
-                        // Send mute command to target participant
-                        targetSocket.emit("muted:by-host", {
-                            meetingId,
-                            kind,
-                            hostName,
-                            reason: "Muted by host",
-                            timestamp: new Date().toISOString()
-                        });
-                    }
-                }
+                // Notify every active device owned by the participant
+                this.emitToUserSockets(targetUserId, "muted:by-host", {
+                    meetingId,
+                    kind,
+                    hostName,
+                    reason: "Muted by host",
+                    timestamp: new Date().toISOString()
+                });
 
                 // Notify all participants about the update
                 this.io.to(meetingId).emit("participant:media:updated", {
@@ -1103,19 +1179,13 @@ export class SocketServiceOptimized {
                     if (recipientType === "all") {
                         this.io.to(meetingId).emit("new-message", chatMessage);
                     } else if (recipientType === "private" && recipientId) {
-                        const recipientSocketId = this.userSockets.get(recipientId);
-                        if (recipientSocketId) {
-                            this.io.to(recipientSocketId).emit("new-message", chatMessage);
-                            socket.emit("new-message", chatMessage);
-                        }
+                        this.emitToUserSockets(recipientId, "new-message", chatMessage);
+                        socket.emit("new-message", chatMessage);
                     } else if (recipientType === "host") {
                         const participants = await this.getMeetingParticipants(meetingId);
                         for (const participant of participants) {
                             if (participant.permissions.is_host || participant.permissions.is_moderator) {
-                                const socketId = this.userSockets.get(participant.user_id);
-                                if (socketId) {
-                                    this.io.to(socketId).emit("new-message", chatMessage);
-                                }
+                                this.emitToUserSockets(participant.user_id, "new-message", chatMessage);
                             }
                         }
                     }
@@ -1343,17 +1413,11 @@ export class SocketServiceOptimized {
                     };
 
                     for (const senderId of senderIds) {
-                        const senderSocketId = this.userSockets.get(senderId);
-                        if (senderSocketId) {
-                            const senderSocket = this.activeSockets.get(senderSocketId);
-                            if (senderSocket) {
-                                senderSocket.emit("messages-seen", {
-                                    roomId,
-                                    messageIds,
-                                    seenBy: seenReceipt
-                                });
-                            }
-                        }
+                        this.emitToUserSockets(senderId, "messages-seen", {
+                            roomId,
+                            messageIds,
+                            seenBy: seenReceipt
+                        });
                     }
                 } catch (error) {
                     log(`Failed to notify senders of seen receipts: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
@@ -1717,11 +1781,15 @@ export class SocketServiceOptimized {
 
         // Clean up socket mappings
         this.activeSockets.delete(socket.id);
-        this.userSockets.delete(userId);
+        const remainingSockets = this.removeUserSocket(userId, socket.id);
         this.socketUsers.delete(socket.id);
 
-        // 🚀 OPTIMIZATION: Update online status in Redis (no DB write)
-        await ChatCacheService.setUserOffline(userId);
+        const userFullyOffline = remainingSockets === 0;
+
+        // 🚀 OPTIMIZATION: Update online status in Redis only when last socket disconnects
+        if (userFullyOffline) {
+            await ChatCacheService.setUserOffline(userId);
+        }
 
         // Handle leaving all meetings
         const rooms = [...socket.rooms];
@@ -1729,8 +1797,10 @@ export class SocketServiceOptimized {
             if (room !== socket.id) {
                 // Check if it's a chat room
                 if (room.startsWith("chat_room_")) {
-                    const roomId = room.replace("chat_room_", "");
-                    await ChatCacheService.removeUserFromRoomOnline(roomId, userId);
+                    if (userFullyOffline) {
+                        const roomId = room.replace("chat_room_", "");
+                        await ChatCacheService.removeUserFromRoomOnline(roomId, userId);
+                    }
                 } else {
                     // Meeting room
                     await this.handleLeaveMeeting(socket, room);
@@ -1847,13 +1917,7 @@ export class SocketServiceOptimized {
      * Send message to specific user
      */
     public static sendToUser(userId: string, event: string, data: any): void {
-        const socketId = this.userSockets.get(userId);
-        if (socketId) {
-            const socket = this.activeSockets.get(socketId);
-            if (socket) {
-                socket.emit(event, data);
-            }
-        }
+        this.emitToUserSockets(userId, event, data);
     }
 
     /**
@@ -1880,14 +1944,8 @@ export class SocketServiceOptimized {
             timestamp: new Date().toISOString()
         };
         
-        // 🚀 OPTIMIZATION: Emit to sender first for instant feedback
-        const senderSocketId = this.userSockets.get(senderId);
-        if (senderSocketId) {
-            const socket = this.activeSockets.get(senderSocketId);
-            if (socket) {
-                socket.emit("new-chat-message", messageData);
-            }
-        }
+        // 🚀 OPTIMIZATION: Emit to all sender devices for instant feedback
+        this.emitToUserSockets(senderId, "new-chat-message", messageData);
         
         // Get room members and check who's online
         this.broadcastOrQueueMessage(roomId, messageData, senderId).catch(err =>
@@ -2117,17 +2175,11 @@ export class SocketServiceOptimized {
         }
         
         // Also send to the user's own socket for consistency
-        const socketId = this.userSockets.get(userId);
-        if (socketId) {
-            const socket = this.activeSockets.get(socketId);
-            if (socket) {
-                socket.emit("chat-user-status-update", {
-                    userId,
-                    ...status,
-                    timestamp: new Date().toISOString()
-                });
-            }
-        }
+        this.emitToUserSockets(userId, "chat-user-status-update", {
+            userId,
+            ...status,
+            timestamp: new Date().toISOString()
+        });
     }
 
     /**
@@ -2137,16 +2189,10 @@ export class SocketServiceOptimized {
         type: "new_chat" | "new_message" | "mention" | "room_created" | "room_deleted" | "room_archived" | "room_messages_cleared";
         data: any;
     }): void {
-        const socketId = this.userSockets.get(userId);
-        if (socketId) {
-            const socket = this.activeSockets.get(socketId);
-            if (socket) {
-                socket.emit("chat-notification", {
-                    ...notification,
-                    timestamp: new Date().toISOString()
-                });
-            }
-        }
+        this.emitToUserSockets(userId, "chat-notification", {
+            ...notification,
+            timestamp: new Date().toISOString()
+        });
     }
 
     /**
@@ -2187,13 +2233,7 @@ export class SocketServiceOptimized {
     ): Promise<void> {
         try {
             for (const userId of participantIds) {
-                const socketId = this.userSockets.get(userId);
-                if (socketId) {
-                    const socket = this.activeSockets.get(socketId);
-                    if (socket) {
-                        socket.emit("participant_notification", notification);
-                    }
-                }
+                this.emitToUserSockets(userId, "participant_notification", notification);
             }
         } catch (error) {
             log(`Error notifying specific participants: ${error}`, LogTypes.ERROR, "SOCKET_SERVICE");
@@ -2215,8 +2255,7 @@ export class SocketServiceOptimized {
             if (cachedUserIds.length > 0) {
                 // Map user IDs to full user data
                 return cachedUserIds.map(userId => {
-                    const socketId = this.userSockets.get(userId);
-                    const socket = socketId ? this.activeSockets.get(socketId) : null;
+                    const socket = this.getFirstActiveSocket(userId);
                     
                     return {
                         userId,
