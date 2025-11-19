@@ -85,6 +85,47 @@ export class UserService {
             updated_at: new Date(),
         });
 
+        // If student, add to class's student_ids array
+        if (user_type === "Student" && class_id && academic_year && campus_id) {
+            try {
+                const classData = await Class.findOne({
+                    id: class_id,
+                    campus_id: campus_id,
+                    academic_year: academic_year,
+                    is_active: true,
+                    is_deleted: false,
+                });
+
+                if (classData) {
+                    const currentStudentIds = classData.student_ids || [];
+                    if (!currentStudentIds.includes(newUser.id)) {
+                        await Class.updateById(classData.id, {
+                            student_ids: [...currentStudentIds, newUser.id],
+                            student_count: (classData.student_count || 0) + 1,
+                            updated_at: new Date(),
+                        });
+                        infoLogs(
+                            `Student ${newUser.id} added to class ${class_id}`,
+                            LogTypes.LOGS,
+                            "USER:CREATE:CLASS_ASSIGNMENT"
+                        );
+                    }
+                } else {
+                    infoLogs(
+                        `Class not found for class_id: ${class_id}, academic_year: ${academic_year}`,
+                        LogTypes.ERROR,
+                        "USER:CREATE:CLASS_NOT_FOUND"
+                    );
+                }
+            } catch (error) {
+                infoLogs(
+                    `Failed to add student to class: ${error}`,
+                    LogTypes.ERROR,
+                    "USER:CREATE:CLASS_ASSIGNMENT_FAILED"
+                );
+            }
+        }
+
         // Send welcome email after successful user creation
         try {
             // Get campus name if campus_id is provided
@@ -126,8 +167,8 @@ export class UserService {
 
     // Get All
     // Get One
-    public static readonly getUser = async (id: string): Promise<IUser> => {
-        return await User.findById(id, {
+    public static readonly getUser = async (id: string): Promise<IUser & { class_name?: string }> => {
+        const user = await User.findById(id, {
             select: [
                 "id",
                 "user_id",
@@ -148,6 +189,25 @@ export class UserService {
                 "updated_at",
             ],
         });
+
+        // Populate class name if class_id exists
+        let userWithClass: IUser & { class_name?: string } = { ...user };
+        if (user.class_id) {
+            try {
+                const classData = await Class.findById(user.class_id);
+                if (classData) {
+                    userWithClass.class_name = classData.name;
+                }
+            } catch (error) {
+                infoLogs(
+                    `Failed to fetch class name for class_id: ${user.class_id}`,
+                    LogTypes.ERROR,
+                    "USER:GET:CLASS_FETCH_FAILED"
+                );
+            }
+        }
+
+        return userWithClass;
     };
 
     // Update
@@ -515,8 +575,31 @@ export class UserService {
         const skip = (page - 1) * limit;
         const paginatedUsers = users.slice(skip, skip + limit);
 
+        // Populate class names for users with class_id
+        const usersWithClassNames = await Promise.all(
+            paginatedUsers.map(async (user) => {
+                if (user.class_id) {
+                    try {
+                        const classData = await Class.findById(user.class_id);
+                        return {
+                            ...user,
+                            class_name: classData?.name,
+                        };
+                    } catch (error) {
+                        infoLogs(
+                            `Failed to fetch class name for class_id: ${user.class_id}`,
+                            LogTypes.ERROR,
+                            "USER:GET:CLASS_FETCH_FAILED"
+                        );
+                        return user;
+                    }
+                }
+                return user;
+            })
+        );
+
         return {
-            users: paginatedUsers,
+            users: usersWithClassNames,
             pagination: {
                 current_page: page,
                 per_page: limit,

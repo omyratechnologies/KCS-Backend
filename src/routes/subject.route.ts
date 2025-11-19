@@ -29,6 +29,119 @@ import {
 
 const app = new Hono();
 
+app.get(
+    "/assignments",
+    describeRoute({
+        tags: ["Subject"],
+        operationId: "getAllSubjectAssignments",
+        summary: "Get all subject assignments",
+        description: "Retrieves all subject assignments with class, teacher, and academic year details",
+        parameters: [
+            {
+                name: "search",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+                description: "Search by subject name, code, class name, teacher name, or academic year",
+            },
+            {
+                name: "academic_year",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+                description: "Filter by academic year",
+            },
+            {
+                name: "class_id",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+                description: "Filter by class ID",
+            },
+            {
+                name: "subject_id",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+                description: "Filter by subject ID",
+            },
+            {
+                name: "teacher_id",
+                in: "query",
+                required: false,
+                schema: { type: "string" },
+                description: "Filter by teacher ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "List of subject assignments",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                success: { type: "boolean" },
+                                data: {
+                                    type: "array",
+                                    items: {
+                                        type: "object",
+                                        properties: {
+                                            id: { type: "string" },
+                                            subject: {
+                                                type: "object",
+                                                properties: {
+                                                    id: { type: "string" },
+                                                    name: { type: "string" },
+                                                    code: { type: "string" },
+                                                },
+                                            },
+                                            class: {
+                                                type: "object",
+                                                properties: {
+                                                    id: { type: "string" },
+                                                    name: { type: "string" },
+                                                },
+                                            },
+                                            teacher: {
+                                                type: "object",
+                                                properties: {
+                                                    id: { type: "string" },
+                                                    name: { type: "string" },
+                                                    email: { type: "string" },
+                                                },
+                                            },
+                                            academic_year: { type: "string" },
+                                            created_at: { type: "string", format: "date-time" },
+                                            updated_at: { type: "string", format: "date-time" },
+                                        },
+                                    },
+                                },
+                                total: { type: "number" },
+                            },
+                        },
+                    },
+                },
+            },
+            500: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                success: { type: "boolean" },
+                                message: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    SubjectController.getAllSubjectAssignments
+);
+
 app.post(
     "/",
     describeRoute({

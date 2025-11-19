@@ -159,4 +159,49 @@ app.put(
     TimetableController.updateTimetableById
 );
 
+app.delete(
+    "/:id",
+    describeRoute({
+        operationId: "deleteTimetableById",
+        summary: "Delete a timetable entry",
+        description: "Soft deletes a specific timetable entry by ID",
+        tags: ["Timetable"],
+        parameters: [
+            {
+                name: "id",
+                in: "path",
+                required: true,
+                schema: { type: "string" },
+                description: "Timetable entry ID",
+            },
+        ],
+        responses: {
+            200: {
+                description: "Timetable entry deleted successfully",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                success: { type: "boolean" },
+                                message: { type: "string" },
+                                data: { type: "object" },
+                            },
+                        },
+                    },
+                },
+            },
+            400: {
+                description: "Bad request",
+                content: {
+                    "application/json": {
+                        schema: resolver(errorResponseSchema),
+                    },
+                },
+            },
+        },
+    }),
+    TimetableController.deleteTimetableById
+);
+
 export default app;

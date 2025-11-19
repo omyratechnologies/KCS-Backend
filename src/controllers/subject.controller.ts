@@ -143,4 +143,38 @@ export class SubjectController {
             }
         }
     };
+
+    // getAllSubjectAssignments
+    public static readonly getAllSubjectAssignments = async (ctx: Context) => {
+        try {
+            const campus_id = ctx.get("campus_id");
+            const query = ctx.req.query();
+
+            const filters = {
+                search: query.search as string,
+                academic_year: query.academic_year as string,
+                class_id: query.class_id as string,
+                subject_id: query.subject_id as string,
+                teacher_id: query.teacher_id as string,
+            };
+
+            const assignments = await SubjectService.getAllSubjectAssignments(campus_id, filters);
+
+            return ctx.json({
+                success: true,
+                data: assignments,
+                total: assignments.length,
+            });
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json(
+                    {
+                        success: false,
+                        message: error.message,
+                    },
+                    500
+                );
+            }
+        }
+    };
 }

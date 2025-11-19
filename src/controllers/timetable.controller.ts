@@ -83,4 +83,26 @@ export class TimetableController {
             }
         }
     };
+
+    // Delete by ID
+    public static readonly deleteTimetableById = async (ctx: Context) => {
+        try {
+            const { id } = ctx.req.param();
+
+            const timetable = await TimetableService.deleteTimetableById(id);
+
+            return ctx.json({
+                success: true,
+                message: "Timetable deleted successfully",
+                data: timetable,
+            });
+        } catch (error) {
+            if (error instanceof Error) {
+                return ctx.json({
+                    success: false,
+                    message: error.message,
+                }, 400);
+            }
+        }
+    };
 }
