@@ -1,0 +1,666 @@
+{
+	"info": {
+		"_postman_id": "exam-timetable-system-2025",
+		"name": "Exam Timetable System",
+		"description": "Complete API collection for managing exam terms and timetables. \n\n## Workflow:\n1. Create exam term with multiple classes\n2. View classes in the term\n3. Create individual timetable for each class\n4. View, update, publish/unpublish timetables\n\n## Important Notes:\n- Each timetable is for ONE class only\n- Classes must be part of the exam term\n- Duplicate timetables for same class in same term are prevented\n- All GET endpoints auto-enrich data with names",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Exam Terms",
+			"item": [
+				{
+					"name": "Create Exam Term",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Mid Term 2025\",\n  \"class_ids\": [\n    \"{{class_1_id}}\",\n    \"{{class_2_id}}\",\n    \"{{class_3_id}}\"\n  ],\n  \"start_date\": \"2025-03-15T00:00:00Z\",\n  \"end_date\": \"2025-03-25T00:00:00Z\",\n  \"meta_data\": {\n    \"type\": \"midterm\",\n    \"academic_year\": \"2024-2025\",\n    \"description\": \"Mid-term examinations for all selected classes\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/exam",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"exam"
+							]
+						},
+						"description": "**Step 1: Create Exam Term**\n\nCreate a new exam term with multiple classes that will participate.\n\n**Required Fields:**\n- `name`: Term name (e.g., \"Mid Term 2025\", \"Final Term 2025\")\n- `class_ids`: Array of class IDs that will have exams\n- `start_date`: Term start date (ISO 8601 format)\n- `end_date`: Term end date (ISO 8601 format)\n- `meta_data`: Additional information\n\n**Validations:**\n✓ All classes must exist\n✓ Classes must belong to the campus\n✓ Start date must be before end date\n\n**Response:**\nReturns created exam term with enriched class names:\n```json\n{\n  \"id\": \"term123\",\n  \"name\": \"Mid Term 2025\",\n  \"class_ids\": [\"class1\", \"class2\"],\n  \"classes\": [\n    {\"id\": \"class1\", \"name\": \"Class 7A\"},\n    {\"id\": \"class2\", \"name\": \"Class 7B\"}\n  ],\n  \"start_date\": \"2025-03-15T00:00:00Z\",\n  \"end_date\": \"2025-03-25T00:00:00Z\",\n  \"is_active\": true,\n  \"is_deleted\": false\n}\n```"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Exam Terms",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/exam",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"exam"
+							]
+						},
+						"description": "Get all active exam terms for the campus.\n\n**Filters Applied:**\n- Only active terms (is_deleted = false)\n- Sorted by updated_at DESC\n\n**Response Enhancement:**\n- Includes enriched class names\n- Each class shows as {id, name}\n\n**Use Case:**\nDisplay list of all exam terms in the UI (like the card view showing \"Mid Term 2025\", \"Final Term 2025\", etc.)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Exam Term by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/exam/{{exam_term_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"exam",
+								"{{exam_term_id}}"
+							]
+						},
+						"description": "**Step 2: Get Exam Term Details**\n\nRetrieve a specific exam term with all its classes.\n\n**Response:**\nReturns term with enriched data:\n- Class names populated\n- All term details\n\n**Use Case:**\nWhen user clicks on a term card, fetch details to show the list of classes that need timetables."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Exam Term",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Mid Term 2025 - Updated\",\n  \"class_ids\": [\n    \"{{class_1_id}}\",\n    \"{{class_2_id}}\",\n    \"{{class_4_id}}\"\n  ],\n  \"start_date\": \"2025-03-16T00:00:00Z\",\n  \"end_date\": \"2025-03-26T00:00:00Z\",\n  \"meta_data\": {\n    \"type\": \"midterm\",\n    \"academic_year\": \"2024-2025\",\n    \"updated_reason\": \"Extended exam period\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/exam/{{exam_term_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"exam",
+								"{{exam_term_id}}"
+							]
+						},
+						"description": "Update an existing exam term.\n\n**Optional Fields:**\n- All fields are optional\n- Only provided fields will be updated\n\n**Validations:**\n- If updating class_ids, validates all classes exist and belong to campus\n\n**Note:**\nUpdating class_ids may affect existing timetables. Ensure timetables are updated accordingly."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Exam Term",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/exam/{{exam_term_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"exam",
+								"{{exam_term_id}}"
+							]
+						},
+						"description": "Soft delete an exam term.\n\n**Behavior:**\n- Sets is_deleted = true\n- Term won't appear in GET requests\n- Data is preserved for audit purposes\n\n**Warning:**\nConsider impact on related timetables before deleting."
+					},
+					"response": []
+				}
+			],
+			"description": "Exam term management endpoints. Terms define which classes will participate in a set of exams."
+		},
+		{
+			"name": "2. Exam Timetables",
+			"item": [
+				{
+					"name": "Create Exam Timetable (Single Class)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"exam_term_id\": \"{{exam_term_id}}\",\n  \"exam_name\": \"Mid Term 2025\",\n  \"class_id\": \"{{class_1_id}}\",\n  \"start_date\": \"2025-03-15T00:00:00Z\",\n  \"end_date\": \"2025-03-25T00:00:00Z\",\n  \"subjects\": [\n    {\n      \"subject_id\": \"{{math_subject_id}}\",\n      \"exam_date\": \"2025-03-15T00:00:00Z\",\n      \"start_time\": \"09:00\",\n      \"end_time\": \"11:00\",\n      \"room\": \"Room A101\",\n      \"invigilator_ids\": [\n        \"{{teacher_1_id}}\",\n        \"{{teacher_2_id}}\"\n      ]\n    },\n    {\n      \"subject_id\": \"{{physics_subject_id}}\",\n      \"exam_date\": \"2025-03-17T00:00:00Z\",\n      \"start_time\": \"09:00\",\n      \"end_time\": \"11:00\",\n      \"room\": \"Room B202\",\n      \"invigilator_ids\": [\n        \"{{teacher_3_id}}\"\n      ]\n    },\n    {\n      \"subject_id\": \"{{cs_subject_id}}\",\n      \"exam_date\": \"2025-03-19T00:00:00Z\",\n      \"start_time\": \"09:00\",\n      \"end_time\": \"11:00\",\n      \"room\": \"Computer Lab\"\n    }\n  ],\n  \"meta_data\": {\n    \"total_subjects\": 3,\n    \"total_credits\": 12,\n    \"special_instructions\": \"Calculators allowed for Math exam\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/exam/timetable",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"exam",
+								"timetable"
+							]
+						},
+						"description": "**Step 3: Create Timetable for a Specific Class**\n\nCreate exam timetable for ONE class only.\n\n**Required Fields:**\n- `exam_term_id`: ID of the exam term\n- `exam_name`: Name of the examination\n- `class_id`: Single class ID (NOT an array)\n- `start_date`: Timetable start date\n- `end_date`: Timetable end date\n- `subjects`: Array of subject schedules\n\n**Subject Object:**\n- `subject_id`: Subject identifier (required)\n- `exam_date`: Date of exam (required)\n- `start_time`: Format \"HH:MM\" (required)\n- `end_time`: Format \"HH:MM\" (required)\n- `room`: Exam room (optional)\n- `invigilator_ids`: Array of teacher IDs (optional)\n\n**Validations:**\n✓ Exam term must exist\n✓ Class must be part of the exam term\n✓ Class must belong to campus\n✓ No duplicate timetable for same class in same term\n✓ All subjects must exist\n✓ No schedule conflicts for the class\n\n**Response:**\nReturns created timetable with enriched data:\n- Subject names, codes, credits\n- Class name\n- Invigilator names\n\n**Important:**\nRepeat this call for EACH class in the term to create individual timetables.\n\n**Example Workflow:**\n1. Create timetable for Class 7A\n2. Create timetable for Class 7B\n3. Create timetable for Class 7C\n\nEach class gets its own customized schedule."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Exam Timetables",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/exam/timetable/all",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"exam",
+								"timetable",
+								"all"
+							]
+						},
+						"description": "Get all exam timetables for the campus (Admin only).\n\n**Filters Applied:**\n- Only active timetables (is_deleted = false)\n- All statuses (draft and published)\n\n**Response Enhancement:**\nEach timetable includes:\n- Enriched subject details (name, code, credits)\n- Class names\n- Exam term details\n- Invigilator names\n\n**Use Case:**\nAdmin dashboard showing all timetables across all terms and classes."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Exam Timetable by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/exam/timetable/{{timetable_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"exam",
+								"timetable",
+								"{{timetable_id}}"
+							]
+						},
+						"description": "**Step 4: Get Timetable for Review**\n\nRetrieve a specific exam timetable with all enriched data.\n\n**Response:**\nFully enriched timetable with:\n- Subject details (name: \"Mathematics\", code: \"MAT101\", credits: 4)\n- Class name (e.g., \"Class 7A\")\n- Exam term information\n- Invigilator names (e.g., \"John Doe\", \"Jane Smith\")\n- Complete schedule with dates and times\n\n**Use Case:**\nDisplay timetable details for review before publishing or for viewing published timetables."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Timetables by Exam Term",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/exam/timetable/exam-term/{{exam_term_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"exam",
+								"timetable",
+								"exam-term",
+								"{{exam_term_id}}"
+							]
+						},
+						"description": "Get all timetables for a specific exam term.\n\n**Returns:**\nArray of timetables, each for a different class within the term.\n\n**Example Response Structure:**\n```json\n[\n  {\n    \"id\": \"tt1\",\n    \"class_ids\": [\"class7a\"],\n    \"classes\": [{\"id\": \"class7a\", \"name\": \"Class 7A\"}],\n    \"subjects\": [...]\n  },\n  {\n    \"id\": \"tt2\",\n    \"class_ids\": [\"class7b\"],\n    \"classes\": [{\"id\": \"class7b\", \"name\": \"Class 7B\"}],\n    \"subjects\": [...]\n  }\n]\n```\n\n**Use Case:**\nWhen user clicks on \"Mid Term 2025\", show all class timetables created for that term (Class 2 - Section A, Class 4 - Section B, etc.)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Timetables by Class",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/exam/timetable/class/{{class_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"exam",
+								"timetable",
+								"class",
+								"{{class_id}}"
+							]
+						},
+						"description": "Get all published timetables for a specific class.\n\n**Access:**\n- Public endpoint\n- Students and parents can access\n- Returns only published timetables\n\n**Use Case:**\nStudent/parent view to see all exam schedules for their class."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Published Timetables",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/exam/timetable/published",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"exam",
+								"timetable",
+								"published"
+							]
+						},
+						"description": "Get all published exam timetables.\n\n**Filters Applied:**\n- Only published timetables (is_published = true)\n- Only active (is_deleted = false)\n\n**Access:**\nPublic - available to students, parents, and teachers\n\n**Use Case:**\nPublic exam schedule board showing all published timetables."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Exam Timetable",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"exam_name\": \"Mid Term 2025 - Updated\",\n  \"start_date\": \"2025-03-16T00:00:00Z\",\n  \"end_date\": \"2025-03-26T00:00:00Z\",\n  \"subjects\": [\n    {\n      \"subject_id\": \"{{math_subject_id}}\",\n      \"exam_date\": \"2025-03-16T00:00:00Z\",\n      \"start_time\": \"10:00\",\n      \"end_time\": \"12:00\",\n      \"room\": \"Room A102\",\n      \"invigilator_ids\": [\n        \"{{teacher_1_id}}\"\n      ]\n    },\n    {\n      \"subject_id\": \"{{physics_subject_id}}\",\n      \"exam_date\": \"2025-03-18T00:00:00Z\",\n      \"start_time\": \"10:00\",\n      \"end_time\": \"12:00\",\n      \"room\": \"Room B203\"\n    }\n  ],\n  \"meta_data\": {\n    \"updated_reason\": \"Time slots adjusted\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/exam/timetable/{{timetable_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"exam",
+								"timetable",
+								"{{timetable_id}}"
+							]
+						},
+						"description": "Update an existing exam timetable.\n\n**Optional Fields:**\n- `exam_name`: Update exam name\n- `start_date`: Update start date\n- `end_date`: Update end date\n- `subjects`: Update subject schedules (replaces entire array)\n- `is_published`: Change publication status\n- `meta_data`: Update metadata\n\n**Note:**\n- Cannot change exam_term_id\n- Cannot change class_id (create new timetable instead)\n\n**Validations:**\n- All subjects must exist\n- No schedule conflicts"
+					},
+					"response": []
+				},
+				{
+					"name": "Publish Exam Timetable",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/exam/timetable/{{timetable_id}}/publish",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"exam",
+								"timetable",
+								"{{timetable_id}}",
+								"publish"
+							]
+						},
+						"description": "Publish an exam timetable.\n\n**Effect:**\n- Sets is_published = true\n- Timetable becomes visible to students and parents\n- Appears in public endpoints\n\n**Use Case:**\nAfter creating and reviewing the timetable, publish it to make it visible to students."
+					},
+					"response": []
+				},
+				{
+					"name": "Unpublish Exam Timetable",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/exam/timetable/{{timetable_id}}/unpublish",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"exam",
+								"timetable",
+								"{{timetable_id}}",
+								"unpublish"
+							]
+						},
+						"description": "Unpublish an exam timetable.\n\n**Effect:**\n- Sets is_published = false\n- Timetable hidden from students and parents\n- Removed from public endpoints\n\n**Use Case:**\nHide timetable to make corrections or changes before republishing."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Exam Timetable",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/exam/timetable/{{timetable_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"exam",
+								"timetable",
+								"{{timetable_id}}"
+							]
+						},
+						"description": "Soft delete an exam timetable.\n\n**Behavior:**\n- Sets is_deleted = true\n- Sets is_active = false\n- Timetable won't appear in GET requests\n- Data preserved for audit purposes\n\n**Use Case:**\nRemove timetable that was created incorrectly or is no longer needed."
+					},
+					"response": []
+				},
+				{
+					"name": "Check Schedule Conflicts",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"exam_date\": \"2025-03-15T00:00:00Z\",\n  \"start_time\": \"09:00\",\n  \"end_time\": \"11:00\",\n  \"exclude_id\": \"{{timetable_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/exam/timetable/check-conflicts",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"exam",
+								"timetable",
+								"check-conflicts"
+							]
+						},
+						"description": "Check for schedule conflicts before creating or updating a timetable.\n\n**Request Fields:**\n- `exam_date`: Date to check\n- `start_time`: Start time (HH:MM format)\n- `end_time`: End time (HH:MM format)\n- `exclude_id`: Timetable ID to exclude (optional, for updates)\n\n**Response:**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"has_conflicts\": false,\n    \"conflicts\": []\n  },\n  \"message\": \"No schedule conflicts\"\n}\n```\n\nOr if conflicts found:\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"has_conflicts\": true,\n    \"conflicts\": [\n      {\n        \"timetable_id\": \"tt123\",\n        \"exam_name\": \"Final Term 2025\",\n        \"subject_name\": \"Physics\",\n        \"conflicting_time\": \"09:00 - 11:00\"\n      }\n    ]\n  },\n  \"message\": \"Schedule conflicts found\"\n}\n```\n\n**Use Case:**\nValidate schedule before submitting timetable creation/update."
+					},
+					"response": []
+				}
+			],
+			"description": "Exam timetable management endpoints. Each timetable is for a single class with scheduled subjects."
+		},
+		{
+			"name": "3. Complete Workflow Example",
+			"item": [
+				{
+					"name": "1. Create Term for Mid-Term 2025",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Mid Term 2025\",\n  \"class_ids\": [\n    \"class_7a_id\",\n    \"class_7b_id\",\n    \"class_7c_id\"\n  ],\n  \"start_date\": \"2025-05-15T00:00:00Z\",\n  \"end_date\": \"2025-05-25T00:00:00Z\",\n  \"meta_data\": {\n    \"type\": \"midterm\",\n    \"academic_year\": \"2024-2025\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/exam",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"exam"
+							]
+						},
+						"description": "**Workflow Step 1**\n\nCreate exam term with Classes 7A, 7B, and 7C.\n\nSave the returned `id` for next steps."
+					},
+					"response": []
+				},
+				{
+					"name": "2. Get Term with Class List",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/exam/{{exam_term_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"exam",
+								"{{exam_term_id}}"
+							]
+						},
+						"description": "**Workflow Step 2**\n\nFetch term details to see the list of classes:\n- Class 7A\n- Class 7B  \n- Class 7C\n\nUI displays these as separate cards."
+					},
+					"response": []
+				},
+				{
+					"name": "3a. Create Timetable for Class 7A",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"exam_term_id\": \"{{exam_term_id}}\",\n  \"exam_name\": \"Mid Term 2025\",\n  \"class_id\": \"class_7a_id\",\n  \"start_date\": \"2025-05-15T00:00:00Z\",\n  \"end_date\": \"2025-05-25T00:00:00Z\",\n  \"subjects\": [\n    {\n      \"subject_id\": \"math_101\",\n      \"exam_date\": \"2025-05-15T00:00:00Z\",\n      \"start_time\": \"09:00\",\n      \"end_time\": \"11:00\",\n      \"room\": \"Room A101\"\n    },\n    {\n      \"subject_id\": \"physics_101\",\n      \"exam_date\": \"2025-05-17T00:00:00Z\",\n      \"start_time\": \"09:00\",\n      \"end_time\": \"11:00\",\n      \"room\": \"Room B202\"\n    },\n    {\n      \"subject_id\": \"cs_101\",\n      \"exam_date\": \"2025-05-19T00:00:00Z\",\n      \"start_time\": \"09:00\",\n      \"end_time\": \"11:00\",\n      \"room\": \"Computer Lab\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/exam/timetable",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"exam",
+								"timetable"
+							]
+						},
+						"description": "**Workflow Step 3a**\n\nCreate timetable specifically for Class 7A with:\n- Mathematics on 15 May\n- Physics on 17 May\n- Computer Science on 19 May"
+					},
+					"response": []
+				},
+				{
+					"name": "3b. Create Timetable for Class 7B",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"exam_term_id\": \"{{exam_term_id}}\",\n  \"exam_name\": \"Mid Term 2025\",\n  \"class_id\": \"class_7b_id\",\n  \"start_date\": \"2025-05-15T00:00:00Z\",\n  \"end_date\": \"2025-05-25T00:00:00Z\",\n  \"subjects\": [\n    {\n      \"subject_id\": \"math_101\",\n      \"exam_date\": \"2025-05-16T00:00:00Z\",\n      \"start_time\": \"10:00\",\n      \"end_time\": \"12:00\",\n      \"room\": \"Room A102\"\n    },\n    {\n      \"subject_id\": \"physics_101\",\n      \"exam_date\": \"2025-05-18T00:00:00Z\",\n      \"start_time\": \"10:00\",\n      \"end_time\": \"12:00\",\n      \"room\": \"Room B203\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/exam/timetable",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"exam",
+								"timetable"
+							]
+						},
+						"description": "**Workflow Step 3b**\n\nCreate separate timetable for Class 7B.\n\nNote: Different dates and times than Class 7A!"
+					},
+					"response": []
+				},
+				{
+					"name": "3c. Create Timetable for Class 7C",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"exam_term_id\": \"{{exam_term_id}}\",\n  \"exam_name\": \"Mid Term 2025\",\n  \"class_id\": \"class_7c_id\",\n  \"start_date\": \"2025-05-15T00:00:00Z\",\n  \"end_date\": \"2025-05-25T00:00:00Z\",\n  \"subjects\": [\n    {\n      \"subject_id\": \"math_101\",\n      \"exam_date\": \"2025-05-15T00:00:00Z\",\n      \"start_time\": \"14:00\",\n      \"end_time\": \"16:00\",\n      \"room\": \"Room A103\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/exam/timetable",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"exam",
+								"timetable"
+							]
+						},
+						"description": "**Workflow Step 3c**\n\nCreate timetable for Class 7C.\n\nNow all three classes have their individual timetables!"
+					},
+					"response": []
+				},
+				{
+					"name": "4. View All Timetables for Term",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/exam/timetable/exam-term/{{exam_term_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"exam",
+								"timetable",
+								"exam-term",
+								"{{exam_term_id}}"
+							]
+						},
+						"description": "**Workflow Step 4**\n\nView all timetables created for Mid Term 2025:\n- Class 7A timetable\n- Class 7B timetable\n- Class 7C timetable\n\nEach shown as a separate card in the UI."
+					},
+					"response": []
+				},
+				{
+					"name": "5. Publish Class 7A Timetable",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/exam/timetable/{{class_7a_timetable_id}}/publish",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"exam",
+								"timetable",
+								"{{class_7a_timetable_id}}",
+								"publish"
+							]
+						},
+						"description": "**Workflow Step 5**\n\nPublish the timetable to make it visible to students and parents of Class 7A.\n\nRepeat for Classes 7B and 7C."
+					},
+					"response": []
+				}
+			],
+			"description": "Complete end-to-end workflow example showing how to create exam terms and individual timetables for multiple classes."
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "exam_term_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "timetable_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "class_1_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "class_2_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "class_3_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "math_subject_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "physics_subject_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "cs_subject_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "teacher_1_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "teacher_2_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "teacher_3_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

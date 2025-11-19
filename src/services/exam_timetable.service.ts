@@ -12,7 +12,7 @@ export class ExamTimetableService {
         data: {
             exam_term_id: string;
             exam_name: string;
-            class_ids: string[];
+            class_id: string; // Single class - one timetable per class
             start_date: Date;
             end_date: Date;
             subjects: Array<{
@@ -32,11 +32,30 @@ export class ExamTimetableService {
             throw new Error("Exam term not found");
         }
 
-        // Validate classes exist
-        for (const class_id of data.class_ids) {
-            const classExists = await Class.findById(class_id);
-            if (!classExists) {
-                throw new Error(`Class with ID ${class_id} not found`);
+        // Validate the class exists and belongs to the term
+        const classExists = await Class.findById(data.class_id);
+        if (!classExists) {
+            throw new Error(`Class with ID ${data.class_id} not found`);
+        }
+        if (classExists.campus_id !== campus_id) {
+            throw new Error(`Class with ID ${data.class_id} does not belong to this campus`);
+        }
+
+        // Check if class is in the exam term's class list
+        if (!examTerm.class_ids.includes(data.class_id)) {
+            throw new Error(`Class with ID ${data.class_id} is not part of this exam term`);
+        }
+
+        // Check if timetable already exists for this class and term
+        const existingTimetable = await ExamTimetable.find({
+            campus_id,
+            exam_term_id: data.exam_term_id,
+            is_deleted: false,
+        });
+
+        for (const existing of existingTimetable.rows) {
+            if (existing.class_ids.includes(data.class_id)) {
+                throw new Error(`Exam timetable already exists for this class in this term`);
             }
         }
 
@@ -48,14 +67,10 @@ export class ExamTimetableService {
             }
         }
 
-        // Check for date conflicts with existing timetables
-        const existingTimetables = await ExamTimetable.find({
-            campus_id,
-            exam_term_id: data.exam_term_id,
-            is_deleted: false,
-        });
+        // Check for schedule conflicts with existing timetables for this class
+        for (const existing of existingTimetable.rows) {
+            if (!existing.class_ids.includes(data.class_id)) continue;
 
-        for (const existing of existingTimetables.rows) {
             const hasOverlap =
                 (data.start_date >= existing.start_date && data.start_date <= existing.end_date) ||
                 (data.end_date >= existing.start_date && data.end_date <= existing.end_date) ||
@@ -70,7 +85,7 @@ export class ExamTimetableService {
             campus_id,
             exam_term_id: data.exam_term_id,
             exam_name: data.exam_name,
-            class_ids: data.class_ids,
+            class_ids: [data.class_id], // Store as array with single class
             start_date: data.start_date,
             end_date: data.end_date,
             subjects: data.subjects,

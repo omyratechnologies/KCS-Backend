@@ -1,20 +1,108 @@
+import { Class } from "@/models/class.model";
 import { ExamTerm, IExamTermData } from "@/models/exam_term.model";
 import { Examination, IExaminationData } from "@/models/examination.model";
+import { Subject } from "@/models/subject.model";
 
 export class ExamService {
+    // Enrich exam term with class names
+    private static readonly enrichExamTerm = async (examTerm: IExamTermData) => {
+        try {
+            const classes = await Promise.all(
+                (examTerm.class_ids || []).map(async (class_id: string) => {
+                    try {
+                        const classInfo = await Class.findById(class_id);
+                        return {
+                            id: class_id,
+                            name: classInfo?.name || "Unknown Class",
+                        };
+                    } catch (error) {
+                        return {
+                            id: class_id,
+                            name: "Unknown Class",
+                        };
+                    }
+                })
+            );
+
+            return {
+                ...examTerm,
+                classes,
+            };
+        } catch (error) {
+            return {
+                ...examTerm,
+                classes: (examTerm.class_ids || []).map(id => ({
+                    id,
+                    name: "Unknown Class"
+                })),
+            };
+        }
+    };
+
+    // Enrich examination with subject details
+    private static readonly enrichExamination = async (examination: IExaminationData) => {
+        try {
+            const subject = await Subject.findById(examination.subject_id);
+            const examTerm = await ExamTerm.findById(examination.exam_term_id);
+            
+            return {
+                ...examination,
+                subject: {
+                    id: examination.subject_id,
+                    name: subject?.name || "Unknown Subject",
+                    code: subject?.code || "Unknown Code",
+                    credits: (subject?.meta_data as { credits?: number })?.credits || 0,
+                },
+                exam_term: {
+                    id: examination.exam_term_id,
+                    name: examTerm?.name || "Unknown Term",
+                },
+            };
+        } catch (error) {
+            return {
+                ...examination,
+                subject: {
+                    id: examination.subject_id,
+                    name: "Unknown Subject",
+                    code: "Unknown Code",
+                    credits: 0,
+                },
+                exam_term: {
+                    id: examination.exam_term_id,
+                    name: "Unknown Term",
+                },
+            };
+        }
+    };
+
     // create exam term
     public static readonly createExamTerm = async (
         campus_id: string,
         data: {
             name: string;
+            class_ids: string[];
             start_date: Date;
             end_date: Date;
             meta_data: object;
         }
     ) => {
+        // Validate that all classes exist
+        for (const class_id of data.class_ids) {
+            const classExists = await Class.findById(class_id);
+            if (!classExists) {
+                throw new Error(`Class with ID ${class_id} not found`);
+            }
+            // Ensure class belongs to the same campus
+            if (classExists.campus_id !== campus_id) {
+                throw new Error(`Class with ID ${class_id} does not belong to this campus`);
+            }
+        }
+
         return await ExamTerm.create({
             campus_id,
             ...data,
+            is_active: true,
+            is_deleted: false,
             created_at: new Date(),
             updated_at: new Date(),
         });
@@ -25,7 +113,7 @@ export class ExamService {
         const data: {
             rows: IExamTermData[];
         } = await ExamTerm.find(
-            { campus_id },
+            { campus_id, is_deleted: false },
             {
                 sort: {
                     updated_at: "DESC",
@@ -34,10 +122,15 @@ export class ExamService {
         );
 
         if (data.rows.length === 0) {
-            throw new Error("Exam terms not found");
+            return [];
         }
 
-        return data.rows;
+        // Enrich with class names
+        const enrichedTerms = await Promise.all(
+            data.rows.map(term => this.enrichExamTerm(term))
+        );
+
+        return enrichedTerms;
     };
 
     // get exam term by id
@@ -48,18 +141,38 @@ export class ExamService {
             throw new Error("Exam term not found");
         }
 
-        return data;
+        // Enrich with class names
+        return await this.enrichExamTerm(data);
     };
 
     // update exam term
     public static readonly updateExamTerm = async (id: string, data: Partial<IExamTermData>) => {
-        const examTerm = await ExamTerm.updateById(id, data);
+        // If updating class_ids, validate that all classes exist
+        if (data.class_ids) {
+            const examTerm = await ExamTerm.findById(id);
+            if (!examTerm) {
+                throw new Error("Exam term not found");
+            }
 
-        if (!examTerm) {
+            for (const class_id of data.class_ids) {
+                const classExists = await Class.findById(class_id);
+                if (!classExists) {
+                    throw new Error(`Class with ID ${class_id} not found`);
+                }
+                // Ensure class belongs to the same campus
+                if (classExists.campus_id !== examTerm.campus_id) {
+                    throw new Error(`Class with ID ${class_id} does not belong to this campus`);
+                }
+            }
+        }
+
+        const updatedExamTerm = await ExamTerm.updateById(id, data);
+
+        if (!updatedExamTerm) {
             throw new Error("Exam term not updated");
         }
 
-        return examTerm;
+        return updatedExamTerm;
     };
 
     // delete exam term
@@ -107,10 +220,15 @@ export class ExamService {
         );
 
         if (data.rows.length === 0) {
-            throw new Error("Examinations not found");
+            return [];
         }
 
-        return data.rows;
+        // Enrich with subject details
+        const enrichedExaminations = await Promise.all(
+            data.rows.map(exam => this.enrichExamination(exam))
+        );
+
+        return enrichedExaminations;
     };
 
     // get examination by id
@@ -121,7 +239,8 @@ export class ExamService {
             throw new Error("Examination not found");
         }
 
-        return data;
+        // Enrich with subject details
+        return await this.enrichExamination(data);
     };
 
     // update examination
@@ -162,10 +281,15 @@ export class ExamService {
         );
 
         if (data.rows.length === 0) {
-            throw new Error("Examinations not found");
+            return [];
         }
 
-        return data.rows;
+        // Enrich with subject details
+        const enrichedExaminations = await Promise.all(
+            data.rows.map(exam => this.enrichExamination(exam))
+        );
+
+        return enrichedExaminations;
     };
 
     // get examination by subject id
@@ -182,10 +306,15 @@ export class ExamService {
         );
 
         if (data.rows.length === 0) {
-            throw new Error("Examinations not found");
+            return [];
         }
 
-        return data.rows;
+        // Enrich with subject details
+        const enrichedExaminations = await Promise.all(
+            data.rows.map(exam => this.enrichExamination(exam))
+        );
+
+        return enrichedExaminations;
     };
 
     // get examination by date
@@ -202,9 +331,14 @@ export class ExamService {
         );
 
         if (data.rows.length === 0) {
-            throw new Error("Examinations not found");
+            return [];
         }
 
-        return data.rows;
+        // Enrich with subject details
+        const enrichedExaminations = await Promise.all(
+            data.rows.map(exam => this.enrichExamination(exam))
+        );
+
+        return enrichedExaminations;
     };
 }
