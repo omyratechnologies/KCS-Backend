@@ -25,10 +25,10 @@ globalForServer.httpServer = server;
 // Initialize services asynchronously
 async function initializeServices() {
     // Skip initialization if already done (for hot reload)
-    // if (globalForServer.servicesInitialized) {
-    //     log("🔄 Hot reload detected - skipping service re-initialization", LogTypes.LOGS, "INIT");
-    //     return;
-    // }
+    if (globalForServer.servicesInitialized) {
+        log("🔄 Hot reload detected - skipping service re-initialization", LogTypes.LOGS, "INIT");
+        return;
+    }
     try {
         log("🚀 Initializing services...", LogTypes.LOGS, "INIT");
 
