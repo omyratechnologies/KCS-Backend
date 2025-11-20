@@ -40,6 +40,7 @@ export const actionMap: {
         "view_student_progress",
         "view_assignment_progress",
         "view_academic_summary",
+        "create_payment_order",
     ],
     Parent: [
         "get_user",
@@ -53,6 +54,7 @@ export const actionMap: {
         "monitor_study_time",
         "view_course_completion_reports",
         "access_parent_dashboard",
+        "create_payment_order",
     ],
     Teacher: [
         "get_user",
@@ -139,6 +141,16 @@ export const actionMap: {
         "admin_assignment_overview",
         "admin_assignment_analytics",
         "admin_bulk_assignment_operations",
+        // Payment permissions (full access)
+        "create_payment_template",
+        "update_payment_template",
+        "delete_payment_template",
+        "view_payment_templates",
+        "view_payment_transactions",
+        "view_payment_invoices",
+        "create_payment_refund",
+        "view_payment_analytics",
+        "verify_payment",
         // Course content permissions (full access)
         "create_course",
         "update_course",
@@ -183,6 +195,14 @@ export const actionMap: {
         "view_course_progress",
         "view_assignment_progress",
         "view_academic_summary",
+    ],
+    Accountant: [
+        "get_user",
+        // Payment permissions (read-only)
+        "view_payment_templates",
+        "view_payment_transactions",
+        "view_payment_invoices",
+        "view_payment_analytics",
     ],
     "Super Admin": [
         "create_campus",
@@ -375,6 +395,17 @@ const actionNameSchema = z.union([
     z.literal("export_student_reports"),
     z.literal("customize_course_settings"),
     z.literal("reorder_course_content"),
+    // Payment actions
+    z.literal("create_payment_template"),
+    z.literal("update_payment_template"),
+    z.literal("delete_payment_template"),
+    z.literal("view_payment_templates"),
+    z.literal("view_payment_transactions"),
+    z.literal("view_payment_invoices"),
+    z.literal("create_payment_refund"),
+    z.literal("view_payment_analytics"),
+    z.literal("create_payment_order"),
+    z.literal("verify_payment"),
 ]);
 
 export type ActionType = z.infer<typeof actionNameSchema>;

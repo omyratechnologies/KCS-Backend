@@ -3,6 +3,7 @@ import { zValidator } from "@hono/zod-validator";
 
 import { PaymentController } from "@/controllers/payment.controller";
 import { authMiddleware } from "@/middlewares/auth.middleware";
+import { roleMiddleware } from "@/middlewares/role.middleware";
 import {
     CreatePaymentTemplateSchema,
     UpdatePaymentTemplateSchema,
@@ -27,6 +28,7 @@ const paymentRoute = new Hono();
 paymentRoute.post(
     "/templates",
     authMiddleware,
+    roleMiddleware("create_payment_template"),
     zValidator("json", CreatePaymentTemplateSchema),
     PaymentController.createPaymentTemplate
 );
@@ -34,11 +36,12 @@ paymentRoute.post(
 /**
  * @route   GET /api/payments/templates
  * @desc    Get all payment templates with filters
- * @access  Authenticated users
+ * @access  Admin and Accountant
  */
 paymentRoute.get(
     "/templates",
     authMiddleware,
+    roleMiddleware("view_payment_templates"),
     zValidator("query", GetPaymentTemplatesQuerySchema),
     PaymentController.getPaymentTemplates
 );
@@ -46,11 +49,12 @@ paymentRoute.get(
 /**
  * @route   GET /api/payments/templates/:id
  * @desc    Get payment template by ID
- * @access  Authenticated users
+ * @access  Admin and Accountant
  */
 paymentRoute.get(
     "/templates/:id",
     authMiddleware,
+    roleMiddleware("view_payment_templates"),
     PaymentController.getPaymentTemplateById
 );
 
@@ -62,6 +66,7 @@ paymentRoute.get(
 paymentRoute.put(
     "/templates/:id",
     authMiddleware,
+    roleMiddleware("update_payment_template"),
     zValidator("json", UpdatePaymentTemplateSchema),
     PaymentController.updatePaymentTemplate
 );
@@ -74,6 +79,7 @@ paymentRoute.put(
 paymentRoute.delete(
     "/templates/:id",
     authMiddleware,
+    roleMiddleware("delete_payment_template"),
     PaymentController.deletePaymentTemplate
 );
 
@@ -82,11 +88,12 @@ paymentRoute.delete(
 /**
  * @route   POST /api/payments/orders
  * @desc    Create a Razorpay order for payment
- * @access  Students and Parents
+ * @access  Admin only (can create orders for students)
  */
 paymentRoute.post(
     "/orders",
     authMiddleware,
+    roleMiddleware("create_payment_order"),
     zValidator("json", CreatePaymentOrderSchema),
     PaymentController.createPaymentOrder
 );
@@ -94,11 +101,12 @@ paymentRoute.post(
 /**
  * @route   POST /api/payments/verify
  * @desc    Verify payment and create route transfer
- * @access  Authenticated users
+ * @access  Admin only
  */
 paymentRoute.post(
     "/verify",
     authMiddleware,
+    roleMiddleware("verify_payment"),
     zValidator("json", VerifyPaymentSchema),
     PaymentController.verifyPayment
 );
@@ -108,11 +116,12 @@ paymentRoute.post(
 /**
  * @route   GET /api/payments/transactions
  * @desc    Get payment transactions with filters
- * @access  Authenticated users (students see their own, admins see all)
+ * @access  Admin and Accountant (view all), Students (view own)
  */
 paymentRoute.get(
     "/transactions",
     authMiddleware,
+    roleMiddleware("view_payment_transactions"),
     zValidator("query", GetPaymentTransactionsQuerySchema),
     PaymentController.getPaymentTransactions
 );
@@ -120,11 +129,12 @@ paymentRoute.get(
 /**
  * @route   GET /api/payments/transactions/:id
  * @desc    Get transaction by ID
- * @access  Authenticated users (students can only view their own)
+ * @access  Admin and Accountant (view all), Students (view own)
  */
 paymentRoute.get(
     "/transactions/:id",
     authMiddleware,
+    roleMiddleware("view_payment_transactions"),
     PaymentController.getTransactionById
 );
 
@@ -133,11 +143,12 @@ paymentRoute.get(
 /**
  * @route   GET /api/payments/invoices
  * @desc    Get invoices with filters
- * @access  Authenticated users (students see their own, admins see all)
+ * @access  Admin and Accountant (view all), Students (view own)
  */
 paymentRoute.get(
     "/invoices",
     authMiddleware,
+    roleMiddleware("view_payment_invoices"),
     zValidator("query", GetInvoicesQuerySchema),
     PaymentController.getInvoices
 );
@@ -145,11 +156,12 @@ paymentRoute.get(
 /**
  * @route   GET /api/payments/invoices/:id
  * @desc    Get invoice by ID
- * @access  Authenticated users (students can only view their own)
+ * @access  Admin and Accountant (view all), Students (view own)
  */
 paymentRoute.get(
     "/invoices/:id",
     authMiddleware,
+    roleMiddleware("view_payment_invoices"),
     PaymentController.getInvoiceById
 );
 
@@ -163,6 +175,7 @@ paymentRoute.get(
 paymentRoute.post(
     "/refunds",
     authMiddleware,
+    roleMiddleware("create_payment_refund"),
     zValidator("json", CreateRefundSchema),
     PaymentController.createRefund
 );
@@ -172,11 +185,12 @@ paymentRoute.post(
 /**
  * @route   GET /api/payments/analytics
  * @desc    Get payment analytics and statistics
- * @access  Admin only
+ * @access  Admin and Accountant
  */
 paymentRoute.get(
     "/analytics",
     authMiddleware,
+    roleMiddleware("view_payment_analytics"),
     zValidator("query", GetPaymentAnalyticsQuerySchema),
     PaymentController.getPaymentAnalytics
 );
