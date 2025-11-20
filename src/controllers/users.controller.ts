@@ -91,6 +91,57 @@ export class UsersController {
             }
         }
     };
+
+    // Bulk Create Users
+    public static readonly bulkCreateUsers = async (c: Context) => {
+        try {
+            const _user_type = c.get("user_type");
+            const _campus_id = c.get("campus_id");
+            const _user_id = c.get("user_id");
+
+            const { users } = await c.req.json();
+
+            if (!users || !Array.isArray(users) || users.length === 0) {
+                return c.json(
+                    {
+                        message: "Users array is required and must not be empty",
+                    },
+                    400
+                );
+            }
+
+            // Limit bulk creation to reasonable number
+            if (users.length > 100) {
+                return c.json(
+                    {
+                        message: "Cannot create more than 100 users at once",
+                    },
+                    400
+                );
+            }
+
+            const results = await UserService.bulkCreateUsers(users, {
+                creator_id: _user_id,
+                creator_type: _user_type,
+                creator_campus_id: _campus_id,
+            });
+
+            return c.json({
+                message: "Bulk user creation completed",
+                results: results,
+            });
+        } catch (error) {
+            if (error instanceof Error) {
+                return c.json(
+                    {
+                        message: error.message,
+                    },
+                    400
+                );
+            }
+        }
+    };
+
     // Get All Users with filtering and pagination
     public static readonly getUsers = async (c: Context) => {
         try {

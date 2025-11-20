@@ -11,9 +11,59 @@ import {
     getUserResponseSchema,
     updateUserRequestBodySchema,
     updateUserResponseSchema,
+    bulkCreateUsersRequestBodySchema,
+    bulkCreateUsersResponseSchema,
 } from "@/schema/user";
 
 const app = new Hono();
+
+app.post(
+    "/bulk",
+    describeRoute({
+        tags: ["Users"],
+        operationId: "bulkCreateUsers",
+        summary: "Bulk create users",
+        description: "Creates multiple users at once. ONLY supports creating Students, Teachers, and Parents in bulk. Maximum 100 users per request. Other user types (Admin, Principal, Staff) cannot be created in bulk.",
+        responses: {
+            200: {
+                description: "Bulk user creation completed",
+                content: {
+                    "application/json": {
+                        schema: resolver(bulkCreateUsersResponseSchema),
+                    },
+                },
+            },
+            400: {
+                description: "Bad request",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                message: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+            403: {
+                description: "Forbidden",
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            properties: {
+                                message: { type: "string" },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }),
+    zValidator("json", bulkCreateUsersRequestBodySchema),
+    UsersController.bulkCreateUsers
+);
 
 app.post(
     "/",

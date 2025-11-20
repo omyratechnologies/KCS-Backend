@@ -83,3 +83,117 @@ export const deleteUserResponseSchema = z
         message: z.string().openapi({ example: "Users deleted successfully" }),
     })
     .openapi({ ref: "DeleteUserResponse" });
+
+// Bulk Create Users Request
+export const bulkCreateUsersRequestBodySchema = z
+    .object({
+        users: z
+            .array(
+                z.object({
+                    user_id: z.string().openapi({ example: "user123" }),
+                    email: z.string().email().openapi({ example: "user@example.com" }),
+                    password: z.string().openapi({ example: "securepassword" }),
+                    first_name: z.string().openapi({ example: "John" }),
+                    last_name: z.string().openapi({ example: "Doe" }),
+                    phone: z.string().openapi({ example: "+1234567890" }),
+                    address: z.string().openapi({ example: "123 Main St, City" }),
+                    meta_data: z.record(z.string(), z.any()).optional().openapi({ example: { role: "student" } }),
+                    user_type: z.enum(["Student", "Parent", "Teacher"]).openapi({ example: "Student" }),
+                    campus_id: z.string().optional().openapi({ example: "campus123" }),
+                    academic_year: z.string().optional().openapi({ example: "2024-2025" }),
+                    class_id: z.string().optional().openapi({ example: "class123" }),
+                })
+            )
+            .min(1)
+            .max(100)
+            .openapi({
+                example: [
+                    {
+                        user_id: "student001",
+                        email: "student1@example.com",
+                        password: "password123",
+                        first_name: "Alice",
+                        last_name: "Smith",
+                        phone: "+1234567890",
+                        address: "123 Main St",
+                        user_type: "Student",
+                        academic_year: "2024-2025",
+                        class_id: "class123",
+                    },
+                    {
+                        user_id: "student002",
+                        email: "student2@example.com",
+                        password: "password123",
+                        first_name: "Bob",
+                        last_name: "Johnson",
+                        phone: "+1234567891",
+                        address: "456 Oak Ave",
+                        user_type: "Student",
+                        academic_year: "2024-2025",
+                        class_id: "class123",
+                    },
+                ],
+            }),
+    })
+    .openapi({ ref: "BulkCreateUsersRequest" });
+
+export const bulkCreateUsersResponseSchema = z
+    .object({
+        message: z.string().openapi({ example: "Bulk user creation completed" }),
+        results: z
+            .object({
+                total: z.number().openapi({ example: 10 }),
+                success_count: z.number().openapi({ example: 8 }),
+                failed_count: z.number().openapi({ example: 2 }),
+                successful: z
+                    .array(
+                        z.object({
+                            index: z.number(),
+                            user_id: z.string(),
+                            email: z.string(),
+                            id: z.string(),
+                            message: z.string(),
+                        })
+                    )
+                    .openapi({
+                        example: [
+                            {
+                                index: 0,
+                                user_id: "student001",
+                                email: "student1@example.com",
+                                id: "uuid-123",
+                                message: "User created successfully",
+                            },
+                        ],
+                    }),
+                failed: z
+                    .array(
+                        z.object({
+                            index: z.number(),
+                            user_id: z.string(),
+                            email: z.string(),
+                            error: z.string(),
+                        })
+                    )
+                    .openapi({
+                        example: [
+                            {
+                                index: 5,
+                                user_id: "student006",
+                                email: "duplicate@example.com",
+                                error: "Email already exists",
+                            },
+                        ],
+                    }),
+            })
+            .openapi({
+                example: {
+                    total: 10,
+                    success_count: 8,
+                    failed_count: 2,
+                    successful: [],
+                    failed: [],
+                },
+            }),
+    })
+    .openapi({ ref: "BulkCreateUsersResponse" });

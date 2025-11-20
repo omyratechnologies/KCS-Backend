@@ -7,6 +7,7 @@ import infoLogs, { LogTypes } from "@/libs/logger";
 import { sendWelcomeEmail } from "@/libs/mailer";
 import { Class } from "@/models/class.model";
 import { IUser, User } from "@/models/user.model";
+import { canCreateUserType } from "@/middlewares/role.middleware";
 
 import { CampusService } from "./campuses.service";
 
@@ -54,8 +55,8 @@ export class UserService {
         }
 
         // Validate campus exists if campus_id is provided
-        try {
-            if (campus_id && campus_id.trim() !== "" && user_type !== "Super Admin") {
+        if (campus_id && campus_id.trim() !== "" && user_type !== "Super Admin") {
+            try {
                 const campus = await CampusService.getCampus(campus_id);
                 if (!campus || campus.is_deleted) {
                     throw new Error("Campus not found or is deleted");
@@ -63,12 +64,42 @@ export class UserService {
                 if (!campus.is_active) {
                     throw new Error("Campus is not active");
                 }
+            } catch (error) {
+                if (error instanceof Error) {
+                    if (error.name === "DocumentNotFoundError" || error.message.includes("DocumentNotFoundError")) {
+                        throw new Error("Campus not found. Please provide a valid campus ID");
+                    }
+                    // Re-throw our custom error messages
+                    if (error.message === "Campus not found or is deleted" || error.message === "Campus is not active") {
+                        throw error;
+                    }
+                }
+                throw new Error("Invalid campus ID. Please provide a valid campus ID");
             }
-        } catch (error) {
-            if (error instanceof Error) {
-                throw new Error("Campus not found. Please provide a valid campus ID");
+        }
+
+        // Validate class exists if user_type is Student
+        if (user_type === "Student" && class_id && academic_year && campus_id) {
+            try {
+                const classData = await Class.findOne({
+                    id: class_id,
+                    campus_id: campus_id,
+                    academic_year: academic_year,
+                    is_active: true,
+                    is_deleted: false,
+                });
+
+                if (!classData) {
+                    throw new Error(`Class not found. Please provide a valid class ID for campus ${campus_id} and academic year ${academic_year}`);
+                }
+            } catch (error) {
+                if (error instanceof Error) {
+                    if (error.message.includes("Class not found")) {
+                        throw error;
+                    }
+                }
+                throw new Error("Invalid class ID. Please provide a valid class ID");
             }
-            throw new Error("Invalid campus ID");
         }
 
         // Determine deletable status based on creator and target user type
@@ -199,6 +230,123 @@ export class UserService {
         }
 
         return newUser;
+    };
+
+    // Bulk Create Users
+    public static readonly bulkCreateUsers = async (
+        users: Array<{
+            user_id: string;
+            email: string;
+            password: string;
+            first_name: string;
+            last_name: string;
+            phone: string;
+            address: string;
+            meta_data?: string;
+            user_type: string;
+            campus_id?: string;
+            academic_year?: string;
+            class_id?: string;
+        }>,
+        creatorInfo: {
+            creator_id?: string;
+            creator_type?: string;
+            creator_campus_id?: string;
+        }
+    ) => {
+        const results = {
+            successful: [] as any[],
+            failed: [] as any[],
+            total: users.length,
+            success_count: 0,
+            failed_count: 0,
+        };
+
+        // Allowed user types for bulk creation
+        const allowedBulkTypes = ["Student", "Parent", "Teacher"];
+
+        for (let i = 0; i < users.length; i++) {
+            const userData = users[i];
+            try {
+                // Validate that only Student, Parent, Teacher can be created in bulk
+                if (!allowedBulkTypes.includes(userData.user_type)) {
+                    throw new Error(`Bulk creation is only allowed for Student, Parent, and Teacher. Cannot create ${userData.user_type} in bulk`);
+                }
+
+                // Validate role hierarchy
+                if (!canCreateUserType(creatorInfo.creator_type || "", userData.user_type)) {
+                    throw new Error(`${creatorInfo.creator_type} cannot create ${userData.user_type} users`);
+                }
+
+                // Campus validation for non-Super Admin creators
+                let campus_id = userData.campus_id;
+                if (creatorInfo.creator_type !== "Super Admin") {
+                    if (!creatorInfo.creator_campus_id) {
+                        throw new Error("Creator must be assigned to a campus");
+                    }
+
+                    // Force campus_id to be the creator's campus
+                    if (campus_id && campus_id !== creatorInfo.creator_campus_id) {
+                        throw new Error("Can only create users in your own campus");
+                    }
+                    campus_id = creatorInfo.creator_campus_id;
+                } else {
+                    // Super Admin must provide campus_id for non-super-admin users
+                    if (!campus_id && userData.user_type !== "Super Admin") {
+                        throw new Error("Campus ID is required");
+                    }
+                }
+
+                const newUser = await UserService.createUsers({
+                    user_id: userData.user_id,
+                    email: userData.email,
+                    password: userData.password,
+                    first_name: userData.first_name,
+                    last_name: userData.last_name,
+                    phone: userData.phone,
+                    address: userData.address,
+                    meta_data: userData.meta_data || "{}",
+                    user_type: userData.user_type,
+                    campus_id: campus_id,
+                    academic_year: userData.academic_year,
+                    class_id: userData.class_id,
+                    creator_id: creatorInfo.creator_id,
+                    creator_type: creatorInfo.creator_type,
+                });
+
+                results.successful.push({
+                    index: i,
+                    user_id: userData.user_id,
+                    email: userData.email,
+                    id: newUser.id,
+                    message: "User created successfully",
+                });
+                results.success_count++;
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : "Unknown error";
+                results.failed.push({
+                    index: i,
+                    user_id: userData.user_id,
+                    email: userData.email,
+                    error: errorMessage,
+                });
+                results.failed_count++;
+
+                infoLogs(
+                    `Bulk create failed for user ${userData.email}: ${errorMessage}`,
+                    LogTypes.ERROR,
+                    "USER:BULK_CREATE:FAILED"
+                );
+            }
+        }
+
+        infoLogs(
+            `Bulk user creation completed. Success: ${results.success_count}, Failed: ${results.failed_count}`,
+            LogTypes.LOGS,
+            "USER:BULK_CREATE:COMPLETED"
+        );
+
+        return results;
     };
 
     // Get All
