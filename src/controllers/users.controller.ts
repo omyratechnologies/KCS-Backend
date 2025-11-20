@@ -1,6 +1,7 @@
 import { type Context } from "hono";
 
 import { UserService } from "@/services/users.service";
+import { canCreateUserType } from "@/middlewares/role.middleware";
 
 export class UsersController {
     // Create
@@ -8,32 +9,57 @@ export class UsersController {
         try {
             const _user_type = c.get("user_type");
             const _campus_id = c.get("campus_id");
+            const _user_id = c.get("user_id");
 
             const { user_id, email, password, first_name, last_name, phone, address, meta_data, user_type, academic_year, class_id } =
                 await c.req.json();
 
             let { campus_id } = await c.req.json();
 
-            if (_user_type !== "Super Admin" && !_campus_id) {
+            // Validate role hierarchy - check if creator can create this user type
+            if (!canCreateUserType(_user_type, user_type)) {
                 return c.json(
                     {
-                        message: "You can only add users to your assigned campus",
+                        message: `${_user_type} cannot create ${user_type} users`,
                     },
-                    401
+                    403
                 );
             }
 
-            if (_user_type !== "Super Admin" && !_campus_id) {
-                return c.json(
-                    {
-                        message: "Campus ID is required",
-                    },
-                    400
-                );
-            }
+            // Super Admin can create users in any campus
+            // Others must create users in their own campus only
+            if (_user_type !== "Super Admin") {
+                if (!_campus_id) {
+                    return c.json(
+                        {
+                            message: "You can only add users to your assigned campus",
+                        },
+                        401
+                    );
+                }
 
-            if (!campus_id && _user_type !== "Super Admin") {
+                // If campus_id is provided in request but doesn't match creator's campus, reject
+                if (campus_id && campus_id !== _campus_id) {
+                    return c.json(
+                        {
+                            message: "You can only add users to your own campus",
+                        },
+                        403
+                    );
+                }
+
+                // Force campus_id to be the creator's campus
                 campus_id = _campus_id;
+            } else {
+                // Super Admin must provide campus_id for non-super-admin users
+                if (!campus_id && user_type !== "Super Admin") {
+                    return c.json(
+                        {
+                            message: "Campus ID is required",
+                        },
+                        400
+                    );
+                }
             }
 
             const users = await UserService.createUsers({
@@ -49,6 +75,8 @@ export class UsersController {
                 campus_id,
                 academic_year,
                 class_id,
+                creator_id: _user_id,
+                creator_type: _user_type,
             });
 
             return c.json(users);
@@ -133,8 +161,11 @@ export class UsersController {
         try {
             const { id } = c.req.param();
             const data = await c.req.json();
+            const _user_id = c.get("user_id");
+            const _user_type = c.get("user_type");
+            const _campus_id = c.get("campus_id");
 
-            await UserService.updateUsers(id, data);
+            await UserService.updateUsers(id, data, _user_id, _user_type, _campus_id);
 
             return c.json({
                 message: "Users updated successfully",
@@ -155,8 +186,20 @@ export class UsersController {
     public static readonly deleteUsers = async (c: Context) => {
         try {
             const { id } = c.req.param();
+            const _user_id = c.get("user_id");
+            const _user_type = c.get("user_type");
+            const _campus_id = c.get("campus_id");
 
-            await UserService.deleteUsers(id);
+            if (!_user_id || !_user_type) {
+                return c.json(
+                    {
+                        message: "Unauthorized",
+                    },
+                    401
+                );
+            }
+
+            await UserService.deleteUsers(id, _user_id, _user_type, _campus_id);
 
             return c.json({
                 message: "Users deleted successfully",

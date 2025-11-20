@@ -21,6 +21,8 @@ interface IUser {
     // meta_data?: object;
     is_active: boolean;
     is_deleted: boolean;
+    deletable: boolean; // Can this user be deleted by admins
+    created_by?: string; // User ID of creator (for tracking who created this user)
     created_at: Date;
     updated_at: Date;
     meta_data: {
@@ -46,6 +48,8 @@ const UserSchema = new Schema({
     meta_data: { type: Object, required: true },
     is_active: { type: Boolean, required: true },
     is_deleted: { type: Boolean, required: true },
+    deletable: { type: Boolean, required: true, default: true },
+    created_by: { type: String, required: false },
     created_at: { type: Date, default: () => new Date() },
     updated_at: { type: Date, default: () => new Date() },
 });

@@ -25,6 +25,8 @@ export class UserService {
         campus_id,
         academic_year,
         class_id,
+        creator_id,
+        creator_type,
     }: {
         user_id: string;
         email: string;
@@ -38,8 +40,9 @@ export class UserService {
         campus_id?: string;
         academic_year?: string;
         class_id?: string;
+        creator_id?: string;
+        creator_type?: string;
     }) => {
-        
         // if its type is student and its academic year or class id not there then give error
         if (user_type === "Student" && (!academic_year || !class_id)) {
             throw new Error("Academic year and class ID are required for students");
@@ -49,6 +52,37 @@ export class UserService {
         if (!user_type) {
             throw new Error("User type is required");
         }
+
+        // Validate campus exists if campus_id is provided
+        try {
+            if (campus_id && campus_id.trim() !== "" && user_type !== "Super Admin") {
+                const campus = await CampusService.getCampus(campus_id);
+                if (!campus || campus.is_deleted) {
+                    throw new Error("Campus not found or is deleted");
+                }
+                if (!campus.is_active) {
+                    throw new Error("Campus is not active");
+                }
+            }
+        } catch (error) {
+            if (error instanceof Error) {
+                throw new Error("Campus not found. Please provide a valid campus ID");
+            }
+            throw new Error("Invalid campus ID");
+        }
+
+        // Determine deletable status based on creator and target user type
+        let deletable = true;
+        if (user_type === "Admin") {
+            // If created by Super Admin, set deletable to false
+            // If created by another Admin, set deletable to true
+            if (creator_type === "Super Admin") {
+                deletable = false;
+            } else {
+                deletable = true;
+            }
+        }
+
         // Check if email already exists
         try {
             const existingUser = await User.find({ email: email });
@@ -77,6 +111,8 @@ export class UserService {
             meta_data: meta_data,
             is_active: true,
             is_deleted: false,
+            deletable: deletable,
+            created_by: creator_id,
             user_type: user_type,
             campus_id: campus_id ?? " ",
             academic_year: academic_year ?? undefined,
@@ -227,11 +263,24 @@ export class UserService {
             campus_id?: string;
             academic_year?: string;
             class_id?: string;
-        }
+        },
+        updaterId?: string,
+        updaterType?: string,
+        updaterCampusId?: string
     ): Promise<void> => {
         const user = await User.findById(id);
         if (!user) {
             throw new Error("User not found");
+        }
+
+        // Validate update permissions if updater info is provided
+        if (updaterId && updaterType) {
+            const { canUpdateUser } = await import("@/middlewares/role.middleware");
+            const updateCheck = await canUpdateUser(updaterId, updaterType, updaterCampusId, id);
+
+            if (!updateCheck.canUpdate) {
+                throw new Error(updateCheck.reason || "You don't have permission to update this user");
+            }
         }
 
         // Check if email is being updated and if it already exists
@@ -256,10 +305,23 @@ export class UserService {
     };
 
     // Delete
-    public static readonly deleteUsers = async (id: string): Promise<void> => {
+    public static readonly deleteUsers = async (
+        id: string,
+        deleterId: string,
+        deleterType: string,
+        deleterCampusId?: string
+    ): Promise<void> => {
         const user = await User.findById(id);
         if (!user) {
             throw new Error("User not found");
+        }
+
+        // Validate deletion permissions
+        const { canDeleteUser } = await import("@/middlewares/role.middleware");
+        const deleteCheck = await canDeleteUser(deleterId, deleterType, deleterCampusId, id);
+
+        if (!deleteCheck.canDelete) {
+            throw new Error(deleteCheck.reason || "You don't have permission to delete this user");
         }
 
         await User.removeById(id);
@@ -416,7 +478,7 @@ export class UserService {
 
         // Build filter object
         const filter: any = { campus_id };
-        
+
         // Prevent Super Admin from being retrieved through this endpoint
         if (user_type === "Super Admin") {
             // Return empty result if explicitly trying to get Super Admin
@@ -432,12 +494,12 @@ export class UserService {
                 },
             };
         }
-        
+
         if (user_type) {
             filter.user_type = user_type;
         }
         // Note: Super Admin will be filtered out from results below
-        
+
         if (is_deleted !== undefined) {
             filter.is_deleted = is_deleted;
         }
@@ -488,10 +550,12 @@ export class UserService {
         if (name) {
             const nameLower = name.toLowerCase();
             users = users.filter((u) => {
-                const fullName = `${u.first_name || ''} ${u.last_name || ''}`.toLowerCase();
-                return fullName.includes(nameLower) ||
-                       u.first_name?.toLowerCase().includes(nameLower) ||
-                       u.last_name?.toLowerCase().includes(nameLower);
+                const fullName = `${u.first_name || ""} ${u.last_name || ""}`.toLowerCase();
+                return (
+                    fullName.includes(nameLower) ||
+                    u.first_name?.toLowerCase().includes(nameLower) ||
+                    u.last_name?.toLowerCase().includes(nameLower)
+                );
             });
         }
 
@@ -524,12 +588,14 @@ export class UserService {
         if (search) {
             const searchLower = search.toLowerCase();
             users = users.filter((u) => {
-                const fullName = `${u.first_name || ''} ${u.last_name || ''}`.toLowerCase();
-                return fullName.includes(searchLower) ||
-                       u.email?.toLowerCase().includes(searchLower) ||
-                       u.user_id?.toLowerCase().includes(searchLower) ||
-                       u.phone?.includes(search) ||
-                       u.address?.toLowerCase().includes(searchLower);
+                const fullName = `${u.first_name || ""} ${u.last_name || ""}`.toLowerCase();
+                return (
+                    fullName.includes(searchLower) ||
+                    u.email?.toLowerCase().includes(searchLower) ||
+                    u.user_id?.toLowerCase().includes(searchLower) ||
+                    u.phone?.includes(search) ||
+                    u.address?.toLowerCase().includes(searchLower)
+                );
             });
         }
 
