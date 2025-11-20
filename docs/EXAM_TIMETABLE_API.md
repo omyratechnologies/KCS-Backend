@@ -2,6 +2,63 @@
 
 This module provides a complete CRUD (Create, Read, Update, Delete) system for managing exam timetables. The system is designed for administrative users only, with published timetables being visible to students and parents.
 
+## New Workflow (Updated)
+
+The exam timetable creation follows a **three-step process** as shown in the UI:
+
+### Step 1: Create New Term
+When creating an exam term, you **must specify the classes** that will participate in the exam:
+
+```json
+POST /api/exam/
+{
+  "name": "Mid-Term Examination",
+  "class_ids": ["class7a", "class7b", "class7c"],
+  "start_date": "2023-05-15T00:00:00Z",
+  "end_date": "2023-05-25T00:00:00Z",
+  "meta_data": {
+    "type": "midterm",
+    "academic_year": "2022-2023"
+  }
+}
+```
+
+### Step 2: View Classes in Term
+After creating the term, click on it to see the list of classes. Each class will be displayed as a separate card (e.g., "Class 2 - Section A", "Class 4 - Section B").
+
+### Step 3: Create Timetable for a Specific Class
+Select ONE class and create its timetable by choosing subjects, dates, and times. **Each timetable is for a single class only**:
+
+```json
+POST /api/exam/timetable
+{
+  "exam_term_id": "term123",
+  "exam_name": "Mid-Term Examination",
+  "class_id": "class7a",  // Single class only
+  "start_date": "2023-05-15T00:00:00Z",
+  "end_date": "2023-05-25T00:00:00Z",
+  "subjects": [
+    {
+      "subject_id": "math101",
+      "exam_date": "2023-05-15T00:00:00Z",
+      "start_time": "09:00",
+      "end_time": "11:00",
+      "room": "Room A101",
+      "invigilator_ids": ["teacher123", "teacher456"]
+    }
+  ]
+}
+```
+
+### Step 4: Review & Create
+The final step shows a review of all information before creating the timetable. The API automatically enriches the response with:
+- Subject details (code, name, credits)
+- Class name
+- Exam term information
+- Invigilator names
+
+**Important**: Repeat Step 3 & 4 for each class in the term to create individual timetables.
+
 ## Architecture
 
 The exam timetable system follows a **reference-only architecture** for data integrity and consistency:
@@ -30,12 +87,20 @@ This approach ensures that any updates to subject details, class names, or exam 
 
 ## Data Structure
 
-### Exam Timetable
-Based on the provided image, each exam timetable includes:
+### Exam Term (Updated)
+Each exam term now includes:
+- **Term Name**: e.g., "Mid-Term Examination"
+- **Class IDs**: Array of class IDs that will participate in this exam term
+- **Date Range**: Start and End dates for the term
+- **Meta Data**: Additional information like academic year, type, etc.
 
+### Exam Timetable
+Based on the provided UI workflow, each exam timetable includes:
+
+- **Exam Term ID**: Reference to the exam term (includes class_ids)
 - **Exam Name**: e.g., "Mid-Term Examination"
-- **Classes**: Multiple classes (e.g., "Class 7A, 7B, 7C")
-- **Date Range**: Start and End dates
+- **Classes**: Inherited from exam term (or can be overridden)
+- **Date Range**: Start and End dates for exams
 - **Subjects**: Array of subjects with:
   - Subject ID (reference to subject entity)
   - Exam Date and Time
@@ -46,17 +111,41 @@ Based on the provided image, each exam timetable includes:
 - Subject Code (e.g., "MAT101")
 - Subject Name (e.g., "Mathematics") 
 - Credits (e.g., 4)
-- Class Names
+- Class Names (e.g., "Class 7A, 7B, 7C")
 - Exam Term Details
 - Invigilator Names
 
 ## API Endpoints
 
-### Admin Endpoints (Require Admin Permissions)
+### Exam Term Endpoints
+
+#### Create Exam Term (Step 1)
+- **POST** `/api/exam/`
+- Create a new exam term with class selection
+- **Required Fields**: name, class_ids, start_date, end_date
+- Classes must be selected at this stage
+
+#### Get All Exam Terms
+- **GET** `/api/exam/`
+- Retrieve all exam terms for the campus
+
+#### Get Exam Term by ID
+- **GET** `/api/exam/:id`
+- Retrieve a specific exam term with its class assignments
+
+#### Update Exam Term
+- **PATCH** `/api/exam/:id`
+- Update an existing exam term, including class assignments
+
+#### Delete Exam Term
+- **DELETE** `/api/exam/:id`
+- Soft delete an exam term
+
+### Exam Timetable Endpoints (Step 2 & 3)
 
 #### Create Exam Timetable
 - **POST** `/api/exam/timetable`
-- Create a new exam timetable
+- Create a new exam timetable (automatically inherits class_ids from exam term)
 
 #### Get All Exam Timetables
 - **GET** `/api/exam/timetable/all`
@@ -64,7 +153,7 @@ Based on the provided image, each exam timetable includes:
 
 #### Get Exam Timetable by ID
 - **GET** `/api/exam/timetable/:id`
-- Retrieve a specific exam timetable
+- Retrieve a specific exam timetable with enriched data
 
 #### Update Exam Timetable
 - **PATCH** `/api/exam/timetable/:id`
@@ -102,14 +191,30 @@ Based on the provided image, each exam timetable includes:
 
 ## Usage Example
 
-### Creating an Exam Timetable
+### Creating Exam Timetables
 
+#### Step 1: Create the Term
+```json
+POST /api/exam/
+{
+  "name": "Mid-Term Examination",
+  "class_ids": ["class7a", "class7b", "class7c"],
+  "start_date": "2023-05-15T00:00:00Z",
+  "end_date": "2023-05-25T00:00:00Z",
+  "meta_data": {
+    "type": "midterm",
+    "academic_year": "2022-2023"
+  }
+}
+```
+
+#### Step 2: Create Timetable for Class 7A
 ```json
 POST /api/exam/timetable
 {
   "exam_term_id": "term123",
   "exam_name": "Mid-Term Examination",
-  "class_ids": ["class7a", "class7b", "class7c"],
+  "class_id": "class7a",
   "start_date": "2023-05-15T00:00:00Z",
   "end_date": "2023-05-25T00:00:00Z",
   "subjects": [
@@ -118,8 +223,7 @@ POST /api/exam/timetable
       "exam_date": "2023-05-15T00:00:00Z",
       "start_time": "09:00",
       "end_time": "11:00",
-      "room": "Room A101",
-      "invigilator_ids": ["teacher123", "teacher456"]
+      "room": "Room A101"
     },
     {
       "subject_id": "phys101",
@@ -132,7 +236,27 @@ POST /api/exam/timetable
 }
 ```
 
-**Note**: The API accepts only subject IDs and other reference IDs. When retrieving exam timetables, the system automatically enriches the response with complete subject details (code, name, credits) by looking up the referenced subjects, classes, and exam terms.
+#### Step 3: Create Timetable for Class 7B
+```json
+POST /api/exam/timetable
+{
+  "exam_term_id": "term123",
+  "exam_name": "Mid-Term Examination",
+  "class_id": "class7b",
+  "start_date": "2023-05-15T00:00:00Z",
+  "end_date": "2023-05-25T00:00:00Z",
+  "subjects": [
+    {
+      "subject_id": "math101",
+      "exam_date": "2023-05-15T00:00:00Z",
+      "start_time": "09:00",
+      "end_time": "11:00"
+    }
+  ]
+}
+```
+
+**Note**: Each class gets its own timetable. Repeat for all classes in the term.
 
 ## Security
 

@@ -39,7 +39,10 @@ export const createExamTimetableRequestBodySchema = z
     .object({
         exam_term_id: z.string().openapi({ example: "exam_term123" }),
         exam_name: z.string().openapi({ example: "Mid-Term Examination" }),
-        class_ids: z.array(z.string()).openapi({ example: ["class123", "class456"] }),
+        class_id: z.string().openapi({ 
+            example: "class123",
+            description: "Single class ID - each timetable is for one class only"
+        }),
         start_date: z.string().openapi({ example: "2023-05-15T00:00:00Z" }),
         end_date: z.string().openapi({ example: "2023-05-25T00:00:00Z" }),
         subjects: z.array(

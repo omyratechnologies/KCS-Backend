@@ -7,10 +7,11 @@ export class ExamController {
     public static readonly createExamTerm = async (ctx: Context) => {
         try {
             const campus_id = ctx.get("campus_id");
-            const { name, start_date, end_date, meta_data } = await ctx.req.json();
+            const { name, class_ids, start_date, end_date, meta_data } = await ctx.req.json();
 
             const exam_term = await ExamService.createExamTerm(campus_id, {
                 name,
+                class_ids,
                 start_date: new Date(start_date),
                 end_date: new Date(end_date),
                 meta_data,
@@ -73,12 +74,13 @@ export class ExamController {
     public static readonly updateExamTerm = async (ctx: Context) => {
         try {
             const id = ctx.req.param("id");
-            const { name, start_date, end_date, meta_data } = await ctx.req.json();
+            const { name, class_ids, start_date, end_date, meta_data } = await ctx.req.json();
 
             const exam_term = await ExamService.updateExamTerm(id, {
                 name,
-                start_date: new Date(start_date),
-                end_date: new Date(end_date),
+                class_ids,
+                start_date: start_date ? new Date(start_date) : undefined,
+                end_date: end_date ? new Date(end_date) : undefined,
                 meta_data,
             });
 

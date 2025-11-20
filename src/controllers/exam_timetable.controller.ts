@@ -11,7 +11,7 @@ export class ExamTimetableController {
             const {
                 exam_term_id,
                 exam_name,
-                class_ids,
+                class_id,
                 start_date,
                 end_date,
                 subjects,
@@ -19,7 +19,7 @@ export class ExamTimetableController {
             }: {
                 exam_term_id: string;
                 exam_name: string;
-                class_ids: string[];
+                class_id: string;
                 start_date: string;
                 end_date: string;
                 subjects: Array<{
@@ -36,7 +36,7 @@ export class ExamTimetableController {
             const examTimetable = await ExamTimetableService.createExamTimetable(campus_id, {
                 exam_term_id,
                 exam_name,
-                class_ids,
+                class_id,
                 start_date: new Date(start_date),
                 end_date: new Date(end_date),
                 subjects: subjects.map((subject) => ({

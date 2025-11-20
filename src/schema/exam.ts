@@ -8,11 +8,14 @@ export const examTermSchema = z
         id: z.string().openapi({ example: "examterm123" }),
         campus_id: z.string().openapi({ example: "campus123" }),
         name: z.string().openapi({ example: "Midterm Examination" }),
+        class_ids: z.array(z.string()).openapi({ example: ["class123", "class456", "class789"] }),
         start_date: z.string().openapi({ example: "2023-03-15T00:00:00Z" }),
         end_date: z.string().openapi({ example: "2023-03-25T00:00:00Z" }),
         meta_data: z.record(z.string(), z.any()).openapi({
             example: { type: "midterm", academic_year: "2022-2023" },
         }),
+        is_active: z.boolean().openapi({ example: true }),
+        is_deleted: z.boolean().openapi({ example: false }),
         created_at: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
         updated_at: z.string().openapi({ example: "2023-01-01T00:00:00Z" }),
     })
@@ -22,6 +25,7 @@ export const examTermSchema = z
 export const createExamTermRequestBodySchema = z
     .object({
         name: z.string().openapi({ example: "Midterm Examination" }),
+        class_ids: z.array(z.string()).openapi({ example: ["class123", "class456", "class789"] }),
         start_date: z.string().openapi({ example: "2023-03-15T00:00:00Z" }),
         end_date: z.string().openapi({ example: "2023-03-25T00:00:00Z" }),
         meta_data: z.record(z.string(), z.any()).openapi({
@@ -38,6 +42,7 @@ export const createExamTermResponseSchema = examTermSchema.openapi({
 export const updateExamTermRequestBodySchema = z
     .object({
         name: z.string().optional().openapi({ example: "Updated Midterm Examination" }),
+        class_ids: z.array(z.string()).optional().openapi({ example: ["class123", "class456", "class789"] }),
         start_date: z.string().optional().openapi({ example: "2023-03-16T00:00:00Z" }),
         end_date: z.string().optional().openapi({ example: "2023-03-26T00:00:00Z" }),
         meta_data: z
