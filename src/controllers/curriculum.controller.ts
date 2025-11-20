@@ -24,13 +24,13 @@ export class CurriculumController {
             const body = await ctx.req.json();
 
             const bodyKeys = Object.keys(body);
-            const allowedKeys = ["units, subject_id"];
+            const allowedKeys = ["units", "subject_id"];
             const extraKeys = bodyKeys.filter(key => !allowedKeys.includes(key));
             
             if (extraKeys.length > 0) {
                 return ctx.json(
                     {
-                        message: `Invalid fields in request body: ${extraKeys.join(", ")}. Only 'units' is allowed.`,
+                        message: `Invalid fields in request body: ${extraKeys.join(", ")}. Only 'units' and 'subject_id' are allowed.`,
                     },
                     400
                 );
