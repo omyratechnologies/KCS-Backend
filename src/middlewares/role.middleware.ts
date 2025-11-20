@@ -24,3 +24,22 @@ export const roleMiddleware = (actionName: ActionType): MiddlewareHandler => {
         await next();
     };
 };
+
+export const checkUserType = (requiredUserTypes: string[]): MiddlewareHandler => {
+    return async (ctx: Context, next: Next) => {
+        const user_type = ctx.get("user_type");
+
+        if (!user_type) {
+            return ctx.json({ error: "Unauthorized" }, 401);
+        }
+
+        const normalizedUserType = user_type.toLowerCase();
+        const normalizedRequiredTypes = requiredUserTypes.map(type => type.toLowerCase());
+
+        if (normalizedRequiredTypes.includes(normalizedUserType)) {
+            await next();
+        } else {
+            return ctx.json({ error: "Forbidden: Insufficient permissions" }, 403);
+        }
+    };
+};

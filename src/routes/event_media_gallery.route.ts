@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { EventMediaGalleryController } from "@/controllers/event_media_gallery.controller";
-import { teacherOrAdminMiddleware } from "@/middlewares/teacher_or_admin.middleware";
+import { checkUserType } from "@/middlewares/role.middleware";
 
 const app = new Hono();
 
@@ -10,7 +10,7 @@ const app = new Hono();
  * Create new event media gallery
  * Only teachers and admins can upload
  */
-app.post("/", teacherOrAdminMiddleware(), EventMediaGalleryController.createEventMedia);
+app.post("/", checkUserType(["teacher", "admin"]), EventMediaGalleryController.createEventMedia);
 
 /**
  * Get all event media galleries
@@ -27,12 +27,12 @@ app.get("/:id", EventMediaGalleryController.getEventMediaById);
  * Update event media gallery
  * Admin can update any, teachers only their own
  */
-app.put("/:id", teacherOrAdminMiddleware(), EventMediaGalleryController.updateEventMedia);
+app.put("/:id", checkUserType(["teacher", "admin"]), EventMediaGalleryController.updateEventMedia);
 
 /**
  * Delete event media gallery
  * Admin can delete any, teachers only their own
  */
-app.delete("/:id", teacherOrAdminMiddleware(), EventMediaGalleryController.deleteEventMedia);
+app.delete("/:id", checkUserType(["teacher", "admin"]), EventMediaGalleryController.deleteEventMedia);
 
 export default app;
