@@ -34,9 +34,6 @@ export const env = z.object({
     R2_BUCKET_URL: z.string(),
     // Redis Configuration
     REDIS_URI: z.string(),
-    // GetStream Configuration
-    GETSTREAM_API_KEY: z.string(),
-    GETSTREAM_API_SECRET: z.string(),
     // Firebase Configuration
     FIREBASE_PROJECT_ID: z.string().optional(),
     FIREBASE_SERVICE_ACCOUNT_KEY: z.string().optional(),

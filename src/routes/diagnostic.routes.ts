@@ -26,12 +26,6 @@ diagnosticRoutes.get("/env", authMiddleware, async (c) => {
             data: {
                 NODE_ENV: config.NODE_ENV,
                 PORT: config.PORT,
-                GETSTREAM_API_KEY: config.GETSTREAM_API_KEY || "NOT_SET",
-                GETSTREAM_API_SECRET: config.GETSTREAM_API_SECRET ? 
-                    config.GETSTREAM_API_SECRET.substring(0, 20) + "..." : 
-                    "NOT_SET",
-                GETSTREAM_API_KEY_LENGTH: config.GETSTREAM_API_KEY?.length || 0,
-                GETSTREAM_API_SECRET_LENGTH: config.GETSTREAM_API_SECRET?.length || 0,
             }
         });
     } catch (error) {
