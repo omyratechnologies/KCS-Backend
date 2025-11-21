@@ -374,15 +374,15 @@ export class UserService {
             ],
         });
 
-        // Populate class name if class_id exists
-        let userWithClass: IUser & { class_name?: string } = { ...user };
-        if (user.class_id) {
+        // Populate class name if class_id exists (only for students)
+        const userWithClass: IUser & { class_name?: string } = { ...user };
+        if (user.class_id && user.user_type?.toLowerCase() === "student") {
             try {
                 const classData = await Class.findById(user.class_id);
                 if (classData) {
                     userWithClass.class_name = classData.name;
                 }
-            } catch (error) {
+            } catch {
                 infoLogs(
                     `Failed to fetch class name for class_id: ${user.class_id}`,
                     LogTypes.ERROR,
@@ -797,7 +797,7 @@ export class UserService {
         // Populate class names for users with class_id
         const usersWithClassNames = await Promise.all(
             paginatedUsers.map(async (user) => {
-                if (user.class_id) {
+                if (user.class_id && user.user_type?.toLowerCase() === "student") {
                     try {
                         const classData = await Class.findById(user.class_id);
                         return {

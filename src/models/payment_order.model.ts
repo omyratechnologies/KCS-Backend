@@ -19,6 +19,10 @@ export interface IPaymentOrder {
     class_id: string;
     fee_structure_id: string;
     
+    // Parent relation (who made the payment)
+    paid_by_id: string; // User ID of who paid (Student or Parent)
+    paid_by_type: "Student" | "Parent"; // Type of user who paid
+    
     // Payment details
     payment_type: "ONE_TIME" | "INSTALLMENT";
     installment_number?: number; // If installment payment
@@ -61,6 +65,9 @@ const paymentOrderSchema = new Schema({
     campus_id: { type: String, required: true },
     class_id: { type: String, required: true },
     fee_structure_id: { type: String, required: true },
+    
+    paid_by_id: { type: String, required: true },
+    paid_by_type: { type: String, required: true },
     
     payment_type: { type: String, required: true },
     installment_number: Number,

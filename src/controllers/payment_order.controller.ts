@@ -10,37 +10,31 @@ import { CampusVendor } from "../models/campus_vendor.model";
 import { User } from "../models/user.model";
 import { cashfreeService } from "../services/cashfree.service";
 import { CashfreeWebhookEvent, PaymentMode } from "../types/payment-gateway.types";
-// role middleware "../middlewares/role.middleware"
-import { roleMiddleware } from "../middlewares/role.middleware";
 
 export class PaymentOrderController {
     /**
-     * Create payment order (student initiates payment)
-     * POST /api/payments/create-order
+     * Create payment order (student or parent initiates payment)
+     * POST /api/cashfree-payments/create-order
      */
     static async createOrder(c: Context) {
         try {
-            const student_id = c.get("user_id");
+            const user_id = c.get("user_id");
             const user_type = c.get("user_type");
-
-            if (user_type?.toLowerCase() !== "student") {
-                return c.json({ success: false, message: "Only students can create payment orders" }, 403);
-            }
 
             const body = await c.req.json();
             const {
-                fee_structure_id,
+                student_id: provided_student_id, // Parent must provide this, Student can optionally provide (for validation)
                 payment_type, // "ONE_TIME" or "INSTALLMENT"
                 installment_number, // Required if payment_type is INSTALLMENT
-                return_url,
+                return_url, // Optional redirect URL after payment
             } = body;
 
             // Validation
-            if (!fee_structure_id || !payment_type) {
+            if (!payment_type || (payment_type !== PaymentMode.ONE_TIME && payment_type !== PaymentMode.INSTALLMENT)) {
                 return c.json(
                     {
                         success: false,
-                        message: "Missing required fields: fee_structure_id, payment_type",
+                        message: "Invalid or missing payment_type. Must be one_time or installment.",
                     },
                     400
                 );
@@ -53,7 +47,54 @@ export class PaymentOrderController {
                 );
             }
 
-            // Auto-fetch student details from User model
+            // Determine the student_id based on user type
+            let student_id: string;
+            const paid_by_id: string = user_id;
+            let paid_by_type: "Student" | "Parent";
+
+            if (user_type.toLowerCase() === "student") {
+                // Student paying for themselves
+                student_id = user_id;
+                paid_by_type = "Student";
+
+                // If student provided a different student_id, reject it
+                if (provided_student_id && provided_student_id !== user_id) {
+                    return c.json({ success: false, message: "Students can only pay for themselves" }, 403);
+                }
+            } else {
+                // Parent paying for their child
+                paid_by_type = "Parent";
+
+                // Parent MUST provide student_id
+                if (!provided_student_id) {
+                    return c.json(
+                        { success: false, message: "Parents must provide student_id to pay for their child" },
+                        400
+                    );
+                }
+
+                student_id = provided_student_id;
+
+                // Verify that the student is linked to this parent
+                const parent = await User.findById(user_id);
+                if (!parent) {
+                    return c.json({ success: false, message: "Parent not found" }, 404);
+                }
+
+                const linkedStudentIds = (parent.meta_data as Record<string, unknown>)?.student_id || [];
+                if (!Array.isArray(linkedStudentIds) || !linkedStudentIds.includes(student_id)) {
+                    return c.json(
+                        {
+                            success: false,
+                            message:
+                                "You are not authorized to pay for this student. This student is not linked to your parent account.",
+                        },
+                        403
+                    );
+                }
+            }
+
+            // Fetch student details for payment
             const student = await User.findById(student_id);
             if (!student) {
                 return c.json({ success: false, message: "Student not found" }, 404);
@@ -67,22 +108,28 @@ export class PaymentOrderController {
                 return c.json(
                     {
                         success: false,
-                        message: "Student profile incomplete. Please update your name, email, and phone number.",
+                        message: "Student profile incomplete. Please update student's name, email, and phone number.",
                     },
                     400
                 );
             }
 
-            // Get fee structure
+            // Get fee structure from student's current class
+            if (!student.class_id) {
+                return c.json({ success: false, message: "Student is not assigned to any class" }, 400);
+            }
+
             const feeStructureResult = await ClassFeeStructure.find({
-                id: fee_structure_id,
+                class_id: student.class_id,
             });
             const feeStructure =
                 feeStructureResult && feeStructureResult.rows.length > 0 ? feeStructureResult.rows[0] : null;
 
             if (!feeStructure) {
-                return c.json({ success: false, message: "Fee structure not found" }, 404);
+                return c.json({ success: false, message: "Fee structure not found for student's class" }, 404);
             }
+
+            const fee_structure_id = feeStructure.id;
 
             // Check if payment type is enabled
             if (payment_type === PaymentMode.ONE_TIME && !feeStructure.one_time_enabled) {
@@ -112,7 +159,9 @@ export class PaymentOrderController {
             const base_amount_paid = existingPayments.reduce((sum, payment) => {
                 if (payment.payment_type === PaymentMode.INSTALLMENT && payment.installment_number) {
                     // Find the installment in fee structure to get base amount
-                    const inst = feeStructure.installments?.find(i => i.installment_number === payment.installment_number);
+                    const inst = feeStructure.installments?.find(
+                        (i) => i.installment_number === payment.installment_number
+                    );
                     if (inst) {
                         return sum + inst.amount; // Use base installment amount, not order_amount
                     }
@@ -202,19 +251,19 @@ export class PaymentOrderController {
                 // ===== VALIDATION: Sequential installment payment (must pay in order) =====
                 // Sort installments by due date to determine order
                 const sortedInstallments = [...feeStructure.installments].sort((a, b) => {
-                    const dateA = new Date(a.due_date || '9999-12-31');
-                    const dateB = new Date(b.due_date || '9999-12-31');
+                    const dateA = new Date(a.due_date || "9999-12-31");
+                    const dateB = new Date(b.due_date || "9999-12-31");
                     return dateA.getTime() - dateB.getTime();
                 });
 
                 // Find which installments have been paid
                 const paidInstallmentNumbers = existingPayments
-                    .filter(p => p.payment_type === PaymentMode.INSTALLMENT && p.installment_number)
-                    .map(p => p.installment_number);
+                    .filter((p) => p.payment_type === PaymentMode.INSTALLMENT && p.installment_number)
+                    .map((p) => p.installment_number);
 
                 // Find the next unpaid installment (by due date order)
                 const nextUnpaidInstallment = sortedInstallments.find(
-                    inst => !paidInstallmentNumbers.includes(inst.installment_number)
+                    (inst) => !paidInstallmentNumbers.includes(inst.installment_number)
                 );
 
                 // Check if trying to pay out of order
@@ -268,14 +317,21 @@ export class PaymentOrderController {
                         appliedLateFee = installment.late_fee || 0;
                         order_amount += appliedLateFee;
                         installment_description += ` (Late Fee: ₹${appliedLateFee})`;
-                        
+
                         // eslint-disable-next-line no-console
-                        console.log(`⚠️ Late payment detected! Due: ${installment.due_date}, Late Fee: ₹${appliedLateFee}`);
+                        console.log(
+                            `⚠️ Late payment detected! Due: ${installment.due_date}, Late Fee: ₹${appliedLateFee}`
+                        );
                     }
                 }
 
                 // eslint-disable-next-line no-console
-                console.log("Installment payment:", { installment_number, order_amount, base_amount: installment.amount, late_fee: appliedLateFee });
+                console.log("Installment payment:", {
+                    installment_number,
+                    order_amount,
+                    base_amount: installment.amount,
+                    late_fee: appliedLateFee,
+                });
 
                 // ===== VALIDATION: Check if payment would exceed total (using BASE amounts only) =====
                 // Late fees are penalties and should NOT count against the total fee structure amount
@@ -307,13 +363,15 @@ export class PaymentOrderController {
             const order_id = `ORD_${feeStructure.campus_id}_${student_id}_${timestamp}`;
 
             // Create order in database first
-            const paymentOrder = new PaymentOrder({
+            const paymentOrder = await PaymentOrder.create({
                 order_id,
                 cf_order_id: "", // Will be updated after Cashfree order creation
                 student_id,
                 campus_id: feeStructure.campus_id,
                 class_id: feeStructure.class_id,
                 fee_structure_id,
+                paid_by_id,
+                paid_by_type,
                 payment_type,
                 installment_number: payment_type === PaymentMode.INSTALLMENT ? installment_number : undefined,
                 order_amount,
@@ -321,11 +379,10 @@ export class PaymentOrderController {
                 payment_status: "PENDING",
                 order_status: "ACTIVE",
                 settlement_status: "PENDING",
+                is_deleted: false,
                 created_at: new Date(),
                 updated_at: new Date(),
             });
-
-            await paymentOrder.save();
 
             // Create order in Cashfree with splits
             try {
@@ -346,8 +403,8 @@ export class PaymentOrderController {
                     order_meta: {
                         return_url:
                             return_url && return_url.startsWith("http")
-                                ? return_url
-                                : `http://localhost:3000/payment/success`,
+                                ? `${return_url}${return_url.includes("?") ? "&" : "?"}order_id=${order_id}`
+                                : `https://letscatchup-kcs.com/order_id=${order_id}`,
                         notify_url:
                             process.env.CASHFREE_WEBHOOK_URL || `http://localhost:4500/api/cashfree-payments/webhook`,
                     },
@@ -371,11 +428,16 @@ export class PaymentOrderController {
 
                 const cashfreeOrder = await cashfreeService.createOrder(cashfreeOrderData);
 
+                // eslint-disable-next-line no-console
+                console.log("✅ Cashfree order created successfully:", JSON.stringify(cashfreeOrder, null, 2));
+
                 // Update payment order with Cashfree order ID and payment session
-                paymentOrder.cf_order_id = cashfreeOrder.cf_order_id;
-                paymentOrder.payment_session_id = cashfreeOrder.payment_session_id;
-                paymentOrder.order_status = cashfreeOrder.order_status;
-                await paymentOrder.save();
+                await PaymentOrder.updateById(paymentOrder.id, {
+                    cf_order_id: cashfreeOrder.cf_order_id,
+                    payment_session_id: cashfreeOrder.payment_session_id,
+                    order_status: cashfreeOrder.order_status,
+                    updated_at: new Date(),
+                });
 
                 return c.json(
                     {
@@ -387,25 +449,35 @@ export class PaymentOrderController {
                             payment_session_id: cashfreeOrder.payment_session_id,
                             order_amount,
                             order_currency: "INR",
+                            // IMPORTANT: Use payment_session_id with Cashfree JS SDK for proper return_url redirect
+                            // Direct payment_link will NOT redirect to return_url
                             payment_link: `https://sandbox.cashfree.com/pg/orders/${cashfreeOrder.cf_order_id}`,
                             order_status: cashfreeOrder.order_status,
+                            // For redirect to work: Use Cashfree JS SDK on frontend with payment_session_id
+                            // See: https://docs.cashfree.com/docs/web-integration-guide
                         },
                     },
                     201
                 );
             } catch (cashfreeError) {
                 // Mark order as failed
-                paymentOrder.order_status = "FAILED";
-                paymentOrder.payment_status = "FAILED";
-                await paymentOrder.save();
+                await PaymentOrder.updateById(paymentOrder.id, {
+                    order_status: "FAILED",
+                    payment_status: "FAILED",
+                    updated_at: new Date(),
+                });
 
                 // eslint-disable-next-line no-console
-                console.error("Cashfree Order Creation Error:", cashfreeError);
+                console.error("❌ Cashfree Order Creation Error:", cashfreeError);
+                // eslint-disable-next-line no-console
+                console.error("Error details:", JSON.stringify(cashfreeError, null, 2));
+
                 return c.json(
                     {
                         success: false,
                         message: "Failed to create payment order in Cashfree",
                         error: cashfreeError instanceof Error ? cashfreeError.message : "Unknown error",
+                        details: cashfreeError,
                     },
                     500
                 );
@@ -426,11 +498,13 @@ export class PaymentOrderController {
 
     /**
      * Get payment order status
-     * GET /api/payments/:order_id
+     * GET /api/cashfree-payments/:order_id
+     * Accessible by: Student (own orders), Parent (their children's orders), Admin, Accountant (all orders)
      */
     static async getOrderStatus(c: Context) {
         try {
-            const student_id = c.get("user_id");
+            const user_id = c.get("user_id");
+            const user_type = c.get("user_type");
             const { order_id } = c.req.param();
 
             const paymentOrder = await PaymentOrder.findOne({ order_id });
@@ -439,10 +513,35 @@ export class PaymentOrderController {
                 return c.json({ success: false, message: "Payment order not found" }, 404);
             }
 
-            // Verify ownership (students can only see their own orders)
-            const user_type = c.get("user_type");
-            if (paymentOrder.student_id !== student_id && user_type?.toLowerCase() !== "admin") {
-                return c.json({ success: false, message: "Unauthorized access to payment order" }, 403);
+            // Authorization check based on user type
+            const userTypeLower = user_type?.toLowerCase();
+
+            if (userTypeLower === "student") {
+                // Students can only see their own orders
+                if (paymentOrder.student_id !== user_id) {
+                    return c.json({ success: false, message: "Unauthorized access to payment order" }, 403);
+                }
+            } else if (userTypeLower === "parent") {
+                // Parents can see orders of their linked children
+                const parent = await User.findById(user_id);
+                if (!parent) {
+                    return c.json({ success: false, message: "Parent not found" }, 404);
+                }
+
+                const linkedStudentIds = (parent.meta_data as Record<string, unknown>)?.student_id || [];
+                if (!Array.isArray(linkedStudentIds) || !linkedStudentIds.includes(paymentOrder.student_id)) {
+                    return c.json(
+                        {
+                            success: false,
+                            message:
+                                "Unauthorized access to payment order. This order is for a student not linked to your account.",
+                        },
+                        403
+                    );
+                }
+            } else if (userTypeLower !== "admin" && userTypeLower !== "accountant") {
+                // Only Admin, Accountant, Student, and Parent can access
+                return c.json({ success: false, message: "Unauthorized access to payment orders" }, 403);
             }
 
             // Fetch latest status from Cashfree
@@ -484,19 +583,12 @@ export class PaymentOrderController {
     }
 
     /**
-     * Get all payment orders for student
-     * GET /api/payments
+     * Get all payment orders (Admin and Accountant only)
+     * GET /api/cashfree-payments/all-orders
      */
     static async getAllOrders(c: Context) {
         try {
-            const student_id = c.get("user_id");
-            const user_type = c.get("user_type");
-
-            if (user_type?.toLowerCase() !== "student") {
-                return c.json({ success: false, message: "Only students can view payment orders" }, 403);
-            }
-
-            const paymentOrders = await PaymentOrder.find({ student_id });
+            const paymentOrders = await PaymentOrder.find({});
 
             return c.json({
                 success: true,
@@ -816,19 +908,48 @@ export class PaymentOrderController {
             const user_id = c.get("user_id");
             const user_type = c.get("user_type");
 
-            // Only students and admins can sync
-            if (!user_id) {
-                return c.json({ success: false, message: "Unauthorized" }, 401);
-            }
-
             // Get student_id based on user type
             let student_id = user_id;
             let syncAll = false;
 
-            if (user_type?.toLowerCase() === "admin") {
-                // Admin can sync all payments or specific student
+            if (user_type?.toLowerCase() !== "student") {
                 const queryStudentId = c.req.query("student_id");
+                if (user_type?.toLowerCase() === "parent" && !queryStudentId) {
+                    return c.json(
+                        {
+                            success: false,
+                            message: "student_id query parameter is required for parent users",
+                        },
+                        400
+                    );
+                }
                 if (queryStudentId) {
+                    // Check if student exists
+                    const student = await User.findById(queryStudentId);
+                    if (!student) {
+                        return c.json({ success: false, message: "Student not found" }, 404);
+                    }
+
+                    // If parent, verify student is linked to them
+                    if (user_type?.toLowerCase() === "parent") {
+                        const parent = await User.findById(user_id);
+                        if (!parent) {
+                            return c.json({ success: false, message: "Parent not found" }, 404);
+                        }
+
+                        const linkedStudentIds = (parent.meta_data as Record<string, unknown>)?.student_id || [];
+                        if (!Array.isArray(linkedStudentIds) || !linkedStudentIds.includes(queryStudentId)) {
+                            return c.json(
+                                {
+                                    success: false,
+                                    message:
+                                        "You are not authorized to sync payments for this student. This student is not linked to your parent account.",
+                                },
+                                403
+                            );
+                        }
+                    }
+
                     student_id = queryStudentId;
                 } else {
                     syncAll = true;
@@ -934,24 +1055,16 @@ export class PaymentOrderController {
         }
     }
 
+    /**
+     * Get student's own payment history (Student only)
+     * GET /api/cashfree-payments/my-payments
+     */
     static async getMyPayments(c: Context) {
         try {
-            const student_id = c.get("user_id");
-            const user_type = c.get("user_type");
-
-            // Check if user is a student
-            if (!user_type || user_type !== "Student") {
-                return c.json(
-                    {
-                        success: false,
-                        message: "Unauthorized - Only students can view their payment history",
-                    },
-                    403
-                );
-            }
+            const user_id = c.get("user_id");
 
             // Fetch all payments for this student
-            const result = await PaymentOrder.find({ student_id });
+            const result = await PaymentOrder.find({ student_id: user_id });
             const payments = result && result.rows ? result.rows : [];
 
             // Sort by created_at descending (newest first)
@@ -990,6 +1103,8 @@ export class PaymentOrderController {
                         payment_time: payment.payment_time,
                         created_at: payment.created_at,
                         settlement_status: payment.settlement_status,
+                        paid_by_type: payment.paid_by_type,
+                        paid_by_id: payment.paid_by_id,
                         fee_structure: feeStructure
                             ? {
                                   class_name: feeStructure.class_name,
@@ -1005,7 +1120,7 @@ export class PaymentOrderController {
             return c.json({
                 success: true,
                 data: {
-                    student_id,
+                    student_id: user_id,
                     total_payments: paymentsWithDetails.length,
                     payments: paymentsWithDetails,
                 },
@@ -1025,19 +1140,37 @@ export class PaymentOrderController {
     }
 
     /**
-     * Get student payment history by student ID (admin only)
+     * Get student payment history by student ID by parent or admin
      * GET /api/cashfree-payments/student/:student_id/payments
      */
     static async getStudentPayments(c: Context) {
         try {
+            const parent_id = c.get("user_id");
             const user_type = c.get("user_type");
-            if (!user_type || user_type !== "Admin") {
-                return c.json({ success: false, message: "Unauthorized - Admin access required" }, 403);
-            }
 
             const student_id = c.req.param("student_id");
             if (!student_id) {
                 return c.json({ success: false, message: "Student ID is required" }, 400);
+            }
+
+            // Verify that the student is linked to this parent
+            if (user_type.toLowerCase() === "parent") {
+                const parent = await User.findById(parent_id);
+                if (!parent) {
+                    return c.json({ success: false, message: "Parent not found" }, 404);
+                }
+
+                const linkedStudentIds = (parent.meta_data as Record<string, unknown>)?.student_id || [];
+                if (!Array.isArray(linkedStudentIds) || !linkedStudentIds.includes(student_id)) {
+                    return c.json(
+                        {
+                            success: false,
+                            message:
+                                "You are not authorized to view payments for this student. This student is not linked to your parent account.",
+                        },
+                        403
+                    );
+                }
             }
 
             // Fetch all payments for this student
@@ -1080,6 +1213,8 @@ export class PaymentOrderController {
                         payment_time: payment.payment_time,
                         created_at: payment.created_at,
                         settlement_status: payment.settlement_status,
+                        paid_by_type: payment.paid_by_type,
+                        paid_by_id: payment.paid_by_id,
                         fee_structure: feeStructure
                             ? {
                                   class_name: feeStructure.class_name,
@@ -1092,17 +1227,20 @@ export class PaymentOrderController {
                 })
             );
 
+            const responseKey = user_type.toLowerCase() === "parent" ? "parent_id" : "admin_id";
+
             return c.json({
                 success: true,
                 data: {
                     student_id,
+                    [responseKey]: parent_id,
                     total_payments: paymentsWithDetails.length,
                     payments: paymentsWithDetails,
                 },
             });
         } catch (error) {
             // eslint-disable-next-line no-console
-            console.error("❌ Get Student Payments Error:", error);
+            console.error("❌ Get Student Payments By Parent Error:", error);
             return c.json(
                 {
                     success: false,
@@ -1113,4 +1251,95 @@ export class PaymentOrderController {
             );
         }
     }
+
+    /**
+     * Get student payment history by student ID (Admin and Accountant only)
+     * This is kept for backward compatibility with admin panel
+     * GET /api/cashfree-payments/admin/student/:student_id/payments (not currently routed)
+     */
+    // static async getStudentPayments(c: Context) {
+    //     try {
+    //         const user_type = c.get("user_type");
+    //         if (!user_type || user_type !== "Admin") {
+    //             return c.json({ success: false, message: "Unauthorized - Admin access required" }, 403);
+    //         }
+
+    //         const student_id = c.req.param("student_id");
+    //         if (!student_id) {
+    //             return c.json({ success: false, message: "Student ID is required" }, 400);
+    //         }
+
+    //         // Fetch all payments for this student
+    //         const result = await PaymentOrder.find({ student_id });
+    //         const payments = result && result.rows ? result.rows : [];
+
+    //         // Sort by created_at descending (newest first)
+    //         // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    //         payments.sort((a: any, b: any) => {
+    //             const dateA = new Date(a.created_at).getTime();
+    //             const dateB = new Date(b.created_at).getTime();
+    //             return dateB - dateA;
+    //         });
+
+    //         // Fetch fee structure details for each payment
+    //         const paymentsWithDetails = await Promise.all(
+    //             // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    //             payments.map(async (payment: any) => {
+    //                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    //                 let feeStructure: any = null;
+    //                 if (payment.fee_structure_id) {
+    //                     try {
+    //                         const feeResult = await ClassFeeStructure.find({ id: payment.fee_structure_id });
+    //                         feeStructure = feeResult && feeResult.rows.length > 0 ? feeResult.rows[0] : null;
+    //                     } catch (err) {
+    //                         // eslint-disable-next-line no-console
+    //                         console.error("Error fetching fee structure:", err);
+    //                     }
+    //                 }
+
+    //                 return {
+    //                     order_id: payment.order_id,
+    //                     cf_order_id: payment.cf_order_id,
+    //                     order_amount: payment.order_amount,
+    //                     payment_type: payment.payment_type,
+    //                     installment_number: payment.installment_number,
+    //                     payment_status: payment.payment_status,
+    //                     order_status: payment.order_status,
+    //                     payment_method: payment.payment_method,
+    //                     payment_time: payment.payment_time,
+    //                     created_at: payment.created_at,
+    //                     settlement_status: payment.settlement_status,
+    //                     fee_structure: feeStructure
+    //                         ? {
+    //                               class_name: feeStructure.class_name,
+    //                               academic_year: feeStructure.academic_year,
+    //                               total_amount: feeStructure.total_amount,
+    //                               fee_description: feeStructure.fee_description,
+    //                           }
+    //                         : null,
+    //                 };
+    //             })
+    //         );
+
+    //         return c.json({
+    //             success: true,
+    //             data: {
+    //                 student_id,
+    //                 total_payments: paymentsWithDetails.length,
+    //                 payments: paymentsWithDetails,
+    //             },
+    //         });
+    //     } catch (error) {
+    //         // eslint-disable-next-line no-console
+    //         console.error("❌ Get Student Payments Error:", error);
+    //         return c.json(
+    //             {
+    //                 success: false,
+    //                 message: "Failed to fetch student payments",
+    //                 error: error instanceof Error ? error.message : "Unknown error",
+    //             },
+    //             500
+    //         );
+    //     }
+    // }
 }

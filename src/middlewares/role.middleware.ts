@@ -18,6 +18,8 @@ export const roleMiddleware = (actionName: ActionType): MiddlewareHandler => {
     return async (ctx: Context, next: Next) => {
         const user_type = ctx.get("user_type");
 
+        console.log("Role Middleware - User Type:", user_type, "Action:", actionName);
+
         if (!user_type) {
             return ctx.json({ error: "Unauthorized" }, 401);
         }

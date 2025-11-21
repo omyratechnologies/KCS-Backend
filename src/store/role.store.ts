@@ -41,6 +41,8 @@ export const actionMap: {
         "view_assignment_progress",
         "view_academic_summary",
         "create_payment_order",
+        "view_student_own_payments",
+        "view_specific_order",
     ],
     Parent: [
         "get_user",
@@ -55,6 +57,8 @@ export const actionMap: {
         "view_course_completion_reports",
         "access_parent_dashboard",
         "create_payment_order",
+        "view_student_payments",
+        "view_specific_order",
     ],
     Teacher: [
         "get_user",
@@ -151,6 +155,7 @@ export const actionMap: {
         "create_payment_refund",
         "view_payment_analytics",
         "verify_payment",
+        "view_specific_order",
         // Course content permissions (full access)
         "create_course",
         "update_course",
@@ -195,14 +200,18 @@ export const actionMap: {
         "view_course_progress",
         "view_assignment_progress",
         "view_academic_summary",
+        "view_student_payments",
     ],
     Accountant: [
         "get_user",
         // Payment permissions (read-only)
         "view_payment_templates",
+        "view_student_payments",
         "view_payment_transactions",
+        "view_specific_order",
         "view_payment_invoices",
         "view_payment_analytics",
+        "verify_payment",
     ],
     "Super Admin": [
         "create_campus",
@@ -401,6 +410,9 @@ const actionNameSchema = z.union([
     z.literal("delete_payment_template"),
     z.literal("view_payment_templates"),
     z.literal("view_payment_transactions"),
+    z.literal("view_student_payments"),
+    z.literal("view_student_own_payments"),
+    z.literal("view_specific_order"),
     z.literal("view_payment_invoices"),
     z.literal("create_payment_refund"),
     z.literal("view_payment_analytics"),

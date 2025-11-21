@@ -1,76 +1,67 @@
 /**
  * Cashfree Payment Order Routes
- * Students create payment orders with automatic vendor splits
+ * Students and Parents can create payment orders with automatic vendor splits
  */
 
 import { Hono } from "hono";
 import { PaymentOrderController } from "../controllers/payment_order.controller";
-import { authMiddleware } from "@/middlewares/auth.middleware";
 import { roleMiddleware } from "@/middlewares/role.middleware";
 
 const cashfreePaymentRouter = new Hono();
 
-// Create payment order (admin only)
+// Create payment order (Student and Parent only)
 cashfreePaymentRouter.post(
     "/create-order",
-    authMiddleware,
     roleMiddleware("create_payment_order"),
     PaymentOrderController.createOrder
 );
 
-// Sync payment statuses with Cashfree (admin only)
-cashfreePaymentRouter.get(
-    "/sync-payments",
-    authMiddleware,
-    roleMiddleware("verify_payment"),
-    PaymentOrderController.syncPaymentsWithCashfree
-);
-
-// Get student's payment history (admin and accountant)
+// Get student's own payment history (Student only)
 cashfreePaymentRouter.get(
     "/my-payments",
-    authMiddleware,
-    roleMiddleware("view_payment_transactions"),
+    roleMiddleware("view_student_own_payments"),
     PaymentOrderController.getMyPayments
 );
 
-// Get student payment history by ID (admin and accountant)
+// Get student payment history by student ID (Parent only - for their children) or admin
 cashfreePaymentRouter.get(
     "/student/:student_id/payments",
-    authMiddleware,
-    roleMiddleware("view_payment_transactions"),
+    roleMiddleware("view_student_payments"),
     PaymentOrderController.getStudentPayments
 );
 
-// Get all payment orders (admin and accountant)
+// Sync payment statuses with Cashfree (Admin and Accountant only)
 cashfreePaymentRouter.get(
-    "/",
-    authMiddleware,
+    "/sync-payments",
+    roleMiddleware("view_specific_order"),
+    PaymentOrderController.syncPaymentsWithCashfree
+);
+
+// Get all payment orders (Admin and Accountant only)
+cashfreePaymentRouter.get(
+    "/all-orders",
     roleMiddleware("view_payment_transactions"),
     PaymentOrderController.getAllOrders
 );
 
-// Manually verify payment status from Cashfree (admin only)
+// Manually verify payment status from Cashfree (Admin only)
 cashfreePaymentRouter.get(
     "/verify/:order_id",
-    authMiddleware,
     roleMiddleware("verify_payment"),
     PaymentOrderController.verifyPayment
 );
 
-// Check split and settlement details from Cashfree (admin and accountant)
+// Check split and settlement details from Cashfree (Admin and Accountant)
 cashfreePaymentRouter.get(
     "/check-split/:order_id",
-    authMiddleware,
-    roleMiddleware("view_payment_transactions"),
+    roleMiddleware("verify_payment"),
     PaymentOrderController.checkSplitDetails
 );
 
-// Get payment order status by order_id (admin and accountant)
+// Get payment order status by order_id (Admin, Accountant, Student, Parent)
 cashfreePaymentRouter.get(
     "/:order_id",
-    authMiddleware,
-    roleMiddleware("view_payment_transactions"),
+    roleMiddleware("view_specific_order"),
     PaymentOrderController.getOrderStatus
 );
 
