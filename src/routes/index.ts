@@ -19,6 +19,7 @@ import eventMediaGalleryRoute from "@/routes/event_media_gallery.route";
 import examRoute from "@/routes/exam.route";
 import examTimetableRoute from "@/routes/exam_timetable.route";
 import feeRoute from "@/routes/fee.route";
+import feeNotificationRoute from "@/routes/fee_notification.route";
 import healthRoute from "@/routes/health.route";
 import labelRoute from "@/routes/label.route";
 import leaveRoute from "@/routes/leave.route";
@@ -98,6 +99,7 @@ app.route("/exam/timetable", examTimetableRoute);
 app.route("/fee", feeRoute);
 app.route("/vendor", vendorRoute); // Campus vendor management (Cashfree)
 app.route("/fee-structures", feeStructureRoute); // Class fee structure management (Cashfree)
+app.route("/fee-notifications", feeNotificationRoute); // Fee payment reminder notifications (automated & manual)
 app.route("/label", labelRoute); // Label management for curriculum chapters
 app.route("/leave", leaveRoute);
 app.route("/timetable", timetableRoute);

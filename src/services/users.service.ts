@@ -98,7 +98,7 @@ export class UserService {
                         throw error;
                     }
                 }
-                throw new Error("Invalid class ID. Please provide a valid class ID");
+                throw new Error("Invalid class ID or Academic Year. Please provide a valid class ID");
             }
         }
 

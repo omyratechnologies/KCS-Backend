@@ -10,7 +10,7 @@ export interface IPaymentOrder {
     id?: string;
     
     // Order identification
-    order_id: string; // Cashfree order ID
+    order_id: string; // Cashfree order IDw
     cf_order_id?: string; // Cashfree's internal order ID
     
     // Student & Class info

@@ -18,12 +18,9 @@ import {
 
 const app = new Hono();
 
-// Apply student/parent creation check to user creation routes
-app.use("/", studentParentCreationMiddleware());
-app.use("/bulk", studentParentCreationMiddleware());
-
 app.post(
     "/bulk",
+    studentParentCreationMiddleware(), // Apply middleware only to bulk creation
     describeRoute({
         tags: ["Users"],
         operationId: "bulkCreateUsers",
@@ -72,6 +69,7 @@ app.post(
 
 app.post(
     "/",
+    studentParentCreationMiddleware(), // Apply middleware only to user creation
     describeRoute({
         tags: ["Users"],
         operationId: "createUser",
