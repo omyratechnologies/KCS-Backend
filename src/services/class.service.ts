@@ -829,7 +829,13 @@ export class ClassService {
     public async assignStudentsToClass(classId: string, studentIds: string[]): Promise<IClassData | null> {
         try {
             // Validate class exists
-            const existingClass = await Class.findById(classId);
+            let existingClass: IClassData | null;
+            try {
+                existingClass = await Class.findById(classId);
+            } catch {
+                throw new Error("Class not found");
+            }
+            
             if (!existingClass) {
                 throw new Error("Class not found");
             }
@@ -838,10 +844,19 @@ export class ClassService {
                 throw new Error("Class is not active or has been deleted");
             }
 
-            // Validate student IDs exist and are valid
+            // Get current student IDs in the target class
+            const currentStudentIds = existingClass.student_ids || [];
+            
+            // Validate student IDs exist and are valid, and remove from previous class STRICTLY
             const validStudents: string[] = [];
             for (const studentId of studentIds) {
-                const student = await UserService.getUser(studentId);
+                let student: IUser | null;
+                try {
+                    student = await UserService.getUser(studentId);
+                } catch {
+                    throw new Error(`Student with ID ${studentId} not found`);
+                }
+                
                 if (!student) {
                     throw new Error(`Student with ID ${studentId} not found`);
                 }
@@ -851,15 +866,35 @@ export class ClassService {
                 if (!student.is_active || student.is_deleted) {
                     throw new Error(`Student with ID ${studentId} is not active`);
                 }
+                
+                // Skip if student is already in this class
+                if (currentStudentIds.includes(studentId)) {
+                    continue;
+                }
+                
+                // STRICT: Remove student from their PREVIOUS class ONLY (using class_id)
+                if (student.class_id && student.class_id !== classId) {
+                    const previousClass = await Class.findById(student.class_id);
+                    if (previousClass && previousClass.student_ids) {
+                        const updatedStudentIds = previousClass.student_ids.filter(id => id !== studentId);
+                        await Class.findOneAndUpdate(
+                            { id: previousClass.id },
+                            {
+                                student_ids: updatedStudentIds,
+                                student_count: updatedStudentIds.length,
+                                updated_at: new Date(),
+                            },
+                            { new: true }
+                        );
+                    }
+                }
+                
                 validStudents.push(studentId);
             }
 
-            // Get current student IDs to prevent duplicates
-            const currentStudentIds = existingClass.student_ids || [];
-            const duplicateStudents = validStudents.filter((studentId) => currentStudentIds.includes(studentId));
-
-            if (duplicateStudents.length > 0) {
-                throw new Error(`Students with IDs ${duplicateStudents.join(", ")} are already assigned to this class`);
+            // if no valid students to add, return existing class
+            if (validStudents.length === 0) {
+                throw new Error("No valid students to assign to class");
             }
 
             // Merge new student IDs with existing ones
@@ -884,12 +919,12 @@ export class ClassService {
                 throw new Error("Failed to update class");
             }
 
-            // Update each student's meta_data to include the class
+            // Update each student's class_id, academic_year, campus_id 
             for (const studentId of validStudents) {
                 const student = await UserService.getUser(studentId);
                 if (student) {
                     // Parse meta_data if it's a string, otherwise use as object
-                    let currentMetaData: any = {};
+                    let currentMetaData: Record<string, any> = {};
                     if (student.meta_data) {
                         if (typeof student.meta_data === "string") {
                             try {
@@ -898,25 +933,18 @@ export class ClassService {
                                 currentMetaData = {};
                             }
                         } else {
-                            currentMetaData = student.meta_data;
+                            currentMetaData = { ...student.meta_data };
                         }
                     }
 
-                    const currentClasses = currentMetaData.classes || [];
-
-                    // Check if class is already assigned to avoid duplicates
-                    if (!currentClasses.includes(classId)) {
-                        const updatedClasses = [...currentClasses, classId];
-                        const updatedMetaData = {
-                            ...currentMetaData,
-                            classes: updatedClasses,
-                        };
-
-                        await UserService.updateUsers(student.id, {
-                            meta_data: JSON.stringify(updatedMetaData),
-                        });
-                    }
-                }
+                    // Update user with class_id, academic_year, campus_id, and cleaned meta_data
+                    await UserService.updateUsers(student.id, {
+                        class_id: classId,
+                        academic_year: existingClass.academic_year,
+                        campus_id: existingClass.campus_id,
+                        meta_data: JSON.stringify(currentMetaData),
+                    });
+                } 
             }
 
             return updatedClass;

@@ -518,7 +518,12 @@ export class UserService {
         const student = studentData.rows[0];
 
         // Extract parent IDs from student's meta_data
-        const parentIds = (student.meta_data as any)?.parent_id;
+        // Parse meta_data if it's a string
+        const metaData = typeof student.meta_data === 'string' 
+            ? JSON.parse(student.meta_data) 
+            : student.meta_data;
+        
+        const parentIds = metaData?.parent_id;
 
         if (!parentIds || !Array.isArray(parentIds) || parentIds.length === 0) {
             throw new Error("No parents found for the student");
