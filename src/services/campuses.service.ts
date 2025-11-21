@@ -1,4 +1,5 @@
 import { Campus, ICampus } from "@/models/campus.model";
+import { CampusFeaturesService } from "./campus_features.service";
 
 export class CampusService {
     // Create
@@ -13,7 +14,7 @@ export class CampusService {
         domain: string;
         meta_data: string;
     }) => {
-        return await Campus.create({
+        const campus = await Campus.create({
             name: name,
             address: address,
             domain: domain,
@@ -23,6 +24,22 @@ export class CampusService {
             created_at: new Date(),
             updated_at: new Date(),
         });
+
+        // Automatically create campus features with all features enabled by default
+        try {
+            if (campus.id) {
+                await CampusFeaturesService.initializeCampusFeatures(
+                    campus.id,
+                    "system" // System-generated
+                );
+                console.log(`[CampusService] Campus features initialized for new campus: ${campus.id}`);
+            }
+        } catch (error) {
+            console.error(`[CampusService] Failed to initialize campus features for ${campus.id}:`, error);
+            // Don't fail campus creation if features initialization fails
+        }
+
+        return campus;
     };
 
     // Get All

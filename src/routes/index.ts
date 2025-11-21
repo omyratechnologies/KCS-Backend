@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 
 import { authMiddleware } from "@/middlewares/auth.middleware";
+import { featureAccessMiddleware } from "@/middlewares/feature.middleware";
 import adminCourseAnalyticsRoute from "@/routes/admin_course_analytics.route";
 import assignmentRoute from "@/routes/assignments.route";
 import attendanceRoute from "@/routes/attendance.route";
@@ -46,6 +47,7 @@ import usersRoute from "@/routes/users.route";
 import vendorRoute from "@/routes/vendor.route";
 import feeStructureRoute from "./fee_structure.route";
 import cashfreePaymentRoute from "./cashfree_payment.route";
+import { campusFeaturesRoutes } from "./campus_features.route";
 
 const app = new Hono();
 
@@ -63,12 +65,30 @@ app.route("/dashboard", dashboardRoute);
 app.route("/admin-course-analytics", adminCourseAnalyticsRoute);
 app.route("/user", usersRoute);
 app.route("/campus", campusesRoute);
+
+// Feature-controlled routes - Apply middleware BEFORE mounting routes
+app.use("/chat/*", featureAccessMiddleware("chat")); 
 app.route("/chat", chatRoute);
+
+app.use("/meeting/*", featureAccessMiddleware("meetings"));
+app.route("/meeting", meetingRoute);
+
+app.use("/payments/*", featureAccessMiddleware("payments"));
+app.route("/payments", paymentRoute); // Razorpay payment system
+
+app.use("/cashfree-payments/*", featureAccessMiddleware("payments"));
+app.route("/cashfree-payments", cashfreePaymentRoute); // Cashfree payment orders with vendor splits
+
+app.use("/curriculum/*", featureAccessMiddleware("curriculum"));
+app.route("/curriculum", curriculumRoute);
+
+// Subject materials feature middleware is applied inside subject.route.ts for specific routes
+app.route("/subject", subjectRoute);
+
+// Regular routes without feature restrictions
 app.route("/attendance", attendanceRoute);
 app.route("/class", classRoute);
 app.route("/courses", courseRoute);
-app.route("/curriculum", curriculumRoute);
-app.route("/subject", subjectRoute);
 app.route("/library", libraryRoute);
 app.route("/assignments", assignmentRoute); // New unified assignment routes
 app.route("/document-store", documentStoreoute);
@@ -76,10 +96,8 @@ app.route("/event-media", eventMediaGalleryRoute);
 app.route("/exam", examRoute);
 app.route("/exam/timetable", examTimetableRoute);
 app.route("/fee", feeRoute);
-app.route("/payments", paymentRoute); // Razorpay payment system
 app.route("/vendor", vendorRoute); // Campus vendor management (Cashfree)
 app.route("/fee-structures", feeStructureRoute); // Class fee structure management (Cashfree)
-app.route("/cashfree-payments", cashfreePaymentRoute); // Cashfree payment orders with vendor splits
 app.route("/label", labelRoute); // Label management for curriculum chapters
 app.route("/leave", leaveRoute);
 app.route("/timetable", timetableRoute);
@@ -87,7 +105,6 @@ app.route("/notification", notificationRoute);
 app.route("/push-notification", pushNotificationRoute);
 app.route("/reminders", reminderRoute);
 app.route("/messages", messagesRoute);
-app.route("/meeting", meetingRoute);
 app.route("/class-quiz", classQuizRoute);
 app.route("/syllabus", syllabusRoute);
 app.route("/upload", uploadRoute);
@@ -99,5 +116,6 @@ app.route("/semester-report", semesterReportRoute);
 app.route("/teacher", teacherRoute);
 app.route("/parent", parentRoute);
 app.route("/super-admin", superAdminRoute);
+app.route("/super-admin/campus-features", campusFeaturesRoutes);
 
 export default app;

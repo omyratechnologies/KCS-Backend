@@ -4,6 +4,7 @@ import { resolver, validator as zValidator } from "hono-openapi/zod";
 
 import { UsersController } from "@/controllers/users.controller";
 // import { roleMiddleware } from "@/middlewares/role.middleware";
+import { studentParentCreationMiddleware } from "@/middlewares/feature.middleware";
 import {
     createUserRequestBodySchema,
     createUserResponseSchema,
@@ -16,6 +17,10 @@ import {
 } from "@/schema/user";
 
 const app = new Hono();
+
+// Apply student/parent creation check to user creation routes
+app.use("/", studentParentCreationMiddleware());
+app.use("/bulk", studentParentCreationMiddleware());
 
 app.post(
     "/bulk",

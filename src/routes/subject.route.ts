@@ -4,6 +4,7 @@ import { resolver, validator as zValidator } from "hono-openapi/zod";
 
 import { SubjectController } from "@/controllers/subject.controller";
 import { SubjectMaterialsController } from "@/controllers/subject_materials.controller";
+import { featureAccessMiddleware } from "@/middlewares/feature.middleware";
 import {
     createSubjectRequestBodySchema,
     createSubjectResponseSchema,
@@ -28,6 +29,11 @@ import {
 } from "@/schema/subject_materials";
 
 const app = new Hono();
+
+// Apply feature access control for subject materials at the route level
+app.use("/*/materials*", featureAccessMiddleware("subject_materials"));
+app.use("/*/teachers*", featureAccessMiddleware("subject_materials"));
+app.use("/*/details*", featureAccessMiddleware("subject_materials"));
 
 app.get(
     "/assignments",
@@ -428,6 +434,7 @@ app.get(
 );
 
 // Subject Materials Routes
+// Apply feature access control for subject materials (file uploads by teachers)
 
 // Get subject with detailed breakdown
 app.get(
