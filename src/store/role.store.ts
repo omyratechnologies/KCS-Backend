@@ -6,6 +6,7 @@ export const actionMap: {
     Student: [
         "get_user",
         "get_class",
+        "get_all_class",
         "get_all_courses",
         "get_course",
         "get_subject",
@@ -43,9 +44,12 @@ export const actionMap: {
         "create_payment_order",
         "view_student_own_payments",
         "view_specific_order",
+        "view_fee_structure",
     ],
     Parent: [
         "get_user",
+        "get_class",
+        "get_all_class",
         "parent_get_student_assignments",
         "parent_get_student_performance",
         // Course tracking permissions
@@ -59,10 +63,13 @@ export const actionMap: {
         "create_payment_order",
         "view_student_payments",
         "view_specific_order",
+        "view_fee_structure",
     ],
     Teacher: [
         "get_user",
         "get_users",
+        "get_class",
+        "get_all_class",
         "create_assignment",
         "update_assignment",
         "delete_assignment",
@@ -102,10 +109,12 @@ export const actionMap: {
         "customize_course_settings",
         "reorder_course_content",
     ],
-    Staff: ["get_user", "get_users", "create_users", "update_users", "delete_users", "get_assignment"],
+    Staff: ["get_user", "get_users", "create_users", "update_users", "delete_users", "get_assignment", "get_class", "get_all_class"],
     Principal: [
         "get_user",
         "get_users",
+        "get_class",
+        "get_all_class",
         "create_users",
         "update_users",
         "delete_users",
@@ -201,6 +210,10 @@ export const actionMap: {
         "view_assignment_progress",
         "view_academic_summary",
         "view_student_payments",
+        "create_fee_structure",
+        "update_fee_structure",
+        "get_all_fee_structures",
+        "view_fee_structure",
     ],
     Accountant: [
         "get_user",
@@ -212,6 +225,8 @@ export const actionMap: {
         "view_payment_invoices",
         "view_payment_analytics",
         "verify_payment",
+        "get_all_fee_structures",
+        "view_fee_structure",
     ],
     "Super Admin": [
         "create_campus",
@@ -418,6 +433,11 @@ const actionNameSchema = z.union([
     z.literal("view_payment_analytics"),
     z.literal("create_payment_order"),
     z.literal("verify_payment"),
+    // Fee structure actions
+    z.literal("create_fee_structure"),
+    z.literal("update_fee_structure"),
+    z.literal("get_all_fee_structures"),
+    z.literal("view_fee_structure"),
 ]);
 
 export type ActionType = z.infer<typeof actionNameSchema>;

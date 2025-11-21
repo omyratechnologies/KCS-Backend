@@ -4,6 +4,7 @@ import { resolver, validator as zValidator } from "hono-openapi/zod";
 import { z } from "zod";
 
 import { ClassController } from "@/controllers/class.controller";
+import { roleMiddleware } from "@/middlewares/role.middleware";
 import {
     assignStudentsRequestBodySchema,
     assignTeachersRequestBodySchema,
@@ -32,7 +33,7 @@ app.post(
         tags: ["Class"],
         operationId: "createClass",
         summary: "Create a new class",
-        description: "Creates a new class in the system",
+        description: "Creates a new class in the system (Admin only)",
         responses: {
             200: {
                 description: "Class created successfully",
@@ -58,6 +59,7 @@ app.post(
         },
     }),
     zValidator("json", createClassRequestBodySchema),
+    roleMiddleware("create_class"),
     ClassController.createClass
 );
 
@@ -67,7 +69,7 @@ app.get(
         tags: ["Class"],
         operationId: "getAllClassByCampusId",
         summary: "Get all classes by campus ID",
-        description: "Retrieves all classes for a specific campus",
+        description: "Retrieves all classes for a specific campus (All roles)",
         responses: {
             200: {
                 description: "List of classes",
@@ -92,6 +94,7 @@ app.get(
             },
         },
     }),
+    roleMiddleware("get_all_class"),
     ClassController.getAllClassByCampusId
 );
 
@@ -165,6 +168,7 @@ app.get(
             },
         },
     }),
+    roleMiddleware("get_all_class"),
     ClassController.getStudentsByYearAndClass
 );
 
@@ -208,6 +212,7 @@ app.get(
             },
         },
     }),
+    roleMiddleware("get_class"),
     ClassController.getClassById
 );
 
@@ -253,6 +258,7 @@ app.get(
             },
         },
     }),
+    roleMiddleware("get_class"),
     ClassController.getStudentsByClassId
 );
 
@@ -297,6 +303,7 @@ app.put(
         },
     }),
     zValidator("json", updateClassRequestBodySchema),
+    roleMiddleware("update_class"),
     ClassController.updateClass
 );
 
@@ -340,6 +347,7 @@ app.delete(
             },
         },
     }),
+    roleMiddleware("delete_class"),
     ClassController.deleteClass
 );
 
@@ -389,6 +397,7 @@ app.get(
             },
         },
     }),
+    roleMiddleware("get_class"),
     ClassController.getAllSubjectsByClassId
 );
 
@@ -432,6 +441,7 @@ app.get(
             },
         },
     }),
+    roleMiddleware("get_class"),
     ClassController.getAllClassesBySubjectId
 );
 
@@ -475,6 +485,7 @@ app.get(
             },
         },
     }),
+    roleMiddleware("get_class"),
     ClassController.getAllClassSubjectsByClassId
 );
 
@@ -519,6 +530,7 @@ app.post(
         },
     }),
     zValidator("json", createClassSubjectRequestBodySchema),
+    roleMiddleware("create_class"),
     ClassController.createClassSubject
 );
 
@@ -563,6 +575,7 @@ app.put(
         },
     }),
     zValidator("json", updateClassSubjectRequestBodySchema),
+    roleMiddleware("update_class"),
     ClassController.updateClassSubject
 );
 
@@ -606,6 +619,7 @@ app.delete(
             },
         },
     }),
+    roleMiddleware("delete_class"),
     ClassController.deleteClassSubject
 );
 
@@ -649,6 +663,7 @@ app.get(
             },
         },
     }),
+    roleMiddleware("get_class"),
     ClassController.getClassSubjectById
 );
 
@@ -718,6 +733,7 @@ app.post(
         },
     }),
     zValidator("json", assignStudentsRequestBodySchema),
+    roleMiddleware("create_class"),
     ClassController.assignStudentsToClass
 );
 
@@ -786,6 +802,7 @@ app.delete(
         },
     }),
     zValidator("json", assignStudentsRequestBodySchema),
+    roleMiddleware("delete_class"),
     ClassController.removeStudentsFromClass
 );
 
@@ -855,6 +872,7 @@ app.post(
         },
     }),
     zValidator("json", assignTeachersRequestBodySchema),
+    roleMiddleware("create_class"),
     ClassController.assignTeachersToClass
 );
 
@@ -923,6 +941,7 @@ app.delete(
         },
     }),
     zValidator("json", assignTeachersRequestBodySchema),
+    roleMiddleware("delete_class"),
     ClassController.removeTeachersFromClass
 );
 
@@ -1003,6 +1022,7 @@ app.get(
             },
         },
     }),
+    roleMiddleware("get_all_class"),
     ClassController.getStudentsGroupedByClassForYear
 );
 
@@ -1036,6 +1056,7 @@ app.get(
             },
         },
     }),
+    roleMiddleware("get_all_class"),
     ClassController.getAcademicYears
 );
 
@@ -1079,6 +1100,7 @@ app.get(
             },
         },
     }),
+    roleMiddleware("get_class"),
     ClassController.getClassesByStudentUserId
 );
 
@@ -1157,6 +1179,7 @@ app.get(
             },
         },
     }),
+    roleMiddleware("get_class"),
     ClassController.getAssignmentsDueSoon
 );
 
